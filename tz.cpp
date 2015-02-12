@@ -768,11 +768,7 @@ operator>>(std::istream& is, MonthDayTime& x)
                         throw std::runtime_error(std::string("bad operator: ") + c + c2
                                  + std::to_string(d));
                     x.type_ = c == '<' ? MonthDayTime::lteq : MonthDayTime::gteq;
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-                    x.u = {date::month(m)/d, date::weekday(dow)};
-#else
-                    x.u = MonthDayTime::U(date::month(m)/d, date::weekday(dow));
-#endif
+                    x.u = MonthDayTime::pair{ date::month(m) / d, date::weekday(dow) };
                 }
                 else
                     throw std::runtime_error(std::string("bad operator: ") + c);
@@ -1370,8 +1366,7 @@ find_previous_rule(const Rule* r, date::year y)
 //     [first, last) all have the same name
 static
 std::pair<const Rule*, date::year>
-find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, 
-               date::year y)
+find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, date::year y)
 {
     using namespace date;
     if (y == r->ending_year())
