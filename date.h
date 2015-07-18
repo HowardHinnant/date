@@ -3105,7 +3105,7 @@ public:
     {
         using namespace std;
         save_stream _(os);
-        if (t.h_ < std::chrono::hours{0})
+        if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
@@ -3171,7 +3171,7 @@ public:
     {
         using namespace std;
         save_stream _(os);
-        if (t.h_ < std::chrono::hours{0})
+        if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
@@ -3246,7 +3246,7 @@ public:
     {
         using namespace std;
         save_stream _(os);
-        if (t.h_ < std::chrono::hours{0})
+        if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);

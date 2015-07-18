@@ -28,7 +28,7 @@ static std::string install{"/Users/howardhinnant/Downloads/tzdata2015e"};
 
 static const std::vector<const std::string> files =
 {
-    "africa", "antarctica", "asia", "australasia", "etcetera", "europe",
+    "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
     "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
 };
 
@@ -1326,7 +1326,7 @@ operator<<(std::ostream& os, const Zone& z)
     for (auto const& s : z.zonelets_)
     {
         os << indent;
-        if (s.gmtoff_ >= minutes{0})
+        if (s.gmtoff_ >= seconds{0})
             os << ' ';
         os << make_time(s.gmtoff_) << "   ";
         os.width(15);
