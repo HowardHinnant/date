@@ -43,8 +43,8 @@ public:
     template <class Rep, class Period>
     nonexistent_local_time(std::chrono::time_point<std::chrono::system_clock,
                                std::chrono::duration<Rep, Period>> tp,
-                           seconds_point first, const std::string& first_abrev,
-                           seconds_point last, const std::string& last_abrev,
+                           seconds_point first, const std::string& first_abbrev,
+                           seconds_point last, const std::string& last_abbrev,
                            seconds_point time_sys);
 
 private:
@@ -53,8 +53,8 @@ private:
     std::string
     make_msg(std::chrono::time_point<std::chrono::system_clock,
                  std::chrono::duration<Rep, Period>> tp,
-             seconds_point first, const std::string& first_abrev,
-             seconds_point last, const std::string& last_abrev,
+             seconds_point first, const std::string& first_abbrev,
+             seconds_point last, const std::string& last_abbrev,
              seconds_point time_sys);
 };
 
@@ -63,25 +63,25 @@ inline
 nonexistent_local_time::nonexistent_local_time(
     std::chrono::time_point<std::chrono::system_clock,
         std::chrono::duration<Rep, Period>> tp,
-    seconds_point first, const std::string& first_abrev,
-    seconds_point last, const std::string& last_abrev,
+    seconds_point first, const std::string& first_abbrev,
+    seconds_point last, const std::string& last_abbrev,
     seconds_point time_sys)
-    : std::runtime_error(make_msg(tp, first, first_abrev, last, last_abrev, time_sys))
+    : std::runtime_error(make_msg(tp, first, first_abbrev, last, last_abbrev, time_sys))
     {}
 
 template <class Rep, class Period>
 std::string
 nonexistent_local_time::make_msg(std::chrono::time_point<std::chrono::system_clock,
                                      std::chrono::duration<Rep, Period>> tp,
-                                 seconds_point first, const std::string& first_abrev,
-                                 seconds_point last, const std::string& last_abrev,
+                                 seconds_point first, const std::string& first_abbrev,
+                                 seconds_point last, const std::string& last_abbrev,
                                  seconds_point time_sys)
 {
     using namespace date;
     std::ostringstream os;
     os << tp << " is in a gap between\n"
-       << first << ' ' << first_abrev << " and\n"
-       << last  << ' ' << last_abrev
+       << first << ' ' << first_abbrev << " and\n"
+       << last  << ' ' << last_abbrev
        << " which are both equivalent to\n"
        << time_sys << " UTC";
     return os.str();
@@ -95,9 +95,9 @@ public:
     ambiguous_local_time(std::chrono::time_point<std::chrono::system_clock,
                              std::chrono::duration<Rep, Period>> tp,
                          std::chrono::seconds first_offset,
-                         const std::string& first_abrev,
+                         const std::string& first_abbrev,
                          std::chrono::seconds second_offset,
-                         const std::string& second_abrev);
+                         const std::string& second_abbrev);
 
 private:
     template <class Rep, class Period>
@@ -105,8 +105,8 @@ private:
     std::string
     make_msg(std::chrono::time_point<std::chrono::system_clock,
                  std::chrono::duration<Rep, Period>> tp,
-             std::chrono::seconds first_offset, const std::string& first_abrev,
-             std::chrono::seconds second_offset, const std::string& second_abrev);
+             std::chrono::seconds first_offset, const std::string& first_abbrev,
+             std::chrono::seconds second_offset, const std::string& second_abbrev);
 };
 
 template <class Rep, class Period>
@@ -115,11 +115,11 @@ ambiguous_local_time::ambiguous_local_time(
     std::chrono::time_point<std::chrono::system_clock,
         std::chrono::duration<Rep, Period>> tp,
     std::chrono::seconds first_offset,
-    const std::string& first_abrev,
+    const std::string& first_abbrev,
     std::chrono::seconds second_offset,
-    const std::string& second_abrev)
-    : std::runtime_error(make_msg(tp, first_offset, first_abrev, second_offset,
-                                  second_abrev))
+    const std::string& second_abbrev)
+    : std::runtime_error(make_msg(tp, first_offset, first_abbrev, second_offset,
+                                  second_abbrev))
     {}
 
 template <class Rep, class Period>
@@ -127,15 +127,15 @@ std::string
 ambiguous_local_time::make_msg(std::chrono::time_point<std::chrono::system_clock,
                                    std::chrono::duration<Rep, Period>> tp,
                                std::chrono::seconds first_offset,
-                               const std::string& first_abrev,
+                               const std::string& first_abbrev,
                                std::chrono::seconds second_offset,
-                               const std::string& second_abrev)
+                               const std::string& second_abbrev)
 {
     using namespace date;
     std::ostringstream os;
     os << tp << " is ambiguous.  It could be\n"
-       << tp << ' ' << first_abrev << " == " << tp - first_offset << " UTC or\n" 
-       << tp << ' ' << second_abrev  << " == " << tp - second_offset  << " UTC";
+       << tp << ' ' << first_abbrev << " == " << tp - first_offset << " UTC or\n" 
+       << tp << ' ' << second_abbrev  << " == " << tp - second_offset  << " UTC";
     return os.str();
 }
 

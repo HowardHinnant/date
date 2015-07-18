@@ -824,7 +824,7 @@ Zone::zonelet::zonelet(const zonelet& i)
     , until_std_(i.until_std_)
     , until_loc_(i.until_loc_)
     , initial_save_(i.initial_save_)
-    , initial_abrev_(i.initial_abrev_)
+    , initial_abbrev_(i.initial_abbrev_)
     , first_rule_(i.first_rule_)
     , last_rule_(i.last_rule_)
 {
@@ -1078,14 +1078,14 @@ find_rule(const std::pair<const Rule*, date::year>& first,
           const std::pair<const Rule*, date::year>& last,
           const date::year& y, const std::chrono::seconds& offset,
           const MonthDayTime& mdt, const std::chrono::minutes& initial_save,
-          const std::string& initial_abrev)
+          const std::string& initial_abbrev)
 {
     using namespace std::chrono;
     using namespace date;
     auto r = first.first;
     auto ry = first.second;
     Info x{day_point(year::min()/boring_day), day_point(year::max()/boring_day),
-           seconds{0}, initial_save, initial_abrev};
+           seconds{0}, initial_save, initial_abbrev};
     while (r != nullptr)
     {
         auto tr = r->mdt().to_sys(ry, offset, x.save);
@@ -1203,7 +1203,7 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                 if (z.first_rule_.first != nullptr)
                 {
                     z.initial_save_ = z.first_rule_.first->save();
-                    z.initial_abrev_ = z.first_rule_.first->abbrev();
+                    z.initial_abbrev_ = z.first_rule_.first->abbrev();
                     if (z.first_rule_ != z.last_rule_)
                     {
                         z.first_rule_ = find_next_rule(eqr.first, eqr.second,
@@ -1278,7 +1278,7 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
         {
             r = find_rule(i->first_rule_, i->last_rule_, y, i->gmtoff_,
                           MonthDayTime(floor<seconds>(tp), timezone), i->initial_save_,
-                          i->initial_abrev_);
+                          i->initial_abbrev_);
             auto k = i->format_.find("%s");
             if (k != std::string::npos)
             {
@@ -1345,7 +1345,7 @@ operator<<(std::ostream& os, const Zone& z)
         os << "   " << s.until_std_ << " STD";
         os << "   " << s.until_loc_;
         os << "   " << make_time(s.initial_save_);
-        os << "   " << s.initial_abrev_;
+        os << "   " << s.initial_abbrev_;
         if (s.first_rule_.first != nullptr)
             os << "   {" << *s.first_rule_.first << ", " << s.first_rule_.second << '}';
         else

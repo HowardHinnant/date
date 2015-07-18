@@ -164,7 +164,7 @@ struct Zone::zonelet
     seconds_point        until_std_;
     seconds_point        until_loc_;
     std::chrono::minutes initial_save_{};
-    std::string          initial_abrev_;
+    std::string          initial_abbrev_;
     std::pair<const Rule*, date::year> first_rule_{nullptr, date::year::min()};
     std::pair<const Rule*, date::year> last_rule_{nullptr, date::year::max()};
 
