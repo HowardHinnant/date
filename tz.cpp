@@ -1008,6 +1008,22 @@ find_next_rule(const Rule* r, date::year y)
 }
 
 static
+const Rule*
+find_first_std_rule(const std::pair<const Rule*, const Rule*>& eqr)
+{
+    auto r = eqr.first;
+    auto ry = r->starting_year();
+    while (r->save() != std::chrono::minutes{0})
+    {
+        std::tie(r, ry) = find_next_rule(eqr.first, eqr.second, r, ry);
+        if (r == nullptr)
+            throw std::runtime_error("Could not find standard offset in rule "
+                                     + eqr.first->name());
+    }
+    return r;
+}
+
+static
 std::pair<const Rule*, date::year>
 find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
                    const date::year& y, const std::chrono::seconds& offset,
@@ -1218,7 +1234,10 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                 }
             }
             if (z.first_rule_.first == nullptr && z.last_rule_.first != nullptr)
+            {
                 z.first_rule_ = std::make_pair(eqr.first, eqr.first->starting_year());
+                z.initial_abbrev_ = find_first_std_rule(eqr)->abbrev();
+            }
         }
 
 #ifndef NDEBUG
