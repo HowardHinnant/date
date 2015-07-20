@@ -3386,18 +3386,33 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
     return time_of_day<std::chrono::duration<Rep, Period>>(h, m, s, sub_s, md);
 }
 
-template <class Rep, std::intmax_t N, std::intmax_t D,
-          class = typename std::enable_if
-              <!std::chrono::treat_as_floating_point<Rep>::value>::type>
+template <class Duration>
 inline
-std::ostream&
+typename std::enable_if
+<
+    !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
+        Duration{1} < days{1}
+    , std::ostream&
+>::type
 operator<<(std::ostream& os,
-           const std::chrono::time_point
-               <std::chrono::system_clock,
-                std::chrono::duration<Rep, std::ratio<N, D>>>& tp)
+           const std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
 {
     auto const dp = floor<days>(tp);
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
+}
+
+template <class Duration>
+inline
+typename std::enable_if
+<
+    !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
+        Duration{1} >= days{1}
+    , std::ostream&
+>::type
+operator<<(std::ostream& os,
+           const std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+{
+    return os << year_month_day(floor<days>(tp));
 }
 
 }  // namespace date
