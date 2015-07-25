@@ -26,7 +26,7 @@ namespace date
 
 static std::string install{"/Users/howardhinnant/Downloads/tzdata2015e"};
 
-static const std::vector<const std::string> files =
+static const std::vector<std::string> files =
 {
     "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
     "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
@@ -803,10 +803,12 @@ Rule::split_overlaps(std::vector<Rule>& rules)
 
 Zone::zonelet::~zonelet()
 {
+    using minutes = std::chrono::minutes;
+    using string = std::string;
     if (tag_ == has_save)
-        u.save_.~decltype(u.save_)();
+        u.save_.~minutes();
     else
-        u.rule_.~decltype(u.rule_)();
+        u.rule_.~string();
 }
 
 Zone::zonelet::zonelet()
@@ -1166,10 +1168,11 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                 try
                 {
                     using namespace std::chrono;
+                    using string = std::string;
                     std::istringstream in(z.u.rule_);
                     in.exceptions(std::ios::failbit | std::ios::badbit);
                     auto tmp = duration_cast<minutes>(parse_signed_time(in));
-                    z.u.rule_.~decltype(z.u.rule_)();
+                    z.u.rule_.~string();
                     z.tag_ = zonelet::has_save;
                     ::new(&z.u.save_) minutes(tmp);
                 }
@@ -1267,8 +1270,9 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
                                  + std::to_string(static_cast<int>(max_year)) + "]");
-    auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tp,
-        [timezone](std::chrono::system_clock::time_point t, const zonelet& zl)
+    auto tps = floor<seconds>(tp);
+    auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tps,
+        [timezone](seconds_point t, const zonelet& zl)
         {
             return timezone == tz::utc ? t < zl.until_utc_ : t < zl.until_loc_;
         });
@@ -1278,8 +1282,10 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
     {
         if (i->tag_ == zonelet::has_save)
         {
-            r.begin = i != zonelets_.begin() ? i[-1].until_utc_
-                                             : day_point(year::min()/boring_day);
+            if (i != zonelets_.begin())
+                r.begin = i[-1].until_utc_;
+            else
+                r.begin = day_point(year::min()/boring_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_ + i->u.save_;
             r.save = i->u.save_;
@@ -1287,8 +1293,10 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
         }
         else if (i->u.rule_.empty())
         {
-            r.begin = i != zonelets_.begin() ? i[-1].until_utc_
-                                             : day_point(year::min()/boring_day);
+            if (i != zonelets_.begin())
+                r.begin = i[-1].until_utc_;
+            else
+                r.begin = day_point(year::min()/boring_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_;
             r.abbrev = i->format_;
@@ -1296,7 +1304,7 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
         else
         {
             r = find_rule(i->first_rule_, i->last_rule_, y, i->gmtoff_,
-                          MonthDayTime(floor<seconds>(tp), timezone), i->initial_save_,
+                          MonthDayTime(tps, timezone), i->initial_save_,
                           i->initial_abbrev_);
             auto k = i->format_.find("%s");
             if (k != std::string::npos)
