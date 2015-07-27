@@ -24,7 +24,7 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
-static std::string install{"/Users/howardhinnant/Downloads/tzdata2015e"};
+static std::string install{"/home/gm/Projects/tzdata/tzdata2015e"};
 
 static const std::vector<std::string> files =
 {
