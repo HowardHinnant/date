@@ -24,7 +24,7 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
-static std::string install{"/Users/howardhinnant/Downloads/tzdata2015e"};
+static std::string install{"/home/gm/Projects/tzdata/tzdata2015e"};
 
 static const std::vector<std::string> files =
 {
@@ -1627,6 +1627,33 @@ operator<<(std::ostream& os, const Info& r)
 const Zone*
 current_timezone()
 {
+    // On some versions of some linux distro's (e.g. Ubuntu),
+    // the current timezone might be in the first line of
+    // the /etc/timezone file. So we check that.
+#if __linux
+    std::ifstream timezone_file("/etc/timezone");
+    if (timezone_file.is_open())
+    {
+        std::string line;
+        std::getline(timezone_file, line);
+        if (!line.empty())
+            return locate_zone(line);
+        // Fall through to try other means.
+    }
+#endif
+    // On some OS's a file called /etc/localtime may
+    // exist and it may be either a real file
+    // containing time zone details or a symlink to such a file.
+    // On MacOS and BSD Unix if this file is a symlink it
+    // might resolve to a path like this:
+    // "/usr/share/zoneinfo/America/Los_Angeles"
+    // If it does, we try to determine the current
+    // timezone from the remainder of the path by removing the prefix
+    // and hoping the rest resolves to valid timezone.
+    // It may not always work though. If it doesn't then an
+    // exception will be thrown by local_timezone.
+    // The path may also take a relative form:
+    // "../usr/share/zoneinfo/America/Los_Angeles".
     struct stat sb;
     CONSTDATA auto timezone = "/etc/localtime";
     if (lstat(timezone, &sb) == -1 || sb.st_size == 0)
@@ -1642,7 +1669,10 @@ current_timezone()
         if (sz <= tmp)
             break;
     }
-    result.erase(0, 20);
+    if (result.compare(0, 20, "/usr/share/zoneinfo/")==0)
+        result.erase(0, 20);
+    else if (result.compare(0, 22, "../usr/share/zoneinfo/")==0)
+        result.erase(0, 22);
     return locate_zone(result);
 }
 
