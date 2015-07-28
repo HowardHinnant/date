@@ -3391,7 +3391,7 @@ inline
 typename std::enable_if
 <
     !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
-        Duration{1} < days{1}
+        std::ratio_less<typename Duration::period, days::period>::value
     , std::ostream&
 >::type
 operator<<(std::ostream& os,
@@ -3406,7 +3406,7 @@ inline
 typename std::enable_if
 <
     !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
-        Duration{1} >= days{1}
+        !std::ratio_less<typename Duration::period, days::period>::value
     , std::ostream&
 >::type
 operator<<(std::ostream& os,
