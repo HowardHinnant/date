@@ -21,7 +21,14 @@ namespace date
 // Configuration |
 //---------------+
 
-#if __cplusplus >= 201402
+// MSVC's constexpr support is still a WIP, even in VS2015.
+// Fall back to a lesser mode to support it.
+// TODO: Remove this or retest later once MSVC's constexpr improves.
+#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
+#  define CONSTDATA const
+#  define CONSTCD11
+#  define CONSTCD14
+#elif __cplusplus >= 201402
 #  define CONSTDATA constexpr
 #  define CONSTCD11 constexpr
 #  define CONSTCD14 constexpr
