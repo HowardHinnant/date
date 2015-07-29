@@ -79,7 +79,7 @@ static
 unsigned
 parse_dow(std::istream& in)
 {
-    CONSTDATA char*const dow_names[] =
+    const char*const dow_names[] =
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     auto s = parse3(in);
     auto dow = std::find(std::begin(dow_names), std::end(dow_names), s) - dow_names;
@@ -92,7 +92,7 @@ static
 unsigned
 parse_month(std::istream& in)
 {
-    CONSTDATA char*const month_names[] =
+    const char*const month_names[] =
         {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     auto s = parse3(in);
