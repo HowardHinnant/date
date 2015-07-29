@@ -1689,10 +1689,11 @@ current_timezone()
         if (sz <= tmp)
             break;
     }
-    if (result.compare(0, 20, "/usr/share/zoneinfo/")==0)
-        result.erase(0, 20);
-    else if (result.compare(0, 22, "../usr/share/zoneinfo/")==0)
-        result.erase(0, 22);
+    const char zonepath[] = "/usr/share/zoneinfo/";
+    const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+    const size_t pos = result.find(zonepath);
+    if (pos != result.npos)
+        result.erase(0, zonepath_len+pos);
     return locate_zone(result);
 }
 #endif
