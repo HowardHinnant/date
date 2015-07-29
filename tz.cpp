@@ -161,8 +161,9 @@ MonthDayTime::day() const
         return date::day{31};
     case lteq:
     case gteq:
-        return u.month_day_weekday_.month_day_.day();
+        break;
     }
+    return u.month_day_weekday_.month_day_.day();
 }
 
 date::month
@@ -176,8 +177,9 @@ MonthDayTime::month() const
         return u.month_weekday_last_.month();
     case lteq:
     case gteq:
-        return u.month_day_weekday_.month_day_.month();
+        break;
     }
+    return u.month_day_weekday_.month_day_.month();
 }
 
 int
@@ -276,13 +278,12 @@ MonthDayTime::to_day_point(date::year y) const
             return day_point(x) - (wd1-wd0);
         }
     case gteq:
-        {
-            auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = u.month_day_weekday_.weekday_;
-            auto const wd0 = weekday(x);
-            return day_point(x) + (wd1-wd0);
-        }
+        break;
     }
+    auto const x = y/u.month_day_weekday_.month_day_;
+    auto const wd1 = u.month_day_weekday_.weekday_;
+    auto const wd0 = weekday(x);
+    return day_point(x) + (wd1-wd0);
 }
 
 seconds_point
