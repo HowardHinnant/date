@@ -382,6 +382,11 @@ public:
     CONSTCD11 date::year  year()  const noexcept;
     CONSTCD11 date::month month() const noexcept;
 
+    year_month& operator+=(const months& dm) noexcept;
+    year_month& operator-=(const months& dm) noexcept;
+    year_month& operator+=(const years& dy) noexcept;
+    year_month& operator-=(const years& dy) noexcept;
+
     CONSTCD11 bool ok() const noexcept;
 };
 
@@ -1536,6 +1541,38 @@ year_month::year_month(const date::year& y, const date::month& m) noexcept
 CONSTCD11 inline year year_month::year() const noexcept {return y_;}
 CONSTCD11 inline month year_month::month() const noexcept {return m_;}
 CONSTCD11 inline bool year_month::ok() const noexcept {return y_.ok() && m_.ok();}
+
+inline
+year_month&
+year_month::operator+=(const months& dm) noexcept
+{
+    *this = *this + dm;
+    return *this;
+}
+
+inline
+year_month&
+year_month::operator-=(const months& dm) noexcept
+{
+    *this = *this - dm;
+    return *this;
+}
+
+inline
+year_month&
+year_month::operator+=(const years& dy) noexcept
+{
+    *this = *this + dy;
+    return *this;
+}
+
+inline
+year_month&
+year_month::operator-=(const years& dy) noexcept
+{
+    *this = *this - dy;
+    return *this;
+}
 
 CONSTCD11
 inline
