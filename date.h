@@ -6,6 +6,7 @@
 // http://creativecommons.org/licenses/by/4.0/
 
 #include <chrono>
+#include <climits>
 #if !(__cplusplus >= 201402)
 #  include <cmath>
 #endif
@@ -1161,7 +1162,12 @@ inline
 year
 year::min() noexcept
 {
-    return year{std::numeric_limits<short>::min()};
+    using namespace std::chrono;
+    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
+    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
+    return sizeof(minutes)*CHAR_BIT < 34 ?
+        year{1970} + duration_cast<years>(minutes::min()) :
+        year{std::numeric_limits<short>::min()};
 }
 
 CONSTCD11
@@ -1169,7 +1175,12 @@ inline
 year
 year::max() noexcept
 {
-    return year{std::numeric_limits<short>::max()};
+    using namespace std::chrono;
+    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
+    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
+    return sizeof(minutes)*CHAR_BIT < 34 ?
+        year{1969} + duration_cast<years>(minutes::max()) :
+        year{std::numeric_limits<short>::max()};
 }
 
 CONSTCD11
