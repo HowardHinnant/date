@@ -15,7 +15,13 @@
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
+// MSVC doesn't support unistd.h or __has_include yet.
+// unistd.h does exist on Windows though via gcc/mingw.
+#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
+// Add MSVC specific includes here.
+#else
 #include <unistd.h>
+#endif
 
 namespace date
 {
@@ -44,7 +50,13 @@ CONSTDATA auto boring_day = date::aug/18;
 // | End Configuration |
 // +-------------------+
 
+#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
+// We can't use static_assert here for MSVC (yet) because
+// the expression isn't constexpr in MSVC yet.
+// FIXME! Remove this when MSVC's constexpr support improves.
+#else
 static_assert(min_year <= max_year, "Configuration error");
+#endif
 #if __cplusplus >= 201402
 static_assert(boring_day.ok(), "Configuration error");
 #endif
@@ -67,7 +79,7 @@ static
 unsigned
 parse_dow(std::istream& in)
 {
-    CONSTDATA const char* dow_names[] =
+    const char*const dow_names[] =
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     auto s = parse3(in);
     auto dow = std::find(std::begin(dow_names), std::end(dow_names), s) - dow_names;
@@ -80,7 +92,7 @@ static
 unsigned
 parse_month(std::istream& in)
 {
-    CONSTDATA const char* month_names[] =
+    const char*const month_names[] =
         {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     auto s = parse3(in);
@@ -1625,6 +1637,13 @@ operator<<(std::ostream& os, const Info& r)
     return os;
 }
 
+#if _WIN32
+const Zone*
+current_timezone()
+{
+    throw std::runtime_error("current_timezone not yet implemented on Win32.");
+}
+#else
 const Zone*
 current_timezone()
 {
@@ -1677,5 +1696,6 @@ current_timezone()
         result.erase(0, zonepath_len+pos);
     return locate_zone(result);
 }
+#endif
 
 }  // namespace date
