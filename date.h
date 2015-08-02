@@ -1160,7 +1160,7 @@ year::is_leap() const noexcept
 }
 
 CONSTCD11 inline year::operator int() const noexcept {return y_;}
-CONSTCD11 inline bool year::ok() const noexcept {return true;}
+CONSTCD11 inline bool year::ok() const noexcept {return min() <= *this && *this <= max();}
 
 CONSTCD11
 inline
@@ -1981,7 +1981,13 @@ year_month_day_last::day() const noexcept
     return m_ != feb || !y_.is_leap() ? d[static_cast<unsigned>(m_)-1] : 29_d;
 }
 
-CONSTCD11 inline bool year_month_day_last::ok() const noexcept {return m_.ok();}
+CONSTCD11
+inline
+bool
+year_month_day_last::ok() const noexcept
+{
+    return y_.ok() && m_.ok();
+}
 
 CONSTCD11
 inline
@@ -2179,7 +2185,7 @@ inline
 bool
 year_month_day::ok() const noexcept
 {
-    if (!m_.ok())
+    if (!(y_.ok() && m_.ok()))
         return false;
     return 1_d <= d_ && d_ <= (y_/m_/last).day();
 }
@@ -2393,7 +2399,7 @@ inline
 bool
 year_month_weekday::ok() const noexcept
 {
-    if (!m_.ok() || !wdi_.weekday().ok() || wdi_.index() < 1)
+    if (!y_.ok() || !m_.ok() || !wdi_.weekday().ok() || wdi_.index() < 1)
         return false;
     if (wdi_.index() <= 4)
         return true;
@@ -2552,7 +2558,7 @@ inline
 bool
 year_month_weekday_last::ok() const noexcept
 {
-    return m_.ok() && wdl_.ok();
+    return y_.ok() && m_.ok() && wdl_.ok();
 }
 
 CONSTCD11
