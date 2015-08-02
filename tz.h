@@ -11,6 +11,30 @@
 // 1.  Reload database.
 // 4.  Is the utc to sys renaming complete?  Was it done correctly?
 
+/*
+The notion of "current timezone" is something the operating system is expected
+to "just know". How it knows this is system specific. It's often a value
+set by the user at OS intallation time and recorded by the OS somewhere.
+On Linux and Mac systems. the current timezone name is obtained by looking at
+the name or contents of a particular file on disk.
+On Windows the current timzeone name comes from the registry.
+But however the name is obtained there is no guarante
+that the "native" current timezone name obtained in this way
+will match any of the "Standard" names in this library's "database".
+On Linux, the names usually do seem to match so mapping functions to map from
+native to "Standard" are typically NOT required.
+On Windows, the names are never Standard mapping is always required.
+One should not equate the mapping process with Windows.
+Windows is just currently the only client of them.
+Technically any OS may required mapping.
+*/
+
+#ifdef _WIN32
+#ifndef TIMEZONE_MAPPING
+#define TIMEZONE_MAPPING 1
+#endif
+#endif
+
 #include "date.h"
 
 #include <algorithm>
@@ -462,12 +486,77 @@ operator>=(const std::chrono::time_point<std::chrono::system_clock, Duration>& x
     return !(x < y);
 }
 
+#if TIMEZONE_MAPPING
+
+// TODO! Ensure all these types aren't exposed.
+
+// The time zone mapping is modelled after this data file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// and the field names match the element names from the mapZone element
+// of windowsZones.xml.
+// The website displays this file here:
+// http://www.unicode.org/cldr/charts/latest/supplemental/zone_tzid.html
+// The html view is sorted before being displayed but is otherwise the same
+// There is a mapping between the os centric view (in this case windows)
+// the html displays uses and the generic view the xml file.
+// That mapping is this:
+// display column "windows" -> xml field "other".
+// display column "region"  -> xml field "territory".
+// display column "tzid"    -> xml field "type".
+// This structure uses the generic terminology because it could be
+// used to to support other os/native name conversions, not just windows,
+// and using the same generic names helps retain the connection to the
+// origin of the data that we are using.
+struct timezone_mapping
+{
+    timezone_mapping(const char* other, const char* territory, const char* type)
+        : other(other), territory(territory), type(type)
+    {
+    }
+    timezone_mapping() = default;
+    std::string other;
+    std::string territory;
+    std::string type;
+};
+
+#if 0
+// This represents the type for the tzi field in the windows registry.
+// It's TBD if we need this yet.
+struct TZI
+{
+    TZI() = default;
+    int Bias;
+    int StandardBias;
+    int DaylightBias;
+    SYSTEMTIME StandardDate;
+    SYSTEMTIME DaylightDate;
+};
+#endif
+
+struct timezone_info
+{
+    timezone_info() = default;
+    std::string timezone_id;
+    std::string standard_name;
+#if 0 // TBD
+    std::string display_name;
+    TZI tzi;
+#endif
+};
+
+#endif
+
 struct TZ_DB
 {
     std::vector<Zone> zones;
     std::vector<Link> links;
     std::vector<Leap> leaps;
     std::vector<Rule> rules;
+#if TIMEZONE_MAPPING
+    // TODO! These need some protection.
+    std::vector<timezone_mapping> mappings;
+    std::vector<timezone_info> native_zones;
+#endif
     
     TZ_DB() = default;
     TZ_DB(TZ_DB&&) = default;
@@ -481,6 +570,11 @@ const TZ_DB& reload_tzdb();
 const TZ_DB& reload_tzdb(const std::string& new_install);
 
 const Zone* locate_zone(const std::string& tz_name);
+#ifdef TZ_TEST
+#ifdef _WIN32
+const Zone* locate_native_zone(const std::string& native_tz_name);
+#endif
+#endif
 const Zone* current_timezone();
 
 class utc_clock

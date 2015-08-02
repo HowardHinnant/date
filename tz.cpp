@@ -10,21 +10,92 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
+#ifdef WIN32
+#include <locale>
+#include <codecvt>
+#endif
+
+#if TIMEZONE_MAPPING
+// Timezone mapping is mapping native timezone names to "Standard" ones.
+// Mapping reades a CSV file for the data and currently uses
+// std::quoted to do that which is a C++14 feature found in iomanip.
+// VS2015 supports std::quoted but MSVC has a mixed rather
+// than strict standard support so there is no -std=c++14 flag for MSVC.
+// MingW is a Windows based platform so requires mapping and thefore C++14.
+// Linux/Mac currently do not require mapping so C++14 isn't needed for this
+// so C++11 should work.
+#include <iomanip>
+#endif
+
+// unistd.h is used on some platforms as part of the the means to get
+// the current time zone. However unistd.h only somtimes exists on Win32.
+// gcc/mingw support unistd.h on Win32 but MSVC does not.
+// However on Win32 we don't need unistd.h anyway to get the current timezone
+// as Windows.h provides a means to do it
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <unistd.h>
+#endif
+
+// Until filesystem arrives.
+static const char folder_delimiter =
+#ifdef _WIN32
+'\\';
+#else
+'/';
+#endif
+
+#ifdef _WIN32
+// Win32 support requires calling OS functions.
+// This routine maps OS error codes to readable text strngs.
+static std::string get_win32_message(DWORD error_code)
+{
+    struct free_message {
+        void operator()(char buf[]) {
+            if (buf != nullptr)
+            {
+                auto result = HeapFree(GetProcessHeap(), 0, buf);
+                assert(result != 0);
+            }
+        }
+    };
+    char* msg = nullptr;
+    auto result = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+                                       | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        reinterpret_cast<char*>(&msg), 0, NULL );
+    std::unique_ptr<char[], free_message> message_buffer(msg);
+    if (result == 0) // If there is no error message, still give the code.
+    {
+        std::string err = "Error getting message for error number ";
+        err += std::to_string(error_code);
+        return err;
+    }
+    assert(message_buffer.get() != nullptr);
+    return std::string(message_buffer.get());
+}
+#endif
 
 namespace date
 {
-
 // +---------------------+
 // | Begin Configuration |
 // +---------------------+
 
-static std::string install{"/Users/howardhinnant/Downloads/tzdata2015e"};
+#if _WIN32 // TODO: sensible default for all platforms.
+static std::string install{ "c:\\tzdata" };
+#else
+static std::string install{ "/Users/howardhinnant/Downloads/tzdata2015e" };
+#endif
 
 static const std::vector<std::string> files =
 {
@@ -44,9 +115,292 @@ CONSTDATA auto boring_day = date::aug/18;
 // | End Configuration |
 // +-------------------+
 
+#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
+// We can't use static_assert here for MSVC (yet) because
+// the expression isn't constexpr in MSVC yet.
+// FIXME! Remove this when MSVC's constexpr support improves.
+#else
 static_assert(min_year <= max_year, "Configuration error");
+#endif
 #if __cplusplus >= 201402
 static_assert(boring_day.ok(), "Configuration error");
+#endif
+
+#if TIMEZONE_MAPPING
+
+namespace // Put types in an aonymous name space.
+{
+    // A simple type to manage RAII for key handles and to
+    // implement the trivial registry interface we need.
+    // Not itended to be general purpose.
+    class reg_key
+    {
+    private:
+        // Note there is no value documented to be an invalid handle value.
+        // Not NULL nor INVALID_HANDLE_VALUE. We must rely on is_open.
+        HKEY m_key = NULL;
+        bool m_is_open = false;
+    public:
+        HKEY handle()
+        {
+            return m_key;
+        }
+        bool is_open() const
+        {
+            return m_is_open;
+        }
+        LONG open(const wchar_t* key_name)
+        {
+            LONG result;
+            result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key_name, 0, KEY_READ, &m_key);
+            if (result == ERROR_SUCCESS)
+                m_is_open = true;
+            return result;
+        }
+        LONG close()
+        {
+            if (m_is_open)
+            {
+                auto result = RegCloseKey(m_key);
+                assert(result == ERROR_SUCCESS);
+                if (result == ERROR_SUCCESS)
+                {
+                    m_is_open = false;
+                    m_key = NULL;
+                }
+                return result;
+            }
+            return ERROR_SUCCESS;
+        }
+
+        // WARNING: this function has a hard code value size limit.
+        // It is not a general purpose function.
+        // It should be sufficient for our use cases. 
+        // The function could be made workable for any size string
+        // but we don't need the complexity of implementing that
+        // for our meagre purposes right now.
+        bool get_string(const wchar_t* key_name, std::string& value)
+        {
+            value.clear();
+            wchar_t value_buffer[256];
+            // in/out parameter. Documentation say that size is a count of bytes not chars.
+            DWORD size = sizeof(value_buffer);
+            DWORD tzi_type = REG_SZ;
+            if (RegQueryValueExW(handle(), key_name, nullptr, &tzi_type,
+                reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS)
+            {
+                // Function does not guarantee to null terminate.
+                value_buffer[size] = L'\0';
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                value = converter.to_bytes(value_buffer);
+                return true;
+            }
+            return false;
+        }
+
+        bool get_binary(const wchar_t* key_name, void* value, int value_size)
+        {
+            DWORD size = value_size;
+            DWORD type = REG_BINARY;
+            if (RegQueryValueExW(handle(), key_name, nullptr, &type,
+                reinterpret_cast<LPBYTE>(value), &size) == ERROR_SUCCESS
+                && (int) size == value_size)
+                return true;
+            return false;
+        }
+
+        ~reg_key()
+        {
+            close();
+        }
+    };
+} // anonymous namespace
+
+template < typename T, size_t N >
+static inline size_t countof(T(&arr)[N])
+{
+    return std::extent< T[N] >::value;
+}
+
+// This function return an exhaustive list of time zone information
+// from the Windows registry.
+// The routine tries to to obtain as much information as possible despite errors.
+// If there is an error with any key, it is silently ignored to move on to the next.
+// We don't have a logger to log such errors and it might disruptive to log anyway.
+// We don't want the whole database of information disrupted just because
+// one record of in it can't be read.
+// The expectation is that the errors will eventually manifest to the
+// caller as a missing time zone which they will need to investigate.
+
+static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
+{
+    tz_list.clear();
+    LONG result;
+
+    // Open the parent time zone key that has the list of timzeones in.
+    reg_key zones_key;
+    static const wchar_t zones_key_name[] = { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
+    result = zones_key.open(zones_key_name);
+    // TODO! Review if this should happen here or be signalled later.
+    // We don't want process to fail on startup because of this or something.
+    if (result != ERROR_SUCCESS)
+        throw std::runtime_error("Time Zone registry key could not be opened: " + get_win32_message(result));
+
+    DWORD size;
+    wchar_t zone_key_name[256];
+    std::wstring value;
+
+    // Iterate through the list of keys of the parent time zones key to get
+    // each key that identifies each individual timezone.
+    std::wstring full_zone_key_name;
+    for (DWORD zone_index = 0; ; ++zone_index)
+    {
+        timezone_info tz;
+
+        size = (DWORD) sizeof(zone_key_name);
+        auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
+            nullptr, nullptr, nullptr, nullptr);
+        if (status != ERROR_SUCCESS && status != ERROR_NO_MORE_ITEMS)
+            throw std::runtime_error("Can't enumerate time zone registry key" + get_win32_message(status));
+        if (status == ERROR_NO_MORE_ITEMS)
+            break;
+        zone_key_name[size] = L'\0';
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        tz.timezone_id = converter.to_bytes(zone_key_name);
+
+        full_zone_key_name = zones_key_name;
+        full_zone_key_name += L'\\';
+        full_zone_key_name += zone_key_name;
+
+        // If any field fails to be found consider the whole time zone
+        // entry corrupt and move onto the next. See comments
+        // at top of function.
+
+        reg_key zone_key;
+        if (zone_key.open(full_zone_key_name.c_str()) != ERROR_SUCCESS)
+            continue;
+
+        if (!zone_key.get_string(L"Std", tz.standard_name))
+            continue;
+
+#if 0
+        // TBD if these fields are not required yet.
+        // The might be useful for test cases though.
+        if (!zone_key.get_string("Display", tz.display_name))
+            continue;
+
+        if (!zone_key.get_binary("TZI", &tz.tzi, sizeof(TZI)))
+            continue;
+#endif
+        auto result = zone_key.close();
+
+        tz_list.push_back(std::move(tz));
+    }
+    result = zones_key.close();
+}
+
+// standard_name is the StandardName field from the Windows
+// TIME_ZONE_INFORMATION structure.
+// See the Windows API function GetTimeZoneInformation.
+// The standard_name is also the value from STD field of
+// under the windows registry key Time Zones.
+// To be clear standard_name does NOT represent a windows timezone id
+// or an IANA tzid
+static const timezone_info* find_native_timezone_by_standard_name(
+    const std::string& standard_name)
+{
+    // TODO! we can improve on linear search.
+    const auto& native_zones = get_tzdb().native_zones;
+    for (const auto& tz : native_zones)
+    {
+        if (tz.standard_name == standard_name)
+            return &tz;
+    }
+
+    return nullptr;
+}
+
+// Read CSV file of "other","territory","type".
+// See timezone_mapping structure for more info.
+// This function should be kept in sync the code/ that writes this file.
+static std::vector<timezone_mapping>
+load_timezone_mappings_from_csv_file(const std::string& input_path)
+{
+    size_t line = 1;
+    std::vector<timezone_mapping> mappings;
+    std::ifstream is(input_path, std::ios_base::in | std::ios_base::binary);
+    if (!is.is_open())
+    {
+        // We don't emit file exceptions because that's an implementation detail.
+        std::string msg = "Error opening time zone mapping file: ";
+        msg += input_path;
+        throw std::runtime_error(msg);
+    }
+    auto error = [&](const char* info)
+    {
+        std::string msg = "Error reading zone mapping file at line ";
+        msg += std::to_string(line);
+        msg += ": ";
+        msg += info;
+        throw std::runtime_error(msg);
+    };
+
+    auto read_field_delim = [&]()
+    {
+        char field_delim;
+        is.read(&field_delim, 1);
+        if (is.gcount() != 1 || field_delim != ',')
+            error("delimiter ',' expected");
+    };
+
+    for (;;)
+    {
+        timezone_mapping zm{};
+        is >> std::quoted(zm.other);
+        if (is.eof())
+            break;
+
+        read_field_delim();
+        is >> std::quoted(zm.territory);
+        read_field_delim();
+        is >> std::quoted(zm.type);
+
+        char record_delim;
+        is.read(&record_delim, 1);
+        if (is.gcount() != 1 || record_delim != '\n')
+            error("record delimiter LF expected");
+
+        if (is.fail() || is.eof())
+            error("unexpected end of file, file read error or formatting error.");
+        ++line;
+        mappings.push_back(std::move(zm));
+    }
+    is.close();
+    return mappings;
+}
+
+static bool
+native_to_standard_timezone_name(const std::string& native_tz_name, std::string& standard_tz_name)
+{
+    // TOOD! Need be a case insensitive compare?
+    if (native_tz_name == "UTC")
+    {
+        standard_tz_name = "Etc/UTC";
+        return true;
+    }
+    standard_tz_name.clear();
+    // TODO! we can improve on linear search.
+    const auto& mappings = date::get_tzdb().mappings;
+    for (const auto& tzm : mappings)
+    {
+        if (tzm.other == native_tz_name)
+        {
+            standard_tz_name = tzm.type;
+            return true;
+        }
+    }
+    return false;
+}
 #endif
 
 // Parsing helpers
@@ -67,7 +421,7 @@ static
 unsigned
 parse_dow(std::istream& in)
 {
-    CONSTDATA const char* dow_names[] =
+    const char*const dow_names[] =
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     auto s = parse3(in);
     auto dow = std::find(std::begin(dow_names), std::end(dow_names), s) - dow_names;
@@ -80,7 +434,7 @@ static
 unsigned
 parse_month(std::istream& in)
 {
-    CONSTDATA const char* month_names[] =
+    const char*const month_names[] =
         {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     auto s = parse3(in);
@@ -1032,6 +1386,9 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
                    const date::year& y, const std::chrono::seconds& offset,
                    const MonthDayTime& mdt)
 {
+    assert(eqr.first != nullptr);
+    assert(eqr.second != nullptr);
+
     using namespace std::chrono;
     using namespace date;
     auto r = eqr.first;
@@ -1437,7 +1794,7 @@ TZ_DB
 init_tzdb()
 {
     using namespace date;
-    const std::string path = install + "/";
+    const std::string path = install + folder_delimiter;
     std::string line;
     bool continue_zone = false;
     TZ_DB db;
@@ -1493,6 +1850,13 @@ init_tzdb()
     db.links.shrink_to_fit();
     std::sort(db.leaps.begin(), db.leaps.end());
     db.leaps.shrink_to_fit();
+
+#if TIMEZONE_MAPPING
+    std::string mapping_file = path + "TimeZoneMappings.csv";
+    db.mappings = load_timezone_mappings_from_csv_file(mapping_file);
+    get_windows_timezone_info(db.native_zones);
+#endif
+
     return db;
 }
 
@@ -1554,6 +1918,25 @@ locate_zone(const std::string& tz_name)
     }
     return &*zi;
 }
+
+#ifdef TZ_TEST
+#ifdef _WIN32
+const Zone*
+locate_native_zone(const std::string& native_tz_name)
+{
+    std::string standard_tz_name;
+    if (!native_to_standard_timezone_name(native_tz_name, standard_tz_name))
+    {
+        std::string msg;
+        msg = "locate_native_zone() failed: A mapping from the Windows Time Zone id \"";
+        msg += native_tz_name;
+        msg += "\" was not found in the time zone mapping database.";
+        throw std::runtime_error(msg);
+    }
+    return locate_zone(standard_tz_name);
+}
+#endif
+#endif
 
 std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db)
@@ -1625,6 +2008,48 @@ operator<<(std::ostream& os, const Info& r)
     return os;
 }
 
+#ifdef _WIN32
+
+const Zone*
+current_timezone()
+{
+#if TIMEZONE_MAPPING
+    TIME_ZONE_INFORMATION tzi{};
+    DWORD tz_result = ::GetTimeZoneInformation(&tzi);
+    if (tz_result == TIME_ZONE_ID_INVALID)
+    {
+        auto error_code = ::GetLastError(); // Store this quick before it gets overwritten.
+        throw std::runtime_error("GetTimeZoneInformation failed: " + get_win32_message(error_code));
+    }
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::string standard_name(converter.to_bytes(tzi.StandardName));
+    auto tz = find_native_timezone_by_standard_name(standard_name);
+    if (!tz)
+    {
+        std::string msg;
+        msg = "current_timezone() failed: ";
+        msg += standard_name;
+        msg += " was not found in the Windows Time Zone registry";
+        throw std::runtime_error( msg );
+    }
+    std::string standard_tzid;
+    if (!native_to_standard_timezone_name(tz->timezone_id, standard_tzid))
+    {
+        std::string msg;
+        msg = "current_timezone() failed: A mapping from the Windows Time Zone id \"";
+        msg += tz->timezone_id;
+        msg += "\" was not found in the time zone mapping database.";
+        throw std::runtime_error(msg);
+    }
+    return date::locate_zone(standard_tzid);
+#else
+    // Currently Win32 requires mapping for this function to work.
+    throw std::runtime_error("current_timezone not implemented.");
+#endif
+}
+
+#else // ! WIN32
+
 const Zone*
 current_timezone()
 {
@@ -1677,5 +2102,6 @@ current_timezone()
         result.erase(0, zonepath_len+pos);
     return locate_zone(result);
 }
+#endif
 
 }  // namespace date
