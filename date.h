@@ -3455,18 +3455,11 @@ operator<<(std::ostream& os,
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
 }
 
-template <class Duration>
 inline
-typename std::enable_if
-<
-    !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
-        !std::ratio_less<typename Duration::period, days::period>::value
-    , std::ostream&
->::type
-operator<<(std::ostream& os,
-           const std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+std::ostream&
+operator<<(std::ostream& os, const day_point& dp)
 {
-    return os << year_month_day(floor<days>(tp));
+    return os << year_month_day(dp);
 }
 
 }  // namespace date
