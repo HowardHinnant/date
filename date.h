@@ -45,7 +45,8 @@ using weeks = std::chrono::duration
     <int, std::ratio_multiply<std::ratio<7>, days::period>>;
 
 using years = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<146097, 400>, days::period>>;
+    <int, std::ratio_subtract<std::ratio_multiply<std::ratio<146097, 400>, days::period>,
+                              std::ratio<1, 7>>>;
 
 using months = std::chrono::duration
     <int, std::ratio_divide<years::period, std::ratio<12>>>;
