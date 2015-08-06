@@ -244,7 +244,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
         throw std::runtime_error("Time Zone registry key could not be opened: " + get_win32_message(result));
 
     DWORD size;
-    wchar_t zone_key_name[128];
+    wchar_t zone_key_name[256];
     std::wstring value;
 
     // Iterate through the list of keys of the parent time zones key to get
@@ -252,7 +252,6 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
     std::wstring full_zone_key_name;
     for (DWORD zone_index = 0; ; ++zone_index)
     {
-        // Make room to add one more at end and get a reference to it.
         timezone_info tz;
 
         size = (DWORD) sizeof(zone_key_name);
@@ -282,11 +281,8 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
             continue;
 
 #if 0
-        // TODO:
-        // These two fields are not required as yet.
-        // They might be useful later or or testing purposes,
-        // perhaps under the TZ_TEST flag or they will
-        // get removed completely. TBD.
+        // TBD if these fields are not required yet.
+        // The might be useful for test cases though.
         if (!zone_key.get_string("Display", tz.display_name))
             continue;
 
@@ -294,12 +290,10 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
             continue;
 #endif
         auto result = zone_key.close();
-        assert(result == ERROR_SUCCESS);
 
         tz_list.push_back(std::move(tz));
     }
     result = zones_key.close();
-    assert(result == ERROR_SUCCESS);
 }
 
 // standard_name is the StandardName field from the Windows
