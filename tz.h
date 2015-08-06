@@ -487,6 +487,9 @@ operator>=(const std::chrono::time_point<std::chrono::system_clock, Duration>& x
 }
 
 #if TIMEZONE_MAPPING
+
+// TODO! Ensure all these types aren't exposed.
+
 // The time zone mapping is modelled after this data file:
 // http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
 // and the field names match the element names from the mapZone element
@@ -515,6 +518,32 @@ struct timezone_mapping
     std::string territory;
     std::string type;
 };
+
+#if 0
+// This represents the type for the tzi field in the windows registry.
+// It's TBD if we need this yet.
+struct TZI
+{
+    TZI() = default;
+    int Bias;
+    int StandardBias;
+    int DaylightBias;
+    SYSTEMTIME StandardDate;
+    SYSTEMTIME DaylightDate;
+};
+#endif
+
+struct timezone_info
+{
+    timezone_info() = default;
+    std::string timezone_id;
+    std::string standard_name;
+#if 0 // TBD
+    std::string display_name;
+    TZI tzi;
+#endif
+};
+
 #endif
 
 struct TZ_DB
@@ -524,7 +553,9 @@ struct TZ_DB
     std::vector<Leap> leaps;
     std::vector<Rule> rules;
 #if TIMEZONE_MAPPING
+    // TODO! These need some protection.
     std::vector<timezone_mapping> mappings;
+    std::vector<timezone_info> native_zones;
 #endif
     
     TZ_DB() = default;
@@ -539,6 +570,11 @@ const TZ_DB& reload_tzdb();
 const TZ_DB& reload_tzdb(const std::string& new_install);
 
 const Zone* locate_zone(const std::string& tz_name);
+#ifdef TZ_TEST
+#ifdef _WIN32
+const Zone* locate_native_zone(const std::string& native_tz_name);
+#endif
+#endif
 const Zone* current_timezone();
 
 class utc_clock
