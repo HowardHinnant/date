@@ -3096,6 +3096,11 @@ public:
         return to24hr();
     }
 
+    CONSTCD14 precision to_duration() const noexcept
+    {
+        return static_cast<precision>(*this);
+    }
+
     CONSTCD14 time_of_day_storage& make24() noexcept {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() noexcept {base::make12(); return *this;}
 
@@ -3155,6 +3160,11 @@ public:
     CONSTCD14 explicit operator precision() const noexcept
     {
         return to24hr() + m_;
+    }
+
+    CONSTCD14 precision to_duration() const noexcept
+    {
+        return static_cast<precision>(*this);
     }
 
     CONSTCD14 time_of_day_storage& make24() noexcept {base::make24(); return *this;}
@@ -3221,6 +3231,11 @@ public:
     CONSTCD14 explicit operator precision() const noexcept
     {
         return to24hr() + m_ + s_;
+    }
+
+    CONSTCD14 precision to_duration() const noexcept
+    {
+        return static_cast<precision>(*this);
     }
 
     CONSTCD14 time_of_day_storage& make24() noexcept {base::make24(); return *this;}
@@ -3296,6 +3311,11 @@ public:
     CONSTCD14 explicit operator precision() const noexcept
     {
         return to24hr() + m_ + s_ + sub_s_;
+    }
+
+    CONSTCD14 precision to_duration() const noexcept
+    {
+        return static_cast<precision>(*this);
     }
 
     CONSTCD14 time_of_day_storage& make24() noexcept {base::make24(); return *this;}
