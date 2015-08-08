@@ -1637,6 +1637,66 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
     }
 }
 
+static
+std::string
+format_abbrev(std::string format, const std::string& variable, std::chrono::seconds off,
+                                                               std::chrono::minutes save)
+{
+    using namespace std::chrono;
+    auto k = format.find("%s");
+    if (k != std::string::npos)
+    {
+        format.replace(k, 2, variable);
+    }
+    else
+    {
+        k = format.find('/');
+        if (k != std::string::npos)
+        {
+            if (save == minutes{0})
+                format.erase(k);
+            else
+                format.erase(0, k+1);
+        }
+        else
+        {
+            k = format.find("%z");
+            if (k != std::string::npos)
+            {
+                std::string temp;
+                if (off < seconds{0})
+                {
+                    temp = '-';
+                    off = -off;
+                }
+                else
+                    temp = '+';
+                auto h = floor<hours>(off);
+                off -= h;
+                if (h < hours{10})
+                    temp += '0';
+                temp += std::to_string(h.count());
+                if (off > seconds{0})
+                {
+                    auto m = floor<minutes>(off);
+                    off -= m;
+                    if (m < minutes{10})
+                        temp += '0';
+                    temp += std::to_string(m.count());
+                    if (off > seconds{0})
+                    {
+                        if (off < seconds{10})
+                            temp += '0';
+                        temp += std::to_string(off.count());
+                    }
+                }
+                format.replace(k, 2, temp);
+            }
+        }
+    }
+    return format;
+}
+
 Info
 Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
 {
@@ -1667,7 +1727,6 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
             r.end = i->until_utc_;
             r.offset = i->gmtoff_ + i->u.save_;
             r.save = i->u.save_;
-            r.abbrev = i->format_;
         }
         else if (i->u.rule_.empty())
         {
@@ -1677,41 +1736,19 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
                 r.begin = day_point(year::min()/boring_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_;
-            r.abbrev = i->format_;
         }
         else
         {
             r = find_rule(i->first_rule_, i->last_rule_, y, i->gmtoff_,
                           MonthDayTime(tps, timezone), i->initial_save_,
                           i->initial_abbrev_);
-            auto k = i->format_.find("%s");
-            if (k != std::string::npos)
-            {
-                std::string abbrev = r.abbrev;
-                r.abbrev = i->format_;
-                r.abbrev.replace(k, 2, abbrev);
-            }
-            else
-            {
-                k = i->format_.find('/');
-                if (k != std::string::npos)
-                {
-                    if (r.save == seconds{0})
-                        r.abbrev = i->format_.substr(0, k);
-                    else
-                        r.abbrev = i->format_.substr(k+1);
-                }
-                else
-                {
-                    r.abbrev = i->format_;
-                }
-            }
             r.offset = i->gmtoff_ + r.save;
             if (i != zonelets_.begin() && r.begin < i[-1].until_utc_)
                 r.begin = i[-1].until_utc_;
             if (r.end > i->until_utc_)
                 r.end = i->until_utc_;
         }
+        r.abbrev = format_abbrev(i->format_, r.abbrev, r.offset, r.save);
         assert(r.begin < r.end);
     }
     return r;
