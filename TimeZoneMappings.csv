@@ -1,3 +1,7 @@
+Copyright © 1991-2013 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+
 "AUS Central Standard Time","001","Australia/Darwin"
 "AUS Central Standard Time","AU","Australia/Darwin"
 "AUS Eastern Standard Time","001","Australia/Sydney"
