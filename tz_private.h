@@ -40,7 +40,7 @@ private:
 
 public:
     MonthDayTime() = default;
-    MonthDayTime(seconds_point tp, tz timezone);
+    MonthDayTime(second_point tp, tz timezone);
     MonthDayTime(const date::month_day& md, tz timezone);
 
     date::day day() const;
@@ -49,11 +49,11 @@ public:
 
     void canonicalize(date::year y);
 
-    seconds_point
+    second_point
        to_sys(date::year y, std::chrono::seconds offset, std::chrono::seconds save) const;
     date::day_point to_day_point(date::year y) const;
 
-    seconds_point to_time_point(date::year y) const;
+    second_point to_time_point(date::year y) const;
     int compare(date::year y, const MonthDayTime& x, date::year yx,
                 std::chrono::seconds offset, std::chrono::minutes prev_save) const;
 
@@ -160,9 +160,9 @@ struct Zone::zonelet
     std::string          format_;
     date::year           until_year_{0};
     MonthDayTime         until_date_;
-    seconds_point        until_utc_;
-    seconds_point        until_std_;
-    seconds_point        until_loc_;
+    second_point         until_utc_;
+    second_point         until_std_;
+    second_point         until_loc_;
     std::chrono::minutes initial_save_{};
     std::string          initial_abbrev_;
     std::pair<const Rule*, date::year> first_rule_{nullptr, date::year::min()};

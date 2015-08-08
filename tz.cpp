@@ -485,7 +485,7 @@ parse_signed_time(std::istream& in)
 
 // MonthDayTime
 
-MonthDayTime::MonthDayTime(seconds_point tp, tz timezone)
+MonthDayTime::MonthDayTime(second_point tp, tz timezone)
     : zone_(timezone)
 {
     using namespace date;
@@ -578,7 +578,7 @@ MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
     return t0 < t1 ? -1 : t0 == t1 ? 0 : 1;
 }
 
-seconds_point
+second_point
 MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
                      std::chrono::seconds save) const
 {
@@ -640,7 +640,7 @@ MonthDayTime::to_day_point(date::year y) const
     return day_point(x) + (wd1-wd0);
 }
 
-seconds_point
+second_point
 MonthDayTime::to_time_point(date::year y) const
 {
     return to_day_point(y) + h_ + m_ + s_;
@@ -1411,8 +1411,8 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
 static
 std::pair<const Rule*, date::year>
 find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
-                   const seconds_point& tp_utc, const seconds_point& tp_std,
-                   const seconds_point& tp_loc)
+                   const second_point& tp_utc, const second_point& tp_std,
+                   const second_point& tp_loc)
 {
     using namespace std::chrono;
     using namespace date;
@@ -1630,7 +1630,7 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
                                  + std::to_string(static_cast<int>(max_year)) + "]");
     auto tps = floor<seconds>(tp);
     auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tps,
-        [timezone](seconds_point t, const zonelet& zl)
+        [timezone](second_point t, const zonelet& zl)
         {
             return timezone == tz::utc ? t < zl.until_utc_ : t < zl.until_loc_;
         });

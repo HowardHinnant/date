@@ -54,8 +54,8 @@ Technically any OS may required mapping.
 namespace date
 {
 
-using seconds_point = std::chrono::time_point<std::chrono::system_clock,
-                                              std::chrono::seconds>;
+using second_point = std::chrono::time_point<std::chrono::system_clock,
+                                             std::chrono::seconds>;
 
 enum class tz {utc, local, standard};
 enum class choose {earliest, latest};
@@ -67,9 +67,9 @@ public:
     template <class Rep, class Period>
     nonexistent_local_time(std::chrono::time_point<std::chrono::system_clock,
                                std::chrono::duration<Rep, Period>> tp,
-                           seconds_point first, const std::string& first_abbrev,
-                           seconds_point last, const std::string& last_abbrev,
-                           seconds_point time_sys);
+                           second_point first, const std::string& first_abbrev,
+                           second_point last, const std::string& last_abbrev,
+                           second_point time_sys);
 
 private:
     template <class Rep, class Period>
@@ -77,9 +77,9 @@ private:
     std::string
     make_msg(std::chrono::time_point<std::chrono::system_clock,
                  std::chrono::duration<Rep, Period>> tp,
-             seconds_point first, const std::string& first_abbrev,
-             seconds_point last, const std::string& last_abbrev,
-             seconds_point time_sys);
+             second_point first, const std::string& first_abbrev,
+             second_point last, const std::string& last_abbrev,
+             second_point time_sys);
 };
 
 template <class Rep, class Period>
@@ -87,9 +87,9 @@ inline
 nonexistent_local_time::nonexistent_local_time(
     std::chrono::time_point<std::chrono::system_clock,
         std::chrono::duration<Rep, Period>> tp,
-    seconds_point first, const std::string& first_abbrev,
-    seconds_point last, const std::string& last_abbrev,
-    seconds_point time_sys)
+    second_point first, const std::string& first_abbrev,
+    second_point last, const std::string& last_abbrev,
+    second_point time_sys)
     : std::runtime_error(make_msg(tp, first, first_abbrev, last, last_abbrev, time_sys))
     {}
 
@@ -97,9 +97,9 @@ template <class Rep, class Period>
 std::string
 nonexistent_local_time::make_msg(std::chrono::time_point<std::chrono::system_clock,
                                      std::chrono::duration<Rep, Period>> tp,
-                                 seconds_point first, const std::string& first_abbrev,
-                                 seconds_point last, const std::string& last_abbrev,
-                                 seconds_point time_sys)
+                                 second_point first, const std::string& first_abbrev,
+                                 second_point last, const std::string& last_abbrev,
+                                 second_point time_sys)
 {
     using namespace date;
     std::ostringstream os;
@@ -167,8 +167,8 @@ class Rule;
 
 struct Info
 {
-    seconds_point        begin;
-    seconds_point        end;
+    second_point         begin;
+    second_point         end;
     std::chrono::seconds offset;
     std::chrono::minutes save;
     std::string          abbrev;
@@ -360,12 +360,12 @@ inline bool operator>=(const Link& x, const Link& y) {return !(x < y);}
 class Leap
 {
 private:
-    seconds_point date_;
+    second_point date_;
 
 public:
     explicit Leap(const std::string& s);
 
-    seconds_point date() const {return date_;}
+    second_point date() const {return date_;}
 
     friend bool operator==(const Leap& x, const Leap& y) {return x.date_ == y.date_;}
     friend bool operator< (const Leap& x, const Leap& y) {return x.date_ < y.date_;}
