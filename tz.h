@@ -575,7 +575,7 @@ const Zone* locate_zone(const std::string& tz_name);
 const Zone* locate_native_zone(const std::string& native_tz_name);
 #endif
 #endif
-const Zone* current_timezone();
+const Zone* current_zone();
 
 class utc_clock
 {

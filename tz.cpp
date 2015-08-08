@@ -2011,7 +2011,7 @@ operator<<(std::ostream& os, const Info& r)
 #ifdef _WIN32
 
 const Zone*
-current_timezone()
+current_zone()
 {
 #if TIMEZONE_MAPPING
     TIME_ZONE_INFORMATION tzi{};
@@ -2027,7 +2027,7 @@ current_timezone()
     if (!tz)
     {
         std::string msg;
-        msg = "current_timezone() failed: ";
+        msg = "current_zone() failed: ";
         msg += standard_name;
         msg += " was not found in the Windows Time Zone registry";
         throw std::runtime_error( msg );
@@ -2036,7 +2036,7 @@ current_timezone()
     if (!native_to_standard_timezone_name(tz->timezone_id, standard_tzid))
     {
         std::string msg;
-        msg = "current_timezone() failed: A mapping from the Windows Time Zone id \"";
+        msg = "current_zone() failed: A mapping from the Windows Time Zone id \"";
         msg += tz->timezone_id;
         msg += "\" was not found in the time zone mapping database.";
         throw std::runtime_error(msg);
@@ -2044,14 +2044,14 @@ current_timezone()
     return date::locate_zone(standard_tzid);
 #else
     // Currently Win32 requires mapping for this function to work.
-    throw std::runtime_error("current_timezone not implemented.");
+    throw std::runtime_error("current_zone not implemented.");
 #endif
 }
 
 #else // ! WIN32
 
 const Zone*
-current_timezone()
+current_zone()
 {
     // On some versions of some linux distro's (e.g. Ubuntu),
     // the current timezone might be in the first line of
