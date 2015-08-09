@@ -575,20 +575,22 @@ std::ostream& operator<<(std::ostream& os, const year_month_day& ymd);
 
 class year_month_day_last
 {
-    date::year  y_;
-    date::month m_;
+    date::year           y_;
+    date::month_day_last mdl_;
 
 public:
-    CONSTCD11 year_month_day_last(const date::year& y, const date::month& m) noexcept;
+    CONSTCD11 year_month_day_last(const date::year& y,
+                                  const date::month_day_last& mdl) noexcept;
 
     year_month_day_last& operator+=(const months& m) noexcept;
     year_month_day_last& operator-=(const months& m) noexcept;
     year_month_day_last& operator+=(const years& y)  noexcept;
     year_month_day_last& operator-=(const years& y)  noexcept;
 
-    CONSTCD11 date::year  year()  const noexcept;
-    CONSTCD11 date::month month() const noexcept;
-    CONSTCD14 date::day   day()   const noexcept;
+    CONSTCD11 date::year           year()           const noexcept;
+    CONSTCD11 date::month          month()          const noexcept;
+    CONSTCD11 date::month_day_last month_day_last() const noexcept;
+    CONSTCD14 date::day            day()            const noexcept;
 
     CONSTCD14 operator day_point() const noexcept;
     CONSTCD11 bool ok() const noexcept;
@@ -703,7 +705,7 @@ class year_month_weekday_last
 
 public:
     CONSTCD11 year_month_weekday_last(const date::year& y, const date::month& m,
-                                        const date::weekday_last& wdl) noexcept;
+                                      const date::weekday_last& wdl) noexcept;
 
     year_month_weekday_last& operator+=(const months& m) noexcept;
     year_month_weekday_last& operator-=(const months& m) noexcept;
@@ -1964,9 +1966,9 @@ operator<<(std::ostream& os, const month_weekday_last& mwdl)
 CONSTCD11
 inline
 year_month_day_last::year_month_day_last(const date::year& y,
-                                         const date::month& m) noexcept
+                                         const date::month_day_last& mdl) noexcept
     : y_(y)
-    , m_(m)
+    , mdl_(mdl)
     {}
 
 inline
@@ -2002,7 +2004,15 @@ year_month_day_last::operator-=(const years& y) noexcept
 }
 
 CONSTCD11 inline year year_month_day_last::year() const noexcept {return y_;}
-CONSTCD11 inline month year_month_day_last::month() const noexcept {return m_;}
+CONSTCD11 inline month year_month_day_last::month() const noexcept {return mdl_.month();}
+
+CONSTCD11
+inline
+month_day_last
+year_month_day_last::month_day_last() const noexcept
+{
+    return mdl_;
+}
 
 CONSTCD14
 inline
@@ -2011,7 +2021,7 @@ year_month_day_last::day() const noexcept
 {
     CONSTDATA date::day d[] =
         {31_d, 28_d, 31_d, 30_d, 31_d, 30_d, 31_d, 31_d, 30_d, 31_d, 30_d, 31_d};
-    return m_ != feb || !y_.is_leap() ? d[static_cast<unsigned>(m_)-1] : 29_d;
+    return month() != feb || !y_.is_leap() ? d[static_cast<unsigned>(month())-1] : 29_d;
 }
 
 CONSTCD11
@@ -2019,7 +2029,7 @@ inline
 bool
 year_month_day_last::ok() const noexcept
 {
-    return y_.ok() && m_.ok();
+    return y_.ok() && mdl_.ok();
 }
 
 CONSTCD11
@@ -2027,7 +2037,7 @@ inline
 bool
 operator==(const year_month_day_last& x, const year_month_day_last& y) noexcept
 {
-    return x.year() == y.year() && x.month() == y.month();
+    return x.year() == y.year() && x.month_day_last() == y.month_day_last();
 }
 
 CONSTCD11
@@ -2045,7 +2055,7 @@ operator<(const year_month_day_last& x, const year_month_day_last& y) noexcept
 {
     return x.year() < y.year() ? true
         : (x.year() > y.year() ? false
-        : (x.month() < y.month()));
+        : (x.month_day_last() < y.month_day_last()));
 }
 
 CONSTCD11
@@ -2076,7 +2086,7 @@ inline
 std::ostream&
 operator<<(std::ostream& os, const year_month_day_last& ymdl)
 {
-    return os << ymdl.year() << '/' << ymdl.month() << "/last";
+    return os << ymdl.year() << '/' << ymdl.month_day_last();
 }
 
 CONSTCD14
@@ -2108,7 +2118,7 @@ inline
 year_month_day_last
 operator+(const year_month_day_last& ymdl, const years& dy) noexcept
 {
-    return {ymdl.year()+dy, ymdl.month()};
+    return {ymdl.year()+dy, ymdl.month_day_last()};
 }
 
 CONSTCD11
@@ -2210,7 +2220,7 @@ CONSTCD14
 inline
 year_month_day_last::operator day_point() const noexcept
 {
-    return day_point(y_/m_/day());
+    return day_point(year()/month()/day());
 }
 
 CONSTCD14
@@ -2879,7 +2889,7 @@ inline
 year_month_day_last
 operator/(const year_month& ym, last_spec) noexcept
 {
-    return {ym.year(), ym.month()};
+    return {ym.year(), month_day_last{ym.month()}};
 }
 
 CONSTCD11
@@ -2887,7 +2897,7 @@ inline
 year_month_day_last
 operator/(const year& y, const month_day_last& mdl) noexcept
 {
-    return {y, mdl.month()};
+    return {y, mdl};
 }
 
 CONSTCD11
