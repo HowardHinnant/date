@@ -505,14 +505,15 @@ std::ostream& operator<<(std::ostream& os, const month_weekday& mwd);
 
 class month_weekday_last
 {
-    date::month   m_;
-    date::weekday wd_;
+    date::month        m_;
+    date::weekday_last wdl_;
 
 public:
-    CONSTCD11 month_weekday_last(const date::month& m, const date::weekday& wd) noexcept;
+    CONSTCD11 month_weekday_last(const date::month& m,
+                                 const date::weekday_last& wd) noexcept;
 
-    CONSTCD11 date::month   month()   const noexcept;
-    CONSTCD11 date::weekday weekday() const noexcept;
+    CONSTCD11 date::month        month()        const noexcept;
+    CONSTCD11 date::weekday_last weekday_last() const noexcept;
 
     CONSTCD11 bool ok() const noexcept;
 };
@@ -1912,20 +1913,27 @@ operator<<(std::ostream& os, const month_weekday& mwd)
 CONSTCD11
 inline
 month_weekday_last::month_weekday_last(const date::month& m,
-                                       const date::weekday& wd) noexcept
+                                       const date::weekday_last& wdl) noexcept
     : m_(m)
-    , wd_(wd)
+    , wdl_(wdl)
     {}
 
 CONSTCD11 inline month month_weekday_last::month() const noexcept {return m_;}
-CONSTCD11 inline weekday month_weekday_last::weekday() const noexcept {return wd_;}
+
+CONSTCD11
+inline
+weekday_last
+month_weekday_last::weekday_last() const noexcept
+{
+    return wdl_;
+}
 
 CONSTCD11
 inline
 bool
 month_weekday_last::ok() const noexcept
 {
-    return m_.ok() && wd_.ok();
+    return m_.ok() && wdl_.ok();
 }
 
 CONSTCD11
@@ -1933,7 +1941,7 @@ inline
 bool
 operator==(const month_weekday_last& x, const month_weekday_last& y) noexcept
 {
-    return x.month() == y.month() && x.weekday() == y.weekday();
+    return x.month() == y.month() && x.weekday_last() == y.weekday_last();
 }
 
 CONSTCD11
@@ -1948,7 +1956,7 @@ inline
 std::ostream&
 operator<<(std::ostream& os, const month_weekday_last& mwdl)
 {
-    return os << mwdl.month() << '/' << mwdl.weekday() << "[last]";
+    return os << mwdl.month() << '/' << mwdl.weekday_last();
 }
 
 // year_month_day_last
@@ -2787,7 +2795,7 @@ inline
 month_weekday_last
 operator/(const month& m, const weekday_last& wdl) noexcept
 {
-    return {m, wdl.weekday()};
+    return {m, wdl};
 }
 
 CONSTCD11
@@ -2963,7 +2971,7 @@ inline
 year_month_weekday_last
 operator/(const year& y, const month_weekday_last& mwdl) noexcept
 {
-    return {y, mwdl.month(), mwdl.weekday()[last]};
+    return {y, mwdl.month(), mwdl.weekday_last()};
 }
 
 CONSTCD11
