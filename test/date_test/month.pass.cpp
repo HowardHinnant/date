@@ -104,18 +104,18 @@ main()
 {
     using namespace date;
 
-    static_assert(jan == date::month{1}, "");
-    static_assert(feb == date::month{2}, "");
-    static_assert(mar == date::month{3}, "");
-    static_assert(apr == date::month{4}, "");
-    static_assert(may == date::month{5}, "");
-    static_assert(jun == date::month{6}, "");
-    static_assert(jul == date::month{7}, "");
-    static_assert(aug == date::month{8}, "");
-    static_assert(sep == date::month{9}, "");
-    static_assert(oct == date::month{10}, "");
-    static_assert(nov == date::month{11}, "");
-    static_assert(dec == date::month{12}, "");
+    static_assert(jan == month{1}, "");
+    static_assert(feb == month{2}, "");
+    static_assert(mar == month{3}, "");
+    static_assert(apr == month{4}, "");
+    static_assert(may == month{5}, "");
+    static_assert(jun == month{6}, "");
+    static_assert(jul == month{7}, "");
+    static_assert(aug == month{8}, "");
+    static_assert(sep == month{9}, "");
+    static_assert(oct == month{10}, "");
+    static_assert(nov == month{11}, "");
+    static_assert(dec == month{12}, "");
 
     static_assert(!(jan != jan), "");
     static_assert(  jan != feb, "");

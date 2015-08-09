@@ -85,10 +85,10 @@ int
 main()
 {
     using namespace date;
-    static_assert(std::is_same<decltype(1_d), date::day>{}, "");
+    static_assert(std::is_same<decltype(1_d), day>{}, "");
 
-    static_assert(1_d == date::day{1}, "");
-    static_assert(2_d == date::day{2}, "");
+    static_assert(1_d == day{1}, "");
+    static_assert(2_d == day{2}, "");
 
     static_assert(  1_d == 1_d, "");
     static_assert(!(1_d == 2_d), "");
