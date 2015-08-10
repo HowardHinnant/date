@@ -147,11 +147,11 @@ static_assert(boring_day.ok(), "Configuration error");
 
 #if TIMEZONE_MAPPING
 
-namespace // Put types in an aonymous name space.
+namespace // Put types in an anonymous name space.
 {
     // A simple type to manage RAII for key handles and to
     // implement the trivial registry interface we need.
-    // Not itended to be general purpose.
+    // Not intended to be general-purpose.
     class reg_key
     {
     private:
@@ -192,8 +192,8 @@ namespace // Put types in an aonymous name space.
             return ERROR_SUCCESS;
         }
 
-        // WARNING: this function has a hard code value size limit.
-        // It is not a general purpose function.
+        // WARNING: this function has a hard-coded value size limit.
+        // It is not a general-purpose function.
         // It should be sufficient for our use cases. 
         // The function could be made workable for any size string
         // but we don't need the complexity of implementing that
@@ -241,13 +241,13 @@ static inline size_t countof(T(&arr)[N])
     return std::extent< T[N] >::value;
 }
 
-// This function return an exhaustive list of time zone information
+// This function returns an exhaustive list of time zone information
 // from the Windows registry.
 // The routine tries to to obtain as much information as possible despite errors.
 // If there is an error with any key, it is silently ignored to move on to the next.
-// We don't have a logger to log such errors and it might disruptive to log anyway.
+// We don't have a logger to log such errors and it might be disruptive to log anyway.
 // We don't want the whole database of information disrupted just because
-// one record of in it can't be read.
+// one record in it can't be read.
 // The expectation is that the errors will eventually manifest to the
 // caller as a missing time zone which they will need to investigate.
 
@@ -256,12 +256,12 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
     tz_list.clear();
     LONG result;
 
-    // Open the parent time zone key that has the list of timzeones in.
+    // Open the parent time zone key that has the list of timezones in.
     reg_key zones_key;
     static const wchar_t zones_key_name[] = { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
     result = zones_key.open(zones_key_name);
     // TODO! Review if this should happen here or be signalled later.
-    // We don't want process to fail on startup because of this or something.
+    // We don't want the process to fail on startup because of this.
     if (result != ERROR_SUCCESS)
         throw std::runtime_error("Time Zone registry key could not be opened: " + get_win32_message(result));
 
@@ -291,9 +291,9 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
         full_zone_key_name += L'\\';
         full_zone_key_name += zone_key_name;
 
-        // If any field fails to be found consider the whole time zone
+        // If any field fails to be found, consider the whole time zone
         // entry corrupt and move onto the next. See comments
-        // at top of function.
+        // at the top of function.
 
         reg_key zone_key;
         if (zone_key.open(full_zone_key_name.c_str()) != ERROR_SUCCESS)
@@ -303,8 +303,8 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
             continue;
 
 #if 0
-        // TBD if these fields are not required yet.
-        // The might be useful for test cases though.
+        // TBD these fields are not required yet.
+        // They might be useful for test cases though.
         if (!zone_key.get_string("Display", tz.display_name))
             continue;
 
@@ -323,7 +323,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
 // See the Windows API function GetTimeZoneInformation.
 // The standard_name is also the value from STD field of
 // under the windows registry key Time Zones.
-// To be clear standard_name does NOT represent a windows timezone id
+// To be clear, standard_name does NOT represent a windows timezone id
 // or an IANA tzid
 static const timezone_info* find_native_timezone_by_standard_name(
     const std::string& standard_name)
@@ -341,7 +341,7 @@ static const timezone_info* find_native_timezone_by_standard_name(
 
 // Read CSV file of "other","territory","type".
 // See timezone_mapping structure for more info.
-// This function should be kept in sync the code/ that writes this file.
+// This function should be kept in sync with the code that writes this file.
 static std::vector<timezone_mapping>
 load_timezone_mappings_from_csv_file(const std::string& input_path)
 {
