@@ -204,4 +204,15 @@ main()
     std::ostringstream os;
     os << ymd1;
     assert(os.str() == "2015-08-09");
+
+#if __cplusplus >= 201402
+    static_assert( (2000_y/feb/29).ok(), "");
+    static_assert(!(2000_y/feb/30).ok(), "");
+    static_assert( (2100_y/feb/28).ok(), "");
+    static_assert(!(2100_y/feb/29).ok(), "");
+
+    static_assert(day_point(2100_y/feb/28) + days{1} == day_point(2100_y/mar/1), "");
+    static_assert(day_point(2000_y/mar/1) - day_point(2000_y/feb/28) == days{2}, "");
+    static_assert(day_point(2100_y/mar/1) - day_point(2100_y/feb/28) == days{1}, "");
+#endif
 }
