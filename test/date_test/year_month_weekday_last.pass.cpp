@@ -147,9 +147,11 @@ main()
     static_assert(ymdl1.year() == 2015_y, "");
     static_assert(ymdl1.month() == aug, "");
     static_assert(ymdl1.weekday_last() == fri[last], "");
+#if __cplusplus >= 201402
     constexpr day_point dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/28, "");
+#endif
 
     constexpr year_month_weekday_last ymdl2 = sat[last]/aug/2015;
 

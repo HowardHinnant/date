@@ -152,10 +152,12 @@ main()
     static_assert(ymdl1.year() == 2015_y, "");
     static_assert(ymdl1.month() == aug, "");
     static_assert(ymdl1.month_day_last() == month_day_last{aug}, "");
+#if __cplusplus >= 201402
     static_assert(ymdl1.day() == 31_d, "");
     constexpr day_point dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/31, "");
+#endif
 
     constexpr year_month_day_last ymdl2 = {2015_y, month_day_last{sep}};
 

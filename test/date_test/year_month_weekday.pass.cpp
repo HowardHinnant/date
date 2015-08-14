@@ -147,13 +147,17 @@ main()
     using namespace date;
 
     constexpr year_month_weekday ymdl1 = {2015_y, aug, weekday_indexed{fri, 2}};
+#if __cplusplus >= 201402
     static_assert(ymdl1.ok(), "");
+#endif
     static_assert(ymdl1.year() == 2015_y, "");
     static_assert(ymdl1.month() == aug, "");
     static_assert(ymdl1.weekday_indexed() == fri[2], "");
+#if __cplusplus >= 201402
     constexpr day_point dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/14, "");
+#endif
 
     constexpr year_month_weekday ymdl2 = sat[1]/aug/2015;
 
