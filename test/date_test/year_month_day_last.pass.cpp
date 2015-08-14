@@ -22,9 +22,6 @@
 
 // class year_month_day_last
 // {
-//     date::year           y_;
-//     date::month_day_last mdl_;
-// 
 // public:
 //     constexpr year_month_day_last(const date::year& y,
 //                                   const date::month_day_last& mdl) noexcept;
@@ -170,4 +167,9 @@ main()
     static_assert(ymdl2 >= ymdl1, "");
 
     test_arithmetic();
+
+    std::ostringstream os;
+    os << ymdl1;
+    assert(os.str() == "2015/Aug/last");
+
 }
