@@ -214,5 +214,31 @@ main()
     static_assert(day_point(2100_y/feb/28) + days{1} == day_point(2100_y/mar/1), "");
     static_assert(day_point(2000_y/mar/1) - day_point(2000_y/feb/28) == days{2}, "");
     static_assert(day_point(2100_y/mar/1) - day_point(2100_y/feb/28) == days{1}, "");
+
+    static_assert(jan/31/2015 == jan/last/2015, "");
+    static_assert(feb/28/2015 == feb/last/2015, "");
+    static_assert(mar/31/2015 == mar/last/2015, "");
+    static_assert(apr/30/2015 == apr/last/2015, "");
+    static_assert(may/31/2015 == may/last/2015, "");
+    static_assert(jun/30/2015 == jun/last/2015, "");
+    static_assert(jul/31/2015 == jul/last/2015, "");
+    static_assert(aug/31/2015 == aug/last/2015, "");
+    static_assert(sep/30/2015 == sep/last/2015, "");
+    static_assert(oct/31/2015 == oct/last/2015, "");
+    static_assert(nov/30/2015 == nov/last/2015, "");
+    static_assert(dec/31/2015 == dec/last/2015, "");
+
+    static_assert(jan/31/2016 == jan/last/2016, "");
+    static_assert(feb/29/2016 == feb/last/2016, "");
+    static_assert(mar/31/2016 == mar/last/2016, "");
+    static_assert(apr/30/2016 == apr/last/2016, "");
+    static_assert(may/31/2016 == may/last/2016, "");
+    static_assert(jun/30/2016 == jun/last/2016, "");
+    static_assert(jul/31/2016 == jul/last/2016, "");
+    static_assert(aug/31/2016 == aug/last/2016, "");
+    static_assert(sep/30/2016 == sep/last/2016, "");
+    static_assert(oct/31/2016 == oct/last/2016, "");
+    static_assert(nov/30/2016 == nov/last/2016, "");
+    static_assert(dec/31/2016 == dec/last/2016, "");
 #endif
 }
