@@ -3017,6 +3017,7 @@ namespace detail
 
 enum class classify
 {
+    not_valid,
     hour,
     minute,
     second,
@@ -3026,7 +3027,8 @@ enum class classify
 template <class Duration>
 struct classify_duration
 {
-    static CONSTDATA classify value = 
+    static CONSTDATA classify value =
+        Duration{1} >= days{1}                 ? classify::not_valid :
         Duration{1} >= std::chrono::hours{1}   ? classify::hour :
         Duration{1} >= std::chrono::minutes{1} ? classify::minute :
         Duration{1} >= std::chrono::seconds{1} ? classify::second :
