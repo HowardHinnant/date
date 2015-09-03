@@ -318,6 +318,7 @@ class weekday
     unsigned char wd_;
 public:
     explicit CONSTCD11 weekday(unsigned wd) noexcept;
+    explicit weekday(int) = delete;
     CONSTCD11 weekday(const day_point& dp) noexcept;
 
     weekday& operator++()    noexcept;
@@ -813,7 +814,7 @@ inline
 To
 round(const std::chrono::duration<Rep, Period>& d)
 {
-    To t0 = std::chrono::duration_cast<To>(d);
+    To t0 = floor<To>(d);
     To t1 = t0 + To{1};
     auto diff0 = d - t0;
     auto diff1 = t1 - d;
@@ -1454,13 +1455,13 @@ operator<<(std::ostream& os, const weekday& wd)
     return os;
 }
 
-CONSTDATA weekday sun{0};
-CONSTDATA weekday mon{1};
-CONSTDATA weekday tue{2};
-CONSTDATA weekday wed{3};
-CONSTDATA weekday thu{4};
-CONSTDATA weekday fri{5};
-CONSTDATA weekday sat{6};
+CONSTDATA weekday sun{0u};
+CONSTDATA weekday mon{1u};
+CONSTDATA weekday tue{2u};
+CONSTDATA weekday wed{3u};
+CONSTDATA weekday thu{4u};
+CONSTDATA weekday fri{5u};
+CONSTDATA weekday sat{6u};
 
 // weekday_indexed
 
@@ -1469,7 +1470,7 @@ inline
 weekday
 weekday_indexed::weekday() const noexcept
 {
-    return date::weekday{wd_};
+    return date::weekday{static_cast<unsigned>(wd_)};
 }
 
 CONSTCD11 inline unsigned weekday_indexed::index() const noexcept {return index_;}

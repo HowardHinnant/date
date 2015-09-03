@@ -81,16 +81,16 @@ static_assert( std::is_nothrow_constructible<unsigned, date::weekday>{}, "");
 static_assert(!std::is_convertible<unsigned, date::weekday>{}, "");
 static_assert( std::is_convertible<date::day_point, date::weekday>{}, "");
 static_assert(!std::is_convertible<date::weekday, unsigned>{}, "");
-static_assert(static_cast<unsigned>(date::weekday{1}) == 1, "");
+static_assert(static_cast<unsigned>(date::weekday{1u}) == 1, "");
 
-static_assert( date::weekday{0}.ok(), "");
-static_assert( date::weekday{1}.ok(), "");
-static_assert( date::weekday{2}.ok(), "");
-static_assert( date::weekday{3}.ok(), "");
-static_assert( date::weekday{4}.ok(), "");
-static_assert( date::weekday{5}.ok(), "");
-static_assert( date::weekday{6}.ok(), "");
-static_assert(!date::weekday{7}.ok(), "");
+static_assert( date::weekday{0u}.ok(), "");
+static_assert( date::weekday{1u}.ok(), "");
+static_assert( date::weekday{2u}.ok(), "");
+static_assert( date::weekday{3u}.ok(), "");
+static_assert( date::weekday{4u}.ok(), "");
+static_assert( date::weekday{5u}.ok(), "");
+static_assert( date::weekday{6u}.ok(), "");
+static_assert(!date::weekday{7u}.ok(), "");
 
 void
 test_weekday_arithmetic()
@@ -157,13 +157,13 @@ main()
 {
     using namespace date;
 
-    static_assert(sun == weekday{0}, "");
-    static_assert(mon == weekday{1}, "");
-    static_assert(tue == weekday{2}, "");
-    static_assert(wed == weekday{3}, "");
-    static_assert(thu == weekday{4}, "");
-    static_assert(fri == weekday{5}, "");
-    static_assert(sat == weekday{6}, "");
+    static_assert(sun == weekday{0u}, "");
+    static_assert(mon == weekday{1u}, "");
+    static_assert(tue == weekday{2u}, "");
+    static_assert(wed == weekday{3u}, "");
+    static_assert(thu == weekday{4u}, "");
+    static_assert(fri == weekday{5u}, "");
+    static_assert(sat == weekday{6u}, "");
 
     static_assert(!(sun != sun), "");
     static_assert(  sun != mon, "");

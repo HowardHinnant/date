@@ -32,8 +32,8 @@ main()
 {
     using namespace date;
 
-    static_assert(      aug/fri[last] == month_weekday_last{month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(        8/fri[last] == month_weekday_last{month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(fri[last]/aug       == month_weekday_last{month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(fri[last]/8         == month_weekday_last{month{8}, weekday_last{weekday{5}}}, "");
+    static_assert(      aug/fri[last] == month_weekday_last{month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(        8/fri[last] == month_weekday_last{month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(fri[last]/aug       == month_weekday_last{month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(fri[last]/8         == month_weekday_last{month{8}, weekday_last{weekday{5u}}}, "");
 }

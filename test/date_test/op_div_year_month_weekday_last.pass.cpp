@@ -33,9 +33,9 @@ main()
 {
     using namespace date;
 
-    static_assert(   2015_y/aug/fri[last]       == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(       2015_y/(aug/fri[last]) == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(         2015/(aug/fri[last]) == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(aug/fri[last]/2015_y          == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5}}}, "");
-    static_assert(aug/fri[last]/2015            == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5}}}, "");
+    static_assert(   2015_y/aug/fri[last]       == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(       2015_y/(aug/fri[last]) == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(         2015/(aug/fri[last]) == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(aug/fri[last]/2015_y          == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5u}}}, "");
+    static_assert(aug/fri[last]/2015            == year_month_weekday_last{year{2015}, month{8}, weekday_last{weekday{5u}}}, "");
 }
