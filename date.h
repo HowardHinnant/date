@@ -81,7 +81,7 @@ using day_point = std::chrono::time_point<std::chrono::system_clock, days>;
 
 // types
 
-CONSTDATA struct last_spec {} last{};
+struct last_spec {};
 
 class day;
 class month;
@@ -221,7 +221,6 @@ CONSTCD11 day  operator+(const days& x, const day&  y) noexcept;
 CONSTCD11 day  operator-(const day&  x, const days& y) noexcept;
 CONSTCD11 days operator-(const day&  x, const day&  y) noexcept;
 
-CONSTCD11 day operator "" _d(unsigned long long d) noexcept;
 std::ostream& operator<<(std::ostream& os, const day& d);
 
 // month
@@ -257,19 +256,6 @@ CONSTCD14 month  operator-(const month&  x, const months& y) noexcept;
 CONSTCD14 months operator-(const month&  x,  const month& y) noexcept;
 
 std::ostream& operator<<(std::ostream& os, const month& m);
-
-// constexpr month jan{1};
-// constexpr month feb{2};
-// constexpr month mar{3};
-// constexpr month apr{4};
-// constexpr month may{5};
-// constexpr month jun{6};
-// constexpr month jul{7};
-// constexpr month aug{8};
-// constexpr month sep{9};
-// constexpr month oct{10};
-// constexpr month nov{11};
-// constexpr month dec{12};
 
 // year
 
@@ -308,7 +294,6 @@ CONSTCD11 year  operator+(const years& x, const year&  y) noexcept;
 CONSTCD11 year  operator-(const year&  x, const years& y) noexcept;
 CONSTCD11 years operator-(const year&  x, const year&  y) noexcept;
 
-CONSTCD11 year operator "" _y(unsigned long long y) noexcept;
 std::ostream& operator<<(std::ostream& os, const year& y);
 
 // weekday
@@ -348,14 +333,6 @@ CONSTCD14 weekday operator-(const weekday& x, const days&    y) noexcept;
 CONSTCD14 days    operator-(const weekday& x, const weekday& y) noexcept;
 
 std::ostream& operator<<(std::ostream& os, const weekday& wd);
-
-// constexpr weekday sun{0};
-// constexpr weekday mon{1};
-// constexpr weekday tue{2};
-// constexpr weekday wed{3};
-// constexpr weekday thu{4};
-// constexpr weekday fri{5};
-// constexpr weekday sat{6};
 
 // weekday_indexed
 
@@ -755,6 +732,40 @@ operator-(const year_month_weekday_last& ymwdl, const years& dy) noexcept;
 
 std::ostream& operator<<(std::ostream& os, const year_month_weekday_last& ymwdl);
 
+}  // namespace date
+
+inline namespace date_literals
+{
+
+CONSTCD11 date::day  operator "" _d(unsigned long long d) noexcept;
+CONSTCD11 date::year operator "" _y(unsigned long long y) noexcept;
+
+// CONSTDATA date::month jan{1};
+// CONSTDATA date::month feb{2};
+// CONSTDATA date::month mar{3};
+// CONSTDATA date::month apr{4};
+// CONSTDATA date::month may{5};
+// CONSTDATA date::month jun{6};
+// CONSTDATA date::month jul{7};
+// CONSTDATA date::month aug{8};
+// CONSTDATA date::month sep{9};
+// CONSTDATA date::month oct{10};
+// CONSTDATA date::month nov{11};
+// CONSTDATA date::month dec{12};
+// 
+// CONSTDATA date::weekday sun{0u};
+// CONSTDATA date::weekday mon{1u};
+// CONSTDATA date::weekday tue{2u};
+// CONSTDATA date::weekday wed{3u};
+// CONSTDATA date::weekday thu{4u};
+// CONSTDATA date::weekday fri{5u};
+// CONSTDATA date::weekday sat{6u};
+
+}  // inline namespace date_literals
+
+namespace date
+{
+
 //----------------+
 // Implementation |
 //----------------+
@@ -990,14 +1001,6 @@ operator<<(std::ostream& os, const day& d)
     return os;
 }
 
-CONSTCD11
-inline
-day
-operator "" _d(unsigned long long d) noexcept
-{
-    return day{static_cast<unsigned>(d)};
-}
-
 // month
 
 CONSTCD11 inline month::month(unsigned m) noexcept : m_(static_cast<decltype(m_)>(m)) {}
@@ -1107,19 +1110,6 @@ operator-(const month& x, const months& y) noexcept
 {
     return x + -y;
 }
-
-CONSTDATA month jan{1};
-CONSTDATA month feb{2};
-CONSTDATA month mar{3};
-CONSTDATA month apr{4};
-CONSTDATA month may{5};
-CONSTDATA month jun{6};
-CONSTDATA month jul{7};
-CONSTDATA month aug{8};
-CONSTDATA month sep{9};
-CONSTDATA month oct{10};
-CONSTDATA month nov{11};
-CONSTDATA month dec{12};
 
 inline
 std::ostream&
@@ -1309,14 +1299,6 @@ operator<<(std::ostream& os, const year& y)
     return os;
 }
 
-CONSTCD11
-inline
-year
-operator "" _y(unsigned long long y) noexcept
-{
-    return year(static_cast<int>(y));
-}
-
 // weekday
 
 CONSTCD11
@@ -1455,13 +1437,58 @@ operator<<(std::ostream& os, const weekday& wd)
     return os;
 }
 
-CONSTDATA weekday sun{0u};
-CONSTDATA weekday mon{1u};
-CONSTDATA weekday tue{2u};
-CONSTDATA weekday wed{3u};
-CONSTDATA weekday thu{4u};
-CONSTDATA weekday fri{5u};
-CONSTDATA weekday sat{6u};
+}  // namespace date
+
+inline namespace date_literals
+{
+
+CONSTDATA date::last_spec last{};
+
+CONSTCD11
+inline
+date::day
+operator "" _d(unsigned long long d) noexcept
+{
+    return date::day{static_cast<unsigned>(d)};
+}
+
+CONSTCD11
+inline
+date::year
+operator "" _y(unsigned long long y) noexcept
+{
+    return date::year(static_cast<int>(y));
+}
+
+CONSTDATA date::month jan{1};
+CONSTDATA date::month feb{2};
+CONSTDATA date::month mar{3};
+CONSTDATA date::month apr{4};
+CONSTDATA date::month may{5};
+CONSTDATA date::month jun{6};
+CONSTDATA date::month jul{7};
+CONSTDATA date::month aug{8};
+CONSTDATA date::month sep{9};
+CONSTDATA date::month oct{10};
+CONSTDATA date::month nov{11};
+CONSTDATA date::month dec{12};
+
+CONSTDATA date::weekday sun{0u};
+CONSTDATA date::weekday mon{1u};
+CONSTDATA date::weekday tue{2u};
+CONSTDATA date::weekday wed{3u};
+CONSTDATA date::weekday thu{4u};
+CONSTDATA date::weekday fri{5u};
+CONSTDATA date::weekday sat{6u};
+
+}  // inline namespace date_literals
+
+
+
+namespace date
+{
+
+using namespace date_literals;
 
 // weekday_indexed
 
