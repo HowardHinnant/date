@@ -33,6 +33,7 @@
 // 
 //     constexpr date::year year() const noexcept;
 //     constexpr date::month month() const noexcept;
+//     constexpr date::weekday weekday() const noexcept;
 //     constexpr date::weekday_last weekday_last() const noexcept;
 // 
 //     constexpr operator day_point() const noexcept;
@@ -146,6 +147,7 @@ main()
     static_assert(ymdl1.ok(), "");
     static_assert(ymdl1.year() == 2015_y, "");
     static_assert(ymdl1.month() == aug, "");
+    static_assert(ymdl1.weekday() == fri, "");
     static_assert(ymdl1.weekday_last() == fri[last], "");
 #if __cplusplus >= 201402
     constexpr day_point dp = ymdl1;

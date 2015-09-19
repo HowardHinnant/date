@@ -633,6 +633,8 @@ public:
 
     CONSTCD11 date::year year() const noexcept;
     CONSTCD11 date::month month() const noexcept;
+    CONSTCD11 date::weekday weekday() const noexcept;
+    CONSTCD11 unsigned index() const noexcept;
     CONSTCD11 date::weekday_indexed weekday_indexed() const noexcept;
 
     CONSTCD14 operator day_point() const noexcept;
@@ -692,6 +694,7 @@ public:
 
     CONSTCD11 date::year year() const noexcept;
     CONSTCD11 date::month month() const noexcept;
+    CONSTCD11 date::weekday weekday() const noexcept;
     CONSTCD11 date::weekday_last weekday_last() const noexcept;
 
     CONSTCD14 operator day_point() const noexcept;
@@ -2451,6 +2454,22 @@ CONSTCD11 inline month year_month_weekday::month() const noexcept {return m_;}
 
 CONSTCD11
 inline
+weekday
+year_month_weekday::weekday() const noexcept
+{
+    return wdi_.weekday();
+}
+
+CONSTCD11
+inline
+unsigned
+year_month_weekday::index() const noexcept
+{
+    return wdi_.index();
+}
+
+CONSTCD11
+inline
 weekday_indexed
 year_month_weekday::weekday_indexed() const noexcept
 {
@@ -2462,7 +2481,7 @@ inline
 year_month_weekday::operator day_point() const noexcept
 {
     auto d = day_point(y_/m_/1);
-    return d + (wdi_.weekday() - weekday(d) + days{(wdi_.index()-1)*7});
+    return d + (wdi_.weekday() - date::weekday(d) + days{(wdi_.index()-1)*7});
 }
 
 CONSTCD14
@@ -2474,7 +2493,7 @@ year_month_weekday::ok() const noexcept
         return false;
     if (wdi_.index() <= 4)
         return true;
-    auto d2 = wdi_.weekday() - weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
+    auto d2 = wdi_.weekday() - date::weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
     return static_cast<unsigned>(d2.count()) <= static_cast<unsigned>((y_/m_/last).day());
 }
 
@@ -2483,7 +2502,7 @@ inline
 year_month_weekday
 year_month_weekday::from_day_point(const day_point& dp) noexcept
 {
-    auto const wd = weekday(dp);
+    auto const wd = date::weekday(dp);
     auto const ymd = year_month_day(dp);
     return {ymd.year(), ymd.month(), wd[(static_cast<unsigned>(ymd.day())-1)/7+1]};
 }
@@ -2610,6 +2629,14 @@ CONSTCD11 inline month year_month_weekday_last::month() const noexcept {return m
 
 CONSTCD11
 inline
+weekday
+year_month_weekday_last::weekday() const noexcept
+{
+    return wdl_.weekday();
+}
+
+CONSTCD11
+inline
 weekday_last
 year_month_weekday_last::weekday_last() const noexcept
 {
@@ -2621,7 +2648,7 @@ inline
 year_month_weekday_last::operator day_point() const noexcept
 {
     auto const d = day_point(y_/m_/last);
-    return d - (weekday{d} - wdl_.weekday());
+    return d - (date::weekday{d} - wdl_.weekday());
 }
 
 CONSTCD11
