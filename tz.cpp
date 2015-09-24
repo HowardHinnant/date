@@ -35,28 +35,30 @@
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <locale>
 #include <codecvt>
 #endif
 
 #if TIMEZONE_MAPPING
-// Timezone mapping is mapping native timezone names to "Standard" ones.
-// Mapping reades a CSV file for the data and currently uses
-// std::quoted to do that which is a C++14 feature found in iomanip.
-// VS2015 supports std::quoted but MSVC has a mixed rather
-// than strict standard support so there is no -std=c++14 flag for MSVC.
-// MingW is a Windows based platform so requires mapping and thefore C++14.
-// Linux/Mac currently do not require mapping so C++14 isn't needed for this
-// so C++11 should work.
+// Timezone mapping maps native (e.g. Windows) timezone names to the "Standard" names
+// used by this library.
+// The mapping process parses a CSV file of mapping data and uses std::quoted to do that.
+// Because std::quoted is a C++14 feature found in <iomanip> any platforms using
+// the mapping process require C++14.
+// Windows uses the mapping process so C++14 is required on Windows.
+// VS2015 supports std::quoted but there is no -std=c++14 flag required to enable it.
+// MinGW on Windows also requires the mapping process so -std=c++14 is required
+// when using g++ or clang.
+// On Linux/Mac, no mapping / CSV file is required so std::quoted and C++14 isn't needed
+// and so on these platforms C++11 should work but C++14 is preferred even there too
+// because the date library in general works better with C++14.
 #include <iomanip>
 #endif
 
 // unistd.h is used on some platforms as part of the the means to get
-// the current time zone. However unistd.h only somtimes exists on Win32.
-// gcc/mingw support unistd.h on Win32 but MSVC does not.
-// However on Win32 we don't need unistd.h anyway to get the current timezone
-// as Windows.h provides a means to do it
+// the current time zone. On Win32 Windows.h provides a means to do it.
+// gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
 #include <Windows.h>
