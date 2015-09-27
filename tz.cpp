@@ -67,6 +67,47 @@
 #include <unistd.h>
 #endif
 
+namespace date
+{
+// +---------------------+
+// | Begin Configuration |
+// +---------------------+
+
+#if _WIN32 // TODO: sensible default for all platforms.
+static std::string install{ "c:\\tzdata" };
+#else
+static std::string install{ "/Users/howardhinnant/Downloads/tzdata2015f" };
+#endif
+
+static const std::vector<std::string> files =
+{
+    "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
+    "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
+};
+
+// These can be used to reduce the range of the database to save memory
+CONSTDATA auto min_year = date::year::min();
+CONSTDATA auto max_year = date::year::max();
+
+// Arbitrary day of the year that will be away from any limits.
+// Used with year::min() and year::max().
+CONSTDATA auto boring_day = date::aug/18;
+
+// +-------------------+
+// | End Configuration |
+// +-------------------+
+
+#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
+// We can't use static_assert here for MSVC (yet) because
+// the expression isn't constexpr in MSVC yet.
+// FIXME! Remove this when MSVC's constexpr support improves.
+#else
+static_assert(min_year <= max_year, "Configuration error");
+#endif
+#if __cplusplus >= 201402
+static_assert(boring_day.ok(), "Configuration error");
+#endif
+
 // Until filesystem arrives.
 static const char folder_delimiter =
 #ifdef _WIN32
@@ -114,47 +155,6 @@ static std::string get_win32_message(DWORD error_code)
     assert(message_buffer.get() != nullptr);
     return std::string(message_buffer.get());
 }
-#endif
-
-namespace date
-{
-// +---------------------+
-// | Begin Configuration |
-// +---------------------+
-
-#if _WIN32 // TODO: sensible default for all platforms.
-static std::string install{ "c:\\tzdata" };
-#else
-static std::string install{ "/Users/howardhinnant/Downloads/tzdata2015f" };
-#endif
-
-static const std::vector<std::string> files =
-{
-    "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
-    "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
-};
-
-// These can be used to reduce the range of the database to save memory
-CONSTDATA auto min_year = date::year::min();
-CONSTDATA auto max_year = date::year::max();
-
-// Arbitrary day of the year that will be away from any limits.
-// Used with year::min() and year::max().
-CONSTDATA auto boring_day = date::aug/18;
-
-// +-------------------+
-// | End Configuration |
-// +-------------------+
-
-#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
-// We can't use static_assert here for MSVC (yet) because
-// the expression isn't constexpr in MSVC yet.
-// FIXME! Remove this when MSVC's constexpr support improves.
-#else
-static_assert(min_year <= max_year, "Configuration error");
-#endif
-#if __cplusplus >= 201402
-static_assert(boring_day.ok(), "Configuration error");
 #endif
 
 #if TIMEZONE_MAPPING
