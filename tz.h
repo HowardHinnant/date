@@ -33,18 +33,15 @@
 The notion of "current timezone" is something the operating system is expected
 to "just know". How it knows this is system specific. It's often a value
 set by the user at OS intallation time and recorded by the OS somewhere.
-On Linux and Mac systems. the current timezone name is obtained by looking at
+On Linux and Mac systems the current timezone name is obtained by looking at
 the name or contents of a particular file on disk.
 On Windows the current timzeone name comes from the registry.
-But however the name is obtained there is no guarante
-that the "native" current timezone name obtained in this way
+In either method, there is no guarantee that the "native" current timezone name obtained
 will match any of the "Standard" names in this library's "database".
 On Linux, the names usually do seem to match so mapping functions to map from
-native to "Standard" are typically NOT required.
-On Windows, the names are never Standard mapping is always required.
-One should not equate the mapping process with Windows.
-Windows is just currently the only client of them.
-Technically any OS may required mapping.
+native to "Standard" are typically not required.
+On Windows, the names are never "Standard" so mapping is always required.
+Technically any OS may use the mapping process but currently only Windows does use it.
 */
 
 #ifdef _WIN32
