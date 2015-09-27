@@ -62,6 +62,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <io.h>
 #else
 #include <unistd.h>
 #endif
@@ -73,6 +74,15 @@ static const char folder_delimiter =
 #else
 '/';
 #endif
+
+static bool file_exists(const std::string& filename)
+{
+#ifdef _WIN32
+    return ::_access(filename.c_str(), 0) == 0;
+#else
+    return ::access(filename.c_str(), F_OK) == 0;
+#endif
+}
 
 #ifdef _WIN32
 // Win32 support requires calling OS functions.
@@ -92,8 +102,8 @@ static std::string get_win32_message(DWORD error_code)
     auto result = FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
                                        | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        reinterpret_cast<char*>(&msg), 0, NULL );
+        nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        reinterpret_cast<char*>(&msg), 0, nullptr );
     std::unique_ptr<char[], free_message> message_buffer(msg);
     if (result == 0) // If there is no error message, still give the code.
     {
@@ -159,7 +169,7 @@ namespace // Put types in an anonymous name space.
     private:
         // Note there is no value documented to be an invalid handle value.
         // Not NULL nor INVALID_HANDLE_VALUE. We must rely on is_open.
-        HKEY m_key = NULL;
+        HKEY m_key = nullptr;
         bool m_is_open = false;
     public:
         HKEY handle()
@@ -187,7 +197,7 @@ namespace // Put types in an anonymous name space.
                 if (result == ERROR_SUCCESS)
                 {
                     m_is_open = false;
-                    m_key = NULL;
+                    m_key = nullptr;
                 }
                 return result;
             }
@@ -245,13 +255,8 @@ static inline size_t countof(T(&arr)[N])
 
 // This function returns an exhaustive list of time zone information
 // from the Windows registry.
-// The routine tries to to obtain as much information as possible despite errors.
-// If there is an error with any key, it is silently ignored to move on to the next.
-// We don't have a logger to log such errors and it might be disruptive to log anyway.
-// We don't want the whole database of information disrupted just because
-// one record in it can't be read.
-// The expectation is that the errors will eventually manifest to the
-// caller as a missing time zone which they will need to investigate.
+// The routine tries to load as many time zone entries as possible despite errors.
+// We don't want to fail to load the whole database just because one record can't be read.
 
 static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
 {
@@ -1858,6 +1863,15 @@ init_tzdb()
     std::string line;
     bool continue_zone = false;
     TZ_DB db;
+
+    if (!file_exists(install))
+    {
+        std::string msg = "Timezone database not found at \"";
+        msg += install;
+        msg += "\"";
+        throw std::runtime_error(msg);
+    }
+
     for (const auto& filename : files)
     {
         std::ifstream infile(path + filename);
