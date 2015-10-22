@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2015 Howard Hinnant
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,31 +25,31 @@
 //     unsigned char d_;
 // public:
 //     explicit constexpr day(unsigned d) noexcept;
-// 
+//
 //     day& operator++()    noexcept;
 //     day  operator++(int) noexcept;
 //     day& operator--()    noexcept;
 //     day  operator--(int) noexcept;
-// 
+//
 //     day& operator+=(const days& d) noexcept;
 //     day& operator-=(const days& d) noexcept;
-// 
+//
 //     constexpr explicit operator unsigned() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
-// 
+//
 // constexpr bool operator==(const day& x, const day& y) noexcept;
 // constexpr bool operator!=(const day& x, const day& y) noexcept;
 // constexpr bool operator< (const day& x, const day& y) noexcept;
 // constexpr bool operator> (const day& x, const day& y) noexcept;
 // constexpr bool operator<=(const day& x, const day& y) noexcept;
 // constexpr bool operator>=(const day& x, const day& y) noexcept;
-// 
+//
 // constexpr day  operator+(const day&  x, const days& y) noexcept;
 // constexpr day  operator+(const days& x, const day&  y) noexcept;
 // constexpr day  operator-(const day&  x, const days& y) noexcept;
 // constexpr days operator-(const day&  x, const day&  y) noexcept;
-// 
+//
 // constexpr day operator "" _d(unsigned long long d) noexcept;
 // std::ostream& operator<<(std::ostream& os, const day& d);
 
@@ -58,6 +58,10 @@
 #include <cassert>
 #include <sstream>
 #include <type_traits>
+
+
+
+
 
 static_assert( std::is_trivially_destructible<date::day>{}, "");
 static_assert(!std::is_default_constructible<date::day>{}, "");

@@ -9,7 +9,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 project(date)
 
-# Compiler/linker flags 
+# Compiler/linker flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-std=c++14)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -40,7 +40,7 @@ set(AllFiles
 source_group("" FILES ${AllFiles})
 
 add_library(${PROJECT_NAME} SHARED ${AllFiles} CMakeLists.txt)
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION bin)
+# install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION bin)
 
 
 add_subdirectory(test/date_test)
