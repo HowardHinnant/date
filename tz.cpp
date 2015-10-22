@@ -206,7 +206,7 @@ namespace // Put types in an anonymous name space.
 
         // WARNING: this function has a hard-coded value size limit.
         // It is not a general-purpose function.
-        // It should be sufficient for our use cases.
+        // It should be sufficient for our use cases. 
         // The function could be made workable for any size string
         // but we don't need the complexity of implementing that
         // for our meagre purposes right now.
@@ -1722,7 +1722,7 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
         {
             return timezone == tz::utc ? t < zl.until_utc_ : t < zl.until_loc_;
         });
-
+    
     Info r{};
     if (i != zonelets_.end())
     {
