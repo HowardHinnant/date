@@ -2242,8 +2242,15 @@ year_month_day::operator day_point() const noexcept
     auto const d = static_cast<unsigned>(d_);
     auto const era = (y >= 0 ? y : y-399) / 400;
     auto const yoe = static_cast<unsigned>(y - era * 400);       // [0, 399]
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4146) // unary minus operator applied to unsigned type, result still unsigned
+#endif
     auto const doy = (153*(m + (m > 2 ? -3u : 9)) + 2)/5 + d-1;  // [0, 365]
-    auto const doe = yoe * 365 + yoe/4 - yoe/100 + doy;          // [0, 146096]
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+   auto const doe = yoe * 365 + yoe/4 - yoe/100 + doy;          // [0, 146096]
     return day_point{days{era * 146097 + static_cast<int>(doe) - 719468}};
 }
 
@@ -2347,7 +2354,14 @@ year_month_day::from_day_point(const day_point& dp) noexcept
     auto const doy = doe - (365*yoe + yoe/4 - yoe/100);                // [0, 365]
     auto const mp = (5*doy + 2)/153;                                   // [0, 11]
     auto const d = doy - (153*mp+2)/5 + 1;                             // [1, 31]
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4146) // unary minus operator applied to unsigned type, result still unsigned
+#endif
     auto const m = mp + (mp < 10 ? 3 : -9u);                           // [1, 12]
+#ifdef _MSVC_VER
+#pragma warning(pop)
+#endif
     return year_month_day{date::year{y + (m <= 2)}, date::month(m), date::day(d)};
 }
 
