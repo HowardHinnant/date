@@ -81,7 +81,10 @@ using day_point = std::chrono::time_point<std::chrono::system_clock, days>;
 
 // types
 
-struct last_spec {};
+struct last_spec
+{
+    explicit last_spec() = default;
+};
 
 class day;
 class month;
