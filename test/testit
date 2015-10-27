@@ -30,7 +30,7 @@ if [ -z "$CXX_LANG" ]
 then
     CXX_LANG=c++14
 fi
-OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT"
+OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -Wall"
 
 case $TRIPLE in
   *-*-mingw* | *-*-cygwin* | *-*-win*)

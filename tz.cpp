@@ -1471,9 +1471,6 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
         case tz::local:
             found = tp_loc < r->mdt().to_time_point(ry);
             break;
-        default:
-            found = false;
-            assert(false);
         }
         if (found)
             break;

@@ -2253,7 +2253,7 @@ year_month_day::operator day_point() const noexcept
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-   auto const doe = yoe * 365 + yoe/4 - yoe/100 + doy;          // [0, 146096]
+    auto const doe = yoe * 365 + yoe/4 - yoe/100 + doy;          // [0, 146096]
     return day_point{days{era * 146097 + static_cast<int>(doe) - 719468}};
 }
 
