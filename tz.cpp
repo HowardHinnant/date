@@ -61,6 +61,14 @@
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
+// Prevent windows defining min/max macros that will interfere with C++ versions.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+// We don't need everything Windows.h has to offer.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <Windows.h>
 #include <io.h>
 #else
@@ -318,7 +326,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
         if (!zone_key.get_binary("TZI", &tz.tzi, sizeof(TZI)))
             continue;
 #endif
-        auto result = zone_key.close();
+        zone_key.close();
 
         tz_list.push_back(std::move(tz));
     }
@@ -1157,24 +1165,24 @@ Rule::split_overlaps(std::vector<Rule>& rules)
                 return nm < x.name();
             }) - rules.cbegin());
         split_overlaps(rules, i, e);
-        auto first = rules.cbegin() + static_cast<difference_type>(i);
-        auto last = rules.cbegin() + static_cast<difference_type>(e);
-        auto t = std::lower_bound(first, last, min_year);
-        if (t > first+1)
+        auto first_rule = rules.cbegin() + static_cast<difference_type>(i);
+        auto last_rule = rules.cbegin() + static_cast<difference_type>(e);
+        auto t = std::lower_bound(first_rule, last_rule, min_year);
+        if (t > first_rule+1)
         {
-            if (t == last || t->starting_year() >= min_year)
+            if (t == last_rule || t->starting_year() >= min_year)
                 --t;
-            auto d = static_cast<std::size_t>(t - first);
-            rules.erase(first, t);
+            auto d = static_cast<std::size_t>(t - first_rule);
+            rules.erase(first_rule, t);
             e -= d;
         }
-        first = rules.cbegin() + static_cast<difference_type>(i);
-        last = rules.cbegin() + static_cast<difference_type>(e);
-        t = std::upper_bound(first, last, max_year);
-        if (t != last)
+        first_rule = rules.cbegin() + static_cast<difference_type>(i);
+        last_rule = rules.cbegin() + static_cast<difference_type>(e);
+        t = std::upper_bound(first_rule, last_rule, max_year);
+        if (t != last_rule)
         {
-            auto d = static_cast<std::size_t>(last - t);
-            rules.erase(t, last);
+            auto d = static_cast<std::size_t>(last_rule - t);
+            rules.erase(t, last_rule);
             e -= d;
         }
         i = e;
@@ -1336,21 +1344,21 @@ find_previous_rule(const Rule* r, date::year y)
 //     [first, last) all have the same name
 static
 std::pair<const Rule*, date::year>
-find_next_rule(const Rule* first, const Rule* last, const Rule* r, date::year y)
+find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, date::year y)
 {
     using namespace date;
     if (y == r->ending_year())
     {
-        if (r == last-1)
+        if (r == last_rule-1)
             return {nullptr, year::max()};
         ++r;
         if (y == r->ending_year())
             return {r, y};
         return {r, r->starting_year()};
     }
-    if (r == last-1 || r->ending_year() < r[1].ending_year())
+    if (r == last_rule-1 || r->ending_year() < r[1].ending_year())
     {
-        while (r > first && r->starting_year() == r[-1].starting_year())
+        while (r > first_rule && r->starting_year() == r[-1].starting_year())
             --r;
         return {r, ++y};
     }
@@ -1463,8 +1471,6 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
         case tz::local:
             found = tp_loc < r->mdt().to_time_point(ry);
             break;
-        default:
-            assert(false);
         }
         if (found)
             break;
@@ -1478,16 +1484,16 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
 
 static
 Info
-find_rule(const std::pair<const Rule*, date::year>& first,
-          const std::pair<const Rule*, date::year>& last,
+find_rule(const std::pair<const Rule*, date::year>& first_rule,
+          const std::pair<const Rule*, date::year>& last_rule,
           const date::year& y, const std::chrono::seconds& offset,
           const MonthDayTime& mdt, const std::chrono::minutes& initial_save,
           const std::string& initial_abbrev)
 {
     using namespace std::chrono;
     using namespace date;
-    auto r = first.first;
-    auto ry = first.second;
+    auto r = first_rule.first;
+    auto ry = first_rule.second;
     Info x{day_point(year::min()/boring_day), day_point(year::max()/boring_day),
            seconds{0}, initial_save, initial_abbrev};
     while (r != nullptr)
@@ -1495,9 +1501,9 @@ find_rule(const std::pair<const Rule*, date::year>& first,
         auto tr = r->mdt().to_sys(ry, offset, x.save);
         auto tx = mdt.to_sys(y, offset, x.save);
         // Find last rule where tx >= tr
-        if (tx <= tr || (r == last.first && ry == last.second))
+        if (tx <= tr || (r == last_rule.first && ry == last_rule.second))
         {
-            if (tx < tr && r == first.first && ry == first.second)
+            if (tx < tr && r == first_rule.first && ry == first_rule.second)
             {
                 x.end = r->mdt().to_sys(ry, offset, x.save);
                 break;
@@ -1509,12 +1515,12 @@ find_rule(const std::pair<const Rule*, date::year>& first,
             }
             // r != nullptr && tx >= tr (if tr were to be recomputed)
             auto prev_save = initial_save;
-            if (!(r == first.first && ry == first.second))
+            if (!(r == first_rule.first && ry == first_rule.second))
                 prev_save = find_previous_rule(r, ry).first->save();
             x.begin = r->mdt().to_sys(ry, offset, prev_save);
             x.save = r->save();
             x.abbrev = r->abbrev();
-            if (!(r == last.first && ry == last.second))
+            if (!(r == last_rule.first && ry == last_rule.second))
             {
                 std::tie(r, ry) = find_next_rule(r, ry);  // can't return nullptr for r
                 assert(r != nullptr);
