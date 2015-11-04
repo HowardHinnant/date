@@ -319,9 +319,9 @@ Zone::to_sys_impl(std::chrono::time_point<std::chrono::system_clock,
     using namespace std::chrono;
     auto i = get_info(tp, tz::local);
     auto tp_sys = tp - i.offset;
-    if (tp_sys - i.begin <= days{1})
+    if (floor<seconds>(tp_sys) - i.begin <= days{1})
     {
-        if (tp < i.begin + i.offset)
+        if (floor<seconds>(tp) < i.begin + i.offset)
         {
             if (do_throw)
             {
@@ -331,13 +331,13 @@ Zone::to_sys_impl(std::chrono::time_point<std::chrono::system_clock,
             }
             return i.begin;
         }
-        assert(tp >= i.begin + get_info(i.begin - seconds{1}, tz::utc).offset);
+        assert(floor<seconds>(tp) >= i.begin + get_info(i.begin - seconds{1}, tz::utc).offset);
     }
-    if (i.end - tp_sys <= days{1})
+    if (i.end - floor<seconds>(tp_sys) <= days{1})
     {
-        assert(tp < i.end + i.offset);
+        assert(floor<seconds>(tp) < i.end + i.offset);
         auto next = get_info(i.end, tz::utc);
-        if (tp >= i.end + next.offset)
+        if (floor<seconds>(tp) >= i.end + next.offset)
         {
             if (do_throw)
                 throw ambiguous_local_time(tp, i.offset, i.abbrev,
