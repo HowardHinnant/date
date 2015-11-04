@@ -201,6 +201,9 @@ private:
     std::vector<zonelet> zonelets_;
 
 public:
+    Zone(Zone&&) = default;
+    Zone& operator=(Zone&&) = default;
+
     explicit Zone(const std::string& s);
 
     const std::string& name() const {return name_;}
