@@ -1165,8 +1165,8 @@ Rule::split_overlaps(std::vector<Rule>& rules)
                 return nm < x.name();
             }) - rules.cbegin());
         split_overlaps(rules, i, e);
-        auto first_rule = rules.cbegin() + static_cast<difference_type>(i);
-        auto last_rule = rules.cbegin() + static_cast<difference_type>(e);
+        auto first_rule = rules.begin() + static_cast<difference_type>(i);
+        auto last_rule = rules.begin() + static_cast<difference_type>(e);
         auto t = std::lower_bound(first_rule, last_rule, min_year);
         if (t > first_rule+1)
         {
@@ -1176,8 +1176,8 @@ Rule::split_overlaps(std::vector<Rule>& rules)
             rules.erase(first_rule, t);
             e -= d;
         }
-        first_rule = rules.cbegin() + static_cast<difference_type>(i);
-        last_rule = rules.cbegin() + static_cast<difference_type>(e);
+        first_rule = rules.begin() + static_cast<difference_type>(i);
+        last_rule = rules.begin() + static_cast<difference_type>(e);
         t = std::upper_bound(first_rule, last_rule, max_year);
         if (t != last_rule)
         {
