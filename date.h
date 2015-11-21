@@ -738,9 +738,7 @@ operator-(const year_month_weekday_last& ymwdl, const years& dy) noexcept;
 
 std::ostream& operator<<(std::ostream& os, const year_month_weekday_last& ymwdl);
 
-}  // namespace date
-
-inline namespace date_literals
+inline namespace literals
 {
 
 CONSTCD11 date::day  operator "" _d(unsigned long long d) noexcept;
@@ -767,10 +765,7 @@ CONSTCD11 date::year operator "" _y(unsigned long long y) noexcept;
 // CONSTDATA date::weekday fri{5u};
 // CONSTDATA date::weekday sat{6u};
 
-}  // inline namespace date_literals
-
-namespace date
-{
+}  // inline namespace literals
 
 //----------------+
 // Implementation |
@@ -1443,9 +1438,7 @@ operator<<(std::ostream& os, const weekday& wd)
     return os;
 }
 
-}  // namespace date
-
-inline namespace date_literals
+inline namespace literals
 {
 
 CONSTDATA date::last_spec last{};
@@ -1487,14 +1480,7 @@ CONSTDATA date::weekday thu{4u};
 CONSTDATA date::weekday fri{5u};
 CONSTDATA date::weekday sat{6u};
 
-}  // inline namespace date_literals
-
-
-
-namespace date
-{
-
-using namespace date_literals;
+}  // inline namespace literals
 
 // weekday_indexed
 
