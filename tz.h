@@ -201,8 +201,27 @@ private:
     std::vector<zonelet> zonelets_;
 
 public:
-    Zone(Zone&&) = default;
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+	Zone(Zone&&) = default;
     Zone& operator=(Zone&&) = default;
+#else
+	Zone(Zone&& src)
+	{
+		std::string tmp_name(std::move(src.name_));
+		std::vector<zonelet> tmp_zonelets(std::move(src.zonelets_));
+		name_.swap(tmp_name);
+		zonelets_.swap(tmp_zonelets);
+	}
+
+	Zone& operator=(Zone&& src)
+	{
+		std::string tmp_name(std::move(src.name_));
+		std::vector<zonelet> tmp_zonelets(std::move(src.zonelets_));
+		name_.swap(tmp_name);
+		zonelets_.swap(tmp_zonelets);
+		return *this;
+	}
+#endif
 
     explicit Zone(const std::string& s);
 
@@ -577,8 +596,37 @@ struct TZ_DB
 #endif
     
     TZ_DB() = default;
-    TZ_DB(TZ_DB&&) = default;
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+	TZ_DB(TZ_DB&&) = default;
     TZ_DB& operator=(TZ_DB&&) = default;
+#else
+	TZ_DB(TZ_DB&& src)
+	:
+		zones(std::move(src.zones)),
+		links(std::move(links)),
+		leaps(std::move(leaps)),
+		rules(std::move(rules))
+#if TIMEZONE_MAPPING
+		,
+		mappings(std::move(mappings)),
+		native_zones(std::move(native_zones))
+#endif
+	{
+	}
+
+	TZ_DB& operator=(TZ_DB&& src)
+	{
+		zones = std::move(src.zones);
+		links = std::move(links);
+		leaps = std::move(leaps);
+		rules = std::move(rules);
+#if TIMEZONE_MAPPING
+		mappings = std::move(mappings);
+		native_zones = std::move(native_zones);
+#endif
+		return *this;
+	}
+#endif
 };
 
 std::ostream& operator<<(std::ostream& os, const TZ_DB& db);
@@ -604,7 +652,7 @@ public:
     using time_point                = std::chrono::time_point<utc_clock>;
     static CONSTDATA bool is_steady = true;
 
-    static time_point now() noexcept;
+    static time_point now() _NOEXCEPT;
 
     template <class Duration>
         static
@@ -621,7 +669,7 @@ public:
 
 inline
 utc_clock::time_point
-utc_clock::now() noexcept
+utc_clock::now() _NOEXCEPT
 {
     using namespace std::chrono;
     return sys_to_utc(system_clock::now());

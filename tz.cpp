@@ -392,14 +392,14 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     for (;;)
     {
         timezone_mapping zm{};
-        is >> std::quoted(zm.other);
+        is >> date::cxxstd14::quoted(zm.other);
         if (is.eof())
             break;
 
         read_field_delim();
-        is >> std::quoted(zm.territory);
+        is >> date::cxxstd14::quoted(zm.territory);
         read_field_delim();
-        is >> std::quoted(zm.type);
+        is >> date::cxxstd14::quoted(zm.type);
 
         char record_delim;
         is.read(&record_delim, 1);
@@ -1005,7 +1005,7 @@ operator<<(std::ostream& os, const Rule& r)
 {
     using namespace date;
     using namespace std::chrono;
-    save_stream _(os);
+    detail::save_stream _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(15);
@@ -1194,17 +1194,21 @@ Rule::split_overlaps(std::vector<Rule>& rules)
 
 Zone::zonelet::~zonelet()
 {
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     using minutes = std::chrono::minutes;
     using string = std::string;
     if (tag_ == has_save)
         u.save_.~minutes();
     else
         u.rule_.~string();
+#endif
 }
 
 Zone::zonelet::zonelet()
 {
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     ::new(&u.rule_) std::string();
+#endif
 }
 
 Zone::zonelet::zonelet(const zonelet& i)
@@ -1222,9 +1226,17 @@ Zone::zonelet::zonelet(const zonelet& i)
     , last_rule_(i.last_rule_)
 {
     if (tag_ == has_save)
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         ::new(&u.save_) std::chrono::minutes(i.u.save_);
-    else
+#else
+		u.save_ = i.u.save_;
+#endif
+	else
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         ::new(&u.rule_) std::string(i.u.rule_);
+#else
+		u.rule_ = i.u.rule_;
+#endif
 }
 
 Zone::Zone(const std::string& s)
@@ -1564,9 +1576,15 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                     std::istringstream in(z.u.rule_);
                     in.exceptions(std::ios::failbit | std::ios::badbit);
                     auto tmp = duration_cast<minutes>(parse_signed_time(in));
-                    z.u.rule_.~string();
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+					z.u.rule_.~string();
                     z.tag_ = zonelet::has_save;
                     ::new(&z.u.save_) minutes(tmp);
+#else
+					z.u.rule_.clear();
+                    z.tag_ = zonelet::has_save;
+                    z.u.save_ = tmp;
+#endif
                 }
                 catch (...)
                 {
@@ -1773,7 +1791,7 @@ operator<<(std::ostream& os, const Zone& z)
 {
     using namespace date;
     using namespace std::chrono;
-    save_stream _(os);
+    detail::save_stream _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(35);
@@ -1832,7 +1850,7 @@ std::ostream&
 operator<<(std::ostream& os, const Link& x)
 {
     using namespace date;
-    save_stream _(os);
+    detail::save_stream _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(35);

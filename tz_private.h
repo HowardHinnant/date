@@ -28,6 +28,208 @@
 namespace date
 {
 
+// Fix for std::quoted
+namespace cxxstd14 {
+
+#if __cplusplus >= 201402
+
+using quoted = std::quoted;
+
+#else
+
+// Got it from boost
+// http://www.boost.org/doc/libs/1_58_0/boost/io/detail/quoted_manip.hpp
+
+    namespace detail { template <class String, class Char> struct quoted_proxy; }
+
+    //  ------------  public interface  ------------------------------------------------//
+
+    //  manipulator for const std::basic_string&
+    template <class Char, class Traits, class Alloc>
+      detail::quoted_proxy<std::basic_string<Char, Traits, Alloc> const &, Char>
+        quoted(const std::basic_string<Char, Traits, Alloc>& s,
+               Char escape='\\', Char delim='\"');
+
+    //  manipulator for non-const std::basic_string&
+    template <class Char, class Traits, class Alloc>
+      detail::quoted_proxy<std::basic_string<Char, Traits, Alloc> &, Char>
+        quoted(std::basic_string<Char, Traits, Alloc>& s,
+               Char escape='\\', Char delim='\"');
+
+    //  manipulator for const C-string*
+    template <class Char>
+      detail::quoted_proxy<const Char*, Char>
+        quoted(const Char* s, Char escape='\\', Char delim='\"');
+
+    //  -----------  implementation details  -------------------------------------------//
+
+    namespace detail
+    {
+		class ios_flags_saver
+		{
+		public:
+			typedef ::std::ios_base            state_type;
+			typedef ::std::ios_base::fmtflags  aspect_type;
+
+			explicit  ios_flags_saver( state_type &s )
+				: s_save_( s ), a_save_( s.flags() )
+				{}
+			ios_flags_saver( state_type &s, aspect_type const &a )
+				: s_save_( s ), a_save_( s.flags(a) )
+				{}
+			~ios_flags_saver()
+				{ this->restore(); }
+
+			void  restore()
+				{ s_save_.flags( a_save_ ); }
+
+		private:
+			state_type &       s_save_;
+			aspect_type const  a_save_;
+
+			ios_flags_saver& operator=(const ios_flags_saver&);
+		};
+
+	//  proxy used as an argument pack 
+      template <class String, class Char>
+      struct quoted_proxy
+      {
+        String  string;
+        Char    escape;
+        Char    delim;
+
+        quoted_proxy(String s_, Char escape_, Char delim_)
+          : string(s_), escape(escape_), delim(delim_) {}
+      private:
+        // String may be a const type, so disable the assignment operator
+        quoted_proxy& operator=(const quoted_proxy&);  // = deleted
+      };
+
+      //  abstract away difference between proxies with const or non-const basic_strings
+      template <class Char, class Traits, class Alloc>
+      std::basic_ostream<Char, Traits>&
+      basic_string_inserter_imp(std::basic_ostream<Char, Traits>& os,
+        std::basic_string<Char, Traits, Alloc> const & string, Char escape, Char delim)
+      {
+        os << delim;
+        typename std::basic_string<Char, Traits, Alloc>::const_iterator
+          end_it = string.end();
+        for (typename std::basic_string<Char, Traits, Alloc>::const_iterator
+          it = string.begin();
+          it != end_it;
+          ++it )
+        {
+          if (*it == delim || *it == escape)
+            os << escape;
+          os << *it;
+        }
+        os << delim;
+        return os;
+      }
+
+      //  inserter for const std::basic_string& proxies
+      template <class Char, class Traits, class Alloc>
+      inline
+      std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& os, 
+        const quoted_proxy<std::basic_string<Char, Traits, Alloc> const &, Char>& proxy)
+      {
+        return basic_string_inserter_imp(os, proxy.string, proxy.escape, proxy.delim);
+      }
+
+      //  inserter for non-const std::basic_string& proxies
+      template <class Char, class Traits, class Alloc>
+      inline
+      std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& os, 
+        const quoted_proxy<std::basic_string<Char, Traits, Alloc>&, Char>& proxy)
+      {
+        return basic_string_inserter_imp(os, proxy.string, proxy.escape, proxy.delim);
+      }
+ 
+      //  inserter for const C-string* proxies
+      template <class Char, class Traits>
+      std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& os, 
+        const quoted_proxy<const Char*, Char>& proxy)
+      {
+        os << proxy.delim;
+        for (const Char* it = proxy.string;
+          *it;
+          ++it )
+        {
+          if (*it == proxy.delim || *it == proxy.escape)
+            os << proxy.escape;
+          os << *it;
+        }
+        os << proxy.delim;
+        return os;
+      }
+
+      //  extractor for non-const std::basic_string& proxies
+      template <class Char, class Traits, class Alloc>
+      std::basic_istream<Char, Traits>& operator>>(std::basic_istream<Char, Traits>& is, 
+        const quoted_proxy<std::basic_string<Char, Traits, Alloc>&, Char>& proxy)
+      {
+        proxy.string.clear();
+        Char c;
+        is >> c;
+        if (c != proxy.delim)
+        {
+          is.unget();
+          is >> proxy.string;
+          return is;
+        }
+        {
+          ios_flags_saver ifs(is);
+          is >> std::noskipws;
+          for (;;)  
+          {
+            is >> c;
+            if (!is.good())  // cope with I/O errors or end-of-file
+              break;
+            if (c == proxy.escape)
+            {
+              is >> c;
+              if (!is.good())  // cope with I/O errors or end-of-file
+                break;
+            }
+            else if (c == proxy.delim)
+              break;
+            proxy.string += c;
+          }
+        }
+        return is;
+      }
+
+    }  // namespace detail
+
+    //  manipulator implementation for const std::basic_string&
+    template <class Char, class Traits, class Alloc>
+    inline detail::quoted_proxy<std::basic_string<Char, Traits, Alloc> const &, Char>
+    quoted(const std::basic_string<Char, Traits, Alloc>& s, Char escape, Char delim)
+    {
+      return detail::quoted_proxy<std::basic_string<Char, Traits, Alloc> const &, Char>
+        (s, escape, delim);
+    }
+
+    //  manipulator implementation for non-const std::basic_string&
+    template <class Char, class Traits, class Alloc>
+    inline detail::quoted_proxy<std::basic_string<Char, Traits, Alloc> &, Char>
+    quoted(std::basic_string<Char, Traits, Alloc>& s, Char escape, Char delim)
+    {
+      return detail::quoted_proxy<std::basic_string<Char, Traits, Alloc>&, Char>
+        (s, escape, delim);
+    }
+
+    //  manipulator implementation for const C-string*
+    template <class Char>
+    inline detail::quoted_proxy<const Char*, Char>
+    quoted(const Char* s, Char escape, Char delim)
+    {
+      return detail::quoted_proxy<const Char*, Char> (s, escape, delim);
+    }
+#endif
+}
+
+
 class MonthDayTime
 {
 private:
@@ -40,8 +242,13 @@ private:
     enum Type {month_day, month_last_dow, lteq, gteq};
 
     Type                         type_{month_day};
-    union U
-    {
+
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+    struct U
+#else
+	union U
+#endif
+	{
         date::month_day          month_day_;
         date::month_weekday_last month_weekday_last_;
         pair                     month_day_weekday_;
@@ -51,6 +258,7 @@ private:
         U& operator=(const date::month_weekday_last& x);
         U& operator=(const pair& x);
     } u;
+
     std::chrono::hours           h_{0};
     std::chrono::minutes         m_{0};
     std::chrono::seconds         s_{0};
@@ -165,7 +373,12 @@ struct Zone::zonelet
 
     std::chrono::seconds gmtoff_;
     tag tag_ = has_rule;
+
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     union U
+#else
+    struct U
+#endif
     {
         std::string          rule_;
         std::chrono::minutes save_;
@@ -175,6 +388,7 @@ struct Zone::zonelet
         U(const U&) {}
         U& operator=(const U&) = delete;
     } u;
+
     std::string          format_;
     date::year           until_year_{0};
     MonthDayTime         until_date_;
