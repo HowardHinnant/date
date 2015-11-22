@@ -202,22 +202,21 @@ private:
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-	Zone(Zone&&) = default;
+    Zone(Zone&&) = default;
     Zone& operator=(Zone&&) = default;
 #else
-	Zone(Zone&& src)
-	:
-		name_(std::move(src.name_)),
-		zonelets_(std::move(zonelets_))
-	{
-	}
+    Zone(Zone&& src)
+    :
+        name_(std::move(src.name_)),
+        zonelets_(std::move(zonelets_))
+    {}
 
-	Zone& operator=(Zone&& src)
-	{
-		name_ = std::move(src.name_);
-		zonelets_ = std::move(src.zonelets_);
-		return *this;
-	}
+    Zone& operator=(Zone&& src)
+    {
+        name_ = std::move(src.name_);
+        zonelets_ = std::move(src.zonelets_);
+        return *this;
+    }
 #endif
 
     explicit Zone(const std::string& s);
@@ -350,7 +349,8 @@ Zone::to_sys_impl(std::chrono::time_point<std::chrono::system_clock,
             }
             return i.begin;
         }
-        assert(floor<seconds>(tp) >= i.begin + get_info(i.begin - seconds{1}, tz::utc).offset);
+        assert(floor<seconds>(tp) >= 
+                i.begin + get_info(i.begin - seconds{1}, tz::utc).offset);
     }
     if (i.end - floor<seconds>(tp_sys) <= days{1})
     {
@@ -594,35 +594,34 @@ struct TZ_DB
     
     TZ_DB() = default;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-	TZ_DB(TZ_DB&&) = default;
+    TZ_DB(TZ_DB&&) = default;
     TZ_DB& operator=(TZ_DB&&) = default;
 #else
-	TZ_DB(TZ_DB&& src)
-	:
-		zones(std::move(src.zones)),
-		links(std::move(links)),
-		leaps(std::move(leaps)),
-		rules(std::move(rules))
+    TZ_DB(TZ_DB&& src)
+    :
+        zones(std::move(src.zones)),
+        links(std::move(links)),
+        leaps(std::move(leaps)),
+        rules(std::move(rules))
 #if TIMEZONE_MAPPING
-		,
-		mappings(std::move(mappings)),
-		native_zones(std::move(native_zones))
+        ,
+        mappings(std::move(mappings)),
+        native_zones(std::move(native_zones))
 #endif
-	{
-	}
+    {}
 
-	TZ_DB& operator=(TZ_DB&& src)
-	{
-		zones = std::move(src.zones);
-		links = std::move(links);
-		leaps = std::move(leaps);
-		rules = std::move(rules);
+    TZ_DB& operator=(TZ_DB&& src)
+    {
+        zones = std::move(src.zones);
+        links = std::move(links);
+        leaps = std::move(leaps);
+        rules = std::move(rules);
 #if TIMEZONE_MAPPING
-		mappings = std::move(mappings);
-		native_zones = std::move(native_zones);
+        mappings = std::move(mappings);
+        native_zones = std::move(native_zones);
 #endif
-		return *this;
-	}
+        return *this;
+    }
 #endif
 };
 
@@ -649,7 +648,7 @@ public:
     using time_point                = std::chrono::time_point<utc_clock>;
     static CONSTDATA bool is_steady = true;
 
-    static time_point now() _NOEXCEPT;
+    static time_point now() NOEXCEPT;
 
     template <class Duration>
         static
@@ -666,7 +665,7 @@ public:
 
 inline
 utc_clock::time_point
-utc_clock::now() _NOEXCEPT
+utc_clock::now() NOEXCEPT
 {
     using namespace std::chrono;
     return sys_to_utc(system_clock::now());

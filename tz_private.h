@@ -44,9 +44,9 @@ private:
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
     struct U
 #else
-	union U
+    union U
 #endif
-	{
+    {
         date::month_day          month_day_;
         date::month_weekday_last month_weekday_last_;
         pair                     month_day_weekday_;

@@ -273,12 +273,14 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
 
     // Open the parent time zone key that has the list of timezones in.
     reg_key zones_key;
-    static const wchar_t zones_key_name[] = { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
+    static const wchar_t zones_key_name[] = 
+    { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
     result = zones_key.open(zones_key_name);
     // TODO! Review if this should happen here or be signalled later.
     // We don't want the process to fail on startup because of this.
     if (result != ERROR_SUCCESS)
-        throw std::runtime_error("Time Zone registry key could not be opened: " + get_win32_message(result));
+        throw std::runtime_error("Time Zone registry key could not be opened: " 
+        + get_win32_message(result));
 
     DWORD size;
     wchar_t zone_key_name[256];
@@ -295,7 +297,8 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
         auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
             nullptr, nullptr, nullptr, nullptr);
         if (status != ERROR_SUCCESS && status != ERROR_NO_MORE_ITEMS)
-            throw std::runtime_error("Can't enumerate time zone registry key" + get_win32_message(status));
+            throw std::runtime_error("Can't enumerate time zone registry key" 
+            + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
         zone_key_name[size] = L'\0';
@@ -389,26 +392,24 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     std::string copyright;
     for (int i = 0; i < 4; ++i)
         getline(is, copyright);
-	
-	std::string tmp;
     
-	for (;;)
+    for (;;)
     {
-		timezone_mapping zm{};
+        timezone_mapping zm{};
         char ch;
 
-		is.read(&ch, 1);
+        is.read(&ch, 1);
         if (is.eof())
             break;
-		std::getline(is, zm.other, '\"');
+        std::getline(is, zm.other, '\"');
         read_field_delim();
 
-		is.read(&ch, 1);
-		std::getline(is, zm.territory, '\"');
+        is.read(&ch, 1);
+        std::getline(is, zm.territory, '\"');
         read_field_delim();
 
-		is.read(&ch, 1);
-		std::getline(is, zm.type, '\"');
+        is.read(&ch, 1);
+        std::getline(is, zm.type, '\"');
 
         is.read(&ch, 1);
         if (is.gcount() != 1 || ch != '\n')
@@ -425,7 +426,8 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
 }
 
 static bool
-native_to_standard_timezone_name(const std::string& native_tz_name, std::string& standard_tz_name)
+native_to_standard_timezone_name(const std::string& native_tz_name, 
+                                 std::string& standard_tz_name)
 {
     // TOOD! Need be a case insensitive compare?
     if (native_tz_name == "UTC")
@@ -1237,13 +1239,13 @@ Zone::zonelet::zonelet(const zonelet& i)
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     if (tag_ == has_save)
         ::new(&u.save_) std::chrono::minutes(i.u.save_);
-	else
+    else
         ::new(&u.rule_) std::string(i.u.rule_);
 #else
     if (tag_ == has_save)
-		u.save_ = i.u.save_;
-	else
-		u.rule_ = i.u.rule_;
+        u.save_ = i.u.save_;
+    else
+        u.rule_ = i.u.rule_;
 #endif
 }
 
@@ -1364,7 +1366,8 @@ find_previous_rule(const Rule* r, date::year y)
 //     [first, last) all have the same name
 static
 std::pair<const Rule*, date::year>
-find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, date::year y)
+find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, 
+               date::year y)
 {
     using namespace date;
     if (y == r->ending_year())
@@ -1585,11 +1588,11 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                     in.exceptions(std::ios::failbit | std::ios::badbit);
                     auto tmp = duration_cast<minutes>(parse_signed_time(in));
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-					z.u.rule_.~string();
+                    z.u.rule_.~string();
                     z.tag_ = zonelet::has_save;
                     ::new(&z.u.save_) minutes(tmp);
 #else
-					z.u.rule_.clear();
+                    z.u.rule_.clear();
                     z.tag_ = zonelet::has_save;
                     z.u.save_ = tmp;
 #endif
@@ -2125,7 +2128,8 @@ current_zone()
     if (tz_result == TIME_ZONE_ID_INVALID)
     {
         auto error_code = ::GetLastError(); // Store this quick before it gets overwritten.
-        throw std::runtime_error("GetTimeZoneInformation failed: " + get_win32_message(error_code));
+        throw std::runtime_error("GetTimeZoneInformation failed: " 
+            + get_win32_message(error_code));
     }
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::string standard_name(converter.to_bytes(tzi.StandardName));
