@@ -389,25 +389,34 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     std::string copyright;
     for (int i = 0; i < 4; ++i)
         getline(is, copyright);
-    for (;;)
+	
+	std::string tmp;
+    
+	for (;;)
     {
-        timezone_mapping zm{};
-        is >> date::cxxstd14::quoted(zm.other);
+		timezone_mapping zm{};
+        char ch;
+
+		is.read(&ch, 1);
         if (is.eof())
             break;
-
+		std::getline(is, zm.other, '\"');
         read_field_delim();
-        is >> date::cxxstd14::quoted(zm.territory);
-        read_field_delim();
-        is >> date::cxxstd14::quoted(zm.type);
 
-        char record_delim;
-        is.read(&record_delim, 1);
-        if (is.gcount() != 1 || record_delim != '\n')
+		is.read(&ch, 1);
+		std::getline(is, zm.territory, '\"');
+        read_field_delim();
+
+		is.read(&ch, 1);
+		std::getline(is, zm.type, '\"');
+
+        is.read(&ch, 1);
+        if (is.gcount() != 1 || ch != '\n')
             error("record delimiter LF expected");
 
         if (is.fail() || is.eof())
             error("unexpected end of file, file read error or formatting error.");
+
         ++line;
         mappings.push_back(std::move(zm));
     }
@@ -1225,16 +1234,15 @@ Zone::zonelet::zonelet(const zonelet& i)
     , first_rule_(i.first_rule_)
     , last_rule_(i.last_rule_)
 {
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     if (tag_ == has_save)
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         ::new(&u.save_) std::chrono::minutes(i.u.save_);
-#else
-		u.save_ = i.u.save_;
-#endif
 	else
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         ::new(&u.rule_) std::string(i.u.rule_);
 #else
+    if (tag_ == has_save)
+		u.save_ = i.u.save_;
+	else
 		u.rule_ = i.u.rule_;
 #endif
 }

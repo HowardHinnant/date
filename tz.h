@@ -206,19 +206,16 @@ public:
     Zone& operator=(Zone&&) = default;
 #else
 	Zone(Zone&& src)
+	:
+		name_(std::move(src.name_)),
+		zonelets_(std::move(zonelets_))
 	{
-		std::string tmp_name(std::move(src.name_));
-		std::vector<zonelet> tmp_zonelets(std::move(src.zonelets_));
-		name_.swap(tmp_name);
-		zonelets_.swap(tmp_zonelets);
 	}
 
 	Zone& operator=(Zone&& src)
 	{
-		std::string tmp_name(std::move(src.name_));
-		std::vector<zonelet> tmp_zonelets(std::move(src.zonelets_));
-		name_.swap(tmp_name);
-		zonelets_.swap(tmp_zonelets);
+		name_ = std::move(src.name_);
+		zonelets_ = std::move(src.zonelets_);
 		return *this;
 	}
 #endif
