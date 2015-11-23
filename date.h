@@ -816,19 +816,70 @@ public:
         : os_(os)
         , fill_(os.fill())
         , flags_(os.flags())
-    {}
+        {}
 };
 
-} // namespace detail
+template <class T>
+struct choose_trunc_type
+{
+    static const int digits = std::numeric_limits<T>::digits;
+    using type = typename std::conditional
+                 <
+                     digits < 32,
+                     std::int32_t,
+                     typename std::conditional
+                     <
+                         digits < 64,
+                         std::int64_t,
+                         std::int64_t
+                     >::type
+                 >::type;
+};
 
-// truncate towards zero
+template <class T>
+CONSTCD11
+inline
+typename std::enable_if
+<
+    !std::chrono::treat_as_floating_point<T>::value,
+    T
+>::type
+trunc(T t) NOEXCEPT
+{
+    return t;
+}
+
+template <class T>
+CONSTCD14
+inline
+typename std::enable_if
+<
+    std::chrono::treat_as_floating_point<T>::value,
+    T
+>::type
+trunc(T t) NOEXCEPT
+{
+    using namespace std;
+    using I = typename choose_trunc_type<T>::type;
+    CONSTDATA auto digits = numeric_limits<T>::digits;
+    static_assert(digits < numeric_limits<I>::digits, "");
+    CONSTDATA auto max = I{1} << (digits-1);
+    CONSTDATA auto min = -max;
+    if (min <= t && t <= max && t != 0 && t == t)
+        t = static_cast<T>(static_cast<I>(t));
+    return t;
+}
+
+}  // detail
+
+// trunc towards zero
 template <class To, class Rep, class Period>
 CONSTCD11
 inline
 To
-truncate(const std::chrono::duration<Rep, Period>& d)
+trunc(const std::chrono::duration<Rep, Period>& d)
 {
-    return std::chrono::duration_cast<To>(d);
+    return To{detail::trunc(std::chrono::duration_cast<To>(d).count())};
 }
 
 // round down
@@ -838,9 +889,9 @@ inline
 To
 floor(const std::chrono::duration<Rep, Period>& d)
 {
-    To t = std::chrono::duration_cast<To>(d);
+    auto t = trunc<To>(d);
     if (t > d)
-        t = t - To{1};
+        return t - To{1};
     return t;
 }
 
@@ -851,17 +902,17 @@ inline
 To
 round(const std::chrono::duration<Rep, Period>& d)
 {
-    To t0 = floor<To>(d);
-    To t1 = t0 + To{1};
+    auto t0 = floor<To>(d);
+    auto t1 = t0 + To{1};
     auto diff0 = d - t0;
     auto diff1 = t1 - d;
     if (diff0 == diff1)
     {
-        if (t0.count() & 1)
-            return t1;
-        return t0;
+        if (t0 - trunc<To>(t0/2)*2 == To{0})
+            return t0;
+        return t1;
     }
-    else if (diff0 < diff1)
+    if (diff0 < diff1)
         return t0;
     return t1;
 }
@@ -873,20 +924,33 @@ inline
 To
 ceil(const std::chrono::duration<Rep, Period>& d)
 {
-    To t = std::chrono::duration_cast<To>(d);
+    auto t = trunc<To>(d);
     if (t < d)
-        t = t + To{1};
+        return t + To{1};
     return t;
 }
 
-// truncate towards zero
+template <class Rep, class Period,
+          class = typename std::enable_if
+          <
+              std::numeric_limits<Rep>::is_signed
+          >::type>
+CONSTCD11
+std::chrono::duration<Rep, Period>
+abs(std::chrono::duration<Rep, Period> d)
+{
+    return d >= d.zero() ? d : -d;
+}
+
+// trunc towards zero
 template <class To, class Clock, class FromDuration>
 CONSTCD11
 inline
 std::chrono::time_point<Clock, To>
-truncate(const std::chrono::time_point<Clock, FromDuration>& tp)
+trunc(const std::chrono::time_point<Clock, FromDuration>& tp)
 {
-    return std::chrono::time_point_cast<To>(tp);
+    using std::chrono::time_point;
+    return time_point<Clock, To>{trunc<To>(tp.time_since_epoch())};
 }
 
 // round down
@@ -3360,9 +3424,9 @@ public:
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << abs(t.h_.count()) << ':';
+        os << std::abs(t.h_.count()) << ':';
         os.width(2);
-        os << abs(t.m_.count());
+        os << std::abs(t.m_.count());
         switch (t.mode_)
         {
         case am:
@@ -3431,11 +3495,11 @@ public:
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << abs(t.h_.count()) << ':';
+        os << std::abs(t.h_.count()) << ':';
         os.width(2);
-        os << abs(t.m_.count()) << ':';
+        os << std::abs(t.m_.count()) << ':';
         os.width(2);
-        os << abs(t.s_.count());
+        os << std::abs(t.s_.count());
         switch (t.mode_)
         {
         case am:
@@ -3511,22 +3575,22 @@ public:
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << abs(t.h_.count()) << ':';
+        os << std::abs(t.h_.count()) << ':';
         os.width(2);
-        os << abs(t.m_.count()) << ':';
+        os << std::abs(t.m_.count()) << ':';
         os.width(2);
-        os << abs(t.s_.count()) << '.';
+        os << std::abs(t.s_.count()) << '.';
 #if __cplusplus >= 201402
         CONSTDATA auto cl10 = ceil_log10(Period::den);
         using scale = std::ratio_multiply<Period, std::ratio<pow10(cl10)>>;
         os.width(cl10);
-        os << abs(t.sub_s_.count()) * scale::num / scale::den;
+        os << std::abs(t.sub_s_.count()) * scale::num / scale::den;
 #else  // __cplusplus >= 201402
         // inefficient sub-optimal run-time mess, but gets the job done
         const unsigned long long cl10 = std::ceil(log10(Period::den));
         const auto p10 = std::pow(10., cl10);
         os.width(cl10);
-        os << static_cast<unsigned long long>(abs(t.sub_s_.count())
+        os << static_cast<unsigned long long>(std::abs(t.sub_s_.count())
                                               * Period::num * p10 / Period::den);
 #endif  // __cplusplus >= 201402
         switch (t.mode_)
