@@ -33,6 +33,9 @@ class MonthDayTime
 private:
     struct pair
     {
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+        pair() : month_day_(date::jan / 1), weekday_(0U) {}
+#endif
         date::month_day month_day_;
         date::weekday   weekday_;
     };
@@ -51,7 +54,21 @@ private:
         date::month_weekday_last month_weekday_last_;
         pair                     month_day_weekday_;
 
+#if !defined(_MSC_VER) && (_MSC_VER >= 1900)
         U() : month_day_{date::jan/1} {}
+#else
+        U() : 
+            month_day_(date::jan/1), 
+            month_weekday_last_(date::month(0U), date::weekday_last(date::weekday(0U))) 
+        {}
+
+        U(const date::month_day& month_day,
+            const date::weekday& weekday) :
+            month_day_(month_day),
+            month_weekday_last_(date::month(0U), date::weekday_last(weekday))
+        {}
+#endif // !defined(_MSC_VER) && (_MSC_VER >= 1900)
+
         U& operator=(const date::month_day& x);
         U& operator=(const date::month_weekday_last& x);
         U& operator=(const pair& x);
