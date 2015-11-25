@@ -3660,105 +3660,14 @@ class time_of_day
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     using base::base;
+#else
+    template <class ...Args>
+    explicit time_of_day(Args&& ...args)
+        : base(std::forward<Args>(args)...)
+        {}
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 };
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-
-template <>
-class time_of_day<std::chrono::hours>: 
-    public detail::time_of_day_storage<std::chrono::hours>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::hours since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    CONSTCD11 time_of_day(std::chrono::hours h, unsigned md) NOEXCEPT 
-        : time_of_day_storage(h, md) {}
-};
-
-template <>
-class time_of_day<std::chrono::minutes>: 
-    public detail::time_of_day_storage<std::chrono::minutes>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::minutes since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    CONSTCD11 time_of_day(std::chrono::hours h, 
-                          std::chrono::minutes m, unsigned md) NOEXCEPT 
-        : time_of_day_storage(h, m, md) {}
-};
-
-template <>
-class time_of_day<std::chrono::seconds>: 
-    public detail::time_of_day_storage<std::chrono::seconds>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::seconds since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    CONSTCD11 
-        time_of_day(  std::chrono::hours h, std::chrono::minutes m, 
-                      std::chrono::seconds s, unsigned md) NOEXCEPT 
-        : time_of_day_storage(h, m, s, md) {}
-};
-
-template <>
-class time_of_day<std::chrono::milliseconds>: 
-    public detail::time_of_day_storage<std::chrono::milliseconds>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::milliseconds since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    template <class Rep> CONSTCD11 
-        time_of_day(std::chrono::hours h, std::chrono::minutes m, 
-                    std::chrono::seconds s, 
-                    std::chrono::duration<Rep, std::chrono::milliseconds> sub_s, 
-                    unsigned md) NOEXCEPT
-        : time_of_day_storage(h, m, s, sub_s, md) {}
-};
-
-template<>
-class time_of_day<std::chrono::microseconds>: 
-    public detail::time_of_day_storage<std::chrono::microseconds>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::microseconds since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    template <class Rep> CONSTCD11 
-        time_of_day(std::chrono::hours h, std::chrono::minutes m, 
-                    std::chrono::seconds s,
-                    std::chrono::duration<Rep, std::chrono::microseconds> sub_s, 
-                    unsigned md) NOEXCEPT
-        : time_of_day_storage(h, m, s, sub_s, md) {}
-};
-
-template<>
-class time_of_day<std::chrono::nanoseconds>: 
-    public detail::time_of_day_storage<std::chrono::nanoseconds>
-{
-public:
-    CONSTCD11 explicit time_of_day(std::chrono::nanoseconds since_midnight) NOEXCEPT
-        : time_of_day_storage(since_midnight)
-        {}
-
-    template <class Rep> CONSTCD11 
-        time_of_day(std::chrono::hours h, 
-                    std::chrono::minutes m, std::chrono::seconds s, 
-                    std::chrono::duration<Rep, std::chrono::nanoseconds> sub_s, 
-                    unsigned md) NOEXCEPT
-        : time_of_day_storage(h, m, s, sub_s, md) {}
-};
-
-#endif
 
 template <class Rep, class Period,
           class = typename std::enable_if
