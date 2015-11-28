@@ -370,7 +370,6 @@ class weekday_last
     date::weekday wd_;
 
 public:
-
     explicit CONSTCD11 weekday_last(const date::weekday& wd) NOEXCEPT;
 
     CONSTCD11 date::weekday weekday() const NOEXCEPT;
@@ -390,7 +389,6 @@ class year_month
     date::month m_;
 
 public:
-
     CONSTCD11 year_month(const date::year& y, const date::month& m) NOEXCEPT;
 
     CONSTCD11 date::year  year()  const NOEXCEPT;
@@ -426,13 +424,10 @@ std::ostream& operator<<(std::ostream& os, const year_month& ym);
 
 class month_day
 {
-    static const date::day month_day::days_[];
-
     date::month m_;
     date::day   d_;
 
 public:
-
     CONSTCD11 month_day(const date::month& m, const date::day& d) NOEXCEPT;
 
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -457,7 +452,6 @@ class month_day_last
     date::month m_;
 
 public:
-
     CONSTCD11 explicit month_day_last(const date::month& m) NOEXCEPT;
 
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -480,7 +474,6 @@ class month_weekday
     date::month           m_;
     date::weekday_indexed wdi_;
 public:
-
     CONSTCD11 month_weekday(const date::month& m,
                               const date::weekday_indexed& wdi) NOEXCEPT;
 
@@ -503,7 +496,6 @@ class month_weekday_last
     date::weekday_last wdl_;
 
 public:
-
     CONSTCD11 month_weekday_last(const date::month& m,
                                  const date::weekday_last& wd) NOEXCEPT;
 
@@ -529,7 +521,6 @@ class year_month_day
     date::day   d_;
 
 public:
-
     CONSTCD11 year_month_day(const date::year& y, const date::month& m,
                                const date::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
@@ -571,13 +562,10 @@ std::ostream& operator<<(std::ostream& os, const year_month_day& ymd);
 
 class year_month_day_last
 {
-    static const date::day year_month_day_last::days_[];
-
     date::year           y_;
     date::month_day_last mdl_;
 
 public:
-
     CONSTCD11 year_month_day_last(const date::year& y,
                                   const date::month_day_last& mdl) NOEXCEPT;
 
@@ -643,7 +631,6 @@ class year_month_weekday
     date::weekday_indexed wdi_;
 
 public:
-
     CONSTCD11 year_month_weekday(const date::year& y, const date::month& m,
                                    const date::weekday_indexed& wdi) NOEXCEPT;
     CONSTCD14 year_month_weekday(const day_point& dp) NOEXCEPT;
@@ -706,7 +693,6 @@ class year_month_weekday_last
     date::weekday_last wdl_;
 
 public:
-
     CONSTCD11 year_month_weekday_last(const date::year& y, const date::month& m,
                                       const date::weekday_last& wdl) NOEXCEPT;
 
@@ -1550,7 +1536,7 @@ operator "" _y(unsigned long long y) NOEXCEPT
 {
     return date::year(static_cast<int>(y));
 }
-#endif
+#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
 CONSTDATA date::last_spec last{};
 
@@ -1853,20 +1839,14 @@ inline
 bool
 month_day::ok() const NOEXCEPT
 {
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)     
     CONSTDATA date::day d[] =
-        {31_d, 29_d, 31_d, 30_d, 31_d, 30_d, 31_d, 31_d, 30_d, 31_d, 30_d, 31_d};
-    return m_.ok() && 1_d <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
-#else
-    static const date::day days[] =
     {
-        date::day(31), date::day(29), date::day(31), 
-        date::day(30), date::day(31), date::day(30), 
-        date::day(31), date::day(31), date::day(30), 
-        date::day(31), date::day(30), date::day(31) 
+        date::day(31), date::day(29), date::day(31),
+        date::day(30), date::day(31), date::day(30),
+        date::day(31), date::day(31), date::day(30),
+        date::day(31), date::day(30), date::day(31)
     };
-    return m_.ok() && date::day{1} <= d_ && d_ <= days[static_cast<unsigned>(m_)-1];
-#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+    return m_.ok() && date::day{1} <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
 
 CONSTCD11
@@ -2147,22 +2127,15 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     CONSTDATA date::day d[] =
-        {31_d, 29_d, 31_d, 30_d, 31_d, 30_d, 31_d, 31_d, 30_d, 31_d, 30_d, 31_d};
-    return m_.ok() && 1_d <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
-#else
-    static const date::day days[] =
     {
-        date::day(31), date::day(28), date::day(31), 
-        date::day(30), date::day(31), date::day(30), 
-        date::day(31), date::day(31), date::day(30), 
+        date::day(31), date::day(28), date::day(31),
+        date::day(30), date::day(31), date::day(30),
+        date::day(31), date::day(31), date::day(30),
         date::day(31), date::day(30), date::day(31)
     };
-
-    return month() != feb || !y_.is_leap() 
-        ? days[static_cast<unsigned>(month()) - 1] : date::day{29};
-#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+    return month() != feb || !y_.is_leap() ?
+        d[static_cast<unsigned>(month()) - 1] : date::day{29};
 }
 
 CONSTCD11
@@ -3223,19 +3196,19 @@ struct classify_duration
 {
     static CONSTDATA classify value =
         std::ratio_greater_equal<
-            typename Duration::period, 
-            days::period >::value 
+            typename Duration::period,
+            days::period >::value
                 ? classify::not_valid :
         std::ratio_greater_equal<
-            typename Duration::period, 
+            typename Duration::period,
             std::chrono::hours::period>::value
                 ? classify::hour :
         std::ratio_greater_equal<
-            typename Duration::period, 
+            typename Duration::period,
             std::chrono::minutes::period>::value
                 ? classify::minute :
         std::ratio_greater_equal<
-            typename Duration::period, 
+            typename Duration::period,
             std::chrono::seconds::period>::value
                 ? classify::second :
                 classify::subsecond;
@@ -3671,7 +3644,6 @@ public:
         {}
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 };
-
 
 template <class Rep, class Period,
           class = typename std::enable_if
