@@ -811,7 +811,7 @@ struct choose_trunc_type
                      <
                          digits < 64,
                          std::int64_t,
-#ifndef _MSC_VER
+#ifdef __SIZEOF_INT128__
                          __int128
 #else
                          std::int64_t
