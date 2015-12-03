@@ -48,7 +48,7 @@ private:
 
     Type                         type_{month_day};
 
-#if !defined(_MSC_VER) || (_MSC_VER > 1900)
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     union U
 #else
     struct U
