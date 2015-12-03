@@ -35,7 +35,11 @@ private:
     {
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
         pair() : month_day_(date::jan / 1), weekday_(0U) {}
+
+        pair(const date::month_day& month_day, const date::weekday& weekday)
+            : month_day_(month_day), weekday_(weekday) {}
 #endif
+
         date::month_day month_day_;
         date::weekday   weekday_;
     };
@@ -44,17 +48,17 @@ private:
 
     Type                         type_{month_day};
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-    struct U
-#else
+#if !defined(_MSC_VER) || (_MSC_VER > 1900)
     union U
+#else
+    struct U
 #endif
     {
         date::month_day          month_day_;
         date::month_weekday_last month_weekday_last_;
         pair                     month_day_weekday_;
 
-#if !defined(_MSC_VER) && (_MSC_VER >= 1900)
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         U() : month_day_{date::jan/1} {}
 #else
         U() : 
@@ -62,12 +66,7 @@ private:
             month_weekday_last_(date::month(0U), date::weekday_last(date::weekday(0U))) 
         {}
 
-        U(const date::month_day& month_day,
-            const date::weekday& weekday) :
-            month_day_(month_day),
-            month_weekday_last_(date::month(0U), date::weekday_last(weekday))
-        {}
-#endif // !defined(_MSC_VER) && (_MSC_VER >= 1900)
+#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
         U& operator=(const date::month_day& x);
         U& operator=(const date::month_weekday_last& x);
