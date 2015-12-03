@@ -33,6 +33,13 @@ class MonthDayTime
 private:
     struct pair
     {
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+        pair() : month_day_(date::jan / 1), weekday_(0U) {}
+
+        pair(const date::month_day& month_day, const date::weekday& weekday)
+            : month_day_(month_day), weekday_(weekday) {}
+#endif
+
         date::month_day month_day_;
         date::weekday   weekday_;
     };
@@ -40,17 +47,32 @@ private:
     enum Type {month_day, month_last_dow, lteq, gteq};
 
     Type                         type_{month_day};
+
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     union U
+#else
+    struct U
+#endif
     {
         date::month_day          month_day_;
         date::month_weekday_last month_weekday_last_;
         pair                     month_day_weekday_;
 
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         U() : month_day_{date::jan/1} {}
+#else
+        U() : 
+            month_day_(date::jan/1), 
+            month_weekday_last_(date::month(0U), date::weekday_last(date::weekday(0U))) 
+        {}
+
+#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+
         U& operator=(const date::month_day& x);
         U& operator=(const date::month_weekday_last& x);
         U& operator=(const pair& x);
     } u;
+
     std::chrono::hours           h_{0};
     std::chrono::minutes         m_{0};
     std::chrono::seconds         s_{0};
@@ -165,7 +187,12 @@ struct Zone::zonelet
 
     std::chrono::seconds gmtoff_;
     tag tag_ = has_rule;
+
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     union U
+#else
+    struct U
+#endif
     {
         std::string          rule_;
         std::chrono::minutes save_;
@@ -175,6 +202,7 @@ struct Zone::zonelet
         U(const U&) {}
         U& operator=(const U&) = delete;
     } u;
+
     std::string          format_;
     date::year           until_year_{0};
     MonthDayTime         until_date_;
