@@ -90,7 +90,6 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
-    using int64_t = std::int64_t;
 
     static_assert(year{2015} == 2015_y, "");
     static_assert(year{2015} != 2016_y, "");
@@ -108,6 +107,7 @@ main()
     static_assert(year::max().ok(), "");
 
 #if __cplusplus >= 201402
+    using int64_t = std::int64_t;
     static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
         >= as<int64_t>(days::min()), "");
     static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
