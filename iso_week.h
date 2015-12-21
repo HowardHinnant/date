@@ -42,9 +42,9 @@ using day_point = date::day_point;
 
 // types
 
-struct lastweek
+struct last_week
 {
-    explicit lastweek() = default;
+    explicit last_week() = default;
 };
 
 class weekday;
@@ -64,15 +64,15 @@ class year_lastweek_weekday;
 CONSTCD11 year_weeknum operator/(const year& y, const weeknum& wn) NOEXCEPT;
 CONSTCD11 year_weeknum operator/(const year& y, int            wn) NOEXCEPT;
 
-CONSTCD11 year_lastweek operator/(const year& y, lastweek      wn) NOEXCEPT;
+CONSTCD11 year_lastweek operator/(const year& y, last_week      wn) NOEXCEPT;
 
 CONSTCD11 weeknum_weekday operator/(const weeknum& wn, const weekday& wd) NOEXCEPT;
 CONSTCD11 weeknum_weekday operator/(const weeknum& wn, int            wd) NOEXCEPT;
 CONSTCD11 weeknum_weekday operator/(const weekday& wd, const weeknum& wn) NOEXCEPT;
 CONSTCD11 weeknum_weekday operator/(const weekday& wd, int            wn) NOEXCEPT;
 
-CONSTCD11 lastweek_weekday operator/(const lastweek& wn, const weekday& wd) NOEXCEPT;
-CONSTCD11 lastweek_weekday operator/(const lastweek& wn, int            wd) NOEXCEPT;
+CONSTCD11 lastweek_weekday operator/(const last_week& wn, const weekday& wd) NOEXCEPT;
+CONSTCD11 lastweek_weekday operator/(const last_week& wn, int            wd) NOEXCEPT;
 
 CONSTCD11 year_weeknum_weekday operator/(const year_weeknum& ywn, const weekday& wd) NOEXCEPT;
 CONSTCD11 year_weeknum_weekday operator/(const year_weeknum& ywn, int            wd) NOEXCEPT;
@@ -719,7 +719,7 @@ operator "" _w(unsigned long long wn) NOEXCEPT
 
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
-CONSTDATA iso_week::lastweek last{};
+CONSTDATA iso_week::last_week last{};
 
 CONSTDATA iso_week::weekday sun{7u};
 CONSTDATA iso_week::weekday mon{1u};
@@ -1560,7 +1560,7 @@ operator/(const year& y, int wn) NOEXCEPT
 CONSTCD11
 inline
 year_lastweek
-operator/(const year& y, lastweek) NOEXCEPT
+operator/(const year& y, last_week) NOEXCEPT
 {
     return year_lastweek{y};
 }
@@ -1600,7 +1600,7 @@ operator/(const weekday& wd, int wn) NOEXCEPT
 CONSTCD11
 inline
 lastweek_weekday
-operator/(const lastweek&, const weekday& wd) NOEXCEPT
+operator/(const last_week&, const weekday& wd) NOEXCEPT
 {
     return lastweek_weekday{wd};
 }
@@ -1608,7 +1608,7 @@ operator/(const lastweek&, const weekday& wd) NOEXCEPT
 CONSTCD11
 inline
 lastweek_weekday
-operator/(const lastweek& wn, int wd) NOEXCEPT
+operator/(const last_week& wn, int wd) NOEXCEPT
 {
     return wn/weekday{static_cast<unsigned>(wd)};
 }
