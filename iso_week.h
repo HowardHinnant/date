@@ -141,8 +141,6 @@ public:
     year& operator+=(const years& y) NOEXCEPT;
     year& operator-=(const years& y) NOEXCEPT;
 
-    CONSTCD11 bool is_leap() const NOEXCEPT;
-
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
@@ -567,14 +565,6 @@ inline year& year::operator--() NOEXCEPT {--y_; return *this;}
 inline year year::operator--(int) NOEXCEPT {auto tmp(*this); --(*this); return tmp;}
 inline year& year::operator+=(const years& y) NOEXCEPT {*this = *this + y; return *this;}
 inline year& year::operator-=(const years& y) NOEXCEPT {*this = *this - y; return *this;}
-
-CONSTCD11
-inline
-bool
-year::is_leap() const NOEXCEPT
-{
-    return y_ % 4 == 0 && (y_ % 100 != 0 || y_ % 400 == 0);
-}
 
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
 CONSTCD11 inline bool year::ok() const NOEXCEPT {return min() <= *this && *this <= max();}
