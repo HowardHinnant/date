@@ -818,8 +818,8 @@ inline
 weeks
 operator-(const weeknum& x, const weeknum& y) NOEXCEPT
 {
-    return weeks{static_cast<weeks::rep>(static_cast<unsigned>(x)
-                                       - static_cast<unsigned>(y))};
+    return weeks{static_cast<weeks::rep>(static_cast<unsigned>(x)) -
+                 static_cast<weeks::rep>(static_cast<unsigned>(y))};
 }
 
 CONSTCD11
