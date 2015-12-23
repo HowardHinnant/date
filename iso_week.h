@@ -73,6 +73,7 @@ CONSTCD11 weeknum_weekday operator/(const weekday& wd, int            wn) NOEXCE
 
 CONSTCD11 lastweek_weekday operator/(const last_week& wn, const weekday& wd) NOEXCEPT;
 CONSTCD11 lastweek_weekday operator/(const last_week& wn, int            wd) NOEXCEPT;
+CONSTCD11 lastweek_weekday operator/(const weekday& wd, const last_week& wn) NOEXCEPT;
 
 CONSTCD11 year_weeknum_weekday operator/(const year_weeknum& ywn, const weekday& wd) NOEXCEPT;
 CONSTCD11 year_weeknum_weekday operator/(const year_weeknum& ywn, int            wd) NOEXCEPT;
@@ -1600,7 +1601,15 @@ inline
 lastweek_weekday
 operator/(const last_week& wn, int wd) NOEXCEPT
 {
-    return wn/weekday{static_cast<unsigned>(wd)};
+    return wn / weekday{static_cast<unsigned>(wd)};
+}
+
+CONSTCD11
+inline
+lastweek_weekday
+operator/(const weekday& wd, const last_week& wn) NOEXCEPT
+{
+    return wn / wd;
 }
 
 CONSTCD11
