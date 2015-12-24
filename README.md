@@ -6,4 +6,4 @@ This is actually three separate C++11/C++14 libraries:
 
 2. `"tz.h"` / `"tz.cpp"`  are a timezone library built on top of the `"date.h"` library.  This timezone library is a complete parser of the IANA timezone database.  It provides for an easy way to access all of the data in this database, using the types from `"date.h"` and `<chrono>`.  The IANA database also includes data on leap seconds, and this library provides utilities to compute with that information as well.  See http://howardhinnant.github.io/tz.html for more details.
 
-3. `"iso_week.h"` is a header-only library built on top of the `"date.h"` library which implements the ISO week date calendar.
+3. `"iso_week.h"` is a header-only library built on top of the `"date.h"` library which implements the ISO week date calendar.  See http://howardhinnant.github.io/iso_week.html for more details.
