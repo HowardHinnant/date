@@ -855,8 +855,13 @@ trunc(T t) NOEXCEPT
     static_assert(digits < numeric_limits<I>::digits, "");
     CONSTDATA auto max = I{1} << (digits-1);
     CONSTDATA auto min = -max;
+    const auto negative = t < T{0};
     if (min <= t && t <= max && t != 0 && t == t)
+    {
         t = static_cast<T>(static_cast<I>(t));
+        if (t == 0 && negative)
+            t = -t;
+    }
     return t;
 }
 
@@ -894,6 +899,8 @@ round(const std::chrono::duration<Rep, Period>& d)
 {
     auto t0 = floor<To>(d);
     auto t1 = t0 + To{1};
+    if (t1 == To{0} && t0 < To{0})
+        t1 = -t1;
     auto diff0 = d - t0;
     auto diff1 = t1 - d;
     if (diff0 == diff1)
