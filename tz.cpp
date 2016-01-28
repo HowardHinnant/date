@@ -84,7 +84,7 @@ namespace date
 #if _WIN32 // TODO: sensible default for all platforms.
 static std::string install{ "c:\\tzdata" };
 #else
-static std::string install{ "/Users/howardhinnant/Downloads/tzdata2015f" };
+static std::string install{ "/Users/howardhinnant/Downloads/tzdata2016a" };
 #endif
 
 static const std::vector<std::string> files =
@@ -1904,6 +1904,22 @@ init_tzdb()
         msg += install;
         msg += "\"";
         throw std::runtime_error(msg);
+    }
+
+    {
+        std::ifstream infile(path + "Makefile");
+        while (infile)
+        {
+            std::string version;
+            infile >> version;
+            if (version == "VERSION=")
+            {
+                infile >> db.version;
+                break;
+            }
+        }
+        if (db.version.empty())
+            throw std::runtime_error("Unable to get Timezone database version");
     }
 
     for (const auto& filename : files)

@@ -204,7 +204,7 @@ public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     Zone(Zone&&) = default;
     Zone& operator=(Zone&&) = default;
-#else
+#else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     Zone(Zone&& src)
     :
         name_(std::move(src.name_)),
@@ -217,7 +217,7 @@ public:
         zonelets_ = std::move(src.zonelets_);
         return *this;
     }
-#endif
+#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
     explicit Zone(const std::string& s);
 
@@ -553,35 +553,18 @@ struct timezone_mapping
     std::string type;
 };
 
-#if 0
-// This represents the type for the tzi field in the windows registry.
-// It's TBD if we need this yet.
-struct TZI
-{
-    TZI() = default;
-    int Bias;
-    int StandardBias;
-    int DaylightBias;
-    SYSTEMTIME StandardDate;
-    SYSTEMTIME DaylightDate;
-};
-#endif
-
 struct timezone_info
 {
     timezone_info() = default;
     std::string timezone_id;
     std::string standard_name;
-#if 0 // TBD
-    std::string display_name;
-    TZI tzi;
-#endif
 };
 
-#endif
+#endif  // TIMEZONE_MAPPING
 
 struct TZ_DB
 {
+    std::string       version;
     std::vector<Zone> zones;
     std::vector<Link> links;
     std::vector<Leap> leaps;
@@ -596,7 +579,7 @@ struct TZ_DB
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&&) = default;
     TZ_DB& operator=(TZ_DB&&) = default;
-#else
+#else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&& src)
     :
         zones(std::move(src.zones)),
@@ -622,7 +605,7 @@ struct TZ_DB
 #endif
         return *this;
     }
-#endif
+#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 };
 
 std::ostream& operator<<(std::ostream& os, const TZ_DB& db);
