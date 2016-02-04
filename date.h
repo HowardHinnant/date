@@ -805,6 +805,12 @@ public:
         {}
 };
 
+#ifdef __GNUC__
+// GCC complains about __int128 with -pedantic or -pedantic-errors
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+
 template <class T>
 struct choose_trunc_type
 {
@@ -825,6 +831,10 @@ struct choose_trunc_type
                      >::type
                  >::type;
 };
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 template <class T>
 CONSTCD11
