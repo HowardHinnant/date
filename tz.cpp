@@ -2065,6 +2065,7 @@ locate_native_zone(const std::string& native_tz_name)
 std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db)
 {
+    os << "Version: " << db.version << '\n';
     std::string title("--------------------------------------------"
                       "--------------------------------------------\n"
                       "Name           ""Start Y ""End Y   "
