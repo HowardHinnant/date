@@ -208,7 +208,7 @@ public:
     Zone(Zone&& src)
     :
         name_(std::move(src.name_)),
-		zonelets_(std::move(src.zonelets_))
+        zonelets_(std::move(src.zonelets_))
     {}
 
     Zone& operator=(Zone&& src)
@@ -582,28 +582,28 @@ struct TZ_DB
 #else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&& src)
     :
-		version(std::move(src.version)),
+        version(std::move(src.version)),
         zones(std::move(src.zones)),
-		links(std::move(src.links)),
-		leaps(std::move(src.leaps)),
-		rules(std::move(src.rules))
+        links(std::move(src.links)),
+        leaps(std::move(src.leaps)),
+        rules(std::move(src.rules))
 #if TIMEZONE_MAPPING
         ,
-		mappings(std::move(src.mappings)),
-		native_zones(std::move(src.native_zones))
+        mappings(std::move(src.mappings)),
+        native_zones(std::move(src.native_zones))
 #endif
     {}
 
     TZ_DB& operator=(TZ_DB&& src)
     {
-		version = std::move(src.version);
+        version = std::move(src.version);
         zones = std::move(src.zones);
-		links = std::move(src.links);
-		leaps = std::move(src.leaps);
-		rules = std::move(src.rules);
+        links = std::move(src.links);
+        leaps = std::move(src.leaps);
+        rules = std::move(src.rules);
 #if TIMEZONE_MAPPING
-		mappings = std::move(src.mappings);
-		native_zones = std::move(src.native_zones);
+        mappings = std::move(src.mappings);
+        native_zones = std::move(src.native_zones);
 #endif
         return *this;
     }
