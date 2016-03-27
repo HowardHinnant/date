@@ -223,13 +223,13 @@ namespace // Put types in an anonymous name space.
             value.clear();
             wchar_t value_buffer[256];
             // in/out parameter. Documentation say that size is a count of bytes not chars.
-            DWORD size = sizeof(value_buffer);
+            DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
             DWORD tzi_type = REG_SZ;
             if (RegQueryValueExW(handle(), key_name, nullptr, &tzi_type,
                 reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS)
             {
                 // Function does not guarantee to null terminate.
-                value_buffer[size] = L'\0';
+                value_buffer[size/sizeof(value_buffer[0])] = L'\0';
                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
                 value = converter.to_bytes(value_buffer);
                 return true;
@@ -293,7 +293,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
     {
         timezone_info tz;
 
-        size = (DWORD) sizeof(zone_key_name);
+        size = (DWORD) sizeof(zone_key_name)/sizeof(zone_key_name[0]);
         auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
             nullptr, nullptr, nullptr, nullptr);
         if (status != ERROR_SUCCESS && status != ERROR_NO_MORE_ITEMS)
@@ -301,7 +301,6 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
             + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
-        zone_key_name[size] = L'\0';
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         tz.timezone_id = converter.to_bytes(zone_key_name);
 
