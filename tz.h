@@ -3,7 +3,7 @@
 
 // The MIT License (MIT)
 // 
-// Copyright (c) 2015 Howard Hinnant
+// Copyright (c) 2015, 2016 Howard Hinnant
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,21 @@ Technically any OS may use the mapping process but currently only Windows does u
 #ifndef LAZY_INIT
 #  define LAZY_INIT 1
 #endif
+
+#ifndef HAS_REMOTE_API
+#  ifndef _MSC_VER
+#    define HAS_REMOTE_API 1
+#  else
+#    define HAS_REMOTE_API 0
+#  endif
+#endif
+
+#ifndef AUTO_DOWNLOAD
+#  define AUTO_DOWNLOAD HAS_REMOTE_API
+#endif
+
+static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
+              "AUTO_DOWNLOAD can not be turned on without HAS_REMOTE_API");
 
 #include "date.h"
 
@@ -627,7 +642,12 @@ std::ostream& operator<<(std::ostream& os, const TZ_DB& db);
 
 const TZ_DB& get_tzdb();
 const TZ_DB& reload_tzdb();
-const TZ_DB& reload_tzdb(const std::string& new_install);
+
+#if HAS_REMOTE_API
+std::string remote_version();
+bool        remote_download(const std::string& version);
+bool        remote_install(const std::string& version);
+#endif
 
 const Zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST

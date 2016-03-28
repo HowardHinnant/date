@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 // 
-// Copyright (c) 2015 Howard Hinnant
+// Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,6 +35,9 @@
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
+#if HAS_REMOTE_API
+#include <curl/curl.h>
+#endif
 #ifdef _WIN32
 #include <locale>
 #include <codecvt>
@@ -73,6 +76,7 @@
 #include <io.h>
 #else
 #include <unistd.h>
+#include <wordexp.h>
 #endif
 
 namespace date
@@ -82,10 +86,24 @@ namespace date
 // +---------------------+
 
 #if _WIN32 // TODO: sensible default for all platforms.
-static std::string install{ "c:\\tzdata" };
-#else
-static std::string install{ "/Users/howardhinnant/Downloads/tzdata" };
-#endif
+static const std::string install{ "c:\\tzdata" };
+#else  // !_WIN32
+
+static
+std::string
+expand_path(std::string path)
+{
+    ::wordexp_t w{};
+    ::wordexp(path.c_str(), &w, 0);
+    assert(w.we_wordc == 1);
+    path = w.we_wordv[0];
+    ::wordfree(&w);
+    return path;
+}
+
+static const std::string install = expand_path("~/Downloads/tzdata");
+
+#endif  // !_WIN32
 
 static const std::vector<std::string> files =
 {
@@ -117,7 +135,7 @@ static_assert(boring_day.ok(), "Configuration error");
 #endif
 
 // Until filesystem arrives.
-static const char folder_delimiter =
+static CONSTDATA char folder_delimiter =
 #ifdef _WIN32
 '\\';
 #else
@@ -163,7 +181,7 @@ static std::string get_win32_message(DWORD error_code)
     assert(message_buffer.get() != nullptr);
     return std::string(message_buffer.get());
 }
-#endif
+#endif  // _WIN32
 
 #if TIMEZONE_MAPPING
 
@@ -447,7 +465,7 @@ native_to_standard_timezone_name(const std::string& native_tz_name,
     }
     return false;
 }
-#endif
+#endif  // TIMEZONE_MAPPING
 
 // Parsing helpers
 
@@ -1893,6 +1911,138 @@ operator<<(std::ostream& os, const Leap& x)
     return os << x.date_ << "  +";
 }
 
+#if HAS_REMOTE_API
+
+// CURL tools
+
+static
+int
+curl_global()
+{
+    if (::curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+        throw std::runtime_error("CURL global initialization failed");
+    return 0;
+}
+
+static const auto curl_delete = [](CURL* p) {::curl_easy_cleanup(p);};
+
+static
+std::unique_ptr<CURL, decltype(curl_delete)>
+curl_init()
+{
+    static const auto curl_is_now_initiailized = curl_global();
+    return std::unique_ptr<CURL, decltype(curl_delete)>{::curl_easy_init(), curl_delete};
+}
+
+std::string
+remote_version()
+{
+    std::string version;
+    auto curl = curl_init();
+    if (curl != nullptr)
+    {
+        curl_easy_setopt(curl.get(), CURLOPT_URL, "http://www.iana.org/time-zones");
+        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
+                                             std::size_t nmemb, void* userp);
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
+            static_cast<curl_callback>(
+            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
+                -> std::size_t
+            {
+                auto& str = *static_cast<std::string*>(userp);
+                auto realsize = size * nmemb;
+                auto data = static_cast<const char*>(contents);
+                str.append(data, realsize);
+                return realsize;
+            }));
+        std::string str;
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
+        auto res = curl_easy_perform(curl.get());
+        if (res == CURLE_OK)
+        {
+            CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
+            CONSTDATA auto db_size = sizeof(db) - 1;
+            auto p = str.find(db, 0, db_size);
+            if (p != std::string::npos && p + (db_size + 5) <= str.size())
+                version = str.substr(p + db_size, 5);
+        }
+    }
+    return version;
+}
+
+bool
+remote_download(const std::string& version)
+{
+    assert(!version.empty());
+    auto curl = curl_init();
+    if (curl != nullptr)
+    {
+        auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" +
+                   version + ".tar.gz";
+        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
+                                             std::size_t nmemb, void* userp);
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
+            static_cast<curl_callback>(
+            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
+                -> std::size_t
+            {
+                auto& of = *static_cast<std::ofstream*>(userp);
+                auto realsize = size * nmemb;
+                auto data = static_cast<const char*>(contents);
+                of.write(data, realsize);
+                return realsize;
+            }));
+        auto tarfile = install + version + ".tar.gz";
+        decltype(curl_easy_perform(curl.get())) res;
+        {
+            std::ofstream of(tarfile);
+            curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
+            res = curl_easy_perform(curl.get());
+        }
+        return res == CURLE_OK;
+    }
+    return false;
+}
+
+bool
+remote_install(const std::string& version)
+{
+    auto success = false;
+    assert(!version.empty());
+    auto tarfile = install + version + ".tar.gz";
+    if (file_exists(tarfile))
+    {
+        if (file_exists(install))
+            std::system(("rm -R " + install).c_str());
+        if (std::system(("mkdir " + install + " && "
+                 "tar -xzf " + tarfile + " -C " + install).c_str()) == 0)
+            success = true;
+        std::system(("rm " + tarfile).c_str());
+    }
+    return success;
+}
+
+#endif  // HAS_REMOTE_API
+
+static
+std::string
+get_version(const std::string& path)
+{
+    std::ifstream infile(path + "Makefile");
+    std::string version;
+    while (infile)
+    {
+        infile >> version;
+        if (version == "VERSION=")
+        {
+            infile >> version;
+            return version;
+        }
+    }
+    throw std::runtime_error("Unable to get Timezone database version from " + path);
+}
+
 static
 TZ_DB
 init_tzdb()
@@ -1903,6 +2053,35 @@ init_tzdb()
     bool continue_zone = false;
     TZ_DB db;
 
+#if AUTO_DOWNLOAD
+    if (!file_exists(install))
+    {
+        auto rv = remote_version();
+        if (!rv.empty() && remote_download(rv))
+            remote_install(rv);
+        if (!file_exists(install))
+        {
+            std::string msg = "Timezone database not found at \"";
+            msg += install;
+            msg += "\"";
+            throw std::runtime_error(msg);
+        }
+        db.version = get_version(path);
+    }
+    else
+    {
+        db.version = get_version(path);
+        auto rv = remote_version();
+        if (!rv.empty() && db.version != rv)
+        {
+            if (remote_download(rv))
+            {
+                remote_install(rv);
+                db.version = get_version(path);
+            }
+        }
+    }
+#else  // !AUTO_DOWNLOAD
     if (!file_exists(install))
     {
         std::string msg = "Timezone database not found at \"";
@@ -1910,21 +2089,8 @@ init_tzdb()
         msg += "\"";
         throw std::runtime_error(msg);
     }
-
-    {
-        std::ifstream infile(path + "Makefile");
-        while (infile)
-        {
-            infile >> line;
-            if (line == "VERSION=")
-            {
-                infile >> db.version;
-                break;
-            }
-        }
-        if (db.version.empty())
-            throw std::runtime_error("Unable to get Timezone database version");
-    }
+    db.version = get_version(path);
+#endif  // !AUTO_DOWNLOAD
 
     for (const auto& filename : files)
     {
@@ -2001,13 +2167,11 @@ access_tzdb()
 const TZ_DB&
 reload_tzdb()
 {
-    return access_tzdb() = init_tzdb();
-}
-
-const TZ_DB&
-reload_tzdb(const std::string& new_install)
-{
-    install = new_install;
+#if AUTO_DOWNLOAD
+    auto const& v = access_tzdb().version;
+    if (!v.empty() && v == remote_version())
+        return access_tzdb();
+#endif
     return access_tzdb() = init_tzdb();
 }
 
