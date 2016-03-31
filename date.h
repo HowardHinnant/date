@@ -887,6 +887,9 @@ trunc(const std::chrono::duration<Rep, Period>& d)
     return To{detail::trunc(std::chrono::duration_cast<To>(d).count())};
 }
 
+// VS Update 2 provides floor, ceil, round, abs in chrono.
+#if _MSC_FULL_VER < 190023918
+
 // round down
 template <class To, class Rep, class Period>
 CONSTCD14
@@ -949,17 +952,6 @@ abs(std::chrono::duration<Rep, Period> d)
     return d >= d.zero() ? d : -d;
 }
 
-// trunc towards zero
-template <class To, class Clock, class FromDuration>
-CONSTCD11
-inline
-std::chrono::time_point<Clock, To>
-trunc(const std::chrono::time_point<Clock, FromDuration>& tp)
-{
-    using std::chrono::time_point;
-    return time_point<Clock, To>{trunc<To>(tp.time_since_epoch())};
-}
-
 // round down
 template <class To, class Clock, class FromDuration>
 CONSTCD11
@@ -991,6 +983,19 @@ ceil(const std::chrono::time_point<Clock, FromDuration>& tp)
 {
     using std::chrono::time_point;
     return time_point<Clock, To>{ceil<To>(tp.time_since_epoch())};
+}
+
+#endif  // _MSC_FULL_VER < 190023918
+
+// trunc towards zero
+template <class To, class Clock, class FromDuration>
+CONSTCD11
+inline
+std::chrono::time_point<Clock, To>
+trunc(const std::chrono::time_point<Clock, FromDuration>& tp)
+{
+    using std::chrono::time_point;
+    return time_point<Clock, To>{trunc<To>(tp.time_since_epoch())};
 }
 
 // day
