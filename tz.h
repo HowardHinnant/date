@@ -57,6 +57,7 @@ Technically any OS may use the mapping process but currently only Windows does u
 #include <chrono>
 #include <cstdint>
 #include <istream>
+#include <locale>
 #include <ostream>
 #include <ratio>
 #include <sstream>
@@ -684,6 +685,234 @@ utc_clock::utc_to_sys(std::chrono::time_point<utc_clock, Duration> t)
     if (lt != leaps.begin() && tp + seconds{1} < lt[-1])
         tp += seconds{1};
     return tp;
+}
+
+// format
+
+namespace detail
+{
+
+template <class Duration>
+std::string
+format(const std::locale& loc, std::string format,
+       std::chrono::time_point<std::chrono::system_clock, Duration> tp,
+       const Zone* zone)
+{
+    // Handle these specially
+    // %S  append fractional seconds if tp has precision finer than seconds
+    // %T  append fractional seconds if tp has precision finer than seconds
+    // %z  replace with offset from zone
+    // %Z  replace with abbreviation from zone
+
+    using namespace std;
+    using namespace std::chrono;
+    for (auto i = 0; i < format.size(); ++i)
+    {
+        if (format[i] == '%' && i < format.size()-1)
+        {
+            switch (format[i+1])
+            {
+            case 'S':
+            case 'T':
+                if (ratio_less<typename Duration::period, ratio<1>>::value)
+                {
+                    ostringstream os;
+                    os.imbue(loc);
+                    os << make_time(tp - floor<seconds>(tp));
+                    auto s = os.str();
+                    s.erase(0, 8);
+                    format.insert(i+2, s);
+                    i += 2 + s.size() - 1;
+                }
+                break;
+            case 'z':
+                if (zone == nullptr)
+                {
+                    format.replace(i, 2, "+0000");
+                    i += 5 - 1;
+                }
+                else
+                {
+                    auto info = zone->get_info(tp, tz::local);
+                    auto offset = duration_cast<minutes>(info.offset);
+                    ostringstream os;
+                    if (offset >= minutes{0})
+                        os << '+';
+                    os << make_time(offset);
+                    auto s = os.str();
+                    s.erase(s.find(':'), 1);
+                    format.replace(i, 2, s);
+                    i += s.size() - 1;
+                }
+                break;
+            case 'Z':
+                if (zone == nullptr)
+                {
+                    format.replace(i, 2, "UTC");
+                    i += 3 - 1;
+                }
+                else
+                {
+                    auto info = zone->get_info(tp, tz::local);
+                    format.replace(i, 2, info.abbrev);
+                    i += info.abbrev.size() - 1;
+                }
+                break;
+            }
+        }
+    }
+    auto& f = use_facet<time_put<char>>(loc);
+    ostringstream os;
+    auto tt = system_clock::to_time_t(tp);
+    std::tm tm{};
+#ifndef _MSC_VER
+    gmtime_r(&tt, &tm);
+#else
+    gmtime_s(&tm, &tt);
+#endif
+    f.put(os, os, os.fill(), &tm, format.data(), format.data() + format.size());
+    return os.str();
+}
+
+}  // namespace detail
+
+template <class Duration>
+inline
+std::string
+format(const std::locale& loc, std::string format,
+       std::chrono::time_point<std::chrono::system_clock, Duration> tp,
+       const Zone* zone = nullptr)
+{
+    return detail::format(loc, std::move(format), tp, zone);
+}
+
+inline
+std::string
+format(const std::locale& loc, std::string format, day_point tp,
+       const Zone* zone = nullptr)
+{
+    return detail::format(loc, std::move(format), tp, zone);
+}
+
+template <class Duration>
+inline
+std::string
+format(std::string format,
+       std::chrono::time_point<std::chrono::system_clock, Duration> tp,
+       const Zone* zone = nullptr)
+{
+    return detail::format(std::locale{}, std::move(format), tp, zone);
+}
+
+inline
+std::string
+format(std::string format, day_point tp, const Zone* zone = nullptr)
+{
+    return detail::format(std::locale{}, std::move(format), tp, zone);
+}
+
+// parse
+
+template <class Duration>
+void
+parse(std::istream& is, const std::string& format,
+      std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+{
+    using namespace std;
+    using namespace std::chrono;
+    istream::sentry ok{is};
+    if (ok)
+    {
+        auto& f = use_facet<time_get<char>>(is.getloc());
+        ios_base::iostate err = ios_base::goodbit;
+        std::tm tm{};
+        minutes offset{};
+        Duration subseconds{};
+
+        auto b = format.data();
+        auto i = b;
+        auto e = b + format.size();
+        for (; i < e; ++i)
+        {
+            if (*i == '%' && i < e-1)
+            {
+                switch (i[1])
+                {
+                case 'T':
+                case 'S':
+                    f.get(is, 0, is, err, &tm, b, i);
+                    ++i;
+                    b = i+1;
+                    if (*i == 'T')
+                    {
+                        const char hm[] = "%H:%M:";
+                        f.get(is, 0, is, err, &tm, hm, hm+6);
+                    }
+                    if (ratio_less<typename Duration::period, ratio<1>>::value)
+                    {
+                        double s;
+                        is >> s;
+                        if (!is.fail())
+                            subseconds = duration_cast<Duration>(duration<double>{s});
+                        else
+                            err &= ios_base::failbit;
+                    }
+                    else
+                    {
+                        const char hm[] = "%S";
+                        f.get(is, 0, is, err, &tm, hm, hm+2);
+                    }
+                    break;
+                case 'z':
+                    f.get(is, 0, is, err, &tm, b, i);
+                    ++i;
+                    b = i+1;
+                    if ((err & ios_base::failbit) == 0)
+                    {
+                        char sign{};
+                        is >> sign;
+                        if (!is.fail() && (sign == '+' || sign == '-'))
+                        {
+                            char h1, h0, m1, m0;
+                            h1 = static_cast<char>(is.get());
+                            h0 = static_cast<char>(is.get());
+                            m1 = static_cast<char>(is.get());
+                            m0 = static_cast<char>(is.get());
+                            if (!is.fail() && std::isdigit(h1) && std::isdigit(h0)
+                                           && std::isdigit(m1) && std::isdigit(m0))
+                            {
+                                offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
+                                         10*minutes{m1 - '0'} + minutes{m0 - '0'};
+                                if (sign == '-')
+                                    offset = -offset;
+                            }
+                            else
+                                err &= ios_base::failbit;
+                        }
+                        else
+                            err &= ios_base::failbit;
+                    }
+                    break;
+                }
+            }
+        }
+        if ((err & ios_base::failbit) == 0)
+        {
+            if (b < e)
+                f.get(is, 0, is, err, &tm, b, e);
+            if ((err & ios_base::failbit) == 0)
+            {
+#ifndef _MSC_VER
+                auto tt = timegm(&tm);
+#else
+                auto tt = _mkgmtime(&tm);
+#endif
+                tp = floor<Duration>(system_clock::from_time_t(tt) +
+                                     subseconds - offset);
+            }
+        }
+        is.setstate(err);
+    }
 }
 
 }  // namespace date

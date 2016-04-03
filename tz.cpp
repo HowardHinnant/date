@@ -84,7 +84,7 @@ namespace date
 #if _WIN32 // TODO: sensible default for all platforms.
 static std::string install{ "c:\\tzdata" };
 #else
-static std::string install{ "/Users/howardhinnant/Downloads/tzdata2016a" };
+static std::string install{ "/Users/howardhinnant/Downloads/tzdata" };
 #endif
 
 static const std::vector<std::string> files =

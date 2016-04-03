@@ -29,6 +29,7 @@
 #  include <cmath>
 #endif
 #include <limits>
+#include <locale>
 #include <ostream>
 #include <ratio>
 #include <stdexcept>
@@ -787,12 +788,14 @@ class save_stream
     std::ostream& os_;
     char fill_;
     std::ios::fmtflags flags_;
+    std::locale loc_;
 
 public:
     ~save_stream()
     {
         os_.fill(fill_);
         os_.flags(flags_);
+        os_.imbue(loc_);
     }
 
     save_stream(const save_stream&) = delete;
@@ -802,6 +805,7 @@ public:
         : os_(os)
         , fill_(os.fill())
         , flags_(os.flags())
+        , loc_(os.getloc())
         {}
 };
 
@@ -3564,7 +3568,9 @@ public:
         os.width(2);
         os << std::abs(t.m_.count()) << ':';
         os.width(2);
-        os << std::abs(t.s_.count()) << '.';
+        os << std::abs(t.s_.count())
+           << use_facet<numpunct<char>>(os.getloc()).decimal_point();
+        os.imbue(locale{});
 #if __cplusplus >= 201402
         CONSTDATA auto cl10 = ceil_log10(Period::den);
         using scale = std::ratio_multiply<Period, std::ratio<pow10(cl10)>>;
