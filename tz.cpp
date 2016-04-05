@@ -1249,6 +1249,9 @@ Zone::zonelet::zonelet(const zonelet& i)
 }
 
 Zone::Zone(const std::string& s)
+#if LAZY_INIT
+    : adjusted_(new std::once_flag{})
+#endif
 {
     try
     {
@@ -1566,24 +1569,22 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
     const zonelet* prev_zonelet = nullptr;
     for (auto& z : zonelets_)
     {
+        std::pair<const Rule*, const Rule*> eqr{};
+        std::istringstream in;
+        in.exceptions(std::ios::failbit | std::ios::badbit);
         // Classify info as rule-based, has save, or neither
         if (!z.u.rule_.empty())
         {
             // Find out if this zonelet has a rule or a save
-            auto i = std::lower_bound(rules.begin(), rules.end(), z.u.rule_,
-                [](const Rule& r, const std::string& nm)
-                {
-                    return r.name() < nm;
-                });
-            if (i == rules.end() || i->name() != z.u.rule_)
+            eqr = std::equal_range(rules.data(), rules.data() + rules.size(), z.u.rule_);
+            if (eqr.first == eqr.second)
             {
                 // The rule doesn't exist.  Assume this is a save
                 try
                 {
                     using namespace std::chrono;
                     using string = std::string;
-                    std::istringstream in(z.u.rule_);
-                    in.exceptions(std::ios::failbit | std::ios::badbit);
+                    in.str(z.u.rule_);
                     auto tmp = duration_cast<minutes>(parse_signed_time(in));
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
                     z.u.rule_.~string();
@@ -1606,13 +1607,6 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
         {
             // This zone::zonelet has no rule and no save
             z.tag_ = zonelet::is_empty;
-        }
-
-        std::pair<const Rule*, const Rule*> eqr{};
-        if (z.tag_ == zonelet::has_rule)
-        {
-            eqr = std::equal_range(rules.data(), rules.data() + rules.size(), z.u.rule_);
-            assert(eqr.first != eqr.second);
         }
 
         minutes final_save{0};
@@ -1750,6 +1744,12 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
                                  + std::to_string(static_cast<int>(max_year)) + "]");
     auto tps = floor<seconds>(tp);
+#if LAZY_INIT
+    std::call_once(*adjusted_, [this]()
+                               {
+                                   const_cast<Zone*>(this)->adjust_infos(get_tzdb().rules);
+                               });
+#endif
     auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tps,
         [timezone](second_point t, const zonelet& zl)
         {
@@ -1803,6 +1803,12 @@ operator<<(std::ostream& os, const Zone& z)
     detail::save_stream _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
+#if LAZY_INIT
+    std::call_once(*z.adjusted_, [&z]()
+                                 {
+                                     const_cast<Zone&>(z).adjust_infos(get_tzdb().rules);
+                                 });
+#endif
     os.width(35);
     os << z.name_;
     std::string indent;
@@ -1909,9 +1915,8 @@ init_tzdb()
         std::ifstream infile(path + "Makefile");
         while (infile)
         {
-            std::string version;
-            infile >> version;
-            if (version == "VERSION=")
+            infile >> line;
+            if (line == "VERSION=")
             {
                 infile >> db.version;
                 break;
@@ -1966,8 +1971,10 @@ init_tzdb()
     std::sort(db.rules.begin(), db.rules.end());
     Rule::split_overlaps(db.rules);
     std::sort(db.zones.begin(), db.zones.end());
+#if !LAZY_INIT
     for (auto& z : db.zones)
         z.adjust_infos(db.rules);
+#endif
     db.zones.shrink_to_fit();
     std::sort(db.links.begin(), db.links.end());
     db.links.shrink_to_fit();

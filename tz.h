@@ -50,6 +50,10 @@ Technically any OS may use the mapping process but currently only Windows does u
 #endif
 #endif
 
+#ifndef LAZY_INIT
+#  define LAZY_INIT 1
+#endif
+
 #include "date.h"
 
 #include <algorithm>
@@ -200,6 +204,9 @@ private:
 
     std::string          name_;
     std::vector<zonelet> zonelets_;
+#if LAZY_INIT
+    std::unique_ptr<std::once_flag> adjusted_;
+#endif
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -207,15 +214,20 @@ public:
     Zone& operator=(Zone&&) = default;
 #else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     Zone(Zone&& src)
-    :
-        name_(std::move(src.name_)),
-        zonelets_(std::move(src.zonelets_))
+    : name_(std::move(src.name_))
+    , zonelets_(std::move(src.zonelets_))
+#if LAZY_INIT
+    , adjusted_(std::move(src.adjusted_))
+#endif
     {}
 
     Zone& operator=(Zone&& src)
     {
         name_ = std::move(src.name_);
         zonelets_ = std::move(src.zonelets_);
+#if LAZY_INIT
+        adjusted_ = std::move(src.adjusted_);
+#endif
         return *this;
     }
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
