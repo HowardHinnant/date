@@ -845,10 +845,14 @@ format(std::string format, day_point tp, const Zone* zone = nullptr)
 
 // parse
 
+namespace detail
+{
+
 template <class Duration>
 void
 parse(std::istream& is, const std::string& format,
-      std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+      std::chrono::time_point<std::chrono::system_clock, Duration>& tp,
+      std::string* abbrev = nullptr)
 {
     using namespace std;
     using namespace std::chrono;
@@ -860,6 +864,7 @@ parse(std::istream& is, const std::string& format,
         std::tm tm{};
         minutes offset{};
         Duration subseconds{};
+        std::string temp_abbrev;
 
         auto b = format.data();
         auto i = b;
@@ -925,6 +930,20 @@ parse(std::istream& is, const std::string& format,
                             err &= ios_base::failbit;
                     }
                     break;
+                case 'Z':
+                    if (abbrev != nullptr)
+                    {
+                        f.get(is, 0, is, err, &tm, b, i);
+                        ++i;
+                        b = i+1;
+                        if ((err & ios_base::failbit) == 0)
+                        {
+                            is >> temp_abbrev;
+                            if (is.fail())
+                                err &= ios_base::failbit;
+                        }
+                    }
+                    break;
                 }
             }
         }
@@ -941,10 +960,33 @@ parse(std::istream& is, const std::string& format,
 #endif
                 tp = floor<Duration>(system_clock::from_time_t(tt) +
                                      subseconds - offset);
+                if (abbrev != nullptr)
+                    *abbrev = std::move(temp_abbrev);
             }
         }
         is.setstate(err);
     }
+}
+
+}  // namespace detail
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format,
+      std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+{
+    detail::parse(is, format, tp);
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format,
+      std::chrono::time_point<std::chrono::system_clock, Duration>& tp,
+      std::string& abbrev)
+{
+    detail::parse(is, format, tp, &abbrev);
 }
 
 }  // namespace date
