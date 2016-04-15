@@ -54,6 +54,10 @@ Technically any OS may use the mapping process but currently only Windows does u
 #  define LAZY_INIT 1
 #endif
 
+#ifndef TZ_LITERAL_INIT
+#	define TZ_LITERAL_INIT 0
+#endif
+
 #ifndef HAS_REMOTE_API
 #  ifndef _MSC_VER
 #    define HAS_REMOTE_API 1
@@ -85,6 +89,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <mutex>
+#include <memory>
 
 namespace date
 {
@@ -575,6 +581,10 @@ struct timezone_mapping
         : other(other), territory(territory), type(type)
     {
     }
+	timezone_mapping(const std::string & other, const std::string & territory, const std::string & type)
+		: other(other), territory(territory), type(type)
+	{
+	}
     timezone_mapping() = default;
     std::string other;
     std::string territory;
@@ -640,7 +650,11 @@ struct TZ_DB
 
 std::ostream& operator<<(std::ostream& os, const TZ_DB& db);
 
+#if !TZ_LITERAL_INIT
 const TZ_DB& get_tzdb();
+#else
+const TZ_DB& get_tzdb(const std::vector<std::string> & lines = {}, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings = {});
+#endif
 const TZ_DB& reload_tzdb();
 
 #if HAS_REMOTE_API

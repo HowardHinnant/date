@@ -410,23 +410,25 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     for (int i = 0; i < 4; ++i)
         getline(is, copyright);
     
+	std::vector<std::tuple<std::string, std::string, std::string>> mapping_data;
     for (;;)
     {
-        timezone_mapping zm{};
+		std::string other, territory, type;
+        
         char ch;
 
         is.read(&ch, 1);
         if (is.eof())
             break;
-        std::getline(is, zm.other, '\"');
+        std::getline(is, other, '\"');
         read_field_delim();
 
         is.read(&ch, 1);
-        std::getline(is, zm.territory, '\"');
+        std::getline(is, territory, '\"');
         read_field_delim();
 
         is.read(&ch, 1);
-        std::getline(is, zm.type, '\"');
+        std::getline(is, type, '\"');
 
         is.read(&ch, 1);
         if (is.gcount() != 1 || ch != '\n')
@@ -436,9 +438,11 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
             error("unexpected end of file, file read error or formatting error.");
 
         ++line;
-        mappings.push_back(std::move(zm));
+		mapping_data.push_back(std::make_tuple(other, territory, type));
     }
     is.close();
+	for (auto && mapping_row : mapping_data)
+		mappings.push_back(timezone_mapping { std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
     return mappings;
 }
 
@@ -2044,14 +2048,67 @@ get_version(const std::string& path)
 }
 
 static
+void
+load_tzdb(TZ_DB & db, const std::vector<std::string> & lines)
+{
+	bool continue_zone = false;
+	for(auto && line : lines)
+	if (!line.empty() && line[0] != '#')
+	{
+		std::istringstream in(line);
+		std::string word;
+		in >> word;
+		if (word == "Rule")
+		{
+			db.rules.push_back(Rule(line));
+			continue_zone = false;
+		}
+		else if (word == "Link")
+		{
+			db.links.push_back(Link(line));
+			continue_zone = false;
+		}
+		else if (word == "Leap")
+		{
+			db.leaps.push_back(Leap(line));
+			continue_zone = false;
+		}
+		else if (word == "Zone")
+		{
+			db.zones.push_back(Zone(line));
+			continue_zone = true;
+		}
+		else if (line[0] == '\t' && continue_zone)
+		{
+			db.zones.back().add(line);
+		}
+		else
+		{
+			std::cerr << line << '\n';
+		}
+	}
+	std::sort(db.rules.begin(), db.rules.end());
+	Rule::split_overlaps(db.rules);
+	std::sort(db.zones.begin(), db.zones.end());
+#if !LAZY_INIT
+	for (auto& z : db.zones)
+		z.adjust_infos(db.rules);
+#endif
+	db.zones.shrink_to_fit();
+	std::sort(db.links.begin(), db.links.end());
+	db.links.shrink_to_fit();
+	std::sort(db.leaps.begin(), db.leaps.end());
+	db.leaps.shrink_to_fit();
+}
+
+static
 TZ_DB
 init_tzdb()
 {
     using namespace date;
     const std::string path = install + folder_delimiter;
     std::string line;
-    bool continue_zone = false;
-    TZ_DB db;
+	TZ_DB db;
 
 #if AUTO_DOWNLOAD
     if (!file_exists(install))
@@ -2092,60 +2149,17 @@ init_tzdb()
     db.version = get_version(path);
 #endif  // !AUTO_DOWNLOAD
 
+	std::vector<std::string> lines;
     for (const auto& filename : files)
     {
         std::ifstream infile(path + filename);
         while (infile)
         {
             std::getline(infile, line);
-            if (!line.empty() && line[0] != '#')
-            {
-                std::istringstream in(line);
-                std::string word;
-                in >> word;
-                if (word == "Rule")
-                {
-                    db.rules.push_back(Rule(line));
-                    continue_zone = false;
-                }
-                else if (word == "Link")
-                {
-                    db.links.push_back(Link(line));
-                    continue_zone = false;
-                }
-                else if (word == "Leap")
-                {
-                    db.leaps.push_back(Leap(line));
-                    continue_zone = false;
-                }
-                else if (word == "Zone")
-                {
-                    db.zones.push_back(Zone(line));
-                    continue_zone = true;
-                }
-                else if (line[0] == '\t' && continue_zone)
-                {
-                    db.zones.back().add(line);
-                }
-                else
-                {
-                    std::cerr << line << '\n';
-                }
-            }
+			lines.push_back(std::move(line));
         }
     }
-    std::sort(db.rules.begin(), db.rules.end());
-    Rule::split_overlaps(db.rules);
-    std::sort(db.zones.begin(), db.zones.end());
-#if !LAZY_INIT
-    for (auto& z : db.zones)
-        z.adjust_infos(db.rules);
-#endif
-    db.zones.shrink_to_fit();
-    std::sort(db.links.begin(), db.links.end());
-    db.links.shrink_to_fit();
-    std::sort(db.leaps.begin(), db.leaps.end());
-    db.leaps.shrink_to_fit();
+	load_tzdb(db, lines);
 
 #if TIMEZONE_MAPPING
     std::string mapping_file = path + "TimeZoneMappings.csv";
@@ -2154,6 +2168,20 @@ init_tzdb()
 #endif
 
     return db;
+}
+
+static
+TZ_DB
+init_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+{
+	TZ_DB db;
+	load_tzdb(db, lines);
+#if TIMEZONE_MAPPING
+	for (auto && mapping_row : mappings)
+		db.mappings.push_back(timezone_mapping{ std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
+	get_windows_timezone_info(db.native_zones);
+#endif
+	return db;
 }
 
 static
@@ -2175,12 +2203,21 @@ reload_tzdb()
     return access_tzdb() = init_tzdb();
 }
 
+#if !TZ_LITERAL_INIT
 const TZ_DB&
 get_tzdb()
 {
     static const TZ_DB& ref = access_tzdb() = init_tzdb();
     return ref;
 }
+#else
+const TZ_DB&
+get_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+{
+	static const TZ_DB& ref = access_tzdb() = init_tzdb(lines, mappings);
+	return ref;
+}
+#endif
 
 const Zone*
 locate_zone(const std::string& tz_name)
