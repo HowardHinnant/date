@@ -579,6 +579,10 @@ struct timezone_mapping
         : other(other), territory(territory), type(type)
     {
     }
+	timezone_mapping(const std::string & other, const std::string & territory, const std::string & type)
+		: other(other), territory(territory), type(type)
+	{
+	}
     timezone_mapping() = default;
     std::string other;
     std::string territory;
