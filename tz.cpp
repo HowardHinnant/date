@@ -2103,7 +2103,6 @@ init_tzdb()
 {
     using namespace date;
     const std::string path = install + folder_delimiter;
-    std::string line;
 	TZ_DB db;
 
 #if AUTO_DOWNLOAD
@@ -2151,6 +2150,7 @@ init_tzdb()
         std::ifstream infile(path + filename);
         while (infile)
         {
+			std::string line;
             std::getline(infile, line);
 			lines.push_back(std::move(line));
         }
