@@ -410,25 +410,23 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     for (int i = 0; i < 4; ++i)
         getline(is, copyright);
     
-	std::vector<std::tuple<std::string, std::string, std::string>> mapping_data;
     for (;;)
     {
-		std::string other, territory, type;
-        
+        timezone_mapping zm{};
         char ch;
 
         is.read(&ch, 1);
         if (is.eof())
             break;
-        std::getline(is, other, '\"');
+        std::getline(is, zm.other, '\"');
         read_field_delim();
 
         is.read(&ch, 1);
-        std::getline(is, territory, '\"');
+        std::getline(is, zm.territory, '\"');
         read_field_delim();
 
         is.read(&ch, 1);
-        std::getline(is, type, '\"');
+        std::getline(is, zm.type, '\"');
 
         is.read(&ch, 1);
         if (is.gcount() != 1 || ch != '\n')
@@ -438,11 +436,9 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
             error("unexpected end of file, file read error or formatting error.");
 
         ++line;
-		mapping_data.push_back(std::make_tuple(other, territory, type));
+        mappings.push_back(std::move(zm));
     }
     is.close();
-	for (auto && mapping_row : mapping_data)
-		mappings.push_back(timezone_mapping { std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
     return mappings;
 }
 
@@ -2174,6 +2170,7 @@ static
 TZ_DB
 init_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
 {
+	assert(lines.size() > 0);
 	TZ_DB db;
 	load_tzdb(db, lines);
 #if TIMEZONE_MAPPING
@@ -2192,18 +2189,17 @@ access_tzdb()
     return tz_db;
 }
 
+#if !TZ_LITERAL_INIT
 const TZ_DB&
 reload_tzdb()
 {
 #if AUTO_DOWNLOAD
-    auto const& v = access_tzdb().version;
-    if (!v.empty() && v == remote_version())
-        return access_tzdb();
+	auto const& v = access_tzdb().version;
+	if (!v.empty() && v == remote_version())
+		return access_tzdb();
 #endif
-    return access_tzdb() = init_tzdb();
+	return access_tzdb() = init_tzdb();
 }
-
-#if !TZ_LITERAL_INIT
 const TZ_DB&
 get_tzdb()
 {
@@ -2211,6 +2207,11 @@ get_tzdb()
     return ref;
 }
 #else
+const TZ_DB&
+reload_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+{
+	return access_tzdb() = init_tzdb(lines, mappings);
+}
 const TZ_DB&
 get_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
 {
