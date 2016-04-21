@@ -38,7 +38,10 @@ using years = date::years;
 
 // time_point
 
-using day_point = date::day_point;
+using sys_days = date::sys_days;
+
+// deprecated:
+using day_point = sys_days;
 
 // types
 
@@ -95,7 +98,7 @@ public:
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
     CONSTCD11 weekday(date::weekday wd) NOEXCEPT;
     explicit weekday(int) = delete;
-    CONSTCD11 weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
 
     weekday& operator++()    NOEXCEPT;
     weekday  operator++(int) NOEXCEPT;
@@ -328,7 +331,7 @@ public:
     CONSTCD11 iso_week::weeknum weeknum() const NOEXCEPT;
     CONSTCD11 iso_week::weekday weekday() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -357,7 +360,7 @@ public:
     CONSTCD11 year_weeknum_weekday(const iso_week::year& y, const iso_week::weeknum& wn,
                                    const iso_week::weekday& wd) NOEXCEPT;
     CONSTCD14 year_weeknum_weekday(const year_lastweek_weekday& ylwwd) NOEXCEPT;
-    CONSTCD14 year_weeknum_weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD14 year_weeknum_weekday(const sys_days& dp) NOEXCEPT;
 
     year_weeknum_weekday& operator+=(const years& y) NOEXCEPT;
     year_weeknum_weekday& operator-=(const years& y) NOEXCEPT;
@@ -366,11 +369,11 @@ public:
     CONSTCD11 iso_week::weeknum weeknum() const NOEXCEPT;
     CONSTCD11 iso_week::weekday weekday() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-    static CONSTCD14 year_weeknum_weekday from_day_point(const day_point& dp) NOEXCEPT;
+    static CONSTCD14 year_weeknum_weekday from_day_point(const sys_days& dp) NOEXCEPT;
 };
 
 CONSTCD11 bool operator==(const year_weeknum_weekday& x, const year_weeknum_weekday& y) NOEXCEPT;
@@ -431,7 +434,7 @@ weekday::weekday(date::weekday wd) NOEXCEPT
 
 CONSTCD11
 inline
-weekday::weekday(const day_point& dp) NOEXCEPT
+weekday::weekday(const sys_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
     {}
 
@@ -980,8 +983,8 @@ weeknum
 year_lastweek::weeknum() const NOEXCEPT
 {
     const auto y = date::year{int{y_}};
-    const auto s0 = day_point{(y-years{1})/12/date::thu[date::last]};
-    const auto s1 = day_point{y/12/date::thu[date::last]};
+    const auto s0 = sys_days{(y-years{1})/12/date::thu[date::last]};
+    const auto s1 = sys_days{y/12/date::thu[date::last]};
     return iso_week::weeknum(date::trunc<weeks>(s1-s0).count());
 }
 
@@ -1273,9 +1276,9 @@ CONSTCD11 inline weekday year_lastweek_weekday::weekday() const NOEXCEPT {return
 
 CONSTCD14
 inline
-year_lastweek_weekday::operator day_point() const NOEXCEPT
+year_lastweek_weekday::operator sys_days() const NOEXCEPT
 {
-    return day_point{date::year{int{y_}}/date::dec/date::thu[date::last]} + (mon - thu)
+    return sys_days{date::year{int{y_}}/date::dec/date::thu[date::last]} + (mon - thu)
          - (mon - wd_);
 }
 
@@ -1390,7 +1393,7 @@ year_weeknum_weekday::year_weeknum_weekday(const year_lastweek_weekday& ylwwd) N
 
 CONSTCD14
 inline
-year_weeknum_weekday::year_weeknum_weekday(const day_point& dp) NOEXCEPT
+year_weeknum_weekday::year_weeknum_weekday(const sys_days& dp) NOEXCEPT
     : year_weeknum_weekday(from_day_point(dp))
     {}
 
@@ -1416,9 +1419,9 @@ CONSTCD11 inline weekday year_weeknum_weekday::weekday() const NOEXCEPT {return 
 
 CONSTCD14
 inline
-year_weeknum_weekday::operator day_point() const NOEXCEPT
+year_weeknum_weekday::operator sys_days() const NOEXCEPT
 {
-    return day_point{date::year{int{y_}-1}/date::dec/date::thu[date::last]}
+    return sys_days{date::year{int{y_}-1}/date::dec/date::thu[date::last]}
          + (date::mon - date::thu) + weeks{unsigned{wn_}-1} + (wd_ - mon);
 }
 
@@ -1433,15 +1436,15 @@ year_weeknum_weekday::ok() const NOEXCEPT
 CONSTCD14
 inline
 year_weeknum_weekday
-year_weeknum_weekday::from_day_point(const day_point& dp) NOEXCEPT
+year_weeknum_weekday::from_day_point(const sys_days& dp) NOEXCEPT
 {
     const auto wd = iso_week::weekday{dp};
     auto y = date::year_month_day{dp + days{3}}.year();
-    auto start = day_point{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+    auto start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
     if (dp < start)
     {
         --y;
-        start = day_point{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+        start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
     }
     const auto wn = iso_week::weeknum(date::trunc<weeks>(dp - start).count() + 1);
     return {iso_week::year(int{y}), wn, wd};
