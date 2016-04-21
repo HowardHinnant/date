@@ -3,7 +3,7 @@
 
 // The MIT License (MIT)
 // 
-// Copyright (c) 2015 Howard Hinnant
+// Copyright (c) 2015, 2016 Howard Hinnant
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -988,6 +988,13 @@ ceil(const std::chrono::time_point<Clock, FromDuration>& tp)
     using std::chrono::time_point;
     return time_point<Clock, To>{ceil<To>(tp.time_since_epoch())};
 }
+
+#else  // _MSC_FULL_VER < 190023918
+
+using std::chrono::floor;
+using std::chrono::ceil;
+using std::chrono::round;
+using std::chrono::abs;
 
 #endif  // _MSC_FULL_VER < 190023918
 
@@ -3578,7 +3585,8 @@ public:
         os << std::abs(t.sub_s_.count()) * scale::num / scale::den;
 #else  // __cplusplus >= 201402
         // inefficient sub-optimal run-time mess, but gets the job done
-        const unsigned long long cl10 = std::ceil(log10(Period::den));
+        const unsigned long long cl10 =
+            static_cast<unsigned long long>(std::ceil(log10(Period::den)));
         const auto p10 = std::pow(10., cl10);
         os.width(cl10);
         os << static_cast<unsigned long long>(std::abs(t.sub_s_.count())
