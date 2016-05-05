@@ -91,6 +91,10 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <vector>
 #include <mutex>
 #include <memory>
+#if LAZY_INIT
+#  include <memory>
+#  include <mutex>
+#endif
 
 namespace date
 {
@@ -754,7 +758,7 @@ format(const std::locale& loc, std::string format,
 
     using namespace std;
     using namespace std::chrono;
-    for (auto i = 0; i < format.size(); ++i)
+    for (std::size_t i = 0; i < format.size(); ++i)
     {
         if (format[i] == '%' && i < format.size()-1)
         {
