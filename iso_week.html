@@ -1,0 +1,2924 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>iso_week</title>
+
+	<style>
+	p {text-align:justify}
+	li {text-align:justify}
+	blockquote.note
+	{
+		background-color:#E0E0E0;
+		padding-left: 15px;
+		padding-right: 15px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+	}
+	ins {color:#00A000}
+	del {color:#A00000}
+	code {white-space:pre;}
+	</style>
+</head>
+<body>
+
+<address align=right>
+<br/>
+<br/>
+<a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
+2015-12-23<br/>
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
+Commons License" style="border-width:0"
+src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
+under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative
+Commons Attribution 4.0 International License</a>.
+</address>
+<hr/>
+<h1 align=center><code>iso_week</code></h1>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="#Introduction">Introduction</a></li>
+<li><a href="#Implementation">Implementation</a></li>
+<li><a href="#Overview">Overview</a></li>
+<li><a href="#Reference">Reference</a></li>
+</ul>
+
+<a name="Introduction"></a><h2>Introduction</h2>
+
+<p>
+This paper fully documents an
+<a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>
+that is fully interoperable with
+<a href="date_v2.html"><code>date</code></a>.
+</p>
+
+<a name="Implementation"></a><h2>Implementation</h2>
+
+<p>
+This entire library is implemented in a single header:
+<a href="https://github.com/HowardHinnant/date/blob/master/iso_week.h">iso_week.h</a>
+and is open source using the MIT license.
+</p>
+
+<a name="Overview"></a><h2>Overview</h2>
+
+<p>
+This library creates field types that hold the year, week number and weekday
+associated with a <a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date</a>.
+For example, to specify the Saturday of the 51st week of 2015 one can say:
+</p>
+
+<blockquote><pre>
+#include "iso_week.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace iso_week::literals;
+    auto iso_date = sat/51/2015;
+    std::cout &lt;&lt; iso_date &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+The output of this program is:
+</p>
+
+<blockquote><pre>
+2015-W51-Sat
+</pre></blockquote>
+
+<p>
+In this example <code>iso_date</code> has type <code>iso_week::year_weeknum_weekday</code>,
+and this type does nothing but hold the three quantities: <code>year</code>,
+<code>weeknum</code> and <code>weekday</code>.  This is such trivial functionality that
+it almost seems useless.  Anyone can write a type to be constructed from three values,
+and then print them back out when requested.
+</p>
+
+<p>
+The real power of <code>year_weeknum_weekday</code> is that it can implicitly convert to
+and from <a href="date_v2.html#day_point"><code>day_point</code></a>.  And
+ <a href="date_v2.html#day_point"><code>day_point</code></a> is just a type alias for:
+</p>
+
+<blockquote><pre>
+std::chrono::time_point&lt;std::chrono::system_clock, days&gt;
+</pre></blockquote>
+
+<p>
+This is the exact same <code>day_point</code> used by the
+<a href="date_v2.html"><code>date</code></a> and <a href="tz.html">time zone</a>
+libraries.  And so by simply having conversions to and from <code>day_point</code>,
+<code>iso_week::year_weeknum_weekday</code> becomes seamlessly interoperable with all
+of the types in <a href="date_v2.html"><code>date</code></a> and
+<a href="tz.html">time zone</a> such as <code>date::year_month_day</code> and
+<code>date::Zone</code>:
+</p>
+
+<blockquote><pre>
+#include "date.h"
+#include "iso_week.h"
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace std::chrono;
+    using namespace date;
+    using namespace iso_week;
+    auto zone = locate_zone("America/New_York");
+    auto now = zone-&gt;to_local(system_clock::now());
+    auto dp = floor&lt;days&gt;(now.first);
+    auto iso_date = year_weeknum_weekday{dp};
+    auto civil_date = year_month_day{dp};
+    auto time = make_time(duration_cast&lt;minutes&gt;(now.first-dp));
+    std::cout &lt;&lt; "It is currently " &lt;&lt; time &lt;&lt; ' ' &lt;&lt; now.second &lt;&lt; " on "
+              &lt;&lt; iso_date &lt;&lt; " which is also " &lt;&lt; civil_date &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+Which just output for me:
+</p>
+
+<blockquote><pre>
+It is currently 18:33 EST on 2015-W51-Sat which is also 2015-12-19
+</pre></blockquote>
+
+<p>
+Or if you want to find the civil date of the last day of the ISO week year for 2015, then
+(knowning the last day of the week is Sunday in this calendar) it is:
+</p>
+
+<blockquote><pre>
+using namespace iso_week::literals;
+std::cout &lt;&lt; date::year_month_day{2015_y/last/sun} &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+Which will output:
+</p>
+
+<blockquote><pre>
+2016-01-03
+</pre></blockquote>
+
+<p>
+And of course one can convert in the opposite direction:
+</p>
+
+<blockquote><pre>
+using namespace date::literals;
+std::cout &lt;&lt; iso_week::year_weeknum_weekday{2016_y/1/3} &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+Which will output:
+</p>
+
+<blockquote><pre>
+2015-W53-Sun
+</pre></blockquote>
+
+<p>
+In particular, note that for this day, the <code>iso_week::year</code> is 2015 and the
+<code>date::year</code> is 2016.
+</p>
+
+<p>
+This brings us to an important type-safety feature of these libraries:  The
+<code>iso_week::year</code> and the <code>date::year</code> are two <i>distinct</i> types.
+They represent concepts that are <i>very</i> similar.  They almost always have the same
+value for the same <code>day_point</code>.  But as in this example, they are occasionally
+different.  It is not unheard of for computer systems to conflate these two very similar
+types, resulting in bugs that are hard to find because they are relatively rare.  Having
+the C++ type system help you keep these similar but different concepts distinct is a
+solid step towards finding bugs at compile time!
+</p>
+
+<a name="Reference"></a><h2>Reference</h2>
+
+<p>
+Here is a detailed specification of the entire library.  This specification is detailed
+enough that you could write your own implementation from it if desired.  But feel free
+to use <a href="https://github.com/HowardHinnant/date/blob/master/iso_week.h">this one</a>
+instead.  Each type, and each operation is simple
+and predictable.
+</p>
+
+<table>
+<tr><td>durations</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td><a href="#days"><code>days</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#weeks"><code>weeks</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#years"><code>years</code></a></td></tr>
+
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>time_point</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td><a href="#day_point"><code>day_point</code></a></td></tr>
+
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>types</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td><a href="#last_week"><code>last_week</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#weekday"><code>weekday</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#weeknum"><code>weeknum</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#year"><code>year</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#year_weeknum"><code>year_weeknum</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#year_lastweek"><code>year_lastweek</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#weeknum_weekday"><code>weeknum_weekday</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#lastweek_weekday"><code>lastweek_weekday</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#year_weeknum_weekday"><code>year_weeknum_weekday</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#year_lastweek_weekday"><code>year_lastweek_weekday</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>date composition operators</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td><a href="#_1"><code>constexpr year_weeknum operator/(const year&amp; y, const weeknum& wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_2"><code>constexpr year_weeknum operator/(const year&amp; y, int            wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_3"><code>constexpr year_lastweek operator/(const year&amp; y, last_week      wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_4"><code>constexpr weeknum_weekday operator/(const weeknum&amp; wn, const weekday&amp; wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_5"><code>constexpr weeknum_weekday operator/(const weeknum&amp; wn, int            wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_6"><code>constexpr weeknum_weekday operator/(const weekday&amp; wd, const weeknum&amp; wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_7"><code>constexpr weeknum_weekday operator/(const weekday&amp; wd, int            wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_8"><code>constexpr lastweek_weekday operator/(const last_week&amp; wn, const weekday&amp; wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_9"><code>constexpr lastweek_weekday operator/(const last_week&amp; wn, int            wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_10"><code>constexpr lastweek_weekday operator/(const weekday&amp; wd, const last_week&amp; wn) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_11"><code>constexpr year_weeknum_weekday operator/(const year_weeknum&amp; ywn, const weekday&amp; wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_12"><code>constexpr year_weeknum_weekday operator/(const year_weeknum&amp; ywn, int            wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_13"><code>constexpr year_weeknum_weekday operator/(const weeknum_weekday&amp; wnwd, const year&amp; y) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_14"><code>constexpr year_weeknum_weekday operator/(const weeknum_weekday&amp; wnwd, int         y) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_15"><code>constexpr year_lastweek_weekday operator/(const year_lastweek&amp; ylw, const weekday&amp; wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_16"><code>constexpr year_lastweek_weekday operator/(const year_lastweek&amp; ylw, int            wd) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_17"><code>constexpr year_lastweek_weekday operator/(const lastweek_weekday&amp; lwwd, const year&amp; y) noexcept;</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#_18"><code>constexpr year_lastweek_weekday operator/(const lastweek_weekday&amp; lwwd, int         y) noexcept;</code></a></td></tr>
+</table>
+
+<p>
+Everything here is contained in the namespace <code>iso_week</code>. The literal
+operators, and the constexpr field literals (e.g. <code>sun</code>, <code>last</code>,
+etc.) are in namespace <code>iso_week::literals</code> and imported into namespace
+<code>iso_week</code>.
+</p>
+
+<a name="days"></a><h3><code>days</code></h3>
+
+<blockquote>
+<p>
+<code>days</code> is a <code>std::chrono::duration</code> with a tick period of 24 hours.
+This definition is not an SI unit but <a
+href="http://www.bipm.org/en/publications/si-brochure/table6.html">is accepted for use
+with SI</a>.  <code>days</code> is the resultant type when subtracting two
+<code>day_point</code>s.
+</p>
+<pre>
+using days = std::chrono::duration
+    &lt;int, std::ratio_multiply&lt;std::ratio&lt;24&gt;, std::chrono::hours::period&gt;&gt;;
+</pre></blockquote>
+
+<a name="weeks"></a><h3><code>weeks</code></h3>
+
+<blockquote>
+<p>
+<code>weeks</code> is a <code>std::chrono::duration</code> with a tick period of 7 days.
+This definition is widely recognized and predates the Gregorian calendar.  It is
+consistent with <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>.
+<code>weeks</code> will implicitly convert to <code>days</code> but not vice-versa.
+</p>
+<pre>
+using weeks = std::chrono::duration
+    &lt;int, std::ratio_multiply&lt;std::ratio&lt;7&gt;, days::period&gt;&gt;;
+</pre></blockquote>
+
+<a name="years"></a><h3><code>years</code></h3>
+
+<blockquote>
+<p>
+<code>years</code> is a <code>std::chrono::duration</code> with a tick period of 365.2425
+days.  This definition accurately describes the length of the average year in the
+ISO week calendar.  <code>years</code> is the resultant type when subtracting two
+<code>year</code> field-based time points.  <code>years</code> is not implicitly
+convertible to <code>days</code> or <code>weeks</code> nor vice-versa.
+</p>
+<pre>
+using years = std::chrono::duration
+    &lt;int, std::ratio_multiply&lt;std::ratio&lt;146097, 400&gt;, days::period&gt;&gt;;
+</pre></blockquote>
+
+<a name="day_point"></a><h3><code>day_point</code></h3>
+
+<blockquote>
+<p>
+<code>day_point</code> is a <code>std::chrono::time_point</code> using
+<code>std::chrono::system_clock</code> and <code>days</code>.  This makes
+<code>day_point</code> interoperable with
+<code>std::chrono::system_clock::time_point</code>.  It is simply a count of days since
+the epoch of <code>std::chrono::system_clock</code> which in every implementation is
+Jan. 1, 1970.  <code>day_point</code> is a serial-based time point with a resolution of
+<code>days</code>.
+</p>
+<pre>
+using day_point = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
+</pre>
+</blockquote>
+
+<a name="last_week"></a><h3><code>last_week</code></h3>
+
+<blockquote>
+<p>
+<code>last_week</code> is a <code>struct</code> that is <code>CopyConstructible</code>.
+There exists a <code>constexpr</code> instance of <code>last_week</code> named
+<code>last</code>.  This is simply a tag type.  It is used to indicate the last week of
+the year.
+</p>
+
+<pre>
+struct last_week
+{
+    explicit last_week() = default;
+};
+
+inline namespace literals
+{
+
+constexpr iso_week::last_week last{};
+
+}
+</pre>
+
+<p>
+I am leading the C++ standard here a little with the <code>explicit</code> qualifier on
+the default constructor.  This compiles today, but doesn't have quite the desired
+semantics.  But it will when
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_toc.html#1518">CWG 1518</a>
+passes.  This will make it so that <code>{}</code> won't implicitly convert to
+<code>last_week</code>.  This addresses the concern expressed in
+<a href="http://cplusplus.github.io/LWG/lwg-toc.html#2510">LWG 2510</a>.
+</p>
+
+</blockquote>
+
+<a name="weekday"></a><h3><code>weekday</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class weekday
+{
+    unsigned char wd_;  // exposition only
+public:
+    explicit constexpr weekday(unsigned wd) noexcept;
+    constexpr weekday(const day_point&amp; dp) noexcept;
+    constexpr weekday(date::weekday wd) noexcept;
+    explicit weekday(int) = delete;
+
+    weekday&amp; operator++() noexcept;
+    weekday operator++(int) noexcept;
+    weekday&amp; operator--() noexcept;
+    weekday operator--(int) noexcept;
+
+    weekday&amp; operator+=(const days&amp; d) noexcept;
+    weekday&amp; operator-=(const days&amp; d) noexcept;
+
+    constexpr explicit operator unsigned() const noexcept;
+    constexpr operator date::weekday() const noexcept;
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const weekday&amp; x, const weekday&amp; y) noexcept;
+constexpr bool operator!=(const weekday&amp; x, const weekday&amp; y) noexcept;
+
+constexpr weekday operator+(const weekday&amp; x, const days&amp;    y) noexcept;
+constexpr weekday operator+(const days&amp;    x, const weekday&amp; y) noexcept;
+constexpr weekday operator-(const weekday&amp; x, const days&amp;    y) noexcept;
+constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday&amp; wd);
+
+inline namespace literals
+{
+constexpr weekday mon{1u};
+constexpr weekday tue{2u};
+constexpr weekday wed{3u};
+constexpr weekday thu{4u};
+constexpr weekday fri{5u};
+constexpr weekday sat{6u};
+constexpr weekday sun{7u};
+}  // namespace literals
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>weekday</code> represents a day of the week in the ISO week calendar.  It should
+only be representing values in the range 1 to 7, corresponding to Monday thru Sunday. 
+However it may hold values outside this range.  It can be constructed with any
+<code>unsigned</code> value, which will be subsequently truncated to fit into
+<code>weekday</code>'s internal storage.  <code>weekday</code> is equality comparable.
+<code>weekday</code> is not less-than comparable because there is no universal consensus
+on which day is the first day of the week.  This design chooses the encoding of 1 to 7 to
+represent Monday thru Sunday only because this is consistent with ISO 8601.
+ However  <code>weekday</code>'s comparison and arithmetic operations treat the
+days of the week as a circular range, with no beginning and no end.   One can stream out a
+<code>weekday</code> for debugging purposes. <code>weekday</code> has explicit conversions
+to and from <code>unsigned</code>.  There are 7 <code>weekday</code> constants, one for each
+day of the week.
+</p>
+
+<p>
+A <code>weekday</code> can be implicitly constructed from a <code>day_point</code>. This
+is the computation that discovers the day of the week of an arbitrary date.
+</p>
+
+<p>
+A <code>weekday</code> can be implicitly converted to or from a <code>date::weekday</code>.
+<code>iso_week::weekday</code> and <code>date::weekday</code> are distinct types, though
+they represent very similar concepts.  <code>date::weekday</code> can be indexed, and
+<code>iso_week::weekday</code> can not.  <code>date::weekday</code> is encoded as
+[0, 6] representing [Sunday, Saturday], while <code>iso_week::weekday</code> is encoded as
+[1, 7] representing [Monday, Sunday].  The conversion functions will correctly translate
+between these encodings.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>weekday</code> is a trivially copyable class type.</br>
+<code>weekday</code> is a standard-layout class type.</br>
+<code>weekday</code> is a literal class type.</br>
+</p>
+
+<pre>
+explicit constexpr weekday::weekday(unsigned wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weekday</code> by constructing
+<code>wd_</code> with <code>wd</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday(const day_point&amp; dp) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weekday</code> by computing what day
+of the week corresponds to the <code>day_point dp</code>, and representing that day of
+the week in <code>wd_</code>.
+</p>
+<p>
+<i>Example:</i> If <code>dp</code> represents 1970-01-01, the constructed
+<code>weekday</code> shall represent Thursday by storing 4 in <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday(date::weekday wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weekday</code> from a
+<code>date::weekday</code>.  This changes the underlying encoding from [0, 6] -&gt;
+[sun, sat] to [1, 7] -&gt; [mon, sun].
+</p>
+</blockquote>
+
+<pre>
+weekday&amp; weekday::operator++() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> If <code>wd_ != 6</code>, <code>++wd_</code>.  Otherwise sets
+<code>wd_</code> to 0.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weekday weekday::operator++(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>++(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+weekday&amp; weekday::operator--() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> If <code>wd_ != 0</code>, <code>--wd_</code>.  Otherwise sets
+<code>wd_</code> to 6.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weekday weekday::operator--(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>--(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+weekday&amp; weekday::operator+=(const days&amp; d) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this + d</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weekday&amp; weekday::operator-=(const days&amp; d) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this - d</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit weekday::operator unsigned() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr operator date::weekday() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> An object of type <code>date::weekday</code> constructed from
+<code>*this</code>.  This changes the underlying encoding from [1, 7] -&gt; [mon, sun] to
+[0, 6] -&gt; [sun, sat].
+</p>
+</blockquote>
+
+<pre>
+constexpr bool weekday::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>1 &lt;= wd_ &amp;&amp; wd_ &lt;= 7</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const weekday&amp; x, const weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>unsigned{x} == unsigned{y}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const weekday&amp; x, const weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday  operator+(const weekday&amp;  x, const days&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> A <code>weekday</code> for which <code>ok() == true</code> and is found as
+if by incrementing (or decrementing if <code>y &lt; days{0}</code>) <code>x</code>,
+<code>y</code> times.  If <code>weekday.ok() == false</code> prior to this operation,
+behaves as if <code>*this</code> is first brought into the range [1, 7] by modular
+arithmetic. [<i>Note:</i> For example <code>weekday{0}</code> becomes
+<code>weekday{7}</code>. &mdash; <i>end note</i>]
+</p>
+<p>
+<i>Complexity:</i> O(1) with respect to the value of <code>y</code>.  That is, repeated
+increments or decrements is not a valid implementation.
+</p>
+<p>
+<i>Example:</i> <code>sun + days{6} == sat</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday  operator+(const days&amp; x, const weekday&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y + x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday  operator-(const weekday&amp;  x, const days&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + -y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr days operator-(const weekday&amp;  x, const weekday&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Requires:</i> <code>x.ok() == true</code> and <code>y.ok() == true</code>.
+</p>
+<p>
+<i>Returns:</i> A value of <code>days</code> in the range of <code>days{0}</code> to
+<code>days{6}</code> inclusive.
+</p>
+<p>
+<i>Remarks:</i> The returned value <code>d</code> shall satisfy the equality:
+<code>y + d == x</code>.
+</p>
+<p>
+<i>Example:</i> <code>sat - sun == days{6}</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday&amp; wd);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i>  If <code>ok() == true</code> outputs the same string that would be
+output for the weekday field by <code>asctime</code>, assuming the conversion
+<code>unsigned{date::weekday{*this}}</code>.  Otherwise outputs
+<code>unsigned{wd} &lt;&lt; " is not a valid weekday"</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="weeknum"></a><h3><code>weeknum</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class weeknum
+{
+    unsigned char wn_;  // exposition only
+
+public:
+    explicit constexpr weeknum(unsigned wn) noexcept;
+
+    weeknum&amp; operator++() noexcept;
+    weeknum operator++(int) noexcept;
+    weeknum&amp; operator--() noexcept;
+    weeknum operator--(int) noexcept;
+
+    weeknum&amp; operator+=(const weeks&amp; w) noexcept;
+    weeknum&amp; operator-=(const weeks&amp; w) noexcept;
+
+    constexpr explicit operator unsigned() const noexcept;
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+constexpr bool operator!=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+constexpr bool operator&lt; (const weeknum&amp; x, const weeknum&amp; y) noexcept;
+constexpr bool operator&gt; (const weeknum&amp; x, const weeknum&amp; y) noexcept;
+constexpr bool operator&lt;=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+constexpr bool operator&gt;=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+
+constexpr weeknum operator+(const weeknum&amp; x, const weeks&amp;   y) noexcept;
+constexpr weeknum operator+(const weeks&amp;   x, const weeknum&amp; y) noexcept;
+constexpr weeknum operator-(const weeknum&amp; x, const weeks&amp;   y) noexcept;
+constexpr weeks   operator-(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weeknum&amp; wn);
+
+inline namespace literals
+{
+
+constexpr weeknum operator "" _w(unsigned long long wn) noexcept;
+
+}
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>weeknum</code> represents a week number of of the ISO week-year [1, 53]. It should
+only be representing values in the range 1 to 53.  However it may hold values outside this
+range.  It can be constructed with any <code>unsigned</code> value, which will be
+subsequently truncated to fit into <code>weeknum</code>'s internal storage. 
+<code>weeknum</code> is equality and less-than comparable, and participates in basic
+arithmetic with <code>weeks</code> representing the quantity between any two
+<code>weeknum</code>'s.   One can stream out a <code>weeknum</code> for debugging
+purposes. <code>weeknum</code> has explicit conversions to and from <code>unsigned</code>.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>weeknum</code> is a trivially copyable class type.</br>
+<code>weeknum</code> is a standard-layout class type.</br>
+<code>weeknum</code> is a literal class type.</br>
+</p>
+
+<pre>
+explicit constexpr weeknum::weeknum(unsigned wn) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weeknum</code> by constructing
+<code>wn_</code> with <code>wn</code>.
+</p>
+</blockquote>
+
+<pre>
+weeknum&amp; weeknum::operator++() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>++wn_</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weeknum weeknum::operator++(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>++(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+weeknum&amp; weeknum::operator--() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>--wn_</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weeknum weeknum::operator--(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>--(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+weeknum&amp; weeknum::operator+=(const weeks&amp; w) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this + w</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+weeknum&amp; weeknum::operator-=(const weeks&amp; w) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this - w</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit weeknum::operator unsigned() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wn_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool weeknum::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>1 &lt;= wn_ && wn_ &lt;= 53</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>unsigned{x} == unsigned{y}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt; (const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>unsigned{x} &lt; unsigned{y}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt; (const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const weeknum&amp; x, const weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weeknum  operator+(const weeknum&amp;  x, const weeks&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>weeknum{unsigned{x} + static_cast&lt;unsigned&gt;(y.count())}</code>
+</p>
+</blockquote>
+
+<pre>
+constexpr weeknum  operator+(const weeks&amp; x, const weeknum&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y + x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weeknum  operator-(const weeknum&amp;  x, const weeks&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + -y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weeks operator-(const weeknum&amp;  x, const weeknum&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>weeks{static_cast&lt;weeks::rep&gt;(unsigned{x}) -
+              static_cast&lt;weeks::rep&gt;(unsigned{y})}</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weeknum&amp; wn);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts 'W' followed by a decimal integral text representation of
+length 2, prefixed by '0' if the value is less than or equal to 9.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+<p>
+<i>Example:</i> <code>5_w</code> is output as <code>W05</code>.</i>
+</p>
+</blockquote>
+
+<pre>
+constexpr weeknum operator "" _w(unsigned long long wn) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>weeknum{static_cast&lt;unsigned&gt;(wn)}</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="year"></a><h3><code>year</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class year
+{
+    short y_;  // exposition only
+
+public:
+    explicit constexpr year(int y) noexcept;
+
+    year&amp; operator++() noexcept;
+    year operator++(int) noexcept;
+    year&amp; operator--() noexcept;
+    year operator--(int) noexcept;
+
+    year&amp; operator+=(const years&amp; y) noexcept;
+    year&amp; operator-=(const years&amp; y) noexcept;
+
+    constexpr explicit operator int() const noexcept;
+    constexpr bool ok() const noexcept;
+
+    static constexpr year min() noexcept;
+    static constexpr year max() noexcept;
+};
+
+constexpr bool operator==(const year&amp; x, const year&amp; y) noexcept;
+constexpr bool operator!=(const year&amp; x, const year&amp; y) noexcept;
+constexpr bool operator&lt; (const year&amp; x, const year&amp; y) noexcept;
+constexpr bool operator&gt; (const year&amp; x, const year&amp; y) noexcept;
+constexpr bool operator&lt;=(const year&amp; x, const year&amp; y) noexcept;
+constexpr bool operator&gt;=(const year&amp; x, const year&amp; y) noexcept;
+
+constexpr year  operator+(const year&amp;  x, const years&amp; y) noexcept;
+constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
+constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
+constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year&amp; y);
+
+inline namespace literals
+{
+constexpr year operator "" _y(unsigned long long y) noexcept;
+}
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>year</code> represents a year in the
+<a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>.
+It shall represent values in the range <code>[min(), max()]</code>.  It can be constructed
+with any <code>int</code> value, which will be subsequently truncated to fit into
+<code>year</code>'s internal storage.  <code>year</code> is equality and less-than
+comparable, and participates in basic arithmetic with <code>years</code> representing the
+quantity between any two <code>year</code>'s.  One can form a <code>year</code> literal
+with <code>_y</code>.  And one can stream out a <code>year</code> for debugging purposes.
+<code>year</code> has explicit conversions to and from <code>int</code>.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>year</code> is a trivially copyable class type.</br>
+<code>year</code> is a standard-layout class type.</br>
+<code>year</code> is a literal class type.</br>
+</p>
+
+<pre>
+explicit constexpr year::year(int y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year</code> by constructing
+<code>y_</code> with <code>y</code>.
+</p>
+</blockquote>
+
+<pre>
+year&amp; year::operator++() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>++y_</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year year::operator++(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>++(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+year&amp; year::operator--() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>--y_</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year year::operator--(int) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>--(*this)</code>.
+</p>
+<p>
+<i>Returns:</i> A copy of <code>*this</code> as it existed on entry to this member
+function.
+</p>
+</blockquote>
+
+<pre>
+year&amp; year::operator+=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this + y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year&amp; year::operator-=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this - y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit year::operator int() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool year::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>min() &lt;= *this &amp;&amp; *this &lt;= max()</code>.
+</p>
+</blockquote>
+
+<pre>
+static constexpr year year::min() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> A <code>year</code> constructed with the minimum representable year
+number. This year shall be a value such that
+<code>day_point{min()/1_w/mon} + Unit{0}</code>, where <code>Unit</code> is one of
+<code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
+<code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
+<code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
+</p>
+</blockquote>
+
+<pre>
+static constexpr year year::max() noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> A <code>year</code> constructed with the maximum representable year
+number. This year shall be a value such that
+<code>day_point{max()/last/sun} + Unit{0}</code>, where <code>Unit</code> is one of
+<code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
+<code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
+<code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>int{x} == int{y}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt; (const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>int{x} &lt; int{y}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt; (const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const year&amp; x, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year  operator+(const year&amp;  x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>year{int{x} + y.count()}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y + x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + -y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>years{int{x} - int{y}}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year operator "" _y(unsigned long long y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>year{static_cast&lt;int&gt;(y)}</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year&amp; y);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts a signed decimal integral text representation of <code>y</code>
+into <code>os</code>. If the year is less than four decimal digits, pads the year with
+<code>'0'</code> to four digits.  If the year is negative, prefixes with <code>'-'</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year operator "" _y(unsigned long long y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>year{static_cast&lt;int&gt;(y)}</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="year_weeknum"></a><h3><code>year_weeknum</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class year_weeknum
+{
+    iso_week::year    y_;   // exposition only
+    iso_week::weeknum wn_;  // exposition only
+
+public:
+    constexpr year_weeknum(const iso_week::year&amp; y, const iso_week::weeknum&amp; wn) noexcept;
+
+    constexpr iso_week::year    year()    const noexcept;
+    constexpr iso_week::weeknum weeknum() const noexcept;
+
+    year_weeknum&amp; operator+=(const years&amp; dy) noexcept;
+    year_weeknum&amp; operator-=(const years&amp; dy) noexcept;
+
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+constexpr bool operator!=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+constexpr bool operator&lt; (const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+constexpr bool operator&gt; (const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+constexpr bool operator&lt;=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+constexpr bool operator&gt;=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+
+constexpr year_weeknum operator+(const year_weeknum&amp; ym, const years&amp; dy) noexcept;
+constexpr year_weeknum operator+(const years&amp; dy, const year_weeknum&amp; ym) noexcept;
+constexpr year_weeknum operator-(const year_weeknum&amp; ym, const years&amp; dy) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_weeknum&amp; ym);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>year_weeknum</code> is simply a collection of a <code>year</code> and a
+<code>weeknum</code>.  It represents a specific week of a year, but not the day of the
+week.  One can perform year-oriented arithmetic with a <code>year_weeknum</code>.  And
+<code>year_weeknum</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>year_weeknum</code> is a trivially copyable class type.</br>
+<code>year_weeknum</code> is a standard-layout class type.</br>
+<code>year_weeknum</code> is a literal class type.</br>
+</p>
+
+<pre>
+constexpr year_weeknum::year_weeknum(const iso_week::year&amp; y, const iso_week::weeknum&amp; wn) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_weeknum</code> by constructing
+<code>y_</code> with <code>y</code> and <code>wn_</code> with <code>wn</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::year year_weeknum::year() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weeknum year_weeknum::weeknum() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wn_</code>.
+</p>
+</blockquote>
+
+<pre>
+year_weeknum&amp; year_weeknum::operator+=(const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this + dy</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year_weeknum&amp; year_weeknum::operator-=(const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this - dy</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool year_weeknum::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_.ok() &amp;&amp; 1_w &lt;= wn_ &amp;&amp; wn_ &lt;= (y_/last).weeknum()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() == y.year() &amp;&amp; x.weeknum() == y.weeknum()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() &lt; y.year() ? true
+     : (x.year() &gt; y.year() ? false
+     : (x.weeknum() &lt; y.weeknum()))</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const year_weeknum&amp; x, const year_weeknum&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum operator+(const year_weeknum&amp; ym, const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>(ym.year() + dy) / ym.weeknum()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum operator+(const years&amp; dy, const year_weeknum&amp; ym) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>ym + dy</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum operator-(const year_weeknum&amp; ym, const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>ym + -dy</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_weeknum&amp; ywn);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; ywn.year() &lt;&lt; '-' &lt;&lt; ywn.weeknum()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="year_lastweek"></a><h3><code>year_lastweek</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class year_lastweek
+{
+    iso_week::year y_;  // exposition only
+
+public:
+    explicit constexpr year_lastweek(const iso_week::year&amp; y) noexcept;
+
+    constexpr iso_week::year    year()    const noexcept;
+    constexpr iso_week::weeknum weeknum() const noexcept;
+
+    year_lastweek&amp; operator+=(const years&amp; dy) noexcept;
+    year_lastweek&amp; operator-=(const years&amp; dy) noexcept;
+
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+constexpr bool operator!=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+constexpr bool operator&lt; (const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+constexpr bool operator&gt; (const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+constexpr bool operator&lt;=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+constexpr bool operator&gt;=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+
+constexpr year_lastweek operator+(const year_lastweek&amp; ym, const years&amp; dy) noexcept;
+constexpr year_lastweek operator+(const years&amp; dy, const year_lastweek&amp; ym) noexcept;
+constexpr year_lastweek operator-(const year_lastweek&amp; ym, const years&amp; dy) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_lastweek&amp; ym);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>year_lastweek</code> represents a ISO week <code>year</code> and the last week of
+that year.  One can perform year-oriented arithmetic with a <code>year_lastweek</code>.  And
+<code>year_lastweek</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>year_lastweek</code> is a trivially copyable class type.</br>
+<code>year_lastweek</code> is a standard-layout class type.</br>
+<code>year_lastweek</code> is a literal class type.</br>
+</p>
+
+<pre>
+explicit constexpr year_lastweek::year_lastweek(const iso_week::year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_lastweek</code> by constructing
+<code>y_</code> with <code>y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::year year_lastweek::year() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weeknum year_lastweek::weeknum() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> The ISO week number for the last week of the year <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+year_lastweek&amp; year_lastweek::operator+=(const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this + dy</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year_lastweek&amp; year_lastweek::operator-=(const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>*this = *this - dy</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool year_lastweek::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_.ok()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() == y.year()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() &lt; y.year()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const year_lastweek&amp; x, const year_lastweek&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek operator+(const year_lastweek&amp; ym, const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>year_lastweek{ym.year() + dy}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek operator+(const years&amp; dy, const year_lastweek&amp; ym) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>ym + dy</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek operator-(const year_lastweek&amp; ym, const years&amp; dy) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>ym + -dy</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_lastweek&amp; ywn);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; ywn.year() &lt;&lt; "-W last"</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="weeknum_weekday"></a><h3><code>weeknum_weekday</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class weeknum_weekday
+{
+    iso_week::weeknum wn_;  // exposition only
+    iso_week::weekday wd_;  // exposition only
+
+public:
+    constexpr weeknum_weekday(const iso_week::weeknum&amp; wn,
+                              const iso_week::weekday&amp; wd) noexcept;
+
+    constexpr iso_week::weeknum weeknum() const noexcept;
+    constexpr iso_week::weekday weekday() const noexcept;
+
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+constexpr bool operator!=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&lt; (const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&gt; (const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&lt;=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&gt;=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weeknum_weekday&amp; md);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>weeknum_weekday</code> is simply a collection of a <code>weeknum</code> and a
+<code>weekday</code>.  It represents a specific week and day of the week, but an
+unspecified year.  <code>weeknum_weekday</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>weeknum_weekday</code> is a trivially copyable class type.</br>
+<code>weeknum_weekday</code> is a standard-layout class type.</br>
+<code>weeknum_weekday</code> is a literal class type.</br>
+</p>
+
+<pre>
+constexpr weeknum_weekday::weeknum_weekday(const iso_week::weeknum&amp; wn,
+                                           const iso_week::weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weeknum_weekday</code> by constructing
+<code>wn_</code> with <code>wn</code> and <code>wd_</code> with <code>wd</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weeknum weeknum_weekday::weeknum() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wn_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weekday weeknum_weekday::weekday() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool weeknum_weekday::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wn_.ok() &amp;&amp; wd_.ok()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.weeknum() == y.weeknum() &amp;&amp; x.weekday() == y.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.weeknum() &lt; y.weeknum() ? true
+     : (x.weeknum() &gt; y.weeknum() ? false
+     : (unsigned{x.weekday()} &lt; unsigned{y.weekday()}))</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const weeknum_weekday&amp; x, const weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weeknum_weekday&amp; md);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; md.weeknum() &lt;&lt; '-' &lt;&lt; md.weekday()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="lastweek_weekday"></a><h3><code>lastweek_weekday</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class lastweek_weekday
+{
+    iso_week::weekday wd_;  // exposition only
+
+public:
+    explicit constexpr lastweek_weekday(const iso_week::weekday&amp; wd) noexcept;
+
+    constexpr iso_week::weekday weekday() const noexcept;
+
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+constexpr bool operator!=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&lt; (const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&gt; (const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&lt;=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&gt;=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const lastweek_weekday&amp; md);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>lastweek_weekday</code> represents a weekday in the last week of an unspecified
+year.  <code>lastweek_weekday</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>lastweek_weekday</code> is a trivially copyable class type.</br>
+<code>lastweek_weekday</code> is a standard-layout class type.</br>
+<code>lastweek_weekday</code> is a literal class type.</br>
+</p>
+
+<pre>
+explicit constexpr lastweek_weekday::lastweek_weekday(const iso_week::weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>lastweek_weekday</code> by constructing
+<code>wd_</code> with <code>wd</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weekday lastweek_weekday::weekday() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool lastweek_weekday::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_.ok()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.weekday() == y.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>unsigned{x.weekday()} &lt; unsigned{y.weekday()}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const lastweek_weekday&amp; x, const lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const lastweek_weekday&amp; md);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; "W last-" &lt;&lt; md.weekday()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="year_weeknum_weekday"></a><h3><code>year_weeknum_weekday</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class year_weeknum_weekday
+{
+    iso_week::year    y_;   // exposition only
+    iso_week::weeknum wn_;  // exposition only
+    iso_week::weekday wd_;  // exposition only
+
+public:
+    constexpr year_weeknum_weekday(const iso_week::year&amp; y, const iso_week::weeknum&amp; wn,
+                                   const iso_week::weekday&amp; wd) noexcept;
+    constexpr year_weeknum_weekday(const year_lastweek_weekday&amp; x) noexcept;
+    constexpr year_weeknum_weekday(const day_point&amp; dp) noexcept;
+
+    year_weeknum_weekday&amp; operator+=(const years&amp; y) noexcept;
+    year_weeknum_weekday&amp; operator-=(const years&amp; y) noexcept;
+
+    constexpr iso_week::year    year()    const noexcept;
+    constexpr iso_week::weeknum weeknum() const noexcept;
+    constexpr iso_week::weekday weekday() const noexcept;
+
+    constexpr operator day_point() const noexcept;
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+constexpr bool operator!=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&lt; (const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&gt; (const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&lt;=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+constexpr bool operator&gt;=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+
+constexpr year_weeknum_weekday operator+(const year_weeknum_weekday&amp; x, const years&amp; y) noexcept;
+constexpr year_weeknum_weekday operator+(const years&amp; y, const year_weeknum_weekday&amp; x) noexcept;
+constexpr year_weeknum_weekday operator-(const year_weeknum_weekday&amp; x, const years&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_weeknum_weekday&amp; x);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>year_weeknum_weekday</code> represents a <code>year</code>, <code>weeknum</code>,
+and <code>weekday</code> in the
+<a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>.
+One can observe each field. <code>year_weeknum_weekday</code> supports year-oriented
+arithmetic. There is an implicit conversion to and from <code>day_point</code>. There is
+also an implicit conversion from <code>year_lastweek_weekday</code>.
+<code>year_weeknum_weekday</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>year_weeknum_weekday</code> is a trivially copyable class type.</br>
+<code>year_weeknum_weekday</code> is a standard-layout class type.</br>
+<code>year_weeknum_weekday</code> is a literal class type.</br>
+</p>
+
+<pre>
+constexpr year_weeknum_weekday::year_weeknum_weekday(const iso_week::year&amp; y,
+                                                     const iso_week::weeknum&amp; wn,
+                                                     const iso_week::weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_weeknum_weekday</code> by
+constructing <code>y_</code> with <code>y</code>, <code>wn_</code> with <code>wn</code>,
+and <code>wd_</code> with <code>wd</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday::year_weeknum_weekday(const year_lastweek_weekday&amp; x) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_weeknum_weekday</code> by
+constructing <code>y_</code> with <code>x.year()</code>, <code>wn_</code> with
+<code>x.weeknum()</code>, and <code>wd_</code> with <code>x.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday::year_weeknum_weekday(const day_point&amp; dp) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_weeknum_weekday</code> which
+corresponds to the date represented by <code>dp</code>.
+</p>
+<p>
+<i>Remarks:</i> For any value of <code>year_weeknum_weekday</code>, <code>x</code>, for
+which <code>x.ok()</code> is <code>true</code>, this equality will also be
+<code>true</code>: <code>x == year_weeknum_weekday{day_point{x}}</code>.
+</p>
+</blockquote>
+
+<pre>
+year_weeknum_weekday&amp; year_weeknum_weekday::operator+=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effectx:</i> <code>*this = *this + y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year_weeknum_weekday&amp; year_weeknum_weekday::operator-=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effectx:</i> <code>*this = *this - y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::year year_weeknum_weekday::year() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weeknum year_weeknum_weekday::weeknum() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wn_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weekday year_weeknum_weekday::weekday() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday::operator day_point() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool year_weeknum_weekday::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_.ok() &amp;&amp;
+        wd_.ok() &amp;&amp;
+        1_w &lt;= wn_ &amp;&amp; wn_ &lt;= year_lastweek{y_}.weeknum()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() == y.year() &amp;&amp;
+        x.weeknum() == y.weeknum() &amp;&amp;
+        x.weekday() == y.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() &lt; y.year() ? true
+     : (x.year() &gt; y.year() ? false
+     : (x.weeknum() &lt; y.weeknum() ? true
+     : (x.weeknum() &gt; y.weeknum() ? false
+     : (unsigned{x.weekday()} &lt; unsigned{y.weekday()}))))</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const year_weeknum_weekday&amp; x, const year_weeknum_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday operator+(const year_weeknum_weekday&amp; x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>(x.year() + y) / x.weeknum() / x.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday operator+(const years&amp; y, const year_weeknum_weekday&amp; x) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_weeknum_weekday operator-(const year_weeknum_weekday&amp; x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + -y</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_weeknum_weekday&amp; x);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; x.year() &lt;&lt; '-' &lt;&lt; x.weeknum() &lt;&lt; '-' &lt;&lt; x.weekday()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="year_lastweek_weekday"></a><h3><code>year_lastweek_weekday</code></h3>
+
+<blockquote>
+<p><b>Synopsis</b></p>
+
+<pre>
+class year_lastweek_weekday
+{
+    iso_week::year    y_;   // exposition only
+    iso_week::weekday wd_;  // exposition only
+
+public:
+    constexpr year_lastweek_weekday(const iso_week::year&amp; y,
+                                    const iso_week::weekday&amp; wd) noexcept;
+
+    year_lastweek_weekday&amp; operator+=(const years&amp; y) noexcept;
+    year_lastweek_weekday&amp; operator-=(const years&amp; y) noexcept;
+
+    constexpr iso_week::year    year()    const noexcept;
+    constexpr iso_week::weeknum weeknum() const noexcept;
+    constexpr iso_week::weekday weekday() const noexcept;
+
+    constexpr operator day_point() const noexcept;
+    constexpr bool ok() const noexcept;
+};
+
+constexpr bool operator==(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+constexpr bool operator!=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&lt; (const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&gt; (const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&lt;=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+constexpr bool operator&gt;=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+
+constexpr year_lastweek_weekday operator+(const year_lastweek_weekday&amp; x, const years&amp; y) noexcept;
+constexpr year_lastweek_weekday operator+(const years&amp; y, const year_lastweek_weekday&amp; x) noexcept;
+constexpr year_lastweek_weekday operator-(const year_lastweek_weekday&amp; x, const years&amp; y) noexcept;
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_lastweek_weekday&amp; x);
+</pre>
+
+<p><b>Overview</b></p>
+
+<p>
+<code>year_lastweek_weekday</code> represents a <code>year</code>, 
+and <code>weekday</code> in the last week of the
+<a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>.
+One can observe each field. <code>year_lastweek_weekday</code> supports year-oriented
+arithmetic. There is an implicit conversion to <code>day_point</code>.
+<code>year_lastweek_weekday</code> is equality and less-than comparable.
+</p>
+
+<p><b>Specification</b></p>
+
+<p>
+<code>year_lastweek_weekday</code> is a trivially copyable class type.</br>
+<code>year_lastweek_weekday</code> is a standard-layout class type.</br>
+<code>year_lastweek_weekday</code> is a literal class type.</br>
+</p>
+
+<pre>
+constexpr year_lastweek_weekday::year_lastweek_weekday(const iso_week::year&amp; y,
+                                                       const iso_week::weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_lastweek_weekday</code> by
+constructing <code>y_</code> with <code>y</code>, and <code>wd_</code> with
+<code>wd</code>.
+</p>
+</blockquote>
+
+<pre>
+year_lastweek_weekday&amp; year_lastweek_weekday::operator+=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effectx:</i> <code>*this = *this + y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+year_lastweek_weekday&amp; year_lastweek_weekday::operator-=(const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effectx:</i> <code>*this = *this - y</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::year year_lastweek_weekday::year() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weeknum year_lastweek_weekday::weeknum() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>(y_ / last).weeknum()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr iso_week::weekday year_lastweek_weekday::weekday() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek_weekday::operator day_point() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool year_lastweek_weekday::ok() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y_.ok() &amp;&amp; wd_.ok()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator==(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() == y.year() &amp;&amp; x.weekday() == y.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator!=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.year() &lt; y.year() ? true
+     : (x.year() &gt; y.year() ? false
+     : (unsigned{x.weekday()} &lt; unsigned{y.weekday()}))</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&lt;=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr bool operator&gt;=(const year_lastweek_weekday&amp; x, const year_lastweek_weekday&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek_weekday operator+(const year_lastweek_weekday&amp; x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>(x.year() + y) / last / x.weekday()</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek_weekday operator+(const years&amp; y, const year_lastweek_weekday&amp; x) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + y</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_lastweek_weekday operator-(const year_lastweek_weekday&amp; x, const years&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>x + -y</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_lastweek_weekday&amp; x);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> <code>os &lt;&lt; x.year() &lt;&lt; "-W last-" &lt;&lt; x.weekday()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<h3>date composition operators</h3>
+
+<blockquote>
+
+<p>
+To understand this API it is not necessary for you to memorize each of these operators.
+Indeed, that would be detrimental to understanding this API.  Instead it is sufficient
+to known that this collection of operators implement constructions in 3 orders:
+</p>
+
+<ol>
+<li><code>year/weeknum/weekday</code></li>
+<li><code>weeknum/weekday/year</code></li>
+<li><code>weekday/weeknum/year</code></li>
+</ol>
+
+<p>
+The first component in each order must be properly typed, the following components may
+be specified with the proper type or an <code>int</code>.
+</p>
+
+<p>
+Anywhere a "weeknum" is required one can also specify <code>last</code> to indicate the
+last week of the year.
+</p>
+
+<p>
+Sub-field-types such as <code>year_weeknum</code> and <code>weeknum_weekday</code> can be
+created by simply not applying the second division operator for any of the three orders. 
+For example:
+</p>
+
+<blockquote><pre>
+year_weeknum ym = 2015_y/52_w;
+weeknum_weekday md1 = 52_w/thu;
+weeknum_weekday md2 = thu/52_w;
+</pre></blockquote>
+
+<p>
+Everything not intended as above is caught as a compile-time error, with the notable
+exception of an expression that consists of nothing but <code>int</code>, which of course
+has type <code>int</code>.
+</p>
+
+<blockquote><pre>
+auto a = 2015/4/4;       // a == int(125)
+auto b = 2015_y/4/4;     // b == year_weeknum_weekday{year(2015), week(4), weekday(4)}
+auto c = 2015_y/thu/4_w; // error: invalid operands to binary expression ('iso_week::year' and 'iso_week::weekday')
+auto d = 2015/4_w/4;     // error: invalid operands to binary expression ('int' and 'const iso_week::weeknum')
+</pre></blockquote>
+
+<p>
+The last example may be clear to a human reader.  But the compiler doesn't know if
+<code>2015</code> refers to a <code>year</code> or a <code>weekday</code>.  Instead of
+guessing, the compiler flags it as an error.
+</p>
+
+<p>
+In short, you will either write unambiguous and readable code, or you will get a
+compile-time error.
+</p>
+
+<hr>
+
+<p><b><code>year_weeknum</code>:</b></p>
+
+<a name="_1"></a><pre>
+constexpr year_weeknum operator/(const year&amp; y, const weeknum& wn) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{y, wn}</code>.
+</blockquote>
+
+<a name="_2"></a><pre>
+constexpr year_weeknum operator/(const year&amp; y, int wn) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>y / weeknum(wn)</code>.
+</blockquote>
+
+<p><b><code>year_lastweek</code>:</b></p>
+
+<a name="_3"></a><pre>
+constexpr year_lastweek operator/(const year&amp; y, last_week) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>year_lastweek{y}</code>.
+</blockquote>
+
+<p><b><code>weeknum_weekday</code>:</b></p>
+
+<a name="_4"></a><pre>
+constexpr weeknum_weekday operator/(const weeknum&amp; wn, const weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{wn, wd}</code>.
+</blockquote>
+
+<a name="_5"></a><pre>
+constexpr weeknum_weekday operator/(const weeknum&amp; wn, int wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>wn / weekday{static_cast&lt;unsigned&gt;(wd)}</code>.
+</blockquote>
+
+<a name="_6"></a><pre>
+constexpr weeknum_weekday operator/(const weekday&amp; wd, const weeknum&amp; wn) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>wn / wd</code>.
+</blockquote>
+
+<a name="_7"></a><pre>
+constexpr weeknum_weekday operator/(const weekday&amp; wd, int wn) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>weeknum{static_cast&lt;unsigned&gt;(wn)} / wd</code>.
+</blockquote>
+
+<p><b><code>lastweek_weekday</code>:</b></p>
+
+<a name="_8"></a><pre>
+constexpr lastweek_weekday operator/(const last_week&amp;, const weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>lastweek_weekday{wd}</code>.
+</blockquote>
+
+<a name="_9"></a><pre>
+constexpr lastweek_weekday operator/(const last_week&amp; wn, int wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>wn / weekday{static_cast&lt;unsigned&gt;(wd)}</code>.
+</blockquote>
+
+<a name="_10"></a><pre>
+constexpr lastweek_weekday operator/(const weekday&amp; wd, const last_week&amp; wn) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>wn / wd</code>.
+</blockquote>
+
+<p><b><code>year_weeknum_weekday</code>:</b></p>
+
+<a name="_11"></a><pre>
+constexpr year_weeknum_weekday operator/(const year_weeknum&amp; ywn, const weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{ywn.year(), ywn.weeknum(), wd}</code>.
+</blockquote>
+
+<a name="_12"></a><pre>
+constexpr year_weeknum_weekday operator/(const year_weeknum&amp; ywn, int wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>ywn / weekday{static_cast&lt;unsigned&gt;(wd)}</code>.
+</blockquote>
+
+<a name="_13"></a><pre>
+constexpr year_weeknum_weekday operator/(const weeknum_weekday&amp; wnwd, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{y, wnwd.weeknum(), wnwd.weekday()}</code>.
+</blockquote>
+
+<a name="_14"></a><pre>
+constexpr year_weeknum_weekday operator/(const weeknum_weekday&amp; wnwd, int y) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>wnwd / year{y}</code>.
+</blockquote>
+
+<p><b><code>year_lastweek_weekday</code>:</b></p>
+
+<a name="_15"></a><pre>
+constexpr year_lastweek_weekday operator/(const year_lastweek&amp; ylw, const weekday&amp; wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{ylw.year(), wd}</code>.
+</blockquote>
+
+<a name="_16"></a><pre>
+constexpr year_lastweek_weekday operator/(const year_lastweek&amp; ylw, int wd) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>ylw / weekday{static_cast&lt;unsigned&gt;(wd)}</code>.
+</blockquote>
+
+<a name="_17"></a><pre>
+constexpr year_lastweek_weekday operator/(const lastweek_weekday&amp; lwwd, const year&amp; y) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>{y, lwwd.weekday()}</code>.
+</blockquote>
+
+<a name="_18"></a><pre>
+constexpr year_lastweek_weekday operator/(const lastweek_weekday&amp; lwwd, int y) noexcept;
+</pre>
+
+<blockquote>
+<i>Returns:</i> <code>lwwd / year{y}</code>.
+</blockquote>
+
+</blockquote>
+
+</body>
+</html>
