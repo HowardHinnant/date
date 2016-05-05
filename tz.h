@@ -89,6 +89,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <mutex>
+#include <memory>
 
 namespace date
 {
