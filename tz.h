@@ -296,8 +296,8 @@ public:
 private:
 
     static_assert(std::ratio_less_equal<typename Duration::period,
-                                        std::chrono::hours::period>::value,
-                  "zoned_time must have a precision of hours or finer");
+                                        std::chrono::seconds::period>::value,
+                  "zoned_time must have a precision of seconds or finer");
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
@@ -914,15 +914,15 @@ zoned_time<Duration>::get_sys_time() const
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(sys_time<Duration> tp)
 {
-    return zoned_time<Duration>{tp};
+    return {tp};
 }
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const time_zone* zone, local_time<Duration> tp)
 {
     return {zone, tp};
@@ -930,7 +930,7 @@ make_zoned(const time_zone* zone, local_time<Duration> tp)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, local_time<Duration> tp)
 {
     return {name, tp};
@@ -938,7 +938,7 @@ make_zoned(const std::string& name, local_time<Duration> tp)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const time_zone* zone, const zoned_time<Duration>& zt)
 {
     return {zone, zt};
@@ -946,7 +946,7 @@ make_zoned(const time_zone* zone, const zoned_time<Duration>& zt)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const zoned_time<Duration>& zt)
 {
     return {name, zt};
@@ -954,7 +954,7 @@ make_zoned(const std::string& name, const zoned_time<Duration>& zt)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const time_zone* zone, const zoned_time<Duration>& zt, choose c)
 {
     return {zone, zt, c};
@@ -962,7 +962,7 @@ make_zoned(const time_zone* zone, const zoned_time<Duration>& zt, choose c)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const zoned_time<Duration>& zt, choose c)
 {
     return {name, zt, c};
@@ -970,7 +970,7 @@ make_zoned(const std::string& name, const zoned_time<Duration>& zt, choose c)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const time_zone* zone, const sys_time<Duration>& st)
 {
     return {zone, st};
@@ -978,7 +978,7 @@ make_zoned(const time_zone* zone, const sys_time<Duration>& st)
 
 template <class Duration>
 inline
-zoned_time<Duration>
+zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const sys_time<Duration>& st)
 {
     return {name, st};
