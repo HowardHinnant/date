@@ -984,15 +984,14 @@ make_zoned(const std::string& name, const sys_time<Duration>& st)
     return {name, st};
 }
 
-
 template <class Duration>
 inline
 std::ostream&
 operator<<(std::ostream& os, const zoned_time<Duration>& t)
 {
-    // this should not use two lookups!
-    return os << floor<Duration>(t.zone_->to_local(t.tp_)) << ' '
-              << t.zone_->get_info(t.tp_).abbrev;
+    auto i = t.zone_->get_info(t.tp_);
+    auto lt = t.tp_ + i.offset;
+    return os << lt << ' ' << i.abbrev;
 }
 
 class utc_clock
