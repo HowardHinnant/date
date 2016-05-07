@@ -56,8 +56,7 @@ This paper fully documents a date and time library for use with C++11 and C++14.
 <p>
 This entire library is implemented in a single header:
 <a href="https://github.com/HowardHinnant/date/blob/master/date.h">date.h</a> and is
-open source (with generous open source terms &mdash; not generous enough? Contact me, I'm
-flexible).
+open source.
 </p>
 
 <p>
@@ -127,11 +126,6 @@ point with a resolution of one day.</li>
 (encoded as 1 thru 12), a day of the week (encoded as 0 thru 6), and an index in the range
 [1, 5] indicating if this is the first, second, etc. weekday of the indicated month. This
 is a field-based time point with a resolution of one day.</li>
-<li>
-<code>year_month</code>: A type that holds a year and a month.  This is a field-based
-time point with a resolution of one month.  This time point implements month-based
-arithmetic, which other field-based time points can reuse.
-</li>
 </ol>
 
 <h3>Examples</h3>
@@ -181,9 +175,9 @@ Integral types can be converted to <code>year</code>, <code>month</code>, or
 int y = 2015;
 int m = 3;
 int d = 22;
-auto x1 = year(y)/m/d;
-auto x2 = month(m)/d/y;
-auto x3 = day(d)/m/y;
+auto x1 = year{y}/m/d;
+auto x2 = month{m}/d/y;
+auto x3 = day{d}/m/y;
 </pre></blockquote>
 
 <p>
@@ -194,7 +188,7 @@ order need only properly type the <code>day</code> to remain unambiguous:
 </p>
 
 <blockquote><pre>
-auto x = m/day(d)/y;
+auto x = m/day{d}/y;
 </pre></blockquote>
 
 <p>
@@ -258,7 +252,7 @@ and from a <code>sys_days</code>.  If you want to convert to a
 </p>
 
 <blockquote><pre>
-constexpr auto x4 = year_month_day(x3);
+constexpr auto x4 = year_month_day{x3};
 </pre></blockquote>
 
 <b><code>year_month_weekday_last</code></b>
@@ -271,7 +265,7 @@ constexpr auto x4 = year_month_day(x3);
 constexpr auto x1 = 2015_y/mar/sun[last];
 constexpr auto x2 = mar/sun[last]/2015;
 constexpr auto x3 = sun[last]/mar/2015;
-constexpr auto x4 = year_month_day(x3);
+constexpr auto x4 = year_month_day{x3};
 cout &lt;&lt; x3 &lt;&lt; '\n';
 cout &lt;&lt; x4 &lt;&lt; '\n';
 </pre></blockquote>
@@ -286,18 +280,18 @@ outputs:
 2015-03-29
 </pre></blockquote>
 
-<b>Escape hatch from the cute syntax</b>
+<b>Escape hatch from the conventional syntax</b>
 
 <p>
-If you hate the cute syntax, don't use it.  Every type has a descriptive name,
-and public type-safe constructors to do the same job.  The "cute syntax" is a
+If you hate the conventional syntax, don't use it.  Every type has a descriptive name,
+and public type-safe constructors to do the same job.  The "conventional syntax" is a
 non-friended and <i>zero-abstraction-penalty</i> layer on top of a complete lower-level
 API.
 </p>
 
 <blockquote><pre>
 constexpr auto x1 = 2015_y/mar/sun[last];
-constexpr auto x2 = year_month_weekday_last(year(2015), month(3), weekday_last(weekday(0)));
+constexpr auto x2 = year_month_weekday_last{year{2015}, month{3u}, weekday_last{weekday{0u}}};
 static_assert(x1 == x2,                                   "No matter the API, x1 and x2 have the same value ...");
 static_assert(is_same&lt;decltype(x1), decltype(x2)&gt;::value, "... and are the same type");
 cout &lt;&lt; x1 &lt;&lt; '\n';
@@ -433,7 +427,7 @@ int
 main()
 {
     using namespace date;
-    std::cout &lt;&lt; weekday(jul/4/2001) &lt;&lt; '\n';
+    std::cout &lt;&lt; weekday{jul/4/2001} &lt;&lt; '\n';
 }
 </pre></blockquote>
 
@@ -456,7 +450,7 @@ int
 main()
 {
     using namespace date;
-    static_assert(weekday(2001_y/jul/4) == wed, "");
+    static_assert(weekday{2001_y/jul/4} == wed, "");
 }
 </pre></blockquote>
 
@@ -486,11 +480,11 @@ main()
     using namespace date;
     for (auto m = 1; m &lt;= 12; ++m)
     {
-        auto meet = year_month_day(m/fri[1]/2015);
+        auto meet = year_month_day{m/fri[1]/2015};
         cout &lt;&lt; meet &lt;&lt; '\n';
-        meet = meet.year()/meet.month()/(meet.day()+weeks(2));
+        meet = meet.year()/meet.month()/(meet.day()+weeks{2});
         cout &lt;&lt; meet &lt;&lt; '\n';
-        meet = meet.year()/meet.month()/(meet.day()+weeks(2));
+        meet = meet.year()/meet.month()/(meet.day()+weeks{2});
         if (meet.ok())
             cout &lt;&lt; meet &lt;&lt; '\n';
     }
@@ -598,7 +592,7 @@ date::year_month_day
 make_year_month_day(int y, int m, int d)
 {
     using namespace date;
-    return year(y)/m/d;
+    return year{y}/m/d;
 }
 </pre>
 </td>
@@ -967,7 +961,7 @@ And one can convert that day-oriented <code>time_point</code> into a
 </p>
 
 <blockquote><pre>
-auto ymd = year_month_day(dp);
+auto ymd = year_month_day{dp};
 </pre></blockquote>
 
 <p>
@@ -1038,9 +1032,9 @@ utc_offset_Eastern_US(std::chrono::system_clock::time_point tp)
     using namespace std::chrono;
     constexpr auto EST = -5h;
     constexpr auto EDT = -4h;
-    const auto y = year_month_day(floor&lt;days&gt;(tp)).year();
-    const auto begin = sys_days(sun[2]/mar/y) + 2h - EST; // EDT begins at this UTC time
-    const auto end   = sys_days(sun[1]/nov/y) + 2h - EDT; // EST begins at this UTC time
+    const auto y = year_month_day{floor&lt;days&gt;(tp)}.year();
+    const auto begin = sys_days{sun[2]/mar/y} + 2h - EST; // EDT begins at this UTC time
+    const auto end   = sys_days{sun[1]/nov/y} + 2h - EDT; // EST begins at this UTC time
     if (tp &lt; begin || end &lt;= tp)
         return EST;
     return EDT;
@@ -1063,7 +1057,7 @@ auto tp = system_clock::now();
 tp += utc_offset_Eastern_US(tp);
 const auto tpm = floor&lt;minutes&gt;(tp);            // truncate to minutes precision
 const auto dp = floor&lt;days&gt;(tpm);
-const auto ymd = year_month_day(dp);
+const auto ymd = year_month_day{dp};
 auto time = make_time(tpm-dp);                  // minutes since midnight
 time.make12();                                  // change to 12-hour format
 std::cout &lt;&lt; ymd &lt;&lt; ' ' &lt;&lt; time &lt;&lt; '\n';
@@ -1134,7 +1128,7 @@ private:
     iso_week_start(date::year y) noexcept
     {
         using namespace date;
-        return sys_days(thu[1]/jan/y) - (thu-mon);
+        return sys_days{thu[1]/jan/y} - (thu-mon);
     }
 
     static
@@ -1144,7 +1138,7 @@ private:
     {
         using namespace date;
         using namespace std::chrono;
-        auto y = year_month_day(dp).year();
+        auto y = year_month_day{dp}.year();
         auto start = iso_week_start(y);
         if (dp &lt; start)
         {
@@ -1196,7 +1190,7 @@ to rule 2,  this can be elegantly coded as:
 </p>
 
 <blockquote><pre>
-return sys_days(thu[1]/jan/y) - (thu-mon);
+return sys_days{thu[1]/jan/y} - (thu-mon);
 </pre></blockquote>
 
 <p>
@@ -1257,13 +1251,13 @@ main()
     using namespace std;
     using namespace std::chrono;
     auto dp = floor&lt;days&gt;(system_clock::now());
-    auto ymd = year_month_day(dp);
+    auto ymd = year_month_day{dp};
     cout &lt;&lt; ymd &lt;&lt; '\n';
-    <b>auto iso = iso_week(ymd);</b>
+    <b>auto iso = iso_week{ymd};</b>
     cout &lt;&lt; iso &lt;&lt; '\n';
-    <b>auto ymwd = year_month_weekday(iso);</b>
+    <b>auto ymwd = year_month_weekday{iso};</b>
     cout &lt;&lt; ymwd &lt;&lt; '\n';
-    <b>assert(year_month_day(iso) == ymd);</b>
+    <b>assert(year_month_day{iso} == ymd);</b>
 }
 </pre></blockquote>
 
