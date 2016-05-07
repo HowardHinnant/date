@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2015-09-19<br/>
+2016-05-07<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -118,7 +118,7 @@ This library is composed of many types.  But here are the most important ones:
 </p>
 
 <ol>
-<li><code>day_point</code>: A count of days since <code>system_clock</code>'s epoch.  This
+<li><code>sys_days</code>: A count of days since <code>system_clock</code>'s epoch.  This
 is a serial-based time point with a resolution of one day.</li>
 <li><code>year_month_day</code>: A type that holds a year (e.g. 2015), a month
 (encoded as 1 thru 12), and a day (encoded as 1 thru 31).  This is a field-based time
@@ -252,9 +252,9 @@ constexpr auto x3 = sun[4]/mar/2015;
 
 <p>
 The type constructed is <code>year_month_weekday</code> which will implicitly convert to
-and from a <code>day_point</code>.  If you want to convert to a
+and from a <code>sys_days</code>.  If you want to convert to a
 <code>year_month_day</code> you can do so explicitly, which will implicitly convert to
-<code>day_point</code> and back:
+<code>sys_days</code> and back:
 </p>
 
 <blockquote><pre>
@@ -310,9 +310,9 @@ cout &lt;&lt; x2 &lt;&lt; '\n';
 <h3>Example: Today</h3>
 
 <p>
-To get today as a <code>day_point</code>, use <code>system_clock::now()</code> and
+To get today as a <code>sys_days</code>, use <code>system_clock::now()</code> and
 <code>floor</code> to convert the <code>time_point</code> to a
-<code>day_point</code>:
+<code>sys_days</code>:
 </p>
 
 <blockquote><pre>
@@ -329,7 +329,7 @@ Currently this outputs for me:
 </pre></blockquote>
 
 <p>
-To get today as a <code>year_month_day</code>, get a <code>day_point</code> as above and
+To get today as a <code>year_month_day</code>, get a <code>sys_days</code> as above and
 convert it to a <code>year_month_day</code>:
 </p>
 
@@ -347,7 +347,7 @@ Which again currently outputs for me:
 </pre></blockquote>
 
 <p>
-To get today as a <code>year_month_weekday</code>, get a <code>day_point</code> as above and
+To get today as a <code>year_month_weekday</code>, get a <code>sys_days</code> as above and
 convert it to a <code>year_month_weekday</code>:
 </p>
 
@@ -522,7 +522,7 @@ with <code>noexcept</code>.
 
 <p>
 A few of the operations have a precondition that <code>ok() == true</code>.  These are
-generally conversions to <code>day_point</code>, and month-oriented and weekday-oriented
+generally conversions to <code>sys_days</code>, and month-oriented and weekday-oriented
 arithmetic.  Anywhere there is a precondition, and those places are few, the precondition
 is checkable with <code>ok()</code>.
 </p>
@@ -543,7 +543,7 @@ In <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3344.pdf">N
 Pacifico, Meredith and Lakos present a thorough survey of date types and their performance.
 This library has been strongly influenced by this excellent paper.
 <code>year_month_day</code> is equivalent to what <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3344.pdf">N3344</a> terms <code>YMD_4</code>.  And
-<code>day_point</code> is equivalent to what <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3344.pdf">N3344</a> terms <code>HH_SERIAL_RAW_4</code>.
+<code>sys_days</code> is equivalent to what <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3344.pdf">N3344</a> terms <code>HH_SERIAL_RAW_4</code>.
 </p>
 
 <p>
@@ -561,22 +561,22 @@ And additionally, just provide the API for each data structure that it can do ef
 <li><p>
 Field types are good at returning the values of the fields.  Serial types aren't (except
 for weekdays).  So <code>year_month_day</code> has accessors for <code>year</code>,
-<code>month</code> and <code>day</code>.  And <code>day_point</code> does not.
+<code>month</code> and <code>day</code>.  And <code>sys_days</code> does not.
 </p></li>
 <li><p>
 Field types are good at month and year-oriented arithmetic.  Serial types aren't.
 So <code>year_month_day</code> has month and year-oriented arithmetic.  And
-<code>day_point</code> does not.
+<code>sys_days</code> does not.
 </p></li>
 <li><p>
 Serial types are good at day-oriented arithmetic.  Field types aren't.
-So <code>day_point</code> has day-oriented arithmetic.  And <code>year_month_day</code>
+So <code>sys_days</code> has day-oriented arithmetic.  And <code>year_month_day</code>
 does not.  Though one can perform day-oriented arithmetic on the day field of a
 <code>year_month_day</code>, with no impact on the other fields.
 </p></li>
 <li><p>
 To efficiently compute a day of the week, one first needs to compute a serial date.  So
-<code>weekday</code> is constructible from <code>day_point</code>.
+<code>weekday</code> is constructible from <code>sys_days</code>.
 </p></li>
 </ul>
 
@@ -692,24 +692,24 @@ a <code>year_month_day</code> is zero, at least in optimized builds.
 </p>
 
 <p>
-A similar experiment is made for constructing a <code>day_point</code> from a count of
+A similar experiment is made for constructing a <code>sys_days</code> from a count of
 days held in an <code>int</code>.  To do this one must first create a <code>days</code>
-duration, and then construct the <code>day_point</code> from the <code>days</code>
+duration, and then construct the <code>sys_days</code> from the <code>days</code>
 duration.  This is contrasted with the very simplistic <code>struct SERIAL_4</code>.
 </p>
 
 <blockquote>
 <table border="1" cellpadding="10">
-<caption><code>day_point</code> constructor assembly</caption>
+<caption><code>sys_days</code> constructor assembly</caption>
 <tr>
 
 <td>
 <pre>
-date::day_point
+date::sys_days
 make_day_point(int z)
 {
     using namespace date;
-    return day_point{days{z}};
+    return sys_days{days{z}};
 }
 </pre>
 </td>
@@ -784,13 +784,13 @@ Ltmp4:
 
 <p>
 It is easy to see that the generated code is identical, and thus there is no overhead
-associated with the <code>day_point</code> type.  It is also noteworthy that the code for
+associated with the <code>sys_days</code> type.  It is also noteworthy that the code for
 this construction does not actually come from this <code>date</code> library, but instead
 comes from your std::lib header <code>&lt;chrono&gt;</code>.  <code>days</code> is nothing
 but a <i>type-alias</i> for a <code>std::chrono::duration</code>, and
-<code>day_point</code> is nothing but a <i>type-alias</i> for a
+<code>sys_days</code> is nothing but a <i>type-alias</i> for a
 <code>std::chrono::time_point</code> (thus the inspiration for the name
-<code>day_point</code>).  So this is also evidence that there is zero overhead for the
+<code>sys_days</code>).  So this is also evidence that there is zero overhead for the
 type-safe system of the <code>&lt;chrono&gt;</code> library.
 </p>
 
@@ -817,7 +817,7 @@ time_point
 shift_epoch(time_point t)
 {
     using namespace date;
-    return t + (day_point(jan/1/2000) - day_point(jan/1/1970));
+    return t + (sys_days(jan/1/2000) - sys_days(jan/1/1970));
 }
 </pre>
 </td>
@@ -895,7 +895,7 @@ seconds between these two epochs ... who knew?
 
 <p>
 clang generates <i>identical</i> assembly for these two functions at -O2 and higher.  That
-is, the sub-expression <code>(day_point(jan/1/2000) - day_point(jan/1/1970))</code> is
+is, the sub-expression <code>(sys_days(jan/1/2000) - sys_days(jan/1/1970))</code> is
 reduced down to a number of days (10,957) <i>at compile time</i>, and then this
 sub-expression, which has type <code>days</code> is added to a <code>time_point</code>
 with a resolution of <code>seconds</code>, which causes the compiler to convert
@@ -954,7 +954,7 @@ This currently outputs for me:
 
 <p>
 One can turn that into a <code>time_point</code> with the precision of a day (which
-has a type alias called <code>day_point</code>) with:
+has a type alias called <code>sys_days</code>) with:
 </p>
 
 <blockquote><pre>
@@ -1039,8 +1039,8 @@ utc_offset_Eastern_US(std::chrono::system_clock::time_point tp)
     constexpr auto EST = -5h;
     constexpr auto EDT = -4h;
     const auto y = year_month_day(floor&lt;days&gt;(tp)).year();
-    const auto begin = day_point(sun[2]/mar/y) + 2h - EST; // EDT begins at this UTC time
-    const auto end   = day_point(sun[1]/nov/y) + 2h - EDT; // EST begins at this UTC time
+    const auto begin = sys_days(sun[2]/mar/y) + 2h - EST; // EDT begins at this UTC time
+    const auto end   = sys_days(sun[1]/nov/y) + 2h - EDT; // EST begins at this UTC time
     if (tp &lt; begin || end &lt;= tp)
         return EST;
     return EDT;
@@ -1074,27 +1074,27 @@ std::cout &lt;&lt; ymd &lt;&lt; ' ' &lt;&lt; time &lt;&lt; '\n';
 <h3>Extensibility</h3>
 
 <p>
-The hub of this library is <code>day_point</code>.  This is a <i>serial-based</i> time
+The hub of this library is <code>sys_days</code>.  This is a <i>serial-based</i> time
 point which simply counts the days since (or before) <code>jan/1/1970</code>.  And
 ironically this all important hub is nothing but a type alias to a std-defined type.  That
 is, the central theme this library is built around is nothing more than this:
 </p>
 
 <blockquote><pre>
-using day_point = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
+using sys_days = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
 </pre></blockquote>
 
 <p>
 Types such as <code>year_month_day</code> and <code>year_month_weekday</code> provide
-implicit conversions to and from <code>day_point</code>, and because of this, the C++
+implicit conversions to and from <code>sys_days</code>, and because of this, the C++
 language provides explicit conversions between <code>year_month_day</code> and
 <code>year_month_weekday</code>.
 </p>
 
 <p>
 You can easily build your own types that implicitly convert to and from
-<code>day_point</code>, and when you do, you automatically gain explicit convertibility to
-and from every other type which ties into <code>day_point</code>.  For example, here is
+<code>sys_days</code>, and when you do, you automatically gain explicit convertibility to
+and from every other type which ties into <code>sys_days</code>.  For example, here is
 how you could create a custom type that models the ISO week-based calendar:
 </p>
 
@@ -1106,7 +1106,7 @@ class iso_week
     date::weekday wd_;
 
 public:
-    constexpr iso_week(date::day_point dp) noexcept
+    constexpr iso_week(date::sys_days dp) noexcept
         : iso_week(iso_week_from_day_point(dp))
         {}
 
@@ -1116,7 +1116,7 @@ public:
         , wd_(wd)
         {}
 
-    constexpr operator date::day_point() const noexcept
+    constexpr operator date::sys_days() const noexcept
     {
         using namespace date;
         return iso_week_start(y_) + w_ - weeks{1} + (wd_ - mon);
@@ -1130,17 +1130,17 @@ public:
 private:
     static
     constexpr
-    date::day_point
+    date::sys_days
     iso_week_start(date::year y) noexcept
     {
         using namespace date;
-        return day_point(thu[1]/jan/y) - (thu-mon);
+        return sys_days(thu[1]/jan/y) - (thu-mon);
     }
 
     static
     constexpr
     iso_week
-    iso_week_from_day_point(date::day_point dp) noexcept
+    iso_week_from_day_point(date::sys_days dp) noexcept
     {
         using namespace date;
         using namespace std::chrono;
@@ -1181,22 +1181,22 @@ start of the week-based year.</li>
 <p>
 With that in mind, one can easily create a <i>field-based</i> data structure that holds
 a <code>year</code>, a week number, and a day of the week, and then provides conversions
-to and from <code>day_point</code>.
+to and from <code>sys_days</code>.
 </p>
 
 <p>
 The key points of this class (for interoperability) are the constructor
-<code>iso_week(date::day_point dp)</code> and the <code>operator date::day_point()</code>.
+<code>iso_week(date::sys_days dp)</code> and the <code>operator date::sys_days()</code>.
 </p>
 
 <p>
 To aid in these computations a private helper function is created to compute the
-<code>day_point</code> corresponding to the first day of the week-based year.  And according
+<code>sys_days</code> corresponding to the first day of the week-based year.  And according
 to rule 2,  this can be elegantly coded as:
 </p>
 
 <blockquote><pre>
-return day_point(thu[1]/jan/y) - (thu-mon);
+return sys_days(thu[1]/jan/y) - (thu-mon);
 </pre></blockquote>
 
 <p>
@@ -1210,8 +1210,8 @@ days Thursday is past Monday.
 </p>
 
 <p>
-The constructor <code>iso_week(date::day_point dp)</code> has to first discover which
-ISO week-based year the <code>day_point dp</code> falls into.  Most often this is the
+The constructor <code>iso_week(date::sys_days dp)</code> has to first discover which
+ISO week-based year the <code>sys_days dp</code> falls into.  Most often this is the
 same as the civil (<code>year_month_day</code>) year number associated <code>dp</code>.
 But because the week-based year may start a few days earlier or later than
 <code>jan/1</code>, the week-based year number may be one less or one greater than the
@@ -1225,7 +1225,7 @@ return {y, duration_cast&lt;weeks&gt;(dp - start) + weeks{1}, weekday{dp}};
 </pre></blockquote>
 
 <p>
-The conversion from <code>iso_week</code> to <code>day_point</code> is even easier:
+The conversion from <code>iso_week</code> to <code>sys_days</code> is even easier:
 </p>
 
 <blockquote><pre>
@@ -1311,8 +1311,13 @@ and predictable.
 <tr><td>&nbsp;</td><td><a href="#years"><code>years</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>time_point</td><td>&nbsp;</td></tr>
-<tr><td>&nbsp;</td><td><a href="#day_point"><code>day_point</code></a></td></tr>
+<tr><td>time_points</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td><a href="#sys_time"><code>sys_time</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#sys_days"><code>sys_days</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#sys_seconds"><code>sys_seconds</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#local_time"><code>local_time</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#local_days"><code>local_days</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#local_seconds"><code>local_seconds</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 <tr><td>types</td><td>&nbsp;</td></tr>
@@ -1341,7 +1346,7 @@ and predictable.
 <tr><td>&nbsp;</td><td><a href="#time_of_day"><code>time_of_day</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>date composition operators</td><td>&nbsp;</td></tr>
+<tr><td>conventional syntax<br/>operators</td><td>&nbsp;</td></tr>
 <tr><td>&nbsp;</td><td><a href="#_1"><code>constexpr year_month operator/(const year&amp; y, const month&amp; m) noexcept;</code></a></td></tr>
 <tr><td>&nbsp;</td><td><a href="#_2"><code>constexpr year_month operator/(const year&amp; y, int   m) noexcept;</code></a></td></tr>
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
@@ -1392,7 +1397,7 @@ and predictable.
 <tr><td>&nbsp;</td><td><a href="#_40"><code>constexpr year_month_weekday_last operator/(const month_weekday_last&amp; mwdl, int  y) noexcept;</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td><code>time_of_day</code> factory functions</td><td>&nbsp;</td></tr>
+<tr><td><code>time_of_day</code><br/> factory functions</td><td>&nbsp;</td></tr>
 <tr><td>&nbsp;</td><td><a href="#_41">
 <pre>
 template &lt;class Rep, class Period&gt;
@@ -1433,13 +1438,21 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
           std::chrono::duration&lt;Rep, Period&gt; sub_s, unsigned md) noexcept
 </pre></a></td></tr>
 
+<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>convenience<br/>streaming operators</td><td>&nbsp;</td></tr>
+
 <tr><td>&nbsp;</td><td><a href="#_46">
 <pre>
 template &lt;class Duration&gt;
-inline
 std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp);
+operator&lt;&lt;(std::ostream&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
+</pre></a></td></tr>
+
+<tr><td>&nbsp;</td><td><a href="#_47">
+<pre>
+template &lt;class Duration&gt;
+std::ostream&amp;
+operator&lt;&lt;(std::ostream&amp; os, const local_time&lt;Duration&gt;&amp; tp);
 </pre></a></td></tr>
 
 </table>
@@ -1458,7 +1471,7 @@ in namespace <code>date_literals</code> and imported into namespace <code>date</
 This definition is not an SI unit but <a
 href="http://www.bipm.org/en/publications/si-brochure/table6.html">is accepted for use
 with SI</a>.  <code>days</code> is the resultant type when subtracting two
-<code>day_point</code>s.
+<code>sys_days</code>s.
 </p>
 <pre>
 using days = std::chrono::duration
@@ -1511,20 +1524,109 @@ using months = std::chrono::duration
     &lt;int, std::ratio_divide&lt;years::period, std::ratio&lt;12&gt;&gt;&gt;;
 </pre></blockquote>
 
-<a name="day_point"></a><h3><code>day_point</code></h3>
+<a name="sys_time"></a><h3><code>sys_time</code></h3>
 
 <blockquote>
 <p>
-<code>day_point</code> is a <code>std::chrono::time_point</code> using
+<code>sys_time</code> is a convenience template alias for creating a
+<code>system_clock::time_point</code> but of arbitrary precision.  This family of types
+represents "system time", which closely models UTC.  See <code>utc_time</code> in
+<a href="tz.html">tz.h</a> for a variation of <code>sys_time</code> that accurately takes
+leap seconds into account when subtracting <code>time_point</code>s.
+</p>
+<pre>
+template &lt;class Duration&gt;
+    using sys_time = std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;;
+</pre>
+</blockquote>
+
+<a name="sys_days"></a><h3><code>sys_days</code></h3>
+
+<blockquote>
+<p>
+<code>sys_days</code> is a <code>std::chrono::time_point</code> using
 <code>std::chrono::system_clock</code> and <code>days</code>.  This makes
-<code>day_point</code> interoperable with
+<code>sys_days</code> interoperable with
 <code>std::chrono::system_clock::time_point</code>.  It is simply a count of days since
 the epoch of <code>std::chrono::system_clock</code> which in every implementation is
-Jan. 1, 1970.  <code>day_point</code> is a serial-based time point with a resolution of
+Jan. 1, 1970.  <code>sys_days</code> is a serial-based time point with a resolution of
 <code>days</code>.
 </p>
 <pre>
-using day_point = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
+using sys_days = sys_time&lt;days&gt;;
+</pre>
+</blockquote>
+
+<a name="sys_seconds"></a><h3><code>sys_seconds</code></h3>
+
+<blockquote>
+<p>
+<code>sys_seconds</code> is a <code>std::chrono::time_point</code> using
+<code>std::chrono::system_clock</code> and <code>std::chrono::seconds</code>. 
+This makes <code>sys_seconds</code> interoperable with
+<code>std::chrono::system_clock::time_point</code>.  It is simply a count of
+<i>non-leap</i> seconds since the epoch of
+<code>std::chrono::system_clock</code> which in every implementation is Jan. 1,
+1970 00:00:00 UTC.  <code>sys_seconds</code> is a serial-based time point with a
+resolution of <code>seconds</code>.  <code>sys_seconds</code> is also widely known
+as <a href="href="http://en.wikipedia.org/wiki/Unix_time"">Unix Time</a>.
+</p>
+<pre>
+using sys_days = sys_time&lt;std::chrono::seconds&gt;;
+</pre>
+</blockquote>
+
+<a name="local_time"></a><h3><code>local_time</code></h3>
+
+<blockquote>
+<p>
+<code>local_time</code> is a convenience template alias for creating a
+<code>time_point</code> of arbitrary precision which is not based on any clock at all.
+This family of types represents a time not associated with any time zone.  It is handy
+in disambiguating calendar timestamps referring to an unspecified timezone, and those
+referring to UTC.
+</p>
+<p>
+For example, we can say that the upcoming 2017 New Years will be commonly
+celebrated at <code>local_time&lt;days&gt;{2017_y/jan/1} + 0s</code>.  For those
+in a time zone with a zero offset from UTC, it will be celebrated at the
+concrete time of <code>sys_days{2017_y/jan/1} + 0s</code>.  These two timestamps
+have different types, though both have the exact same representation (a count of
+seconds), because they mean two <i>subtly</i> different things, and are both
+<i>quite</i> useful.
+</p>
+
+<pre>
+struct local_t {};
+
+template &lt;class Duration&gt;
+    using sys_time = std::chrono::time_point&lt;local_t, Duration&gt;;
+</pre>
+</blockquote>
+
+<a name="local_days"></a><h3><code>local_days</code></h3>
+
+<blockquote>
+<p>
+<code>local_days</code> is a convient way to write <code>local_time&lt;days&gt;</code>.
+The upcoming 2017 New Years will be commonly celebrated at
+<code>local_days{2017_y/jan/1} + 0s</code>.
+</p>
+
+<pre>
+using local_days = local_time&lt;days&gt;;
+</pre>
+</blockquote>
+
+<a name="local_seconds"></a><h3><code>local_seconds</code></h3>
+
+<blockquote>
+<p>
+<code>local_seconds</code> is a convient way to write <code>local_time&lt;seconds&gt;</code>.
+</p>
+
+<pre>
+using local_seconds = local_time&lt;std::chrono::seconds&gt;;
 </pre>
 </blockquote>
 
@@ -2363,7 +2465,7 @@ static constexpr year year::min() noexcept;
 <p>
 <i>Returns:</i> A <code>year</code> constructed with the minimum representable year
 number. This year shall be a value such that
-<code>day_point(min()/jan/1) + Unit{0}</code>, where <code>Unit</code> is one of
+<code>sys_days(min()/jan/1) + Unit{0}</code>, where <code>Unit</code> is one of
 <code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
 <code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
 <code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
@@ -2378,7 +2480,7 @@ static constexpr year year::max() noexcept;
 <p>
 <i>Returns:</i> A <code>year</code> constructed with the maximum representable year
 number. This year shall be a value such that
-<code>day_point(max()/dec/31) + Unit{0}</code>, where <code>Unit</code> is one of
+<code>sys_days(max()/dec/31) + Unit{0}</code>, where <code>Unit</code> is one of
 <code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
 <code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
 <code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
@@ -2523,7 +2625,8 @@ class weekday
     unsigned char wd_;  // exposition only
 public:
     explicit constexpr weekday(unsigned wd) noexcept;
-    constexpr weekday(const day_point&amp; dp) noexcept;
+    constexpr weekday(const sys_days&amp; dp) noexcept;
+    constexpr weekday(const local_days&amp; dp) noexcept;
 
     weekday&amp; operator++() noexcept;
     weekday operator++(int) noexcept;
@@ -2577,7 +2680,7 @@ day of the week.
 </p>
 
 <p>
-A <code>weekday</code> can be implicitly constructed from a <code>day_point</code>. This
+A <code>weekday</code> can be implicitly constructed from a <code>sys_days</code>. This
 is the computation that discovers the day of the week of an arbitrary date.
 </p>
 
@@ -2607,18 +2710,34 @@ explicit constexpr weekday::weekday(unsigned wd) noexcept;
 </blockquote>
 
 <pre>
-constexpr weekday(const day_point&amp; dp) noexcept;
+constexpr weekday(const sys_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>weekday</code> by computing what day
-of the week corresponds to the <code>day_point dp</code>, and representing that day of
+of the week corresponds to the <code>sys_days dp</code>, and representing that day of
 the week in <code>wd_</code>.
 </p>
 <p>
 <i>Example:</i> If <code>dp</code> represents 1970-01-01, the constructed
 <code>weekday</code> shall represent Thursday by storing 4 in <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr weekday(const local_days&amp; dp) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>weekday</code> by computing what day
+of the week corresponds to the <code>local_days dp</code>, and representing that day of
+the week in <code>wd_</code>.
+</p>
+<p>
+The value after construction shall be identical to that constructed from
+<code>sys_days{dp.time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -3986,7 +4105,8 @@ class year_month_day
 public:
     constexpr year_month_day(const date::year&amp; y, const date::month&amp; m, const date::day&amp; d) noexcept;
     constexpr year_month_day(const year_month_day_last&amp; ymdl) noexcept;
-    constexpr year_month_day(const day_point&amp; dp) noexcept;
+    constexpr year_month_day(const sys_days&amp; dp) noexcept;
+    constexpr year_month_day(const local_days&amp; dp) noexcept;
 
     year_month_day&amp; operator+=(const months&amp; m) noexcept;
     year_month_day&amp; operator-=(const months&amp; m) noexcept;
@@ -3997,7 +4117,8 @@ public:
     constexpr date::month month() const noexcept;
     constexpr date::day day()     const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr          operator sys_days() const noexcept;
+    constexpr explicit operator local_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -4026,8 +4147,8 @@ and <code>day</code>.  <code>year_month_day</code> is a field-based time point w
 resolution of <code>days</code>.  One can observe each field.  <code>year_month_day</code>
 supports <code>years</code> and <code>months</code> oriented arithmetic, but not
 <code>days</code> oriented arithmetic.  For the latter, there is a conversion to
-<code>day_point</code> which efficiently supports <code>days</code> oriented arithmetic. 
-There is also a conversion <i>from</i> <code>day_point</code>.
+<code>sys_days</code> which efficiently supports <code>days</code> oriented arithmetic. 
+There is also a conversion <i>from</i> <code>sys_days</code>.
 <code>year_month_day</code> is equality and less-than comparable.
 </p>
 
@@ -4064,13 +4185,13 @@ constexpr year_month_day::year_month_day(const year_month_day_last&amp; ymdl) no
 <p>
 <i>Note:</i> This conversion from <code>year_month_day_last</code> to
 <code>year_month_day</code> is more efficient than converting a
-<code>year_month_day_last</code> to a <code>day_point</code>, and then converting that
-<code>day_point</code> to a <code>year_month_day</code>.
+<code>year_month_day_last</code> to a <code>sys_days</code>, and then converting that
+<code>sys_days</code> to a <code>year_month_day</code>.
 </p>
 </blockquote>
 
 <pre>
-constexpr year_month_day::year_month_day(const day_point&amp; dp) noexcept;
+constexpr year_month_day::year_month_day(const sys_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
@@ -4081,7 +4202,21 @@ to the date represented by <code>dp</code>.
 <p>
 <i>Remarks:</i> For any value of <code>year_month_day</code>, <code>ymd</code>, for which
 <code>ymd.ok()</code> is <code>true</code>, this equality will also be <code>true</code>:
-<code>ymd == year_month_day{day_point{ymd}}</code>.
+<code>ymd == year_month_day{sys_days{ymd}}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_month_day::year_month_day(const local_days&amp; dp) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_month_day</code> which corresponds
+to the date represented by <code>dp</code>.
+</p>
+<p>
+<i>Remarks:</i> Equivalent to constructing with <code>sys_days{dp.time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -4168,7 +4303,7 @@ constexpr day year_month_day::day() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_month_day::operator day_point() const noexcept;
+constexpr year_month_day::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
@@ -4176,8 +4311,31 @@ constexpr year_month_day::operator day_point() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
+</p>
+<p>
+<i>Remarks:</i> A <code>sys_days</code> which is converted to a <code>year_month_day</code>,
+shall have the same value when converted back to a <code>sys_days</code>.  The round
+trip conversion sequence shall be <i>loss-less</i>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit year_month_day::operator local_days() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Requires:</i> <code>ok() == true</code>.
+</p>
+<p>
+<i>Returns:</i> A <code>local_days</code> which represents the date represented by
+<code>*this</code>.
+</p>
+<p>
+<i>Remarks:</i> Shall return a value equivalent to
+<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -4372,7 +4530,8 @@ public:
     constexpr date::month_day_last month_day_last() const noexcept;
     constexpr date::day            day()            const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr          operator sys_days() const noexcept;
+    constexpr explicit operator local_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -4403,7 +4562,7 @@ std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_day_la
 month.  One can observe each field.  The <code>day</code> field is computed on demand.
 <code>year_month_day_last</code> supports <code>years</code> and <code>months</code>
 oriented arithmetic, but not <code>days</code> oriented arithmetic. For the latter, there
-is a conversion to <code>day_point</code> which efficiently supports <code>days</code>
+is a conversion to <code>sys_days</code> which efficiently supports <code>days</code>
 oriented arithmetic.  <code>year_month_day_last</code> is equality and less-than
 comparable.
 </p>
@@ -4522,7 +4681,7 @@ constexpr day year_month_day_last::day() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_month_day_last::operator day_point() const noexcept;
+constexpr year_month_day_last::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
@@ -4530,8 +4689,26 @@ constexpr year_month_day_last::operator day_point() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit year_month_day_last::operator local_days() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Requires:</i> <code>ok() == true</code>.
+</p>
+<p>
+<i>Returns:</i> A <code>local_days</code> which represents the date represented by
+<code>*this</code>.
+</p>
+<p>
+<i>Remarks:</i> Shall return a value equivalent to
+<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -4708,7 +4885,8 @@ class year_month_weekday
 public:
     constexpr year_month_weekday(const date::year&amp; y, const date::month&amp; m,
                                  const date::weekday_indexed&amp; wdi) noexcept;
-    constexpr year_month_weekday(const day_point&amp; dp) noexcept;
+    constexpr year_month_weekday(const sys_days&amp; dp) noexcept;
+    constexpr year_month_weekday(const local_days&amp; dp) noexcept;
 
     year_month_weekday&amp; operator+=(const months&amp; m) noexcept;
     year_month_weekday&amp; operator-=(const months&amp; m) noexcept;
@@ -4721,7 +4899,8 @@ public:
     constexpr unsigned index() const noexcept;
     constexpr date::weekday_indexed weekday_indexed() const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr          operator sys_days() const noexcept;
+    constexpr explicit operator local_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -4746,7 +4925,7 @@ std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekda
 <code>year_month_weekday</code> is a field-based time point with a resolution of
 <code>days</code>.  One can observe each field. <code>year_month_weekday</code> supports
 <code>years</code> and <code>months</code> oriented arithmetic, but not <code>days</code>
-oriented arithmetic. For the latter, there is a conversion to <code>day_point</code> which
+oriented arithmetic. For the latter, there is a conversion to <code>sys_days</code> which
 efficiently supports <code>days</code> oriented arithmetic. 
 <code>year_month_weekday</code> is equality comparable.
 </p>
@@ -4773,7 +4952,7 @@ and <code>wdi_</code> with <code>wdi</code>.
 </blockquote>
 
 <pre>
-constexpr year_month_weekday(const day_point&amp; dp) noexcept;
+constexpr year_month_weekday(const sys_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
@@ -4784,7 +4963,21 @@ corresponds to the date represented by <code>dp</code>.
 <p>
 <i>Remarks:</i> For any value of <code>year_month_weekday</code>, <code>ymdl</code>, for
 which <code>ymdl.ok()</code> is <code>true</code>, this equality will also be
-<code>true</code>: <code>ymdl == year_month_weekday{day_point{ymdl}}</code>.
+<code>true</code>: <code>ymdl == year_month_weekday{sys_days{ymdl}}</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr year_month_weekday(const local_days&amp; dp) noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs an object of type <code>year_month_weekday</code> which
+corresponds to the date represented by <code>dp</code>.
+</p>
+<p>
+<i>Remarks:</i> Equivalent to constructing with <code>sys_days{dp.time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -4891,7 +5084,7 @@ constexpr weekday_indexed year_month_weekday::weekday_indexed() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_month_weekday::operator day_point() const noexcept;
+constexpr year_month_weekday::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
@@ -4899,8 +5092,26 @@ constexpr year_month_weekday::operator day_point() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit year_month_weekday::operator local_days() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Requires:</i> <code>ok() == true</code>.
+</p>
+<p>
+<i>Returns:</i> A <code>local_days</code> which represents the date represented by
+<code>*this</code>.
+</p>
+<p>
+<i>Remarks:</i> Shall return a value equivalent to
+<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
 </p>
 </blockquote>
 
@@ -5048,7 +5259,8 @@ public:
     constexpr date::weekday weekday() const noexcept;
     constexpr date::weekday_last weekday_last() const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr          operator sys_days() const noexcept;
+    constexpr explicit operator local_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -5096,7 +5308,7 @@ std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekda
 <code>days</code>, except that it is restricted to pointing to the last weekday of a year
 and month.  One can observe each field. <code>year_month_weekday_last</code> supports
 <code>years</code> and <code>months</code> oriented arithmetic, but not <code>days</code>
-oriented arithmetic. For the latter, there is a conversion to <code>day_point</code> which
+oriented arithmetic. For the latter, there is a conversion to <code>sys_days</code> which
 efficiently supports <code>days</code> oriented arithmetic.
 <code>year_month_weekday_last</code> is equality comparable.
 </p>
@@ -5215,7 +5427,7 @@ constexpr weekday_last year_month_weekday_last::weekday_last() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_month_weekday_last::operator day_point() const noexcept;
+constexpr year_month_weekday_last::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
@@ -5223,8 +5435,26 @@ constexpr year_month_weekday_last::operator day_point() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr explicit year_month_weekday_last::operator local_days() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Requires:</i> <code>ok() == true</code>.
+</p>
+<p>
+<i>Returns:</i> A <code>local_days</code> which represents the date represented by
+<code>*this</code>.
+</p>
+<p>
+<i>Remarks:</i> Shall return a value equivalent to
+<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
 </p>
 </blockquote>
 
