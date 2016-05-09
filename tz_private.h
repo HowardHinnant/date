@@ -32,6 +32,8 @@
 namespace date
 {
 
+enum class tz {utc, local, standard};
+
 class MonthDayTime
 {
 private:

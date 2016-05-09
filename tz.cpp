@@ -119,9 +119,6 @@ static const std::vector<std::string> files =
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
 
-// Arbitrary day of the year that will be away from any limits.
-// Used with year::min() and year::max().
-CONSTDATA auto boring_day = date::aug/18;
 CONSTDATA auto min_day = date::jan/1;
 CONSTDATA auto max_day = date::dec/31;
 
@@ -129,15 +126,8 @@ CONSTDATA auto max_day = date::dec/31;
 // | End Configuration |
 // +-------------------+
 
-#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
-// We can't use static_assert here for MSVC (yet) because
-// the expression isn't constexpr in MSVC yet.
-// FIXME! Remove this when MSVC's constexpr support improves.
-#else
+#ifndef _MSC_VER
 static_assert(min_year <= max_year, "Configuration error");
-#endif
-#if __cplusplus >= 201402
-static_assert(boring_day.ok(), "Configuration error");
 #endif
 
 // Until filesystem arrives.
@@ -290,7 +280,7 @@ static inline size_t countof(T(&arr)[N])
 // The routine tries to load as many time zone entries as possible despite errors.
 // We don't want to fail to load the whole database just because one record can't be read.
 
-static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
+static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
 {
     tz_list.clear();
     LONG result;
@@ -315,7 +305,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
     std::wstring full_zone_key_name;
     for (DWORD zone_index = 0; ; ++zone_index)
     {
-        timezone_info tz;
+        detail::timezone_info tz;
 
         size = (DWORD) sizeof(zone_key_name)/sizeof(zone_key_name[0]);
         auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
@@ -366,7 +356,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
 // under the windows registry key Time Zones.
 // To be clear, standard_name does NOT represent a windows timezone id
 // or an IANA tzid
-static const timezone_info* find_native_timezone_by_standard_name(
+static const detail::timezone_info* find_native_timezone_by_standard_name(
     const std::string& standard_name)
 {
     // TODO! we can improve on linear search.
@@ -383,11 +373,11 @@ static const timezone_info* find_native_timezone_by_standard_name(
 // Read CSV file of "other","territory","type".
 // See timezone_mapping structure for more info.
 // This function should be kept in sync with the code that writes this file.
-static std::vector<timezone_mapping>
+static std::vector<detail::timezone_mapping>
 load_timezone_mappings_from_csv_file(const std::string& input_path)
 {
     size_t line = 1;
-    std::vector<timezone_mapping> mappings;
+    std::vector<detail::timezone_mapping> mappings;
     std::ifstream is(input_path, std::ios_base::in | std::ios_base::binary);
     if (!is.is_open())
     {
@@ -418,7 +408,7 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     
     for (;;)
     {
-        timezone_mapping zm{};
+        detail::timezone_mapping zm{};
         char ch;
 
         is.read(&ch, 1);
@@ -1532,7 +1522,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
 }
 
 static
-Info
+sys_info
 find_rule(const std::pair<const Rule*, date::year>& first_rule,
           const std::pair<const Rule*, date::year>& last_rule,
           const date::year& y, const std::chrono::seconds& offset,
@@ -1543,8 +1533,8 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
     using namespace date;
     auto r = first_rule.first;
     auto ry = first_rule.second;
-    Info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
-           seconds{0}, initial_save, initial_abbrev};
+    sys_info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
+               seconds{0}, initial_save, initial_abbrev};
     while (r != nullptr)
     {
         auto tr = r->mdt().to_sys(ry, offset, x.save);
@@ -1757,11 +1747,43 @@ format_abbrev(std::string format, const std::string& variable, std::chrono::seco
     return format;
 }
 
-Info
-time_zone::get_info_impl(sys_seconds tp, tz timezone) const
+sys_info
+time_zone::get_info_impl(sys_seconds tp) const
+{
+    return get_info_impl(tp, static_cast<int>(tz::utc));
+}
+
+local_info
+time_zone::get_info_impl(local_seconds tp) const
+{
+    using namespace std::chrono;
+    local_info i{};
+    i.first = get_info_impl(sys_seconds{tp.time_since_epoch()}, static_cast<int>(tz::local));
+    auto tps = sys_seconds{(tp - i.first.offset).time_since_epoch()};
+    if (tps < i.first.begin)
+    {
+        i.second = std::move(i.first);
+        i.first = get_info_impl(i.second.begin - seconds{1}, static_cast<int>(tz::utc));
+        i.result = local_info::nonexistent;
+    }
+    else if (i.first.end - tps <= days{1})
+    {
+        i.second = get_info_impl(i.first.end, static_cast<int>(tz::utc));
+        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
+        if (tps >= i.second.begin)
+            i.result = local_info::ambiguous;
+        else
+            i.second = {};
+    }
+    return i;
+}
+
+sys_info
+time_zone::get_info_impl(sys_seconds tp, int tz_int) const
 {
     using namespace std::chrono;
     using namespace date;
+    tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
     auto y = year_month_day(floor<days>(tp)).year();
     if (y < min_year || y > max_year)
@@ -1782,7 +1804,7 @@ time_zone::get_info_impl(sys_seconds tp, tz timezone) const
                                          t < sys_seconds{zl.until_loc_.time_since_epoch()};
         });
     
-    Info r{};
+    sys_info r{};
     if (i != zonelets_.end())
     {
         if (i->tag_ == zonelet::has_save)
@@ -2301,14 +2323,29 @@ operator<<(std::ostream& os, const TZ_DB& db)
 // -----------------------
 
 std::ostream&
-operator<<(std::ostream& os, const Info& r)
+operator<<(std::ostream& os, const sys_info& r)
 {
-    using namespace date;
     os << r.begin << '\n';
     os << r.end << '\n';
     os << make_time(r.offset) << "\n";
     os << make_time(r.save) << "\n";
     os << r.abbrev << '\n';
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const local_info& r)
+{
+    if (r.result == local_info::nonexistent)
+        os << "nonexistent between\n";
+    else if (r.result == local_info::ambiguous)
+        os << "ambiguous between\n";
+    os << r.first;
+    if (r.result != local_info::unique)
+    {
+        os << "and\n";
+        os << r.second;
+    }
     return os;
 }
 

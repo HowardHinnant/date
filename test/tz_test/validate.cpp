@@ -103,7 +103,7 @@ main()
         auto z = locate_zone(name);
         auto begin = sys_days(jan/1/year::min()) + 0s;
         auto end   = sys_days(jan/1/2035) + 0s;
-        auto info = z->get_info(begin, tz::utc);
+        auto info = z->get_info(begin);
         std::cout << "Initially:           ";
         if (info.offset >= 0s)
             std::cout << '+';
@@ -119,7 +119,7 @@ main()
         auto prev_save = info.save;
         for (begin = info.end; begin < end; begin = info.end)
         {
-            info = z->get_info(begin, tz::utc);
+            info = z->get_info(begin);
             test_info(z, info);
             if (info.offset == prev_offset && info.abbrev == prev_abbrev &&
                     info.save == prev_save)
