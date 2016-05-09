@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-04-09<br/>
+2016-05-08<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -60,6 +60,7 @@ Commons Attribution 4.0 International License</a>.
     <li><a href="#ThreadSafety">Thread Safety</a></li>
     </ul>
 </li>
+<li><a href="#Reference">Reference</a></li>
 <li><a href="#Installation">Installation &mdash; this is where you find the implementation</a></li>
 <li><a href="#Acknowledgements">Acknowledgements</a></li>
 </ul>
@@ -209,7 +210,7 @@ namespace date
 using second_point = std::chrono::time_point&lt;std::chrono::system_clock,
                                              std::chrono::seconds&gt;;
 
-struct Info
+struct sys_info
 {
     second_point         begin;
     second_point         end;
@@ -219,9 +220,8 @@ struct Info
 };
 
 std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os, const Info&amp; r);
+operator&lt;&lt;(std::ostream&amp; os, const sys_info&amp; r);
 
-enum class tz {utc, local};
 enum class choose {earliest, latest};
 
 class nonexistent_local_time
@@ -268,7 +268,7 @@ public:
            choose z) const;
 
     template &lt;class Rep, class Period&gt;
-    Info
+    sys_info
     get_info(std::chrono::time_point&lt;std::chrono::system_clock,
                                      std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
              tz timezone) const;
@@ -645,7 +645,7 @@ using second_point = std::chrono::time_point&lt;std::chrono::system_clock,
 <code>system_clock</code> but with the precision of <code>seconds</code>.  This library
 will interoperate with <code>system_clock::time_point</code>s of <i>any</i> precision.
 However the data in the database is largely based on <code>second_point</code>, and
-some of the data which is presented, such as that in the <code>Info</code> class, uses
+some of the data which is presented, such as that in the <code>sys_info</code> class, uses
 this type alias as a convenience, and to reduce verbosity.  <code>second_point</code>
 will implicitly convert to <code>system_clock::time_point</code>.  And coarser
 <code>time_point</code>s such as the <code>day_point</code> from the
@@ -654,7 +654,7 @@ will implicitly convert to <code>system_clock::time_point</code>.  And coarser
 </p>
 
 <blockquote><pre>
-struct Info
+struct sys_info
 {
     second_point         begin;
     second_point         end;
@@ -665,13 +665,13 @@ struct Info
 </pre></blockquote>
 
 <p>
-The <code>Info</code> struct is the return type of the <code>get_info</code> member
+The <code>sys_info</code> struct is the return type of the <code>get_info</code> member
 function of the <code>Zone</code> class.  It contains very detailed information about the
 <code>Zone</code> at the <code>time_point</code> (UTC or local) input into this member
-function.  <code>Info</code> contains no pointers or references into the database.
-Therefore clients do not need to be concerned about holding on to <code>Info</code>s
+function.  <code>sys_info</code> contains no pointers or references into the database.
+Therefore clients do not need to be concerned about holding on to <code>sys_info</code>s
 during a call to <code>reload_tzdb()</code>.  Though a call to <code>reload_tzdb()</code>
-could potentially make the data in an outstanding <code>Info</code> obsolete.  See
+could potentially make the data in an outstanding <code>sys_info</code> obsolete.  See
 <code>Zone::get_info</code> for more details.
 </p>
 
@@ -766,7 +766,7 @@ public:
            choose z) const;
 
     template &lt;class Rep, class Period&gt;
-    Info
+    sys_info
     get_info(std::chrono::time_point&lt;std::chrono::system_clock,
                                      std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
              tz timezone) const;
@@ -1089,7 +1089,7 @@ are guaranteed to stay valid:
 
 <blockquote><pre>
 template &lt;class Rep, class Period&gt;
-Info
+sys_info
 get_info(std::chrono::time_point&lt;std::chrono::system_clock,
                                  std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
          tz timezone) const;
@@ -1098,48 +1098,48 @@ get_info(std::chrono::time_point&lt;std::chrono::system_clock,
 <p>
 Input a <code>time_point tp</code>, and indicate whether <code>tp</code> represents a UTC
 <code>time_point</code> (<code>tz::utc</code>) or a local <code>time_point</code>
-(<code>tz::local</code>), and a struct <code>Info</code> for that <code>time_point</code>
+(<code>tz::local</code>), and a struct <code>sys_info</code> for that <code>time_point</code>
 is returned:
 </p>
 
 <blockquote><pre>
-auto info = locate_zone("America/New_York")-&gt;get_info(system_clock::now(), tz::utc);
+auto sys_info = locate_zone("America/New_York")-&gt;get_info(system_clock::now(), tz::utc);
 </pre></blockquote>
 
 <p>
-Upon return <code>info</code> will contain the following information:
+Upon return <code>sys_info</code> will contain the following information:
 </p>
 
 <ul>
 <li><p>
-<code>info.offset</code> has type <code>std::chrono::seconds</code> and indicates the
+<code>sys_info.offset</code> has type <code>std::chrono::seconds</code> and indicates the
 current offset from UTC.  A positive offset indicates that local time is ahead of UTC and
 a negative offset indicates that local time is behind UTC.
 </p></li>
 
 <li><p>
-<code>info.abbrev</code> has type <code>std::string</code> and indicates the
+<code>sys_info.abbrev</code> has type <code>std::string</code> and indicates the
 current abbreviation for the local time zone.
 </p></li>
 
 <li><p>
-<code>info.begin</code> has type <code>second_point</code> and indicates the first
+<code>sys_info.begin</code> has type <code>second_point</code> and indicates the first
 instant guaranteed to have this same <code>offset</code> and <code>abbrev</code>. The
-<code>time_point info.begin</code> is implicitly in the UTC time zone. Note that it is
+<code>time_point sys_info.begin</code> is implicitly in the UTC time zone. Note that it is
 possible that the instant prior to <code>begin</code> may or may not have a
 different <code>offset</code> or <code>abbrev</code>.
 </p></li>
 
 <li><p>
-<code>info.end</code> has type <code>second_point</code> and indicates the last instant
+<code>sys_info.end</code> has type <code>second_point</code> and indicates the last instant
 before which it is guaranteed to have this same <code>offset</code> and
-<code>abbrev</code>. The <code>time_point info.end</code> is implicitly in the UTC time
+<code>abbrev</code>. The <code>time_point sys_info.end</code> is implicitly in the UTC time
 zone. The <code>offset</code> and <code>abbrev</code> associated with
-<code>info.end</code> and beyond may or may not be different.
+<code>sys_info.end</code> and beyond may or may not be different.
 </p></li>
 
 <li><p>
-<code>info.save</code> has type <code>std::chrono::minutes</code> and indicates the
+<code>sys_info.save</code> has type <code>std::chrono::minutes</code> and indicates the
 amount of time that daylight savings time has moved the current offset.  This can be
 used to detect whether or not daylight savings is in effect (no if the value is 0min).
 Note that <code>save</code> is already incorporated into the value of <code>offset</code>,
@@ -1149,7 +1149,7 @@ just in the spirit of more information is better.
 </ul>
 
 <p>
-The <code>Info</code> also has a streaming operator which is mainly useful for debugging
+The <code>sys_info</code> also has a streaming operator which is mainly useful for debugging
 purposes.  Here is sample code and output:
 </p>
 
@@ -1844,7 +1844,7 @@ const TZ_DB&amp; get_tzdb();
 <i>// Zone functions</i>
 const Zone* locate_zone(const std::string&amp; tz_name);
 const Zone* current_zone();
-Info Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const;
+info Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const;
 
 template &lt;class Rep, class Period&gt;
 auto
@@ -1888,6 +1888,1260 @@ reference or pointer.
 <b>Emphasis:</b>  If you don't use the <code>reload_tzdb</code> function, then all access
 is <i>read-only</i> and there is no need for synchronization with an external mutex.
 </p>
+
+<a name="Reference"></a><h2>Reference</h2>
+
+<a name="database"></a><h3>The database</h3>
+<blockquote>
+
+<p>
+The following data structure is the time zone database, and the following
+functions access it.
+</p>
+
+<pre>
+struct TZ_DB
+{
+    std::string            version;
+    std::vector&lt;time_zone&gt; zones;
+    std::vector&lt;Link&gt;      links;
+    std::vector&lt;Leap&gt;      leaps;
+    std::vector&lt;Rule&gt;      rules;
+};
+</pre>
+
+<p>
+The <cod>TZ_DB</code> database is a singleton.  And access to it is
+<i>read-only</i>, except for <code>reload_tzdb()</code> which re-initializes it.
+Each <code>vector</code> is sorted to enable fast lookup.  You don't have to explicitly
+program binary search lookups on it.  That is handled by the API.  But you <i>can</i>
+explicitly iterate over and inspect this database.  And knowing that it is sorted may
+be of benefit to your inspection logic.
+</p>
+
+<p>
+<i>All</i> information in the
+<a href="http://www.iana.org/time-zones">IANA time zone database</a> is
+represented in the above <code>TZ_DB</code> data structure, except for the
+comments in the database.  Thus it is up to you, the client of this library, to
+decide what to do with this data.  This library makes it especially easy and
+convenient to extract the data in the way that is most commonly used (e.g. time
+conversions among time zones).  But it represents <i>all</i> of the data, and
+hides <i>none</i> of it.
+</p>
+
+<pre>
+const TZ_DB&amp; get_tzdb();
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  If this is the first access to the database, will initialize
+the database.  If <code>tz.cpp</code> was compiled with the configuration macro
+<code>AUTO_DOWNLOAD == 1</code>, initialization will include checking the
+<a href="http://www.iana.org/time-zones">IANA website</a> for the latest
+version, and downloading the latest version if your local version is out of
+date, or doesn't exist at the location referred to by the <code>install</code>
+configuration variable in <code>tz.cpp</code>.  If <code>tz.cpp</code> was
+compiled with <code>AUTO_DOWNLOAD == 0</code>, you will have to download and
+decompress the IANA database from the
+<a href="http://www.iana.org/time-zones">IANA website</a> and place it at the
+location referred to by the <code>install</code> configuration variable.
+</p>
+<p>
+<code>AUTO_DOWNLOAD == 1</code> requires linking <code>tz.cpp</code> to
+<a href="https://curl.haxx.se/libcurl/"><code>libcurl</code></a>.
+</p>
+<p>
+<i>Returns:</i> A <code>const</code> reference to the database.
+</p>
+<p>
+<i>Thread Safety:</i>  It is safe to call this function from multiple threads at
+one time.  There will be no race to initialize the singleton database as long as
+your compiler implements threadsafe function-local statics as specified by C++11.
+</p>
+<p>
+<i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
+be returned to a valid <code>TZ_DB</code>.
+</p>
+</blockquote>
+
+<pre>
+const time_zone* locate_zone(const std::string&amp; tz_name);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  Calls <code>get_tzdb()</code> which will initialize the timezone
+database if this is the first reference to the database.
+</p>
+<p>
+<i>Returns:</i> If a <code>time_zone</code> is found for which
+<code>name() == tz_name</code>, returns a pointer to that <code>time_zone</code>.
+Otherwise if a <code>Link</code> is found where <code>tz_name == link.name()</code>,
+then a pointer is returned to the <code>time_zone</code> for which
+<code>zone.name() == link.target()</code> [<i>Note:</i> A <code>Link</code> is an
+alternative name for a <code>time_zone</code>. <i>&mdash; end note</i>]
+</p>
+<p>
+<i>Throws:</i> Any exception propagated from <code>get_tzdb()</code>.  If a
+<code>const time_zone*</code> can not be found as described in the
+<i>Returns</i> clause, throws a <code>std::runtime_error</code>. [<i>Note:</i>
+On non-exceptional return, the return value is <i>always</i> a pointer to a
+valid <code>time_zone</code>. <i>&mdash; end note</i>]
+</p>
+</blockquote>
+
+<pre>
+const time_zone* current_zone();
+</pre>
+<blockquote>
+<i>Effects:</i>  Calls <code>locate_zone()</code> which will initialize the timezone
+database if this is the first reference to the database.
+</p>
+<p>
+<i>Returns:</i> A <code>const time_zone*</code> referring to the time zone which your
+computer has set as its local time zone.
+</p>
+<p>
+<i>Throws:</i> Any exception propagated from <code>locate_zone()</code>.
+[<i>Note:</i> On non-exceptional return, the return value is <i>always</i> a
+pointer to a valid <code>time_zone</code>. <i>&mdash; end note</i>]
+</blockquote>
+
+<pre>
+const TZ_DB&amp; reload_tzdb();
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>
+</p>
+<blockquote>
+<p>
+If If <code>tz.cpp</code> was compiled with the configuration macro
+<code>AUTO_DOWNLOAD == 1</code>, this function first checks the latest version at the
+<a href="http://www.iana.org/time-zones">IANA website</a>.  If the
+<a href="http://www.iana.org/time-zones">IANA website</a> is unavailable, or if the
+latest version is already installed, there are no effects.  Otherwise, a new version
+is available.  It is downloaded and installed, and then the program re-initializes
+the <code>TZ_DB</code> singleton from the new disk files.
+</p>
+
+<p>
+If <code>tz.cpp</code> was compiled with the configuration macro
+<code>AUTO_DOWNLOAD == 0</code>, this function re-initializes the
+<code>TZ_DB</code> singleton from the disk files.  You can manually replace the
+database without ill-effects after your program has called
+<code>get_tzdb()</code> and before it calls <code>reload_tzdb()</code>, as there is
+no access to the files on disk between the first call to <code>get_tzdb()</code> and
+subsequent calls to <code>reload_tzdb()</code>.
+</p>
+</blockquote>
+<p>
+<i>Returns:</i> A <code>const</code> reference to the database.
+</p>
+<p>
+<i>Thread Safety:</i>  This function is <i>not</i> thread safe.  You must
+provide your own synchronization among threads accessing the time zone database
+to safely use this function.  If this function re-initializes the database (as
+it <i>always</i> does when <code>AUTO_DOWNLOAD == 0</code>), all outstanding
+<code>const time_zone*</code> are invalidated (including those held within
+<code>zoned_time</code> objects).  And afterwards, all outstanding
+<code>sys_info</code> may hold obsolete data.
+</p>
+<p>
+<i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
+be returned to a valid <code>TZ_DB</code>.
+</p>
+</blockquote>
+
+<p>
+The following functions are available only if you compile with the configuration macro
+<code>HAS_REMOTE_API == 1</code>.  Use of this API requires linking to
+<a href="https://curl.haxx.se/libcurl/"><code>libcurl</code></a>.
+<code>AUTO_DOWNLOAD == 1</code> requires <code>HAS_REMOTE_API == 1</code>.  You
+will be notified at compile time if <code>AUTO_DOWNLOAD == 1</code> and
+<code>HAS_REMOTE_API == 0</code>.  If <code>HAS_REMOTE_API == 1</code>, then
+<code>AUTO_DOWNLOAD</code> defaults to <code>1</code>, otherwise
+<code>AUTO_DOWNLOAD</code> defaults to <code>0</code>.  On Windows,
+<code>HAS_REMOTE_API</code> defaults to <code>0</code>.  Everywhere else it
+defaults to <code>1</code>.  This is because
+<a href="https://curl.haxx.se/libcurl/"><code>libcurl</code></a> comes preinstalled
+everywhere but Windows, but it is available for Windows.
+</p>
+
+<p>
+[<i>Note:</i>  Even with <code>AUTO_DOWNLOAD == 1</code>, there are no thread-safety
+issues with this library unless one of the following functions are <i>explicitly</i>
+called by your code:
+</p>
+
+<blockquote><pre>
+const TZ_DB&amp; reload_tzdb();
+bool remote_download(const std::string&amp; version);
+bool remote_install(const std::string&amp; version);
+</pre></blockquote>
+
+<p>
+Once your program has initialized the <code>TZ_DB</code> singleton, that singleton
+can <i>never</i> be changed without <i>explicit</i> use of <code>reload_tzdb()</code>.
+<i>&mdash; end note</i>]
+</p>
+
+<blockquote>
+
+<pre>
+std::string remote_version();
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> The latest database version number from the
+<a href="http://www.iana.org/time-zones">IANA website</a>.  If the
+<a href="http://www.iana.org/time-zones">IANA website</a> can not be reached, or
+if it can be reached but the latest version number is unexpectedly not
+available, the empty string is returned.
+</p>
+<p>
+<i>Note:</i>  If non-empty, this can be compared with <code>get_tzdb().version</code> to
+discover if you have the latest database installed.
+</p>
+</blockquote>
+
+<pre>
+bool remote_download(const std::string&amp; version);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  If <code>version == remote_version()</code> this function will download
+the compressed tar file holding the latest time zone database from the
+<a href="http://www.iana.org/time-zones">IANA website</a>.  The tar file will be placed
+at the location indicated by the <code>install</code> configuration variable in
+<code>tz.cpp</code>.
+</p>
+<p>
+<i>Returns:</i>  <code>true</code> if the database was successfully downloaded, else
+<code>false</code>.
+</p>
+<p>
+<i>Thread safety:</i>  If called by multiple threads, there will be a race on the
+creation of the tar file at <code>install</code>.
+</p>
+</blockquote>
+
+<pre>
+bool remote_install(const std::string&amp; version);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  If <code>version</code> refers to the file successfully
+downloaded by <code>remote_download()</code> this function will remove the
+existing time zone database at <code>install</code>, then extract a new database
+from the tar file and place it at <code>install</code>, and finally will delete
+the tar file.
+</p>
+<p>
+This function <i>does not</i> cause your program to re-initialize itself from
+this new database.  In order to do that, you must call
+<code>reload_tzdb()</code> (or <code>get_tzdb()</code> if the database has yet
+to be initialized).  If <code>tz.cpp</code> was compiled with
+<code>AUTO_DOWNLOAD == 1</code>, then <code>reload_tzdb()</code> uses this API
+to check if the database is out of date, and reinitializes it with a freshly downloaded
+database only if it needs to.  Indeed, if <code>AUTO_DOWNLOAD == 1</code> there is
+never any need to call <code>remote_download()</code> or <code>remote_install()</code>
+explicitly.  You can just call <code>reload_tzdb()</code> instead.  This API is
+only exposed so that you can take care of this manually if desired
+(<code>HAS_REMOTE_API == 1 &amp;&amp; AUTO_DOWNLOAD == 0</code>).
+</p>
+<p>
+<i>Returns:</i>  <code>true</code> if the database was successfully replaced by
+the tar file , else <code>false</code>.
+</p>
+<p>
+<i>Thread safety:</i>  If called by multiple threads, there will be a race on the
+creation of the new database at <code>install</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<p>
+Everything else in this library concerns <i>read-only</i> access to this
+database, and intuitive ways to compute with that information, even while being
+oblivious to the fact that you <i>are</i> accessing a database.
+</p>
+
+<p>
+The entire database on disk occupies less than half of the disk space consumed by
+an average Beatles song.  Don't sweat multiple copies of it.  It will easily fit in
+your smart toaster.
+</p>
+
+</blockquote>
+
+<a name="choose"></a><h3><code>choose</code></h3>
+
+<blockquote>
+<p>
+For some conversions from <code>local_time</code> to a <code>sys_time</code>,
+<code>choose::earliest</code> or <code>choose::latest</code> can be used to
+convert a non-existent or ambiguous <code>local_time</code> into a
+<code>sys_time</code>, instead of throwing an exception.
+</p>
+<pre>
+enum class choose {earliest, latest};
+</pre>
+</blockquote>
+
+<a name="nonexistent_local_time"></a><h3><code>nonexistent_local_time</code></h3>
+
+<blockquote>
+<p>
+<code>nonexistent_local_time</code> is thrown when one attempts to convert a
+non-existent <code>local_time</code> to a <code>sys_time</code> without specifying
+<code>choose::earliest</code> or <code>choose::latest</code>.
+</p>
+<pre>
+class nonexistent_local_time
+    : public std::runtime_error
+{
+public:
+    // Construction is undocumented
+};
+</pre>
+<p>
+[<i>Example:</i>
+</p>
+<blockquote>
+<pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono_literals;
+    try
+    {
+        auto zt = make_zoned("America/New_York", local_days{sun[2]/mar/2016} + 2h + 30min);
+    }
+    catch (const nonexistent_local_time&amp; e)
+    {
+        std::cout &lt;&lt; e.what() &lt;&lt; '\n';
+    }
+}
+</pre>
+<p>
+Which outputs:
+</p>
+<pre>
+2016-03-13 02:30:00 is in a gap between
+2016-03-13 02:00:00 EST and
+2016-03-13 03:00:00 EDT which are both equivalent to
+2016-03-13 07:00:00 UTC
+</pre>
+</blockquote>
+<p>
+<i>&mdash; end example:</i>]
+</p>
+</blockquote>
+
+<a name="ambiguous_local_time"></a><h3><code>ambiguous_local_time</code></h3>
+
+<blockquote>
+<p>
+<code>ambiguous_local_time</code> is thrown when one attempts to convert an ambiguous
+<code>local_time</code> to a <code>sys_time</code> without specifying
+<code>choose::earliest</code> or <code>choose::latest</code>.
+</p>
+<pre>
+class ambiguous_local_time
+    : public std::runtime_error
+{
+public:
+    // Construction is undocumented
+};
+</pre>
+<p>
+[<i>Example:</i>
+</p>
+<blockquote>
+<pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono_literals;
+    try
+    {
+        auto zt = make_zoned("America/New_York", local_days{sun[1]/nov/2016} + 1h + 30min);
+    }
+    catch (const ambiguous_local_time&amp; e)
+    {
+        std::cout &lt;&lt; e.what() &lt;&lt; '\n';
+    }
+}
+</pre>
+<p>
+Which outputs:
+</p>
+<pre>
+2016-11-06 01:30:00 is ambiguous.  It could be
+2016-11-06 01:30:00 EDT == 2016-11-06 05:30:00 UTC or
+2016-11-06 01:30:00 EST == 2016-11-06 06:30:00 UTC
+</pre>
+</blockquote>
+<p>
+<i>&mdash; end example:</i>]
+</p>
+</blockquote>
+
+<a name="sys_info"></a><h3><code>sys_info</code></h3>
+
+<blockquote>
+<p>
+This structure can be obtained from the combination of a <code>time_zone</code> and
+either a <code>sys_time</code>, or <code>local_time</code>.  It can also be obtained
+from a <code>zoned_time</code> which is effectively a <code>pair</code> of
+a <code>time_zone</code> and <code>sys_time</code>.
+</p>
+<p>
+This structure represents a lower-level API.  Typical conversions from
+<code>sys_time</code> to <code>local_time</code> will use this structure
+<i>implicitly</i>, not <i>explicitly</i>.
+</p>
+<pre>
+struct sys_info
+{
+    sys_seconds          begin;
+    sys_seconds          end;
+    std::chrono::seconds offset;
+    std::chrono::minutes save;
+    std::string          abbrev;
+};
+</pre>
+<p>
+The <code>begin</code> and <code>end</code> fields indicate that for the
+associated <code>time_zone</code> and <code>time_point</code>, the
+<code>offset</code> and <code>abbrev</code> are in effect in the range
+<code>[begin, end)</code>.  This information can be used to efficiently iterate the
+transitions of a <code>time_zone</code>.
+</p>
+<p>
+The <code>offset</code> field indicates the UTC offset in effect for the associated
+<code>time_zone</code> and <code>time_point</code>.  The relationship between
+<code>local_time</code> and <code>sys_time</code> is:
+</p>
+<pre>
+offset = local_time - sys_time
+</pre>
+<p>
+The <code>save</code> field is "extra" information not normally needed for
+conversion between <code>local_time</code> and <code>sys_time</code>.  If
+<code>save != 0min</code>, this <code>sys_info</code> is said to be on "daylight
+saving" time, and <code>offset - save</code> suggests what this
+<code>time_zone</code> <i>might</i> use if it were off daylight saving. However
+this information should not be taken as authoritative.  The only sure way to get
+such information is to query the <code>time_zone</code> with a
+<code>time_point</code> that returns an <code>sys_info</code> where <code>save ==
+0min</code>.  There is no guarantee what <code>time_point</code> might return such
+an <code>sys_info</code> except that it is guaranteed <i>not</i> to be in the range
+<code>[begin, end)</code> (if <code>save != 0min</code> for this <code>sys_info</code>).
+</p>
+<p>
+The <code>abbrev</code> field indicates the current abbreviation used for the
+associated <code>time_zone</code> and <code>time_point</code>.  Abbreviations
+are not unique among the <code>time_zone</code>s, and so one can not reliably
+map abbreviations back to a <code>time_zone</code> and UTC offset.
+</p>
+<p>
+You can stream out a <code>sys_info</code>:
+</p>
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const sys_info&amp; r);
+</pre>
+</blockquote>
+
+<a name="local_info"></a><h3><code>local_info</code></h3>
+
+<blockquote>
+<p>
+This structure represents a lower-level API.  Typical conversions from
+<code>local_time</code> to <code>sys_time</code> will use this structure
+<i>implicitly</i>, not <i>explicitly</i>.
+</p>
+<pre>
+struct local_info
+{
+    enum {unique, nonexistent, ambiguous} result;
+    sys_info first;
+    sys_info second;
+};
+</pre>
+<p>
+When a <code>local_time</code> to <code>sys_time</code> conversion is unique,
+<code>result == unique</code>, <code>first</code> will be filled out with the
+correct <code>sys_info</code> and <code>second</code> will be zero-initialized.
+If the conversion stems from a nonexistent <code>local_time</code> then
+<code>result == nonexistent</code>, <code>first</code> will be filled out with
+the <code>sys_info</code> that ends just prior to the <code>local_time</code>
+and <code>second</code> will be filled out with the <code>sys_info</code> that
+begins just after the <code>local_time</code>. If the conversion stems from an
+ambiguous <code>local_time</code> then <code>result == ambiguous</code>,
+<code>first</code> will be filled out with the <code>sys_info</code> that ends
+just after the <code>local_time</code> and <code>second</code> will be filled
+out with the <code>sys_info</code> that starts just before the
+<code>local_time</code>.
+</p>
+<p>
+You can stream out a <code>local_info</code>:
+</p>
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const local_info&amp; r);
+</pre>
+
+</blockquote>
+
+<a name="time_zone"></a><h3><code>time_zone</code></h3>
+
+<blockquote>
+<p>
+A <code>time_zone</code> represents all time zone transitions for a specific geographic
+area.  <code>time_zone</code> construction is undocumented, and done for you during
+the database initialization.  You can gain <code>const</code> access to a
+<code>time_zone</code> via functions such as <code>locate_zone</code>.
+</p>
+<pre>
+class time_zone
+{
+public:
+    time_zone(const time_zone&amp;) = delete;
+    time_zone&amp; operator=(const time_zone&amp;) = delete;
+
+    const std::string&amp; name() const;
+
+    template &lt;class Duration&gt; sys_info   get_info(sys_time&lt;Duration&gt; st) const;
+    template &lt;class Duration&gt; local_info get_info(local_time&lt;Duration&gt; tp) const;
+
+    template &lt;class Duration&gt;
+        sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+        to_sys(local_time&lt;Duration&gt; tp) const;
+
+    template &lt;class Duration&gt;
+        sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+        to_sys(local_time&lt;Duration&gt; tp, choose z) const;
+
+    template &lt;class Duration&gt;
+        local_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+        to_local(sys_time&lt;Duration&gt; tp) const;
+};
+
+bool operator==(const time_zone&amp; x, const time_zone&amp; y);
+bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&lt; (const time_zone&amp; x, const time_zone&amp; y);
+bool operator&gt; (const time_zone&amp; x, const time_zone&amp; y);
+bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y);
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_zone&amp; z)
+</pre>
+<pre>
+const std::string&amp; time_zone::name() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> The name of the <code>time_zone</code>.
+</p>
+<p>
+<i>Example:</i> "America/New_York".
+</p>
+<p>
+<i>Note:</i> Here is an unofficial list of <code>time_zone</code> names:
+<a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">https://en.wikipedia.org/wiki/List_of_tz_database_time_zones</a>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt; sys_info time_zone::get_info(sys_time&lt;Duration&gt; st) const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_info</code> <code>i</code> for which <code>st</code> is in the
+range <code>[i.begin, i.end)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt; local_info time_zone::get_info(local_time&lt;Duration&gt; tp) const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>local_info</code> for <code>tp</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+time_zone::to_sys(local_time&lt;Duration&gt; tp) const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_time</code> that is at least as fine as <code>seconds</code>,
+and will be finer if the argument <code>tp</code> has finer precision.  This
+<code>sys_time</code> is the UTC equivalent of <code>tp</code> according to the rules
+of this <code>time_zone</code>.
+</p>
+<p>
+<i>Throws:</i> If the conversion from <code>tp</code> to a <code>sys_time</code>
+is ambiguous, throws <code>ambiguous_local_time</code>.  If the conversion from
+<code>tp</code> to a <code>sys_time</code> is nonexistent, throws
+<code>nonexistent_local_time</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+time_zone::to_sys(local_time&lt;Duration&gt; tp, choose z) const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_time</code> that is at least as fine as
+<code>seconds</code>, and will be finer if the argument <code>tp</code> has
+finer precision.  This <code>sys_time</code> is the UTC equivalent of
+<code>tp</code> according to the rules of this <code>time_zone</code>. If the
+conversion from <code>tp</code> to a <code>sys_time</code> is ambiguous, returns
+the earlier <code>sys_time</code> if <code>z == choose::earliest</code>, and
+returns the later <code>sys_time</code> if <code>z == choose::latest</code>. If
+the <code>tp</code> represents a non-existent time between two UTC
+<code>time_point</code>s, then the two UTC <code>time_point</code>s will be the
+same, and that UTC <code>time_point</code> will be returned.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+local_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+time_zone::to_local(sys_time&lt;Duration&gt; tp) const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> The <code>local_time</code> associated with <code>tp</code> and this
+<code>time_zone</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator==(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.name() == y.name()</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.name() &lt; y.name()</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
+
+<pre>
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_zone&amp; z)
+</pre>
+<blockquote>
+<p>
+Produces an output that is probably more meaningful to me than it is to you.  I found it
+useful for debugging this library.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="zoned_time"></a><h3><code>zoned_time</code></h3>
+
+<blockquote>
+<p>
+<code>zoned_time</code> represents a logical paring of <code>time_zone</code> and a
+<code>time_point</code> with precision <code>Duration</code>.  If <code>seconds</code>
+is not implicitly convertible to <code>Duration</code>, the instantiation is ill-formed.
+[<i>Note:</i> There exist <code>time_zone</code>s with UTC offsets that require a
+precision of <code>seconds</code>. <i>&mdash; end note:</i>] 
+</p>
+
+<pre>
+template &lt;class Duration&gt;
+class zoned_time
+{
+    const time_zone*   zone_;  // exposition only
+    sys_time&lt;Duration&gt; tp_;    // exposition only
+
+public:
+    zoned_time(const zoned_time&amp;) = default;
+    zoned_time&amp; operator=(const zoned_time&amp;) = default;
+
+             zoned_time(sys_time&lt;Duration&gt; st);
+    explicit zoned_time(const time_zone* z);
+    explicit zoned_time(const std::string&amp; name);
+
+    template &lt;class Duration2,
+              class = std::enable_if_t
+                      &lt;
+                          std::is_convertible&lt;sys_time&lt;Duration2&gt;,
+                                              sys_time&lt;Duration&gt;&gt;{}
+                      &gt;&gt;
+        zoned_time(const zoned_time&lt;Duration2&gt;&amp; zt) noexcept;
+
+    zoned_time(const time_zone* z,      local_time&lt;Duration&gt; tp);
+    zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp);
+    zoned_time(const time_zone* z,      local_time&lt;Duration&gt; tp, choose c);
+    zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+
+    zoned_time(const time_zone* z,      const zoned_time&lt;Duration&gt;&amp; zt);
+    zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt);
+    zoned_time(const time_zone* z,      const zoned_time&lt;Duration&gt;&amp; zt, choose);
+    zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
+
+    zoned_time(const time_zone* z,      const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st);
+
+    zoned_time&amp; operator=(sys_time&lt;Duration&gt; st);
+    zoned_time&amp; operator=(local_time&lt;Duration&gt; ut);
+
+             operator sys_time&lt;Duration&gt;() const;
+    explicit operator local_time&lt;Duration&gt;() const;
+
+    const time_zone*     get_time_zone() const;
+    local_time&lt;Duration&gt; get_local_time() const;
+    sys_time&lt;Duration&gt;   get_sys_time() const;
+    sys_info             get_info() const;
+};
+
+using zoned_seconds = zoned_time&lt;std::chrono::seconds&gt;;
+
+template &lt;class Duration1, class Duration2&gt;
+bool
+operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+
+template &lt;class Duration1, class Duration2&gt;
+bool
+operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+</pre>
+
+<p>
+An invariant of <code>zoned_time&lt;Duration&gt;</code> is that it always refers
+to a valid <code>time_zone</code>, and represents a point in time that exists
+and is not ambiguous.
+</p>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&amp;) = default;
+zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(const zoned_time&amp;) = default;
+</pre>
+<blockquote>
+<p>
+The copy members transfer the associated <code>time_zone</code> from the source
+to the destination.  After copying, source and destination compare equal.  If
+<code>Duration</code> has <code>noexcept</code> copy members, then
+<code>zoned_time&lt;Duration&gt;</code> has <code>noexcept</code> copy
+members.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(sys_time&lt;Duration&gt; st);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt;name() == "UTC"</code>, and
+<code>zt.get_sys_time() == st</code>.
+</p>
+</blockquote>
+
+<pre>
+explicit zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and
+<code>zt.get_sys_time() == sys_seconds{}</code>.
+</p>
+</blockquote>
+
+<pre>
+explicit zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>locate_zone(name)</code>.
+</p>
+<p>
+<i>Throws:</i> Any exception propagating out of <code>locate_zone(name)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration2,
+          class = std::enable_if_t
+                  &lt;
+                      std::is_convertible&lt;sys_time&lt;Duration2&gt;,
+                                          sys_time&lt;Duration&gt;&gt;{}
+                  &gt;&gt;
+    zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&lt;Duration2&gt;&amp; y) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>x</code> such that
+<code>x == y</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and <code>zt.get_local_time() == tp</code>.
+</p>
+<p>
+<i>Throws:</i> Any exception that <code>z-&gt;to_sys(tp)</code> would throw.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), tp}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp, choose c);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and
+<code>zt.get_sys_time() == z-&gt;to_sys(tp, c)</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), tp, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and
+<code>zt.get_sys_time() == y.get_sys_time()</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; y, choose);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and
+<code>zt.get_sys_time() == y.get_sys_time()</code>.
+</p>
+<p>
+<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; y, choose);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y}</code>.
+</p>
+<p>
+<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const sys_time&lt;Duration&gt;&amp; st);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt; == z</code>, and <code>zt.get_sys_time() == st</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), st}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(sys_time&lt;Duration&gt; st);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> After assignment <code>get_sys_time() == st</code>.  This assignment has
+no effect on the return value of <code>get_time_zone()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(local_time&lt;Duration&gt; lt);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> After assignment <code>get_local_time() == lt</code>.  This assignment has
+no effect on the return value of <code>get_time_zone()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::operator sys_time&lt;Duration&gt;() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>get_sys_time()</code>.
+</p>
+</blockquote>
+
+<pre>
+explicit zoned_time&lt;Duration&gt;::operator local_time&lt;Duration&gt;() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>get_local_time()</code>.
+</p>
+</blockquote>
+
+<pre>
+const time_zone* zoned_time&lt;Duration&gt;::get_time_zone() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>zone_</code>.
+</p>
+</blockquote>
+
+<pre>
+local_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_local_time() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>zone_-&gt;to_local(tp_)</code>.
+</p>
+</blockquote>
+
+<pre>
+sys_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_sys_time() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>tp_</code>.
+</p>
+</blockquote>
+
+<pre>
+sys_info zoned_time&lt;Duration&gt;::get_info() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>zone_-&gt;get_info(tp_)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration1, class Duration2&gt;
+bool
+operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.zone_ == y.zone_ &amp;&amp; x.tp_ == y.tp_</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration1, class Duration2&gt;
+bool
+operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+template <class Duration>
+std::ostream&
+operator<<(std::ostream& os, const zoned_time<Duration>& t)
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T %Z"
+and the value returned from <code>t.get_local_time()</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="make_zoned"></a><h3><code>make_zoned</code></h3>
+
+<blockquote>
+<p>
+There exist several overloaded functions named <code>make_zoned</code>
+which serve as factory functions for <code>zoned_time&lt;Duration&gt;</code> and
+will deduce the correct <code>Duration</code> from the argument list.  In every
+case the correct return type is
+<code>zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;</code>.
+</p>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(sys_time&lt;Duration&gt; tp)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{tp}</code>.
+</p>
+</blockquote>
+
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{zone, tp}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const std::string&amp; name, local_time&lt;Duration&gt; tp)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{name, tp}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp, choose c)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{zone, tp, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const std::string&amp; name, local_time&lt;Duration&gt; tp, choose c)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{name, tp, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const time_zone* zone, const zoned_time&lt;Duration&gt;&amp; zt)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{zone, zt}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{name, zt}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const time_zone* zone, const zoned_time&lt;Duration&gt;&amp; zt, choose c)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{zone, zt, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt, choose c)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{name, zt, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const time_zone* zone, const sys_time&lt;Duration&gt;&amp; st)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{zone, st}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+zoned_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>{name, st}</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="format"></a><h3><code>format</code></h3>
+<blockquote>
+<p>needs documentation</p>
+</blockquote>
+
+<a name="parse"></a><h3><code>parse</code></h3>
+<blockquote>
+<p>needs documentation</p>
+</blockquote>
+
+<a name="Leap"></a><h3><code>Leap</code></h3>
+<blockquote>
+<p>needs documentation</p>
+</blockquote>
+
+<a name="utc_clock"></a><h3><code>utc_clock</code></h3>
+<blockquote>
+<p>needs documentation</p>
+</blockquote>
+
+<a name="Link"></a><h3><code>Link</code></h3>
+<blockquote>
+<p>needs documentation</p>
+</blockquote>
 
 <a name="Installation"></a><h2>Installation</h2>
 
@@ -2101,6 +3355,13 @@ Arthur David Olson.  I would also like to thank the entire group of people who c
 maintain it, and especially the IESG-designated TZ Coordinator, Paul Eggert.  Without the
 work of these people, this software would have no data to parse.
 </p>
-
+<p>
+I would also like to thank Jiangang Zhuang and Bjarne Stroustrup for invaluable feedback
+for the timezone portion of this library, which ended up influencing the date.h library.
+</p>
+<p>
+And I would also especially like to thank contributors to this library:  gmcode,
+Ivan Pizhenko, tomy2105 and Ville Voutilainen.
+</p>
 </body>
 </html>
