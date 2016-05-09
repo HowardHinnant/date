@@ -1151,7 +1151,7 @@ format(const std::locale& loc, std::string format,
                     throw std::runtime_error("Can not format local_time with %z");
                 else
                 {
-                    auto info = zone->get_info(tp);
+                    auto info = zone->get_info(tp).first;
                     auto offset = duration_cast<minutes>(info.offset);
                     ostringstream os;
                     if (offset >= minutes{0})
@@ -1168,7 +1168,7 @@ format(const std::locale& loc, std::string format,
                     throw std::runtime_error("Can not format local_time with %z");
                 else
                 {
-                    auto info = zone->get_info(tp);
+                    auto info = zone->get_info(tp).first;
                     format.replace(i, 2, info.abbrev);
                     i += info.abbrev.size() - 1;
                 }
@@ -1380,10 +1380,13 @@ parse(std::istream& is, const std::string& format, sys_time<Duration>& tp)
 template <class Duration>
 inline
 void
-parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
       std::string& abbrev)
 {
-    detail::parse(is, format, tp, &abbrev);
+    sys_time<Duration> st;
+    detail::parse(is, format, st, &abbrev);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
 }
 
 }  // namespace date
