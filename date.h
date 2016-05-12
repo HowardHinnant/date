@@ -3763,14 +3763,14 @@ class time_of_day
 {
     using base = detail::time_of_day_storage<Duration>;
 public:
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+#ifndef _MSC_VER
     using base::base;
 #else
     template <class ...Args>
     explicit time_of_day(Args&& ...args)
         : base(std::forward<Args>(args)...)
         {}
-#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+#endif // _MSC_VER
 };
 
 template <class Rep, class Period,
