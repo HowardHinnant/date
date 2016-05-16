@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-07<br/>
+2016-05-15<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -42,6 +42,7 @@ Commons Attribution 4.0 International License</a>.
 <li><a href="#Introduction">Introduction</a></li>
 <li><a href="#Implementation">Implementation</a></li>
 <li><a href="#Overview">Overview</a></li>
+<li><a href="#range">Range of Validity</a></li>
 <li><a href="#Reference">Reference</a></li>
 </ul>
 
@@ -1285,6 +1286,181 @@ For an example of a fully developed
 <a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>
 which is fully interoperable with this library via the technique described above see
 <a href="iso_week.html"><code>iso_week</code></a>.
+</p>
+
+<a name="range"></a><h2>Range of Validity</h2>
+
+<p>
+As with all numerical representations with a fixed storage size, <code>duration</code>s,
+<code>time_point</code>s, and <code>year_month_day</code>s have a fixed range, outside
+of which they overflow.  With this library, and with <code>&lt;chrono&gt;</code>, the
+range varies with precision.
+</p>
+
+<p>
+On one side <code>nanoseconds</code> is represented by a <code>int64_t</code>
+which has a range of about +/- 292 years.  And on the other side <code>year</code>
+is represented by a <code>int16_t</code> which has a range of about +/- 32 thousand
+years.  It is informative and educational to write software which explores the
+intersection of these two constraints for various precisions, and outputs the result
+in terms of a <code>sys_time</code>.
+</p>
+
+<p>
+Here is a function which will discover the limits for a single durration <code>D</code>:
+</p>
+
+<blockquote><pre>
+#include "date.h"
+#include &lt;iomanip&gt;
+#include &lt;iostream&gt;
+#include &lt;limits&gt;
+#include &lt;cstdint&gt;
+
+template &lt;class D&gt;
+void
+limit(const std::string&amp; msg)
+{
+    using namespace date;
+    using namespace std;
+    using namespace std::chrono;
+    using dsecs = sys_time&lt;duration&lt;double&gt;&gt;;
+    constexpr auto ymin = sys_days{year{numeric_limits&lt;int16_t&gt;::min()}/jan/1};
+    constexpr auto ymax = sys_days{year{numeric_limits&lt;int16_t&gt;::max()}/12/last};
+    constexpr auto dmin = sys_time&lt;D&gt;::min();
+    constexpr auto dmax = sys_time&lt;D&gt;::max();
+    cout &lt;&lt; left &lt;&lt; setw(24) &lt;&lt; msg &lt;&lt; " : [";
+    if (ymin &gt; dsecs{dmin})
+        cout &lt;&lt; ymin;
+    else
+        cout &lt;&lt; dmin;
+    cout &lt;&lt; ", ";
+    if (ymax &lt; dsecs{dmax})
+        cout &lt;&lt; ymax;
+    else
+        cout &lt;&lt; dmax;
+    cout &lt;&lt; "]\n";
+}
+</pre></blockquote>
+
+<p>
+The best way to explore limits without risking overflow during the comparison operation
+itself is to use <code>double</code>-based <code>seconds</code> for the comparison.  By
+using <code>seconds</code> you guarantee that the conversion to the comparison type
+won't overflow the compile-time machinery of finding the <code>common_type</code> of the
+<code>duration</code>s, and by using <code>double</code> you make overflow or underflow
+nearly impossible.  The use of <code>double</code> sacrifices precision, but this is
+rarely needed for limits comparisons as the two operands of the comparison are typically
+orders of magnitude apart.
+</p>
+
+<p>
+So the code above creates a <code>sys_time&lt;double&gt;</code> <code>time_point</code>
+with which to perform the comparisons.  Then it finds the min and max of both the
+<code>year_month_day</code> object, and the duration <code>D</code>.  It then prints
+out the intersection of these two ranges.
+</p>
+
+<p>
+This code can be exercised like so:
+</p>
+
+<blockquote><pre>
+void
+limits()
+{
+    using namespace std::chrono;
+    using namespace std;
+    using picoseconds = duration&lt;int64_t, pico&gt;;
+    using fs = duration&lt;int64_t, ratio_multiply&lt;ratio&lt;100&gt;, nano&gt;&gt;;
+    limit&lt;picoseconds&gt;("picoseconds range is");
+    limit&lt;nanoseconds&gt;("nanoseconds range is");
+    limit&lt;fs&gt;("VS system_clock range is");
+    limit&lt;microseconds&gt;("microseconds range is");
+    limit&lt;milliseconds&gt;("milliseconds range is");
+    limit&lt;seconds&gt;("seconds range is");
+    limit&lt;minutes&gt;("minutes range is");
+    limit&lt;hours&gt;("hours range is");
+}
+</pre></blockquote>
+
+<p>
+I've included two extra units: <code>picoseconds</code>, and the units used by Visual
+Studio's <code>system_clock::time_point</code>.  Units finer than <code>picoseconds</code>
+do not work with this date library because the conversion factors needed to convert to 
+units such as <code>days</code> overflow the compile-time machinery.  As a practical
+matter this is not important as the range of a 64 bit femtosecond is only about +/- 2.5
+hours.  On the other side, units coarser than <code>hours</code>, if represented by at
+least 32 bits, will always have a range far greater than a 16 bit <code>year</code>.
+</p>
+
+<p>
+The output of this function on Visual Studio, and on clang using libc++ with
+<code>-arch i386</code> is:
+</p>
+
+<blockquote><pre>
+picoseconds range is     : [1969-09-16 05:57:07.963145224192, 1970-04-17 18:02:52.036854775807]
+nanoseconds range is     : [1677-09-21 00:12:43.145224192, 2262-04-11 23:47:16.854775807]
+VS system_clock range is : [-27258-04-19 21:11:54.5224192, 31197-09-14 02:48:05.4775807]
+microseconds range is    : [-32768-01-01, 32767-12-31]
+milliseconds range is    : [-32768-01-01, 32767-12-31]
+seconds range is         : [-32768-01-01, 32767-12-31]
+minutes range is         : [-2114-12-08 21:52, 6053-01-23 02:07]
+hours range is           : [-32768-01-01, 32767-12-31]
+</pre></blockquote>
+
+<p>
+Using gcc or clang/libc++ with <code>-arch x86_64</code> the output is:
+</p>
+
+<blockquote><pre>
+picoseconds range is     : [1969-09-16 05:57:07.963145224192, 1970-04-17 18:02:52.036854775807]
+nanoseconds range is     : [1677-09-21 00:12:43.145224192, 2262-04-11 23:47:16.854775807]
+VS system_clock range is : [-27258-04-19 21:11:54.5224192, 31197-09-14 02:48:05.4775807]
+microseconds range is    : [-32768-01-01, 32767-12-31]
+milliseconds range is    : [-32768-01-01, 32767-12-31]
+seconds range is         : [-32768-01-01, 32767-12-31]
+minutes range is         : [-32768-01-01, 32767-12-31]
+hours range is           : [-32768-01-01, 32767-12-31]
+</pre></blockquote>
+
+<p>
+The only difference between these two outputs is that associated with
+<code>minutes</code>.  When <code>minutes</code> is represented with 32 bits the range is
+only about +/- 4000 years from 1970.  When <code>minutes</code> is represented with 64
+bits, the limits of the 16 bit year takes precedence.
+</p>
+
+<p>
+The take-away point here is two-fold:
+</p>
+
+<ol>
+<li><p>
+If you need to check range, do the check using <code>duration&lt;double&gt;</code> to
+ensure your comparison is not itself vulnerable to overflow.
+</p></li>
+<li><p>
+If you are dealing units finer than <code>microseconds</code>, you may well
+accidentally experience overflow in surprisingly mundane-looking code.  When
+dealing with dates that may be hundreds of years away from 1970, keep an eye on
+the precision.  And in a surprise move, 32 bit <code>minutes</code> can bite if
+you are several thousand years away from 1970.
+</p></li>
+</ol>
+
+<p>
+Finally note that the civil calendar itself models the rotation and orbit of the
+earth with an accuracy of only one day in several thousand years.  So dates more
+than several thousand years in the past or future (with a precision of a single
+day) are of limited practical use with or without numerical overflow.  The chief
+motivation for having large ranges of date computation before overflow happens
+is to make range checking superflous for most reasonable computations.  If you
+need to handle ranges dealing with geological or astrophysical phenomenon,
+<code>&lt;chrono&gt;</code> can handle it (<code>attoseconds</code> to
+<code>exaseconds</code>), but <code>year_month_day</code> is the wrong tool for
+such extremes.
 </p>
 
 <a name="Reference"></a><h2>Reference</h2>

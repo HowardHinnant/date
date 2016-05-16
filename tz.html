@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-08<br/>
+2016-05-15<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -39,9 +39,8 @@ Commons Attribution 4.0 International License</a>.
 <h2>Contents</h2>
 
 <ul>
+<li><a href="https://github.com/HowardHinnant/date">github link</a></li>
 <li><a href="#Introduction">Introduction</a></li>
-<li><a href="#Overview">Overview</a></li>
-<li><a href="#Synopsis">Synopsis</a></li>
 <li><a href="#Description">Description</a>
     <ul>
     <li><a href="#TheDatabase">The Database</a></li>
@@ -57,29 +56,45 @@ Commons Attribution 4.0 International License</a>.
     <li><a href="#flightexample2">Flight Example with leap seconds</a></li>
     <li><a href="#Formatting">Formatting</a></li>
     <li><a href="#Parsing">Parsing</a></li>
-    <li><a href="#ThreadSafety">Thread Safety</a></li>
     </ul>
 </li>
-<li><a href="#Reference">Reference</a></li>
-<li><a href="#Installation">Installation &mdash; this is where you find the implementation</a></li>
+<li><a href="#Reference">Reference</a>
+    <ul>
+    <li><a href="#database">The database</a></li>
+    <li><a href="#choose"><code>choose</code></a></li>
+    <li><a href="#nonexistent_local_time"><code>nonexistent_local_time</code></a></li>
+    <li><a href="#ambiguous_local_time"><code>ambiguous_local_time</code></a></li>
+    <li><a href="#sys_info"><code>sys_info</code></a></li>
+    <li><a href="#local_info"><code>local_info</code></a></li>
+    <li><a href="#time_zone"><code>time_zone</code></a></li>
+    <li><a href="#zoned_time"><code>zoned_time</code></a></li>
+    <li><a href="#make_zoned"><code>make_zoned</code></a></li>
+    <li><a href="#format"><code>format</code></a></li>
+    <li><a href="#parse"><code>parse</code></a></li>
+    <li><a href="#utc_clock"><code>utc_clock</code></a></li>
+    <li><a href="#Leap"><code>Leap</code></a></li>
+    <li><a href="#Link"><code>Link</code></a></li>
+    </ul>
+</li>
+<li><a href="#Installation">Installation</a></li>
 <li><a href="#Acknowledgements">Acknowledgements</a></li>
 </ul>
 
 <a name="Introduction"></a><h2>Introduction</h2>
 
 <p>
-I had just completed writing <a href="date_v2.html"><code>date</code></a>, which is a
+I had just completed writing <a href="date.html"><code>date</code></a>, which is a
 library for extending <code>&lt;chrono&gt;</code> into the realm of calendars, and I was
 looking around for the most challenging date time problem I could find with which I could
 demonstrate the power of this new library.  "I know," I said to myself, "I'll handle all
-the world's time zones, and maybe even leap seconds!"  Thus began my journey into a
+of the world's time zones, and maybe even leap seconds!"  Thus began my journey into a
 rabbit hole which I knew existed, but had never truly appreciated the intricacies of.
 </p>
 
 <p>
-This library adds timezone and leap second support to this <a href="date_v2.html">date</a>
- library.  This is a separate library from <a href="date_v2.html"><code>date</code></a>
-because many clients of <a href="date_v2.html"><code>date</code></a> do not need timezone
+This library adds timezone and leap second support to this <a href="date.html">date</a>
+ library.  This is a separate library from <a href="date.html"><code>date</code></a>
+because many clients of <a href="date.html"><code>date</code></a> do not need timezone
 nor leap second support, and this support does not come for free (though the cost is quite
 reasonable).
 </p>
@@ -88,7 +103,7 @@ reasonable).
 This library is a <b>complete</b> parser of the <a
 href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.  This database contains
 timezone information that represents the history of local time for many representative
-locations around the globe. It is updated periodically to reflect changes made by
+locations around the globe. It is updated every few months to reflect changes made by
 political bodies to time zone boundaries, UTC offsets, and daylight-saving rules.  The
 database also maintains a list of leap seconds from 1972 through the present.
 </p>
@@ -122,339 +137,10 @@ Leap:  The date of the insertion of a leap second.
 <p>
 The library documented herein provides access to <i>all</i> of this data, and offers
 efficient and convenient ways to compute with it.  And this is all done based on the <a
-href="date_v2.html"><code>date</code></a> library, which in turn is based on the C++11/14
+href="date.html"><code>date</code></a> library, which in turn is based on the C++11/14
 <code>&lt;chrono&gt;</code> library.  So once you've learned those fundamental libraries,
 the learning curve for this library is greatly eased.
 </p>
-
-<a name="Overview"></a><h2>Overview</h2>
-
-<p>
-Like <a href="date_v2.html"><code>date</code></a>, this library revolves around
-<code>std::chrono::system_clock</code>.  Thus it is important to understand the properties
-of this foundation.  <code>std::chrono::system_clock</code> has nested types including
-<code>time_point</code> and <code>duration</code>, and a static function called
-<code>now</code> which returns a <code>time_point</code>.  This <code>time_point</code>
-measures time against some unspecified epoch using the units of <code>duration</code>.
-</p>
-
-<blockquote><pre>
-namespace std { namespace chrono {
-
-class system_clock
-{
-public:
-    using duration   = microseconds;
-    using time_point = chrono::time_point&lt;system_clock&gt;;
-    // other types ...
-
-    static time_point now() noexcept;
-    // other member functions ...
-};
-
-}} // namespace std::chrono
-</pre></blockquote>
-
-<p>
-The use of <code>microseconds</code> above for the <code>duration</code> type is just
-an example.  This is what is used for <a href="http://libcxx.llvm.org">libc++</a> on
-<a href="http://www.apple.com/osx/">OS X</a>.  Other implementations may use
-other units such as <code>nanoseconds</code>.  But one unspecified property that all
-implementations of <code>std::chrono::system_clock</code> have in common is that they
-all model <a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a>.
-</p>
-
-<p>
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> counts the number of
-seconds since 1970-01-01 00:00:00 UTC, except that leap seconds are ignored in the count. 
-An interesting and useful property of
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> is that it treats leap
-seconds as nothing more than a typical clock correction.  That is, no clock keeps perfect
-time, not even the one in your computer.  And several times a day your computer will ask
-another computer what time it is, and typically correct itself by a small fraction of a
-second.
-</p>
-
-<p>
-When a leap second occurs, instead of counting an extra second,
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> reacts by saying, oh, I'm
-off by a second, I'll slow down or speed up to correct.  Companies such as Google will
-"smear" the application of a leap second over a period of hours, letting their
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> counters adjust by
-milliseconds, or even microseconds at a time, so that the insertion of a leap second is
-virtually undetectable to applications running on the computer.
-</p>
-
-<p>
-It is this de-facto standard based on
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> that allows
-<a href="date_v2.html"><code>date</code></a> to portably convert a count of microseconds
-(for example) into field-based structures containing <code>year/month/day</code> and
-<code>hours::minutes::seconds.microseconds</code>.  And when you need to further convert
-the <code>system_clock::time_point</code> into a local time, and/or take leap seconds into
-account, the library documented herein handles it by accessing your local copy of the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.
-</p>
-
-<a name="Synopsis"></a><h2>Synopsis</h2>
-
-<p>
-This synopsis provides nothing but a quick overview of the documented API of this library.
-If you don't see it in the synopsis below, it is not a documented part of this library.
-</p>
-
-<blockquote><pre>
-namespace date
-{
-
-using second_point = std::chrono::time_point&lt;std::chrono::system_clock,
-                                             std::chrono::seconds&gt;;
-
-struct sys_info
-{
-    second_point         begin;
-    second_point         end;
-    std::chrono::seconds offset;
-    std::chrono::minutes save;
-    std::string          abbrev;
-};
-
-std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os, const sys_info&amp; r);
-
-enum class choose {earliest, latest};
-
-class nonexistent_local_time
-    : public std::runtime_error
-{
-public:
-};
-
-class ambiguous_local_time
-    : public std::runtime_error
-{
-public:
-};
-
-class Zone
-{
-public:
-    const std::string&amp; name() const;
-
-    template &lt;class Rep, class Period&gt;
-    std::pair
-    &lt;
-        std::chrono::time_point&lt;std::chrono::system_clock,
-            typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                      std::chrono::seconds&gt;::type&gt;,
-        std::string
-    &gt;
-    to_local(std::chrono::time_point&lt;std::chrono::system_clock,
-                                     std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-
-    template &lt;class Rep, class Period&gt;
-    std::chrono::time_point&lt;std::chrono::system_clock,
-        typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                  std::chrono::seconds&gt;::type&gt;
-    to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-                                   std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-
-    template &lt;class Rep, class Period&gt;
-    std::chrono::time_point&lt;std::chrono::system_clock,
-        typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                  std::chrono::seconds&gt;::type&gt;
-    to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-                                   std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
-           choose z) const;
-
-    template &lt;class Rep, class Period&gt;
-    sys_info
-    get_info(std::chrono::time_point&lt;std::chrono::system_clock,
-                                     std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
-             tz timezone) const;
-};
-
-const Zone* locate_zone(const std::string&amp; tz_name);
-const Zone* current_zone();
-
-bool operator==(const Zone&amp; x, const Zone&amp; y);
-bool operator!=(const Zone&amp; x, const Zone&amp; y);
-bool operator&lt; (const Zone&amp; x, const Zone&amp; y);
-bool operator&gt; (const Zone&amp; x, const Zone&amp; y);
-bool operator&lt;=(const Zone&amp; x, const Zone&amp; y);
-bool operator&gt;=(const Zone&amp; x, const Zone&amp; y);
-
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const Zone&amp; z);
-
-class Link
-{
-public:
-    const std::string&amp; name() const;
-    const std::string&amp; target() const;
-};
-
-bool operator==(const Link&amp; x, const Link&amp; y);
-bool operator!=(const Link&amp; x, const Link&amp; y);
-bool operator&lt; (const Link&amp; x, const Link&amp; y);
-bool operator&gt; (const Link&amp; x, const Link&amp; y);
-bool operator&lt;=(const Link&amp; x, const Link&amp; y);
-bool operator&gt;=(const Link&amp; x, const Link&amp; y);
-
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const Link&amp; x);
-
-class Leap
-{
-public:
-    second_point date() const;
-};
-
-bool operator==(const Leap&amp; x, const Leap&amp; y);
-bool operator!=(const Leap&amp; x, const Leap&amp; y);
-bool operator&lt; (const Leap&amp; x, const Leap&amp; y);
-bool operator&gt; (const Leap&amp; x, const Leap&amp; y);
-bool operator&lt;=(const Leap&amp; x, const Leap&amp; y);
-bool operator&gt;=(const Leap&amp; x, const Leap&amp; y);
-
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const Leap&amp; x);
-
-template &lt;class Duration&gt;
-bool
-operator==(const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator==(const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator!=(const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator!=(const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&lt; (const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&lt; (const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&gt; (const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&gt; (const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&lt;=(const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&lt;=(const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&gt;=(const Leap&amp; x,
-           const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; y);
-
-template &lt;class Duration&gt;
-bool
-operator&gt;=(const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; x,
-           const Leap&amp; y);
-
-class Rule;
-
-struct TZ_DB
-{
-    std::string       version;
-    std::vector&lt;Zone&gt; zones;
-    std::vector&lt;Link&gt; links;
-    std::vector&lt;Leap&gt; leaps;
-    std::vector&lt;Rule&gt; rules;
-};
-
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const TZ_DB&amp; db);
-
-const TZ_DB&amp; get_tzdb();
-const TZ_DB&amp; reload_tzdb();
-
-#if HAS_REMOTE_API
-std::string remote_version();
-bool        remote_download(const std::string&amp; version);
-bool        remote_install(const std::string&amp; version);
-#endif
-
-class utc_clock
-{
-public:
-    using duration                  = std::chrono::system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
-    using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
-    static constexpr bool is_steady = true;
-
-    static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-        static
-        std::chrono::time_point&lt;utc_clock,
-            typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-        sys_to_utc(std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt; t);
-
-    template &lt;class Duration&gt;
-        static
-        std::chrono::time_point&lt;std::chrono::system_clock,
-            typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-        utc_to_sys(std::chrono::time_point&lt;utc_clock, Duration&gt; t);
-};
-
-template &lt;class Duration&gt;
-std::string
-format(const std::locale&amp; loc, std::string format,
-       std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt; tp,
-       const Zone* zone = nullptr);
-
-std::string
-format(const std::locale&amp; loc, std::string format, day_point tp,
-       const Zone* zone = nullptr);
-
-template &lt;class Duration&gt;
-std::string
-format(std::string format,
-       std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt; tp,
-       const Zone* zone = nullptr);
-
-std::string
-format(std::string format, day_point tp, const Zone* zone = nullptr);
-
-template &lt;class Duration&gt;
-void
-parse(std::istream&amp; is, const std::string&amp; format,
-      std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp);
-
-template &lt;class Duration&gt;
-void
-parse(std::istream&amp; is, const std::string&amp; format,
-      std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp,
-      std::string&amp; abbrev);
-
-}  // namespace date
-</pre></blockquote>
 
 <a name="Description"></a><h2>Description</h2>
 
@@ -463,6 +149,229 @@ Everything documented below is in <code>namespace date</code>.  Explicit referen
 this namespace in example code below is intentionally omitted in the hopes of reducing
 verbosity.
 </p>
+
+<h3>What is the current local time?</h3>
+
+<p>
+One of the first things people want to is find out what current local time it is.
+Here is a complete program to print out the local time in human readable format:
+</p>
+
+<blockquote><pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono;
+    auto local_time = make_zoned(current_zone(), system_clock::now());
+    std::cout &lt;&lt; local_time &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+This just output for me:
+</p>
+
+<blockquote><pre>
+2016-05-14 18:33:24.205124 EDT
+</pre></blockquote>
+
+<p>
+There are some noteworthy points about this program:
+</p>
+
+<ul>
+<li><p>
+This is a <code>&lt;chrono&gt;</code>-based system.  The current time is
+found with <code>std::chrono::system_clock::now()</code>.
+</p></li>
+<li><p>
+The computer's current local time zone is not assumed.  If anything is assumed that
+would be UTC, since this is the time zone that <code>system_clock</code> tracks
+(unspecified but de facto standard).
+</p></li>
+<li><p>
+Specifying you want to convert <code>system_clock::time_point</code>s to the
+current local time zone is as easy as calling <code>date::current_zone()</code>
+and <i>pairing</i> that with a <code>system_clock::time_point</code> using
+<code>date::make_zoned</code>.  This creates a <code>zoned_time</code>.
+</p></li>
+<li><p>
+This <code>zoned_time</code> maintains whatever precision it was given.  On my
+platform <code>system_clock::now()</code> has microseconds precision, so in this
+example, <code>local_time</code> has microseconds precision as well.
+</p></li>
+<li><p>
+The <code>local_time</code> is then simply streamed out.  By default the output
+represents all of the precision it is given.
+</p></li>
+</ul>
+
+<p>
+Everything about the above program can be customized:  the precision, the formatting,
+and the time zone.  But by default, things just work, and don't throw away information.
+</p>
+
+<p>
+For example let's say we wanted to limit the precision to milliseconds.  This can
+be done by inserting <code>floor&lt;milliseconds&gt;</code> in one place.  This
+makes <code>local_time</code> have just a precision of <code>milliseconds</code>
+and that is reflected in the streaming operator with no further effort:
+</p>
+
+<blockquote><pre>
+auto local_time = make_zoned(current_zone(), <b>floor&lt;milliseconds&gt;</b>(system_clock::now()));
+std::cout &lt;&lt; local_time &lt;&lt; '\n';  // 2016-05-14 18:33:24.205 EDT
+</pre></blockquote>
+
+<p>
+Seconds precision is just as easy:
+</p>
+
+<blockquote><pre>
+auto local_time = make_zoned(current_zone(), <b>floor&lt;seconds&gt;</b>(system_clock::now()));
+std::cout &lt;&lt; local_time &lt;&lt; '\n';  // 2016-05-14 18:33:24 EDT
+</pre></blockquote>
+
+<p>
+The entire <code>strftime</code> / <code>time_put</code> formatting capability is
+also at your fingertips (and at any precision):
+</p>
+
+<blockquote><pre>
+auto local_time = make_zoned(current_zone(), system_clock::now());
+std::cout &lt;&lt; <b>format("%a, %b %d, %Y at %I:%M %p %Z", local_time)</b> &lt;&lt; '\n';
+// Sat, May 14, 2016 at 06:33 PM EDT
+</pre></blockquote>
+
+<p>
+Using any <code>std::locale</code> your OS supports:
+</p>
+
+<blockquote><pre>
+auto local_time = make_zoned(current_zone(), floor&lt;seconds&gt;(system_clock::now()));
+std::cout &lt;&lt; format(<b>locale("de_DE")</b>, "%a, %b %d, %Y at %T %Z", local_time) &lt;&lt; '\n';
+// Sa, Mai 14, 2016 at 18:33:24 EDT
+</pre></blockquote>
+
+<h3>What time is it somewhere <i>else</i> in the world?</h3>
+
+<p>
+From the previous section:
+</p>
+
+<blockquote>
+<p>
+Hmm... German locale in an American time zone.
+</p>
+</blockquote>
+
+<p>
+We can fix that easily too:
+</p>
+
+<blockquote><pre>
+<b>auto zone = locate_zone("Europe/Berlin");</b>
+auto local_time = make_zoned(<b>zone</b>, floor&lt;seconds&gt;(system_clock::now()));
+std::cout &lt;&lt; format(locale("de_DE"), "%a, %b %d, %Y at %T %Z", local_time) &lt;&lt; '\n';
+// So, Mai 15, 2016 at 00:33:24 CEST
+</pre></blockquote>
+
+<p>
+The <code>date::locate_zone()</code> function looks up the IANA time zone with the name
+"Europe/Berlin" and returns a <code>const time_zone*</code> which has no ownership
+issues and can be freely and cheaply copied around.  It is not possible for
+<code>locate_zone()</code> to return <code>nullptr</code>, though it might throw
+an exception if pushed far enough (e.g. <code>locate_zone("Disney/Mickey_Mouse")</code>).
+</p>
+
+<p>
+You can also call <code>make_zoned</code> with the time zone name right in the call:
+</p>
+
+<blockquote><pre>
+auto local_time = make_zoned(<b>"Europe/Berlin"</b>, floor&lt;seconds&gt;(system_clock::now()));
+</pre></blockquote>
+
+<p>
+The first way is very slightly more efficient if you plan on using <code>zone</code>
+multiple times since it then only has to be looked up once.
+</p>
+
+<h3>How do I convert a <code>time_zone</code> from one time zone to another?</h3>
+
+<p>
+So far we've only looked at converting from <code>system_clock::now()</code> to
+a local, or specific time zone.  We've used <code>make_zoned</code> with the
+first argument being either <code>current_zone()</code> or a specification for
+some other time zone, and the second argument being a
+<code>system_clock::time_point</code>. So far so good.
+</p>
+
+<p>
+But now I have a video-conference meeting on the first Monday of May, 2016 at
+9am New York time.  I need to communicate that meeting with partners in London
+and Sydney.  And the computation is taking place on a computer in New Zealand (or some other
+unrelated time zone). What does that look like?
+</p>
+
+<blockquote><pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date::literals;
+    using namespace std::chrono_literals;
+    auto meet_nyc = make_zoned("America/New_York", date::local_days{mon[1]/may/2016} + 9h);
+    auto meet_lon = make_zoned("Europe/London",    meet_nyc);
+    auto meet_syd = make_zoned("Australia/Sydney", meet_nyc);
+    std::cout &lt;&lt; "The New York meeting is " &lt;&lt; meet_nyc &lt;&lt; '\n';
+    std::cout &lt;&lt; "The London   meeting is " &lt;&lt; meet_lon &lt;&lt; '\n';
+    std::cout &lt;&lt; "The Sydney   meeting is " &lt;&lt; meet_syd &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+The output is the following.  But before you forward it, send a generous bonus
+to the guys in Australia.
+</p>
+
+<blockquote><pre>
+The New York meeting is 2016-05-02 09:00:00 EDT
+The London   meeting is 2016-05-02 14:00:00 BST
+The Sydney   meeting is 2016-05-02 23:00:00 AEST
+</pre></blockquote>
+
+<p>
+Summary:  <code>zoned_time</code> is a pairing of local or UTC time with a <code>time_zone</code>.
+The result is a well-specified point in time.  And it carries with it the ability to
+serve as a translator to any other <code>time_point</code> which carries time zone
+information (to any precision).
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <a name="TheDatabase"></a><h3>The Database</h3>
 
@@ -649,7 +558,7 @@ some of the data which is presented, such as that in the <code>sys_info</code> c
 this type alias as a convenience, and to reduce verbosity.  <code>second_point</code>
 will implicitly convert to <code>system_clock::time_point</code>.  And coarser
 <code>time_point</code>s such as the <code>day_point</code> from the
-<a href="date_v2.html"><code>date</code></a> library will implicitly convert to 
+<a href="date.html"><code>date</code></a> library will implicitly convert to 
 <code>second_point</code>.
 </p>
 
@@ -1495,7 +1404,7 @@ of history here.
 
 <p>
 All of the types in this library, as well as in
-<a href="date_v2.html"><code>date.h</code></a> are streamable when you need quick and
+<a href="date.html"><code>date.h</code></a> are streamable when you need quick and
 simple output.  However in addition to this simplistic streaming there is more
 sophisticated formatting built on top of the C++11 <code>time_put&lt;char&gt;</code>
 facet.  <code>time_put&lt;char&gt;</code> itself is built on C's <code>strftime</code>
@@ -1804,92 +1713,12 @@ all possible.  However, if you are forced to, this library has the power to find
 thing that is knowable about that timestamp.
 </p>
 
-<a name="ThreadSafety"></a><h3>Thread Safety</h3>
-
-<p>
-The implementation of the database is as a singleton.  An application can have only a
-single database.  However the initial construction of that database is thread safe, and
-subsequent access is always const (unless you need to update to a new version of the
-database at run time).  The initial construction thread safety is implemented with C++11
-function local statics.  If your compiler does not implement threadsafe function local
-statics, then you will need to arrange for your own thread safety during the
-initialization stage.
-</p>
-
-<p>
-If you need to update the database at runtime via the <code>reload_tzdb</code> function,
-you will need to provide your own thread safety if you are in a multithreaded application.
-This could be done (for example) by ensuring that all of your calls into the database
-occur with the permission of a C++14
-<code>std::shared_lock&lt;std::shared_timed_mutex&gt;</code>, except for the calls to
-<code>reload_tzdb</code>, which must be done with a
-<code>std::unique_lock&lt;std::shared_timed_mutex&gt;</code>.  Such facilities are not
-provided by default with this library so that you don't pay for them if you don't need
-them.
-</p>
-
-<p>
-In case you do need to protect calls into the database with a mutex, here is a
-comprehensive list of the public API that accesses the database:
-</p>
-
-<blockquote><pre>
-<b><i>// Read/write access</i></b>
-const TZ_DB&amp; reload_tzdb();
-
-<b><i>// Read-only access</i></b>
-
-const TZ_DB&amp; get_tzdb();
-
-<i>// Zone functions</i>
-const Zone* locate_zone(const std::string&amp; tz_name);
-const Zone* current_zone();
-info Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const;
-
-template &lt;class Rep, class Period&gt;
-auto
-Zone::to_local(std::chrono::time_point&lt;std::chrono::system_clock,
-               std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const
-    -&gt; std::pair&lt;decltype(tp + get_info(tp, tz::utc).offset), std::string&gt;;
-
-template &lt;class Rep, class Period&gt;
-auto
-Zone::to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-             std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const
-    -&gt; decltype(tp - get_info(tp, tz::local).offset);
-
-template &lt;class Rep, class Period&gt;
-auto
-Zone::to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-             std::chrono::duration&lt;Rep, Period&gt;&gt; tp, choose z) const
-    -&gt; decltype(tp - get_info(tp, tz::local).offset);
-
-<i>// leap second functions</i>
-utc_clock::time_point utc_clock::now() noexcept;
-
-template &lt;class Duration&gt;
-std::chrono::time_point&lt;utc_clock,
-    typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-utc_clock::sys_to_utc(std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt; t);
-
-template &lt;class Duration&gt;
-std::chrono::time_point&lt;std::chrono::system_clock,
-    typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-utc_clock::utc_to_sys(std::chrono::time_point&lt;utc_clock, Duration&gt; t);
-</blockquote></pre>
-
-<p>
-Those functions that explicitly return const references or const pointers (the first five)
-continue to have read access into the database after the call until the client drops that
-reference or pointer.
-</p>
-
-<p>
-<b>Emphasis:</b>  If you don't use the <code>reload_tzdb</code> function, then all access
-is <i>read-only</i> and there is no need for synchronization with an external mutex.
-</p>
-
 <a name="Reference"></a><h2>Reference</h2>
+
+<p>
+Everything specified below is in <code>namespace date</code>, and accessed via the
+header <code>"tz.h"</code>.
+</p>
 
 <a name="database"></a><h3>The database</h3>
 <blockquote>
@@ -3120,37 +2949,405 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 
 <a name="format"></a><h3><code>format</code></h3>
 <blockquote>
-<p>needs documentation</p>
+<pre>
+template &lt;class Duration&gt;
+std::string
+format(const std::locale&amp; loc, std::string format, local_time&lt;Duration&gt; tp);
+
+template &lt;class Duration&gt;
+std::string
+format(std::string format, local_time&lt;Duration&gt; tp);
+
+template &lt;class Duration&gt;
+std::string
+format(const std::locale&amp; loc, std::string format, const zoned_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration&gt;
+std::string
+format(std::string format, const zoned_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration&gt;
+std::string
+format(const std::locale&amp; loc, std::string format, sys_time&lt;Duration&gt; tp);
+
+template &lt;class Duration&gt;
+std::string
+format(std::string format, sys_time&lt;Duration&gt; tp);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  These functions create a formatted time stamp using the
+arguments, returning the result in a <code>std::string</code>.
+</p>
+<blockquote>
+<p>
+If a <code>locale</code> is passed in, then that <code>locale</code> is used for
+any formatting that requires a <code>locale</code>.  If no <code>locale</code>
+is passed in, then if a <code>locale</code> is required for formatting, a
+default constructed <code>locale</code> will be used (which makes a copy of the
+global <code>locale</code>).
+</p>
+<p>
+The <code>format</code> string follows the rules as specified for
+<code>std::time_put</code> with the following exceptions:
+</p>
+<ul>
+<li><p>
+If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string
+and the argument <code>tp</code> has precision finer than seconds, then seconds
+are formatted as a decimal floating point number with a fixed format and a
+precision matching that of the precision of <code>tp</code>.  The character for
+the decimal point is localized according to the <code>locale</code>.
+</p></li>
+
+<li><p>
+If <code>%z</code> appears in the format, the behavior depends on the type of
+<code>tp</code>:
+</p>
+<ul>
+<li>
+<code>local_time</code>: An exception of type <code>std::runtime_error</code> is thrown.
+</li>
+<li>
+<code>zoned_time</code>: The offset associated with <code>tp.get_time_zone()</code> is
+used.
+</li>
+<li>
+<code>sys_time</code>: <code>"+0000"</code> is used.
+</li>
+</ul>
+</li>
+
+<li><p>
+If <code>%Z</code> appears in the format, the behavior depends on the type of
+<code>tp</code>:
+</p>
+<ul>
+<li>
+<code>local_time</code>: An exception of type <code>std::runtime_error</code> is thrown.
+</li>
+<li>
+<code>zoned_time</code>: The abbreviation associated with
+<code>tp.get_time_zone()</code> is used.
+</li>
+<li>
+<code>sys_time</code>: <code>"UTC"</code> is used.
+</li>
+</ul>
+</li>
+
+</ul>
+
+<p>
+For the overloads taking a <code>zoned_time</code> it is the value returned by
+<code>tz.get_local_time()</code> that is formatted.
+</p>
+</blockquote>
+
+<p>
+<i>Returns:</i> The formatted string.
+</p>
+
+</blockquote>
 </blockquote>
 
 <a name="parse"></a><h3><code>parse</code></h3>
 <blockquote>
-<p>needs documentation</p>
-</blockquote>
+<pre>
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp);
 
-<a name="Leap"></a><h3><code>Leap</code></h3>
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      std::string&amp; abbrev);
+</pre>
 <blockquote>
-<p>needs documentation</p>
+<p>
+<i>Effects:</i> These functions attempt to parse a <code>time_point</code> out of
+<code>is</code> according to <code>format</code>.  If the parse is unsuccessful,
+calls <code>is.setstate(std::ios::failbit)</code> which may throw an exception.
+<code>tp</code> is altered only in the event of a successful parse.
+</p>
+<blockquote>
+<p>
+The <code>format</code> string follows the rules as specified for <code>std::time_get</code>
+with the following exceptions:
+</p>
+<ul>
+<li><p>
+If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string
+and the argument <code>tp</code> has precision finer than seconds, then the
+seconds are parsed as a <code>double</code>, and if that parse is successful
+contributes to the time stamp as if
+<code>round&lt;Duration&gt;(duration&lt;double&gt;{s})</code> where
+<code>s</code> is a local variable holding the parsed <code>double</code>.
+</p></li>
+
+<li><p>
+If <code>%z</code> appears in the <code>format</code> string and an offset is
+successfully parsed, the first overload (<code>sys_time</code>) interprets the
+parsed time as a local time and subtracts the offset prior to assigning the
+value to <code>tp</code>, resulting in a value of <code>tp</code> representing a
+UTC timestamp.  The second and third overloads require a valid parse of the
+offset, but then ignore the offset in assigning a value to the
+<code>local_time&lt;Duration&gt;&amp; tp</code>.
+</p></li>
+
+<li><p>
+If <code>%Z</code> appears in the <code>format</code> string then an abbreviation
+is required in that position for a successful parse.  However the parsed abbreviation
+does not have to be a valid time zone abbreviation, and has no impact on the value
+parsed into <code>tp</code>.  Using the third overload one can discover what that
+parsed abbreviation is.  If the third overload is used, but <code>%Z</code> does
+not appear in the format, then <code>abbrev</code> is not altered.
+</p></li>
+</ul>
+</blockquote>
+<p>
+<i>Note:</i>  There is no unique mapping from a time zone abbreviation to a
+<code>time_zone</code>.
+</p>
+</blockquote>
 </blockquote>
 
 <a name="utc_clock"></a><h3><code>utc_clock</code></h3>
 <blockquote>
-<p>needs documentation</p>
+<pre>
+class utc_clock
+{
+public:
+    using duration                  = std::chrono::system_clock::duration;
+    using rep                       = duration::rep;
+    using period                    = duration::period;
+    using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
+    static constexpr bool is_steady = true;
+
+    static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+        static
+        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        sys_to_utc(sys_time&lt;Duration&gt; t);
+
+    template &lt;class Duration&gt;
+        static
+        sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        utc_to_sys(utc_time&lt;Duration&gt; u);
+};
+
+template &lt;class Duration&gt;
+    using utc_time = std::chrono::time_point&lt;utc_clock, Duration&gt;;
+
+using utc_seconds = utc_time&lt;std::chrono::seconds&gt;;
+</pre>
+
+<p>
+In contrast to <code>sys_time</code> which does not take leap seconds into
+account, <code>utc_clock</code> and its associated <code>time_point</code>,
+<code>utc_time</code>, counts time, <i>including</i> leap seconds, since
+1970-01-01 00:00:00 UTC.  It also provides functions for converting between
+<code>utc_time</code> and <code>sys_time</code>.  These functions consult
+<code>get_tzdb().leaps</code> to decide how many seconds to add/subtract
+in performing those conversions.
+</p>
+
+<pre>
+static utc_clock::time_point utc_clock::now() noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>sys_to_utc(system_clock::now())</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+utc_clock::sys_to_utc(sys_time&lt;Duration&gt; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
+<code>u.time_since_epoch() - t.time_since_epoch()</code> is equal to the number
+of leap seconds that were inserted between <code>t</code> and 1970-01-01.  If
+<code>t</code> is ambiguous on this issue (i.e. corresponds to the date of leap
+second insertion), then the conversion counts that leap second as inserted.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+utc_clock::utc_to_sys(utc_time&lt;Duration&gt; u);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_time</code> <code>t</code>, such that
+<code>utc_clock::sys_to_utc(t) == u</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_utc_time(sys_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::sys_to_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_sys_time(utc_time&lt;Duration&gt; u)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::utc_to_sys(u)</code>.
+</p>
+</blockquote>
+
+<p>
+[<i>Example:</i>
+</p>
+
+<blockquote><pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono_literals;
+    auto t0 = sys_days{1972_y/jul/1} - 1ms;
+    auto u0 = to_utc_time(t0);
+    auto t1 = to_sys_time(u0);
+    std::cout &lt;&lt; t0 &lt;&lt; ":\n";
+    std::cout &lt;&lt; (u0.time_since_epoch() - t0.time_since_epoch()).count() &lt;&lt; "ms\n";
+    std::cout &lt;&lt; (t1 - t0).count() &lt;&lt; "ms\n\n";
+
+    t0 += 1ms;
+    u0 = to_utc_time(t0);
+    t1 = to_sys_time(u0);
+    std::cout &lt;&lt; t0 &lt;&lt; ":\n";
+    std::cout &lt;&lt; (u0.time_since_epoch() - t0.time_since_epoch()).count() &lt;&lt; "ms\n";
+    std::cout &lt;&lt; (t1 - t0).count() &lt;&lt; "ms\n";
+}
+</pre>
+<p>
+Output:
+</p>
+<pre>
+1972-06-30 23:59:59.999:
+0ms
+0ms
+
+1972-07-01 00:00:00.000:
+1000ms
+0ms
+</pre>
+</blockquote>
+
+<p>
+<i>&mdash; end example</i>]
+</p>
+
+</blockquote>
+
+<a name="Leap"></a><h3><code>Leap</code></h3>
+<blockquote>
+<pre>
+class Leap
+{
+public:
+    Leap(const Leap&amp;)            = default;
+    Leap&amp; operator=(const Leap&amp;) = default;
+    
+    // Undocumented constructors
+
+    sys_seconds date() const;
+};
+
+bool operator==(const Leap&amp; x, const Leap&amp; y);
+bool operator!=(const Leap&amp; x, const Leap&amp; y);
+bool operator&lt; (const Leap&amp; x, const Leap&amp; y);
+bool operator&gt; (const Leap&amp; x, const Leap&amp; y);
+bool operator&lt;=(const Leap&amp; x, const Leap&amp; y);
+bool operator&gt;=(const Leap&amp; x, const Leap&amp; y);
+
+template &lt;class Duration&gt; bool operator==(const const Leap&amp;         x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator==(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator!=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator!=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator&lt; (const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&lt; (const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator&gt; (const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&gt; (const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator&lt;=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&lt;=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator&gt;=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&gt;=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+</pre>
+
+<p>
+<code>Leap</code> is a copyable class that is constructed and stored in the time zone
+database when initialized.  You can explicitly convert it to a <code>sys_seconds</code>
+with the member function <code>date()</code> and that will be the date of the leap second
+insertion.  <code>Leap</code> is equality and less-than comparable, both with itself, and
+with <code>sys_time&lt;Duration&gt;</code>.
+</p>
 </blockquote>
 
 <a name="Link"></a><h3><code>Link</code></h3>
 <blockquote>
-<p>needs documentation</p>
+<pre>
+class Link
+{
+public:
+    Link(const Link&amp;)            = default;
+    Link&amp; operator=(const Link&amp;) = default;
+
+    // Undocumented constructors
+
+    const std::string&amp; name()   const;
+    const std::string&amp; target() const;
+};
+
+bool operator==(const Link&amp; x, const Link&amp; y);
+bool operator!=(const Link&amp; x, const Link&amp; y);
+bool operator&lt; (const Link&amp; x, const Link&amp; y);
+bool operator&gt; (const Link&amp; x, const Link&amp; y);
+bool operator&lt;=(const Link&amp; x, const Link&amp; y);
+bool operator&gt;=(const Link&amp; x, const Link&amp; y);
+</pre>
+<p>
+A <code>Link</code> is an alternative name for a <code>time_zone</code>.  The alternative
+name is <code>name()</code>.  The name of the <code>time_zone</code> for which this is
+an alternative name is <code>target()</code>.  <code>Link</code>s will be constructed
+for you when the time zone database is initialized.
+</p>
 </blockquote>
 
 <a name="Installation"></a><h2>Installation</h2>
 
 <p>
-There are only three files in the timezone library:
+You will need the following four source files:
+<a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>date.h</code></a>,
 <a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>tz.h</code></a>,
 <a href="https://github.com/HowardHinnant/date/blob/master/tz_private.h"><code>tz_private.h</code></a> and
 <a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>.
-These are sources located at the github repository
+These sources are located at the github repository
 <a href="https://github.com/HowardHinnant/date">https://github.com/HowardHinnant/date</a>.
 The source
 <a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>
@@ -3164,7 +3361,9 @@ static std::string install{"~/Downloads/tzdata"};  //  "c:\\tzdata" on Windows
 <p>
 You should set this such that <code>install</code> points to the directory
 where your library or application can find the downloaded and uncompressed
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.
+<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> (or where
+you want the software to install it for you if you compile with
+<code>AUTO_DOWNLOAD == 1</code>).
 </p>
 
 <p>
@@ -3190,7 +3389,7 @@ compilation, or you can ignore them and they will take on default values.
 </blockquote>
 
 <p>
-If <code>HAS_REMOTE_API</code> is 1 then the <a href="#remote">remote API</a> exists,
+If <code>HAS_REMOTE_API</code> is 1 then the <a href="#database">remote API</a> exists,
 else it doesn't:
 </p>
 
@@ -3214,25 +3413,7 @@ it if it hasn't been installed, and if it has, will use the remote API to instal
 latest version if not already installed.
 </p>
 
-<p>
-If <code>AUTO_DOWNLOAD</code> is 1 then <code>reload_tzdb()</code> will automatically
-check <code>remote_version()</code> against the local version, and if unchanged, will do
-nothing.  If <code>remote_version()</code> can't access the IANA website,
-<code>reload_tzdb()</code> will re-initialize the database anyway (perhaps you changed it
-manually because the net is down).  If the <code>remote_version()</code> is confirmed to
-have changed (and <code>AUTO_DOWNLOAD</code> is on), then <code>reload_tzdb()</code> will
-download and install the latest version.
-</p>
-
-<p>
-If <code>AUTO_DOWNLOAD</code> is off, <code>reload_tzdb()</code> re-initializes the
-database without using the remote API (presumably because it has been manually updated).
-</p>
-
-<p>
-If <code>HAS_REMOTE_API</code> is off and <code>AUTO_DOWNLOAD</code> is on, there will be
-a compile-time error as <code>AUTO_DOWNLOAD</code> needs the remote API.
-</p>
+<h3>Optional installation tweaks</h3>
 
 <p>
 If <code>LAZY_INIT</code> is on, the <code>Zone</code>s are not fully compiled upon first
@@ -3333,17 +3514,7 @@ database blessed.
 There is no preprocessing of the
 <a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> required.  This
 library efficiently initializes itself directly from the files of the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.  If your application
-is long running, and you anticipate the need to update the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>  to a new version
-without recompiling, or even restarting your application, there is API to accomplish
-that.
-</p>
-
-<p>
-If you constrain geography during installation, this can significantly reduce the time
-it takes to initialize the database.  However constraining history has little (if any)
-impact on the performance of the initialization.
+<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.
 </p>
 
 <a name="Acknowledgements"></a><h2>Acknowledgements</h2>
@@ -3356,8 +3527,9 @@ maintain it, and especially the IESG-designated TZ Coordinator, Paul Eggert.  Wi
 work of these people, this software would have no data to parse.
 </p>
 <p>
-I would also like to thank Jiangang Zhuang and Bjarne Stroustrup for invaluable feedback
-for the timezone portion of this library, which ended up influencing the date.h library.
+I would also like to thank Jiangang Zhuang and Bjarne Stroustrup for invaluable
+feedback for the timezone portion of this library, which ended up also
+influencing the date.h library.
 </p>
 <p>
 And I would also especially like to thank contributors to this library:  gmcode,
