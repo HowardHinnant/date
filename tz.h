@@ -1056,6 +1056,8 @@ public:
 template <class Duration>
     using utc_time = std::chrono::time_point<utc_clock, Duration>;
 
+using utc_seconds = utc_time<std::chrono::seconds>;
+
 inline
 utc_clock::time_point
 utc_clock::now() NOEXCEPT
@@ -1091,11 +1093,8 @@ utc_clock::utc_to_sys(utc_time<Duration> t)
 }
 
 template <class Duration>
-    using utc_time = std::chrono::time_point<utc_clock, Duration>;
-
-template <class Duration>
 inline
-sys_time<Duration>
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_sys_time(utc_time<Duration> ut)
 {
     return utc_clock::utc_to_sys(ut);
@@ -1103,7 +1102,7 @@ to_sys_time(utc_time<Duration> ut)
 
 template <class Duration>
 inline
-utc_time<Duration>
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(sys_time<Duration> st)
 {
     return utc_clock::sys_to_utc(st);
@@ -1289,7 +1288,7 @@ parse(std::istream& is, const std::string& format,
                         double s;
                         is >> s;
                         if (!is.fail())
-                            subseconds = duration_cast<Duration>(duration<double>{s});
+                            subseconds = round<Duration>(duration<double>{s});
                         else
                             err |= ios_base::failbit;
                     }
@@ -1330,17 +1329,14 @@ parse(std::istream& is, const std::string& format,
                     }
                     break;
                 case 'Z':
-                    if (abbrev != nullptr)
+                    f.get(is, 0, is, err, &tm, b, i);
+                    ++i;
+                    b = i+1;
+                    if ((err & ios_base::failbit) == 0)
                     {
-                        f.get(is, 0, is, err, &tm, b, i);
-                        ++i;
-                        b = i+1;
-                        if ((err & ios_base::failbit) == 0)
-                        {
-                            is >> temp_abbrev;
-                            if (is.fail())
-                                err |= ios_base::failbit;
-                        }
+                        is >> temp_abbrev;
+                        if (is.fail())
+                            err |= ios_base::failbit;
                     }
                     break;
                 }
@@ -1357,10 +1353,11 @@ parse(std::istream& is, const std::string& format,
 #else
                 auto tt = _mkgmtime(&tm);
 #endif
-                tp = floor<Duration>(system_clock::from_time_t(tt) +
-                                     subseconds - offset);
+                tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
                 if (abbrev != nullptr)
                     *abbrev = std::move(temp_abbrev);
+                else
+                    tp -= offset;
             }
         }
         is.setstate(err);
@@ -1384,6 +1381,18 @@ parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
       std::string& abbrev)
 {
     sys_time<Duration> st;
+    detail::parse(is, format, st, &abbrev);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp)
+{
+    sys_time<Duration> st;
+    std::string abbrev;
     detail::parse(is, format, st, &abbrev);
     if (!is.fail())
         tp = local_time<Duration>{st.time_since_epoch()};
