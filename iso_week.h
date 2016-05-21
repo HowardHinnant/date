@@ -874,7 +874,7 @@ CONSTCD11 inline year year_weeknum::year() const NOEXCEPT {return y_;}
 CONSTCD11 inline weeknum year_weeknum::weeknum() const NOEXCEPT {return wn_;}
 CONSTCD11 inline bool year_weeknum::ok() const NOEXCEPT
 {
-    return y_.ok() && 1u <= unsigned{wn_} && wn_ <= (y_/last).weeknum();
+    return y_.ok() && 1u <= static_cast<unsigned>(wn_) && wn_ <= (y_/last).weeknum();
 }
 
 inline
@@ -990,7 +990,7 @@ inline
 weeknum
 year_lastweek::weeknum() const NOEXCEPT
 {
-    const auto y = date::year{int{y_}};
+    const auto y = date::year{static_cast<int>(y_)};
     const auto s0 = sys_days{(y-years{1})/12/date::thu[date::last]};
     const auto s1 = sys_days{y/12/date::thu[date::last]};
     return iso_week::weeknum(date::trunc<weeks>(s1-s0).count());
@@ -1137,7 +1137,7 @@ operator<(const weeknum_weekday& x, const weeknum_weekday& y) NOEXCEPT
 {
     return x.weeknum() < y.weeknum() ? true
         : (x.weeknum() > y.weeknum() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())));
 }
 
 CONSTCD11
@@ -1210,7 +1210,7 @@ inline
 bool
 operator<(const lastweek_weekday& x, const lastweek_weekday& y) NOEXCEPT
 {
-    return unsigned{x.weekday()} < unsigned{y.weekday()};
+    return static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday());
 }
 
 CONSTCD11
@@ -1286,16 +1286,16 @@ CONSTCD14
 inline
 year_lastweek_weekday::operator sys_days() const NOEXCEPT
 {
-    return sys_days{date::year{int{y_}}/date::dec/date::thu[date::last]} + (mon - thu)
-         - (mon - wd_);
+    return sys_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+         + (mon - thu) - (mon - wd_);
 }
 
 CONSTCD14
 inline
 year_lastweek_weekday::operator local_days() const NOEXCEPT
 {
-    return local_days{date::year{int{y_}}/date::dec/date::thu[date::last]} + (mon - thu)
-         - (mon - wd_);
+    return local_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+         + (mon - thu) - (mon - wd_);
 }
 
 CONSTCD11
@@ -1329,7 +1329,7 @@ operator<(const year_lastweek_weekday& x, const year_lastweek_weekday& y) NOEXCE
 {
     return x.year() < y.year() ? true
         : (x.year() > y.year() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())));
 }
 
 CONSTCD11
@@ -1443,16 +1443,16 @@ CONSTCD14
 inline
 year_weeknum_weekday::operator sys_days() const NOEXCEPT
 {
-    return sys_days{date::year{int{y_}-1}/date::dec/date::thu[date::last]}
-         + (date::mon - date::thu) + weeks{unsigned{wn_}-1} + (wd_ - mon);
+    return sys_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+         + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
 }
 
 CONSTCD14
 inline
 year_weeknum_weekday::operator local_days() const NOEXCEPT
 {
-    return local_days{date::year{int{y_}-1}/date::dec/date::thu[date::last]}
-         + (date::mon - date::thu) + weeks{unsigned{wn_}-1} + (wd_ - mon);
+    return local_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+         + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
 }
 
 CONSTCD14
@@ -1478,7 +1478,7 @@ year_weeknum_weekday::from_days(days d) NOEXCEPT
         start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
     }
     const auto wn = iso_week::weeknum(date::trunc<weeks>(dp - start).count() + 1);
-    return {iso_week::year(int{y}), wn, wd};
+    return {iso_week::year(static_cast<int>(y)), wn, wd};
 }
 
 CONSTCD11
@@ -1506,7 +1506,7 @@ operator<(const year_weeknum_weekday& x, const year_weeknum_weekday& y) NOEXCEPT
         : (x.year() > y.year() ? false
         : (x.weeknum() < y.weeknum() ? true
         : (x.weeknum() > y.weeknum() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}))));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())))));
 }
 
 CONSTCD11
