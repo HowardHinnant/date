@@ -2785,7 +2785,7 @@ class weekday
 public:
     explicit constexpr weekday(unsigned wd) noexcept;
     constexpr weekday(const sys_days&amp; dp) noexcept;
-    constexpr weekday(const local_days&amp; dp) noexcept;
+    constexpr explicit weekday(const local_days&amp; dp) noexcept;
 
     weekday&amp; operator++() noexcept;
     weekday operator++(int) noexcept;
@@ -2885,7 +2885,7 @@ the week in <code>wd_</code>.
 </blockquote>
 
 <pre>
-constexpr weekday(const local_days&amp; dp) noexcept;
+constexpr explicit weekday(const local_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
@@ -4265,7 +4265,7 @@ public:
     constexpr year_month_day(const date::year&amp; y, const date::month&amp; m, const date::day&amp; d) noexcept;
     constexpr year_month_day(const year_month_day_last&amp; ymdl) noexcept;
     constexpr year_month_day(const sys_days&amp; dp) noexcept;
-    constexpr year_month_day(const local_days&amp; dp) noexcept;
+    constexpr explicit year_month_day(const local_days&amp; dp) noexcept;
 
     year_month_day&amp; operator+=(const months&amp; m) noexcept;
     year_month_day&amp; operator-=(const months&amp; m) noexcept;
@@ -4366,7 +4366,7 @@ to the date represented by <code>dp</code>.
 </blockquote>
 
 <pre>
-constexpr year_month_day::year_month_day(const local_days&amp; dp) noexcept;
+constexpr explicit year_month_day::year_month_day(const local_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
@@ -5045,7 +5045,7 @@ public:
     constexpr year_month_weekday(const date::year&amp; y, const date::month&amp; m,
                                  const date::weekday_indexed&amp; wdi) noexcept;
     constexpr year_month_weekday(const sys_days&amp; dp) noexcept;
-    constexpr year_month_weekday(const local_days&amp; dp) noexcept;
+    constexpr explicit year_month_weekday(const local_days&amp; dp) noexcept;
 
     year_month_weekday&amp; operator+=(const months&amp; m) noexcept;
     year_month_weekday&amp; operator-=(const months&amp; m) noexcept;
@@ -5127,7 +5127,7 @@ which <code>ymdl.ok()</code> is <code>true</code>, this equality will also be
 </blockquote>
 
 <pre>
-constexpr year_month_weekday(const local_days&amp; dp) noexcept;
+constexpr explicit year_month_weekday(const local_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
