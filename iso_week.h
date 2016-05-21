@@ -97,7 +97,7 @@ public:
     CONSTCD11 weekday(date::weekday wd) NOEXCEPT;
     explicit weekday(int) = delete;
     CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
-    CONSTCD11 weekday(const local_days& dp) NOEXCEPT;
+    CONSTCD11 explicit weekday(const local_days& dp) NOEXCEPT;
 
     weekday& operator++()    NOEXCEPT;
     weekday  operator++(int) NOEXCEPT;
@@ -361,7 +361,7 @@ public:
                                    const iso_week::weekday& wd) NOEXCEPT;
     CONSTCD14 year_weeknum_weekday(const year_lastweek_weekday& ylwwd) NOEXCEPT;
     CONSTCD14 year_weeknum_weekday(const sys_days& dp) NOEXCEPT;
-    CONSTCD14 year_weeknum_weekday(const local_days& dp) NOEXCEPT;
+    CONSTCD14 explicit year_weeknum_weekday(const local_days& dp) NOEXCEPT;
 
     year_weeknum_weekday& operator+=(const years& y) NOEXCEPT;
     year_weeknum_weekday& operator-=(const years& y) NOEXCEPT;
