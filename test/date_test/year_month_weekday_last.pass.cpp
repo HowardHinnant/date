@@ -36,7 +36,7 @@
 //     constexpr date::weekday weekday() const noexcept;
 //     constexpr date::weekday_last weekday_last() const noexcept;
 // 
-//     constexpr operator day_point() const noexcept;
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
 
@@ -90,9 +90,9 @@ static_assert( std::is_trivially_move_assignable<date::year_month_weekday_last>{
 static_assert(std::is_nothrow_constructible<date::year_month_weekday_last,
                                                 date::year, date::month,
                                                 date::weekday_last>{}, "");
-static_assert(std::is_nothrow_constructible<date::day_point,
+static_assert(std::is_nothrow_constructible<date::sys_days,
                                                 date::year_month_weekday_last>{}, "");
-static_assert(std::is_convertible<date::year_month_weekday_last, date::day_point>{}, "");
+static_assert(std::is_convertible<date::year_month_weekday_last, date::sys_days>{}, "");
 
 void
 test_arithmetic()
@@ -150,7 +150,7 @@ main()
     static_assert(ymdl1.weekday() == fri, "");
     static_assert(ymdl1.weekday_last() == fri[last], "");
 #if __cplusplus >= 201402
-    constexpr day_point dp = ymdl1;
+    constexpr sys_days dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/28, "");
 #endif

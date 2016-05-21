@@ -25,7 +25,7 @@
 // public:
 //     constexpr year_month_weekday(const date::year& y, const date::month& m,
 //                                    const date::weekday_indexed& wdi) noexcept;
-//     constexpr year_month_weekday(const day_point& dp) noexcept;
+//     constexpr year_month_weekday(const sys_days& dp) noexcept;
 // 
 //     year_month_weekday& operator+=(const months& m) noexcept;
 //     year_month_weekday& operator-=(const months& m) noexcept;
@@ -38,11 +38,11 @@
 //     constexpr unsigned index() const noexcept;
 //     constexpr date::weekday_indexed weekday_indexed() const noexcept;
 // 
-//     constexpr operator day_point() const noexcept;
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // 
 // private:
-//     static constexpr year_month_weekday from_day_point(const day_point& dp) noexcept;
+//     static constexpr year_month_weekday from_day_point(const sys_days& dp) noexcept;
 // };
 
 // constexpr
@@ -93,11 +93,11 @@ static_assert(std::is_nothrow_constructible<date::year_month_weekday,
                                                 date::year, date::month,
                                                 date::weekday_indexed>{}, "");
 static_assert(std::is_nothrow_constructible<date::year_month_weekday,
-                                                date::day_point>{}, "");
-static_assert(std::is_convertible<date::day_point, date::year_month_weekday>{}, "");
-static_assert(std::is_nothrow_constructible<date::day_point,
+                                                date::sys_days>{}, "");
+static_assert(std::is_convertible<date::sys_days, date::year_month_weekday>{}, "");
+static_assert(std::is_nothrow_constructible<date::sys_days,
                                                 date::year_month_weekday>{}, "");
-static_assert(std::is_convertible<date::year_month_weekday, date::day_point>{}, "");
+static_assert(std::is_convertible<date::year_month_weekday, date::sys_days>{}, "");
 
 void
 test_arithmetic()
@@ -158,7 +158,7 @@ main()
     static_assert(ymdl1.index() == 2u, "");
     static_assert(ymdl1.weekday_indexed() == fri[2], "");
 #if __cplusplus >= 201402
-    constexpr day_point dp = ymdl1;
+    constexpr sys_days dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/14, "");
 #endif

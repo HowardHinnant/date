@@ -108,29 +108,29 @@ main()
 
 #if __cplusplus >= 201402
     using int64_t = std::int64_t;
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(days::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(hours::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(minutes::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(seconds::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(milliseconds::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(microseconds::min()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(microseconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(milliseconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(seconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(minutes::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(hours::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(days::max()), "");
 #endif
 

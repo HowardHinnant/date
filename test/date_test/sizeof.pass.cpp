@@ -34,7 +34,7 @@ main()
     static_assert(sizeof(months)                  == 4, "");
     static_assert(sizeof(years)                   == 4, "");
 
-    static_assert(sizeof(day_point)               == 4, "");
+    static_assert(sizeof(sys_days)               == 4, "");
 
     static_assert(sizeof(last_spec)               == 1, "");
 

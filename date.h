@@ -22,17 +22,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// Our apologies.  When the previous paragraph was written, lowercase had not yet
+// been invented (that woud involve another several millennia of evolution).
+// We did not mean to shout.
 
 #include <chrono>
 #include <climits>
 #if !(__cplusplus >= 201402)
 #  include <cmath>
 #endif
+#include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <locale>
 #include <ostream>
 #include <ratio>
-#include <stdexcept>
+#include <type_traits>
 
 namespace date
 {
@@ -81,7 +87,19 @@ using months = std::chrono::duration
 
 // time_point
 
-using day_point = std::chrono::time_point<std::chrono::system_clock, days>;
+template <class Duration>
+    using sys_time = std::chrono::time_point<std::chrono::system_clock, Duration>;
+
+using sys_days    = sys_time<days>;
+using sys_seconds = sys_time<std::chrono::seconds>;
+
+struct local_t {};
+
+template <class Duration>
+    using local_time = std::chrono::time_point<local_t, Duration>;
+
+using local_seconds = local_time<std::chrono::seconds>;
+using local_days    = local_time<days>;
 
 // types
 
@@ -314,7 +332,8 @@ class weekday
 public:
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
     explicit weekday(int) = delete;
-    CONSTCD11 weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
+    CONSTCD11 weekday(const local_days& dp) NOEXCEPT;
 
     weekday& operator++()    NOEXCEPT;
     weekday  operator++(int) NOEXCEPT;
@@ -525,7 +544,9 @@ public:
     CONSTCD11 year_month_day(const date::year& y, const date::month& m,
                                const date::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
-    CONSTCD14 year_month_day(const day_point& dp) NOEXCEPT;
+
+    CONSTCD14 year_month_day(sys_days dp) NOEXCEPT;
+    CONSTCD14 year_month_day(local_days dp) NOEXCEPT;
 
     year_month_day& operator+=(const months& m) NOEXCEPT;
     year_month_day& operator-=(const months& m) NOEXCEPT;
@@ -536,11 +557,13 @@ public:
     CONSTCD11 date::month month() const NOEXCEPT;
     CONSTCD11 date::day   day()   const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-    static CONSTCD14 year_month_day from_day_point(const day_point& dp) NOEXCEPT;
+    static CONSTCD14 year_month_day from_days(days dp) NOEXCEPT;
+    CONSTCD14 days to_days() const NOEXCEPT;
 };
 
 CONSTCD11 bool operator==(const year_month_day& x, const year_month_day& y) NOEXCEPT;
@@ -580,7 +603,8 @@ public:
     CONSTCD11 date::month_day_last month_day_last() const NOEXCEPT;
     CONSTCD14 date::day            day()            const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -634,7 +658,8 @@ class year_month_weekday
 public:
     CONSTCD11 year_month_weekday(const date::year& y, const date::month& m,
                                    const date::weekday_indexed& wdi) NOEXCEPT;
-    CONSTCD14 year_month_weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD14 year_month_weekday(const sys_days& dp) NOEXCEPT;
+    CONSTCD14 year_month_weekday(const local_days& dp) NOEXCEPT;
 
     year_month_weekday& operator+=(const months& m) NOEXCEPT;
     year_month_weekday& operator-=(const months& m) NOEXCEPT;
@@ -647,11 +672,13 @@ public:
     CONSTCD11 unsigned index() const NOEXCEPT;
     CONSTCD11 date::weekday_indexed weekday_indexed() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-    static CONSTCD14 year_month_weekday from_day_point(const day_point& dp) NOEXCEPT;
+    static CONSTCD14 year_month_weekday from_days(days dp) NOEXCEPT;
+    CONSTCD14 days to_days() const NOEXCEPT;
 };
 
 CONSTCD11
@@ -707,8 +734,12 @@ public:
     CONSTCD11 date::weekday weekday() const NOEXCEPT;
     CONSTCD11 date::weekday_last weekday_last() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
+
+private:
+    CONSTCD14 days to_days() const NOEXCEPT;
 };
 
 CONSTCD11
@@ -1292,19 +1323,14 @@ year::is_leap() const NOEXCEPT
 }
 
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
-CONSTCD11 inline bool year::ok() const NOEXCEPT {return min() <= *this && *this <= max();}
+CONSTCD11 inline bool year::ok() const NOEXCEPT {return true;}
 
 CONSTCD11
 inline
 year
 year::min() NOEXCEPT
 {
-    using namespace std::chrono;
-    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
-    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
-    return sizeof(minutes)*CHAR_BIT < 34 ?
-        year{1970} + duration_cast<years>(minutes::min()) :
-        year{std::numeric_limits<short>::min()};
+    return year{std::numeric_limits<short>::min()};
 }
 
 CONSTCD11
@@ -1312,12 +1338,7 @@ inline
 year
 year::max() NOEXCEPT
 {
-    using namespace std::chrono;
-    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
-    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
-    return sizeof(minutes)*CHAR_BIT < 34 ?
-        year{1969} + duration_cast<years>(minutes::max()) :
-        year{std::numeric_limits<short>::max()};
+    return year{std::numeric_limits<short>::max()};
 }
 
 CONSTCD11
@@ -1431,7 +1452,13 @@ weekday::weekday(unsigned wd) NOEXCEPT
 
 CONSTCD11
 inline
-weekday::weekday(const day_point& dp) NOEXCEPT
+weekday::weekday(const sys_days& dp) NOEXCEPT
+    : wd_(weekday_from_days(dp.time_since_epoch().count()))
+    {}
+
+CONSTCD11
+inline
+weekday::weekday(const local_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
     {}
 
@@ -2171,6 +2198,20 @@ year_month_day_last::day() const NOEXCEPT
         d[static_cast<unsigned>(month()) - 1] : date::day{29};
 }
 
+CONSTCD14
+inline
+year_month_day_last::operator sys_days() const NOEXCEPT
+{
+    return sys_days(year()/month()/day());
+}
+
+CONSTCD14
+inline
+year_month_day_last::operator local_days() const NOEXCEPT
+{
+    return local_days(year()/month()/day());
+}
+
 CONSTCD11
 inline
 bool
@@ -2305,8 +2346,14 @@ year_month_day::year_month_day(const year_month_day_last& ymdl) NOEXCEPT
 
 CONSTCD14
 inline
-year_month_day::year_month_day(const day_point& dp) NOEXCEPT
-    : year_month_day(from_day_point(dp))
+year_month_day::year_month_day(sys_days dp) NOEXCEPT
+    : year_month_day(from_days(dp.time_since_epoch()))
+    {}
+
+CONSTCD14
+inline
+year_month_day::year_month_day(local_days dp) NOEXCEPT
+    : year_month_day(from_days(dp.time_since_epoch()))
     {}
 
 CONSTCD11 inline year year_month_day::year() const NOEXCEPT {return y_;}
@@ -2347,7 +2394,8 @@ year_month_day::operator-=(const years& y) NOEXCEPT
 
 CONSTCD14
 inline
-year_month_day::operator day_point() const NOEXCEPT
+days
+year_month_day::to_days() const NOEXCEPT
 {
     static_assert(std::numeric_limits<unsigned>::digits >= 18,
              "This algorithm has not been ported to a 16 bit unsigned integer");
@@ -2360,14 +2408,21 @@ year_month_day::operator day_point() const NOEXCEPT
     auto const yoe = static_cast<unsigned>(y - era * 400);       // [0, 399]
     auto const doy = (153*(m > 2 ? m-3 : m+9) + 2)/5 + d-1;      // [0, 365]
     auto const doe = yoe * 365 + yoe/4 - yoe/100 + doy;          // [0, 146096]
-    return day_point{days{era * 146097 + static_cast<int>(doe) - 719468}};
+    return days{era * 146097 + static_cast<int>(doe) - 719468};
 }
 
 CONSTCD14
 inline
-year_month_day_last::operator day_point() const NOEXCEPT
+year_month_day::operator sys_days() const NOEXCEPT
 {
-    return day_point(year()/month()/day());
+    return sys_days{to_days()};
+}
+
+CONSTCD14
+inline
+year_month_day::operator local_days() const NOEXCEPT
+{
+    return local_days{to_days()};
 }
 
 CONSTCD14
@@ -2449,17 +2504,17 @@ operator<<(std::ostream& os, const year_month_day& ymd)
 CONSTCD14
 inline
 year_month_day
-year_month_day::from_day_point(const day_point& dp) NOEXCEPT
+year_month_day::from_days(days dp) NOEXCEPT
 {
     static_assert(std::numeric_limits<unsigned>::digits >= 18,
              "This algorithm has not been ported to a 16 bit unsigned integer");
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
-    auto const z = dp.time_since_epoch().count() + 719468;
+    auto const z = dp.count() + 719468;
     auto const era = (z >= 0 ? z : z - 146096) / 146097;
     auto const doe = static_cast<unsigned>(z - era * 146097);          // [0, 146096]
     auto const yoe = (doe - doe/1460 + doe/36524 - doe/146096) / 365;  // [0, 399]
-    auto const y = static_cast<day_point::rep>(yoe) + era * 400;
+    auto const y = static_cast<days::rep>(yoe) + era * 400;
     auto const doy = doe - (365*yoe + yoe/4 - yoe/100);                // [0, 365]
     auto const mp = (5*doy + 2)/153;                                   // [0, 11]
     auto const d = doy - (153*mp+2)/5 + 1;                             // [1, 31]
@@ -2529,8 +2584,14 @@ year_month_weekday::year_month_weekday(const date::year& y, const date::month& m
 
 CONSTCD14
 inline
-year_month_weekday::year_month_weekday(const day_point& dp) NOEXCEPT
-    : year_month_weekday(from_day_point(dp))
+year_month_weekday::year_month_weekday(const sys_days& dp) NOEXCEPT
+    : year_month_weekday(from_days(dp.time_since_epoch()))
+    {}
+
+CONSTCD14
+inline
+year_month_weekday::year_month_weekday(const local_days& dp) NOEXCEPT
+    : year_month_weekday(from_days(dp.time_since_epoch()))
     {}
 
 inline
@@ -2594,10 +2655,16 @@ year_month_weekday::weekday_indexed() const NOEXCEPT
 
 CONSTCD14
 inline
-year_month_weekday::operator day_point() const NOEXCEPT
+year_month_weekday::operator sys_days() const NOEXCEPT
 {
-    auto d = day_point(y_/m_/1);
-    return d + (wdi_.weekday() - date::weekday(d) + days{(wdi_.index()-1)*7});
+    return sys_days{to_days()};
+}
+
+CONSTCD14
+inline
+year_month_weekday::operator local_days() const NOEXCEPT
+{
+    return local_days{to_days()};
 }
 
 CONSTCD14
@@ -2616,11 +2683,22 @@ year_month_weekday::ok() const NOEXCEPT
 CONSTCD14
 inline
 year_month_weekday
-year_month_weekday::from_day_point(const day_point& dp) NOEXCEPT
+year_month_weekday::from_days(days d) NOEXCEPT
 {
+    sys_days dp{d};
     auto const wd = date::weekday(dp);
     auto const ymd = year_month_day(dp);
     return {ymd.year(), ymd.month(), wd[(static_cast<unsigned>(ymd.day())-1)/7+1]};
+}
+
+CONSTCD14
+inline
+days
+year_month_weekday::to_days() const NOEXCEPT
+{
+    auto d = sys_days(y_/m_/1);
+    return (d + (wdi_.weekday() - date::weekday(d) + days{(wdi_.index()-1)*7})
+           ).time_since_epoch();
 }
 
 CONSTCD11
@@ -2761,10 +2839,16 @@ year_month_weekday_last::weekday_last() const NOEXCEPT
 
 CONSTCD14
 inline
-year_month_weekday_last::operator day_point() const NOEXCEPT
+year_month_weekday_last::operator sys_days() const NOEXCEPT
 {
-    auto const d = day_point(y_/m_/last);
-    return d - (date::weekday{d} - wdl_.weekday());
+    return sys_days{to_days()};
+}
+
+CONSTCD14
+inline
+year_month_weekday_last::operator local_days() const NOEXCEPT
+{
+    return local_days{to_days()};
 }
 
 CONSTCD11
@@ -2773,6 +2857,15 @@ bool
 year_month_weekday_last::ok() const NOEXCEPT
 {
     return y_.ok() && m_.ok() && wdl_.ok();
+}
+
+CONSTCD14
+inline
+days
+year_month_weekday_last::to_days() const NOEXCEPT
+{
+    auto const d = sys_days(y_/m_/last);
+    return (d - (date::weekday{d} - wdl_.weekday())).time_since_epoch();
 }
 
 CONSTCD11
@@ -3723,8 +3816,7 @@ typename std::enable_if
         std::ratio_less<typename Duration::period, days::period>::value
     , std::ostream&
 >::type
-operator<<(std::ostream& os,
-           const std::chrono::time_point<std::chrono::system_clock, Duration>& tp)
+operator<<(std::ostream& os, const sys_time<Duration>& tp)
 {
     auto const dp = floor<days>(tp);
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
@@ -3732,9 +3824,17 @@ operator<<(std::ostream& os,
 
 inline
 std::ostream&
-operator<<(std::ostream& os, const day_point& dp)
+operator<<(std::ostream& os, const sys_days& dp)
 {
     return os << year_month_day(dp);
+}
+
+template <class Duration>
+inline
+std::ostream&
+operator<<(std::ostream& os, const local_time<Duration>& ut)
+{
+    return os << sys_time<Duration>{ut.time_since_epoch()};
 }
 
 }  // namespace date
