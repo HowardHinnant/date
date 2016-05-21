@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-15<br/>
+2016-05-20<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -43,19 +43,12 @@ Commons Attribution 4.0 International License</a>.
 <li><a href="#Introduction">Introduction</a></li>
 <li><a href="#Description">Description</a>
     <ul>
-    <li><a href="#TheDatabase">The Database</a></li>
-    <li><a href="#remote">The remote API</a></li>
-    <li><a href="#Zone">Zone</a>
-        <ul>
-        <li><a href="#Infrastructure">Infrastructure</a></li>
-        <li><a href="#ZoneContinued">Zone continued</a></li>
-        </ul>
-    </li>
-    <li><a href="#flightexample1">Flight Example</a></li>
-    <li><a href="#utc_clock">utc_clock</a></li>
-    <li><a href="#flightexample2">Flight Example with leap seconds</a></li>
-    <li><a href="#Formatting">Formatting</a></li>
-    <li><a href="#Parsing">Parsing</a></li>
+    <li><a href="#current_local">What is the current local time?</a></li>
+    <li><a href="#somewhere_else">What time is it somewhere <i>else</i> in the world?</a></li>
+    <li><a href="#convert">How do I convert a <code>time_zone</code> from one time zone to another?</a></li>
+    <li><a href="#loc_vs_sys"><code>local_time</code> vs <code>sys_time</code></a></li>
+    <li><a href="#Summary">Summary</a></li>
+    <li><a href="#Examples">Examples</a></li>
     </ul>
 </li>
 <li><a href="#Reference">Reference</a>
@@ -150,11 +143,12 @@ this namespace in example code below is intentionally omitted in the hopes of re
 verbosity.
 </p>
 
-<h3>What is the current local time?</h3>
+<a name="current_local"></a><h3>What is the current local time?</h3>
 
 <p>
-One of the first things people want to is find out what current local time it is.
-Here is a complete program to print out the local time in human readable format:
+One of the first things people want to do is find out what the current local time
+it is. Here is a complete program to print out the local time in human readable
+format:
 </p>
 
 <blockquote><pre>
@@ -166,8 +160,8 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
-    auto local_time = make_zoned(current_zone(), system_clock::now());
-    std::cout &lt;&lt; local_time &lt;&lt; '\n';
+    auto t = make_zoned(current_zone(), system_clock::now());
+    std::cout &lt;&lt; t &lt;&lt; '\n';
 }
 </pre></blockquote>
 
@@ -202,10 +196,10 @@ and <i>pairing</i> that with a <code>system_clock::time_point</code> using
 <li><p>
 This <code>zoned_time</code> maintains whatever precision it was given.  On my
 platform <code>system_clock::now()</code> has microseconds precision, so in this
-example, <code>local_time</code> has microseconds precision as well.
+example, <code>t</code> has microseconds precision as well.
 </p></li>
 <li><p>
-The <code>local_time</code> is then simply streamed out.  By default the output
+Then <code>t</code> is simply streamed out.  By default the output
 represents all of the precision it is given.
 </p></li>
 </ul>
@@ -218,13 +212,13 @@ and the time zone.  But by default, things just work, and don't throw away infor
 <p>
 For example let's say we wanted to limit the precision to milliseconds.  This can
 be done by inserting <code>floor&lt;milliseconds&gt;</code> in one place.  This
-makes <code>local_time</code> have just a precision of <code>milliseconds</code>
+makes <code>t</code> have just a precision of <code>milliseconds</code>
 and that is reflected in the streaming operator with no further effort:
 </p>
 
 <blockquote><pre>
-auto local_time = make_zoned(current_zone(), <b>floor&lt;milliseconds&gt;</b>(system_clock::now()));
-std::cout &lt;&lt; local_time &lt;&lt; '\n';  // 2016-05-14 18:33:24.205 EDT
+auto t = make_zoned(current_zone(), <b>floor&lt;milliseconds&gt;</b>(system_clock::now()));
+std::cout &lt;&lt; t &lt;&lt; '\n';  // 2016-05-14 18:33:24.205 EDT
 </pre></blockquote>
 
 <p>
@@ -232,8 +226,8 @@ Seconds precision is just as easy:
 </p>
 
 <blockquote><pre>
-auto local_time = make_zoned(current_zone(), <b>floor&lt;seconds&gt;</b>(system_clock::now()));
-std::cout &lt;&lt; local_time &lt;&lt; '\n';  // 2016-05-14 18:33:24 EDT
+auto t = make_zoned(current_zone(), <b>floor&lt;seconds&gt;</b>(system_clock::now()));
+std::cout &lt;&lt; t &lt;&lt; '\n';  // 2016-05-14 18:33:24 EDT
 </pre></blockquote>
 
 <p>
@@ -242,8 +236,8 @@ also at your fingertips (and at any precision):
 </p>
 
 <blockquote><pre>
-auto local_time = make_zoned(current_zone(), system_clock::now());
-std::cout &lt;&lt; <b>format("%a, %b %d, %Y at %I:%M %p %Z", local_time)</b> &lt;&lt; '\n';
+auto t = make_zoned(current_zone(), system_clock::now());
+std::cout &lt;&lt; <b>format("%a, %b %d, %Y at %I:%M %p %Z", t)</b> &lt;&lt; '\n';
 // Sat, May 14, 2016 at 06:33 PM EDT
 </pre></blockquote>
 
@@ -252,12 +246,12 @@ Using any <code>std::locale</code> your OS supports:
 </p>
 
 <blockquote><pre>
-auto local_time = make_zoned(current_zone(), floor&lt;seconds&gt;(system_clock::now()));
-std::cout &lt;&lt; format(<b>locale("de_DE")</b>, "%a, %b %d, %Y at %T %Z", local_time) &lt;&lt; '\n';
+auto t = make_zoned(current_zone(), floor&lt;seconds&gt;(system_clock::now()));
+std::cout &lt;&lt; format(<b>locale("de_DE")</b>, "%a, %b %d, %Y at %T %Z", t) &lt;&lt; '\n';
 // Sa, Mai 14, 2016 at 18:33:24 EDT
 </pre></blockquote>
 
-<h3>What time is it somewhere <i>else</i> in the world?</h3>
+<a name="somewhere_else"></a><h3>What time is it somewhere <i>else</i> in the world?</h3>
 
 <p>
 From the previous section:
@@ -275,8 +269,8 @@ We can fix that easily too:
 
 <blockquote><pre>
 <b>auto zone = locate_zone("Europe/Berlin");</b>
-auto local_time = make_zoned(<b>zone</b>, floor&lt;seconds&gt;(system_clock::now()));
-std::cout &lt;&lt; format(locale("de_DE"), "%a, %b %d, %Y at %T %Z", local_time) &lt;&lt; '\n';
+auto t = make_zoned(<b>zone</b>, floor&lt;seconds&gt;(system_clock::now()));
+std::cout &lt;&lt; format(locale("de_DE"), "%a, %b %d, %Y at %T %Z", t) &lt;&lt; '\n';
 // So, Mai 15, 2016 at 00:33:24 CEST
 </pre></blockquote>
 
@@ -293,7 +287,7 @@ You can also call <code>make_zoned</code> with the time zone name right in the c
 </p>
 
 <blockquote><pre>
-auto local_time = make_zoned(<b>"Europe/Berlin"</b>, floor&lt;seconds&gt;(system_clock::now()));
+auto t = make_zoned(<b>"Europe/Berlin"</b>, floor&lt;seconds&gt;(system_clock::now()));
 </pre></blockquote>
 
 <p>
@@ -301,7 +295,7 @@ The first way is very slightly more efficient if you plan on using <code>zone</c
 multiple times since it then only has to be looked up once.
 </p>
 
-<h3>How do I convert a <code>time_zone</code> from one time zone to another?</h3>
+<a name="convert"></a><h3>How do I convert a <code>time_zone</code> from one time zone to another?</h3>
 
 <p>
 So far we've only looked at converting from <code>system_clock::now()</code> to
@@ -348,757 +342,219 @@ The Sydney   meeting is 2016-05-02 23:00:00 AEST
 </pre></blockquote>
 
 <p>
+The first time, <code>meet_nyc</code> is a pairing of a time zone ("America/New_York")
+with a <i>local time</i> (<code>mon[1]/may/2016</code> at 09:00).  Note that this
+input is exactly reflected in the output:
+</p>
+
+<blockquote><pre>
+The New York meeting is 2016-05-02 09:00:00 EDT
+</pre></blockquote>
+
+<p>
+The next line creates <code>meet_lon</code> with the <code>zoned_time</code>
+<code>meet_nyc</code> and a new time zone: "Europe/London".  The effect of this pairing
+is to create a <code>time_point</code> with the exact same UTC time point, but
+associated with a different <code>time_zone</code> for localization purposes.  That is,
+after this "converting construction", an invariant is that
+<code>meet_lon.get_sys_time() == meet_nyc.get_sys_time()</code>, even though these
+two objects refer to different time zones.
+</p>
+
+<p>
+The same recipe is followed for creating <code>meet_syd</code>.  The default formatting
+for these <code>zoned_time</code>s is to output the <i>local</i> date and time followed
+by the current time zone abbreviation.
+</p>
+
+<p>
 Summary:  <code>zoned_time</code> is a pairing of local or UTC time with a <code>time_zone</code>.
 The result is a well-specified point in time.  And it carries with it the ability to
 serve as a translator to any other <code>time_point</code> which carries time zone
 information (to any precision).
 </p>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<a name="TheDatabase"></a><h3>The Database</h3>
+<a name="loc_vs_sys"></a><h3><code>local_time</code> vs <code>sys_time</code></h3>
 
 <p>
-The database is represented with the type <code>TZ_DB</code>:
+Let's say I want to refer to the New Years Day party at 2017-01-01 00:00:00.  I don't
+want to refer to a specific party at some geographical location.  I want to refer to
+the fact that this moment is celebrated in different parts of the world according to
+local times.  This is called a <code>local_time</code>.
 </p>
 
 <blockquote><pre>
-struct TZ_DB
-{
-    std::string       version;
-    std::vector&lt;Zone&gt; zones;
-    std::vector&lt;Link&gt; links;
-    std::vector&lt;Leap&gt; leaps;
-    std::vector&lt;Rule&gt; rules;
-};
+auto new_years = local_time&lt;days&gt;{2017_y/jan/1} + 0h + 0m + 0s;
 </pre></blockquote>
 
 <p>
-This is a singleton class.  You can get a <code>const TZ_DB&amp;</code> to the singleton
-using this function:
+A <code>local_time&lt;D&gt;</code> can be created with any duration <code>D</code> and
+is a <code>std::chrono::time_point</code> except that
+<code>local_time&lt;D&gt;::clock</code> has no <code>now()</code> function.  There is
+no time zone associated with <code>local_time</code>.
+</p>
+
+<blockquote>
+<p>
+<code>local_time</code> <b>is not</b> the time associated with the current local time
+the computer is set to.
+</p>
+</blockquote>
+
+<p>
+<code>local_time</code> <i>is</i> a time associated with an <i>as yet</i>
+unspecified time zone.  Only when you pair a <code>local_time</code> with a
+<code>time_zone</code> do you get a concrete point in time that can be converted
+to UTC and other time zones: a <code>zoned_time</code>.
+</p>
+
+<p>
+There also exist convenience type aliases:
 </p>
 
 <blockquote><pre>
-const TZ_DB&amp; get_tzdb();
+using local_seconds = local_time&lt;std::chrono::seconds&gt;;
+using local_days    = local_time&lt;days&gt;;
 </pre></blockquote>
 
 <p>
-The first call to <code>get_tzdb()</code> will initialize the database from your local
-copy of the <a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> located
-at <code>install</code> (a file-scope variable of type <code>std::string</code> in
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>).
-You will need to catch the return of this function by <code>const&amp;</code> as the
-<code>TZ_DB</code> is not constructible from a <code>const TZ_DB</code>.  This can be done
-with the following example code:
+In summary:  When is 1min after New Years 2017?
 </p>
 
 <blockquote><pre>
-auto& db = get_tzdb();
+auto t = local_days{jan/1/2017} + 1min;
+cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01
 </pre></blockquote>
 
 <p>
-With a reference to the database in hand, you have read-only access to the entire
-database, which is nothing more than sorted <code>vector</code>s for the four types of
-data contained in the database.  With such a reference you could (for example) print the
-names of all the Zones in the database:
+When is 1min after New Years 2017 UTC?
 </p>
 
 <blockquote><pre>
-for (auto&amp; z : db.zones)
-    std::cout &lt;&lt; z.name() &lt;&lt; '\n';
+auto t = sys_days{jan/1/2017} + 1min;
+cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01
 </pre></blockquote>
 
 <p>
-There are currently 377 zones in the database.
+This effectively means that <code>year_month_day</code> is also ambiguous as to
+whether it refers to a local (timezone-less) time or to UTC.  You have to
+specify which when you use it.  But that is the nature of how people use dates
+(points in time with days precision).  "There will be a celebration on New Years."
+In many contexts the time zone is intentionally left unspecified.
 </p>
 
 <p>
-Or you could output the 89 <code>Link</code>s, including their <code>name()</code> and
-<code>target()</code>:
+When is 1min after New Years 2017 in New York?
 </p>
 
 <blockquote><pre>
-for (auto&amp; link : db.links)
-    std::cout &lt;&lt; link &lt;&lt; '\n';
+zoned_seconds t{"America/New_York", local_days{jan/1/2017} + 1min};
+cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01:00 EST
 </pre></blockquote>
 
 <p>
-If you aren't happy with the format this outputs in, <code>Link</code> has public member
-functions <code>name()</code> and <code>target()</code> so that you can achieve whatever
-format you desire.
-</p>
-
-<p>
-If needed, <code>db.version</code> is a <code>std::string</code> containing the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> version of the
-database you are reading.  For example the current version when this sentence
-was written was "2016a".
-</p>
-
-<p>
-You can even print the entire database out in a semi-human-readable format if desired:
+What time will it be in New York when it is 1min after New Years 2017 UTC?
 </p>
 
 <blockquote><pre>
-std::cout &lt;&lt; db &lt;&lt; '\n';
+zoned_seconds t{"America/New_York", sys_days{jan/1/2017} + 1min};
+cout &lt;&lt; t &lt;&lt; '\n';  // 2016-12-31 19:01:00 EST
 </pre></blockquote>
 
-<p>
-If you constrain the geography or history of the database during installation, those
-constraints will be reflected in these examples.
-</p>
+<a name="Summary"></a><h3>Summary</h3>
 
 <p>
-If you decide you need to reload the database say, because you want to install a new
-version of the <a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>
-without stopping your program, you can use this function:
-</p>
-
-<blockquote><pre>
-const TZ_DB&amp; reload_tzdb();
-</pre></blockquote>
-
-<p>
-This re-initializes the database by reading from the <code>install</code> location you
-customized on installation.  The use of the <code>reload_tzdb</code> function is not
-pain-free, and not for every application (not for most of them I'm guessing).  For example
-see the <b>Thread Safety</b> section for issues related to the use of these functions.
-</p>
-
-<a name="remote"></a><h3>The remote API</h3>
-
-<p>
-The remote API is enabled only if <code>HAS_REMOTE_API</code> is set to 1 during
-compilation.  See <a href="#Installation">Installation</a> for more details.
-</p>
-
-<blockquote><pre>
-std::string remote_version();
-</pre></blockquote>
-
-<p>
-This function will query the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database website</a> for the
-latest version number of the IANA database, and return it as a <code>std::string</code>.
-If an internet connection can not be made, an empty <code>string</code> is returned.
-This string can be compared against the version of your local copy of the database:
-<code>get_tzdb().version</code>.
-</p>
-
-<blockquote><pre>
-bool remote_download(const std::string&amp; version);
-</pre></blockquote>
-
-<p>
-This function will attempt to download the database with the version <code>version</code>
-from the <a href="http://www.iana.org/time-zones">IANA Time Zone Database website</a>.
-If successful, <code>true</code> is returned and a file named
-<code>version + ".tar.gz"</code>  will be stored at the location <code>install</code>.
-If not successful, <code>false</code> is returned.
-</p>
-
-<blockquote><pre>
-bool remote_install(const std::string&amp; version);
-</pre></blockquote>
-
-<p>
-This function will attempt to uncompress the tar file downloaded by
-<code>remote_download(version)</code> and replace any existing database with
-the result.  It will then delete the tar file.  If the tar file doesn't exist,
-<code>remote_install</code> will do nothing.  Returns <code>true</code> on
-success, else returns <code>false</code>.
-</p>
-
-<a name="Zone"></a><h3>Zone</h3>
-
-<p>
-The <code>Zone</code> class is the most important type in this library.  It provides the
-main access to the functionality provided by this library.  Each <code>Zone</code> is
-named, represents a geographic area, and provides a mapping between UTC and the local
-time, in both directions.  This mapping from local time to UTC is in general not one to
-one.  The mapping, and even the specific rule, depends upon the input
-<code>time_point</code>, which can represent either UTC or local time.
-</p>
-
-<p>
-The detailed API of the <code>Zone</code> class depends upon a small amount of
-infrastructure which is introduced first.
-</p>
-
-<a name="Infrastructure"></a><h4>Infrastructure</h4>
-
-<blockquote><pre>
-using second_point = std::chrono::time_point&lt;std::chrono::system_clock,
-                                             std::chrono::seconds&gt;;
-</pre></blockquote>
-
-<p>
-<code>second_point</code> is a <code>std::chrono::time_point</code> based on
-<code>system_clock</code> but with the precision of <code>seconds</code>.  This library
-will interoperate with <code>system_clock::time_point</code>s of <i>any</i> precision.
-However the data in the database is largely based on <code>second_point</code>, and
-some of the data which is presented, such as that in the <code>sys_info</code> class, uses
-this type alias as a convenience, and to reduce verbosity.  <code>second_point</code>
-will implicitly convert to <code>system_clock::time_point</code>.  And coarser
-<code>time_point</code>s such as the <code>day_point</code> from the
-<a href="date.html"><code>date</code></a> library will implicitly convert to 
-<code>second_point</code>.
-</p>
-
-<blockquote><pre>
-struct sys_info
-{
-    second_point         begin;
-    second_point         end;
-    std::chrono::seconds offset;
-    std::chrono::minutes save;
-    std::string          abbrev;
-};
-</pre></blockquote>
-
-<p>
-The <code>sys_info</code> struct is the return type of the <code>get_info</code> member
-function of the <code>Zone</code> class.  It contains very detailed information about the
-<code>Zone</code> at the <code>time_point</code> (UTC or local) input into this member
-function.  <code>sys_info</code> contains no pointers or references into the database.
-Therefore clients do not need to be concerned about holding on to <code>sys_info</code>s
-during a call to <code>reload_tzdb()</code>.  Though a call to <code>reload_tzdb()</code>
-could potentially make the data in an outstanding <code>sys_info</code> obsolete.  See
-<code>Zone::get_info</code> for more details.
-</p>
-
-<blockquote><pre>
-enum class tz {utc, local};
-enum class choose {earliest, latest};
-</pre></blockquote>
-
-<p>
-These <code>enum</code>s are used as input to some of the <code>Zone</code> member
-functions.  <code>tz::utc</code> indicates that a <code>time_point</code> represents a
-time in the UTC time zone.  <code>tz::local</code> indicates that a
-<code>time_point</code> represents a time in the <code>Zone</code>'s local time zone.
-The <code>choose enum</code> allows a client to specify how a mapping from local to UTC
-should behave when the mapping is not one to one.  Alternatively one can not specify
-a policy in the mapping, and if the mapping is not unique, an exception will be thrown.
-</p>
-
-<blockquote><pre>
-class nonexistent_local_time
-    : public std::runtime_error
-{
-public:
-    const char* what() const override;
-};
-
-class ambiguous_local_time
-    : public std::runtime_error
-{
-public:
-    const char* what() const override;
-};
-</pre></blockquote>
-
-<p>
-These are the exception classes thrown by the local to UTC mapping.  In addition to their
-type indicating the nature of the exceptional circumstance, they also sport a
-<code>what()</code> member function that will contain a very detailed explanation
-including specific times for the specific <code>time_point</code>s involved in the
-attempted mapping.
-</p>
-
-<p>
-If in a call to <code>Zone::to_sys</code> the local <code>time_point</code> falls into a
-"gap" for which no local time exists, a <code>nonexistent_local_time</code> exception is
-thrown.
-</p>
-
-<p>
-If in a call to <code>Zone::to_sys</code> the local <code>time_point</code> has an
-ambiguous mapping to UTC, a <code>ambiguous_local_time</code> exception is thrown.
-</p>
-
-<p>
-Either exceptional situation can be circumvented with the use of
-<code>choose::earliest</code> or <code>choose::latest</code> in the call to
-<code>to_sys</code>.
-</p>
-
-<a name="ZoneContinued"></a><h4>Zone continued</h4>
-
-<blockquote><pre>
-class Zone
-{
-public:
-    const std::string&amp; name() const;
-
-    template &lt;class Rep, class Period&gt;
-    std::pair
-    &lt;
-        std::chrono::time_point&lt;std::chrono::system_clock,
-            typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                      std::chrono::seconds&gt;::type&gt;,
-        std::string
-    &gt;
-    to_local(std::chrono::time_point&lt;std::chrono::system_clock,
-                                     std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-
-    template &lt;class Rep, class Period&gt;
-    std::chrono::time_point&lt;std::chrono::system_clock,
-        typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                  std::chrono::seconds&gt;::type&gt;
-    to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-                                   std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-
-    template &lt;class Rep, class Period&gt;
-    std::chrono::time_point&lt;std::chrono::system_clock,
-        typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                  std::chrono::seconds&gt;::type&gt;
-    to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-                                   std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
-           choose z) const;
-
-    template &lt;class Rep, class Period&gt;
-    sys_info
-    get_info(std::chrono::time_point&lt;std::chrono::system_clock,
-                                     std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
-             tz timezone) const;
-};
-
-const Zone* locate_zone(const std::string&amp; tz_name);
-const Zone* current_zone();
-
-bool operator==(const Zone&amp; x, const Zone&amp; y);
-bool operator!=(const Zone&amp; x, const Zone&amp; y);
-bool operator&lt; (const Zone&amp; x, const Zone&amp; y);
-bool operator&gt; (const Zone&amp; x, const Zone&amp; y);
-bool operator&lt;=(const Zone&amp; x, const Zone&amp; y);
-bool operator&gt;=(const Zone&amp; x, const Zone&amp; y);
-
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const Zone&amp; z);
-</pre></blockquote>
-
-<p>
-The entire public API of the <code>Zone</code> is <code>const</code>.  Once the database
-is initialized (or reloaded), <code>Zone</code>s are set in concrete.
-</p>
-
-<hr>
-
-<p>
-The current time zone associated with your computer can be retrieved with the namespace
-scope function <code>current_zone()</code>.  For example:
-</p>
-
-<blockquote><pre>
-std::cout &lt;&lt; current_zone()-&gt;name() &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-For me the above currently outputs <code>America/New_York</code>.
-</p>
-
-<hr>
-
-<blockquote><pre>
-const Zone* locate_zone(const std::string&amp; tz_name);
-</pre></blockquote>
-
-<p>
-<code>locate_zone</code> returns a pointer to a <code>Zone</code> in the database
-associated with <code>tz_name</code>.  If it can't find a <code>Zone</code> named
-<code>tz_name</code>, the implementation will search for a <code>Link</code> named
-<code>tz_name</code>, and then return the <code>Zone</code> associated with the
-<code>Link</code>'s <code>target()</code>. If <code>tz_name</code> can not be found in the
-database, a <code>std::runtime_error</code> is thrown.
-</p>
-
-<p>
-Example:
-</p>
-
-<blockquote><pre>
-try
-{
-    cout &lt;&lt; locate_zone("Europe/London")-&gt;name() &lt;&lt; '\n';     // A Zone
-    cout &lt;&lt; locate_zone("Europe/Jersey")-&gt;name() &lt;&lt; '\n';     // A Link to a Zone
-    cout &lt;&lt; locate_zone("Europe/New_Jersey")-&gt;name() &lt;&lt; '\n'; // Doesn't exist
-}
-catch (const exception&amp; e)
-{
-    cout &lt;&lt; e.what() &lt;&lt; '\n';
-}
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-Europe/London
-Europe/London
-Europe/New_Jersey not found in timezone database
-</pre></blockquote>
-
-<p>
-Note that <code>locate_zone</code> never returns <code>nullptr</code>.  Also note that
-the first call to <code>locate_zone</code> may implicitly initialize the database.
-</p>
-
-<hr>
-
-<blockquote><pre>
-template &lt;class Rep, class Period&gt;
-std::pair
-&lt;
-    std::chrono::time_point&lt;std::chrono::system_clock,
-        typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                                  std::chrono::seconds&gt;::type&gt;,
-    std::string
-&gt;
-to_local(std::chrono::time_point&lt;std::chrono::system_clock,
-                                 std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-</pre></blockquote>
-
-<p>
-<code>to_local</code> maps a <code>system_clock</code>-associated <code>time_point</code>
-from UTC to local time, returning both the mapped <code>time_point</code> and an
-abbreviation for the local time zone.  This member function accepts any precision
-<code>time_point</code>, but returns a <code>time_point</code> with a precision of
-<code>seconds</code> or finer.  This is done because it is possible that some of the
-mappings returned by the database need the precision of a second.
-</p>
-
-<p>
-There are only two ways this function can fail:
+We now have 5 concepts and their associated types:
 </p>
 
 <ol>
 <li><p>
-Out of memory error.  Not bloody likely.  The only memory that possibly could be
-allocated is for the abbreviation stored in a <code>std::string</code> and all known
-implementations will fit all known abbreviations into their short string buffer.
+Calendars:  These are day-precision time points that are typically field structures
+(multiple fields that create a unique "name" for a day).
+</p>
+<p>
+Example calendars include <code>year_month_day</code> and
+<code>year_month_weekday</code>.  Other examples could include the ISO
+week-based calendar, the Julian calendar, the Islamic calendar, the Hebrew
+calendar, the Chinese calendar, the Mayan calendar, etc.
+</p>
+<p>
+Calendars can convert to and from both <code>sys_days</code> and
+<code>local_days</code>. These two conversions involve identical arithmetic, but
+have semantic differences.
+</p>
+<p>
+Once these conversions are implemented, the calendars are not only interoperable
+with <code>zoned_time</code>, but are also interoperable with each other.  That
+is dates in the Chinese calendar can easily be converted to or from dates in the
+Mayan calendar even though these two calendars have no knowledge of the other.
+</p>
+<p>
+Disclaimer:  "date.h" provides only the <code>year_month_day</code> and
+<code>year_month_weekday</code> calendars.
 </p></li>
+
 <li><p>
-If you curtailed history during installation, a <code>runtime_error</code> will be thrown
-if <code>tp</code> refers to a <code>time_point</code> outside of the range
-<code>min_year/jan/1 00:00:00</code> to <code>max_year/dec/31 23:59:59</code>.  This can
-not happen with the default settings of <code>min_year</code> and <code>max_year</code>.
+<code>sys_time</code>:  This is a serial time point and a
+<code>std::chrono::time_point</code> of arbitrary precision.  It has
+<code>sys_seconds</code> and <code>sys_days</code> convenience precisions.
+</p>
+<p>
+<code>sys_time</code> is a <code>time_point</code> associated with the return of
+<code>system_clock::now()</code> and represents
+<a href="https://en.wikipedia.org/wiki/Unix_time">Unix Time</a> which very
+closely approximates UTC.
+</p></li>
+
+<li><p>
+<code>local_time</code>:  This is a serial time point and a
+<code>std::chrono::time_point</code> of arbitrary precision.  It has
+<code>local_seconds</code> and <code>local_days</code> convenience precisions.
+</p>
+<p>
+<code>local_time</code> is a <code>time_point</code> associated with no time
+zone, and no <code>clock::now()</code>.  It is the <code>void*</code> of
+<code>time_point</code>s.
+</p></li>
+
+<li><p>
+<code>time_zone</code>:  This represents a specific geographical area, and all 
+time zone related information for this area over all time.  This includes a
+name for the area, and for any specific point in time, the UTC offset, the
+abbreviation, and additional information.
+</p></li>
+
+
+<li><p>
+<code>zoned_time</code>:  This is a pairing of a <code>time_zone</code> and a
+<code>sys_time</code> (of precision seconds or finer).  It can also be
+equivalently viewed as a pairing of a <code>time_zone</code> and a
+<code>local_time</code>.  Once constructed it represents a valid point in time,
+and the <code>time_zone</code>, <code>sys_time</code> and
+<code>local_time</code> can all be extracted.  There exists a
+<code>zoned_seconds</code> convenience precision.
 </p></li>
 </ol>
 
 <p>
-Example:
-</p>
-
-<blockquote><pre>
-auto local = current_zone()-&gt;to_local(system_clock::now());
-cout &lt;&lt; local.first &lt;&lt; ' ' &lt;&lt; local.second &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-Which just output for me:
-</p>
-
-<blockquote><pre>
-2015-07-12 16:57:14.430467 EDT
-</pre></blockquote>
-
-<p>
-Not quite 5pm in the US Eastern timezone during daylight saving time.
+<code>time_zone</code>s are retrieved from a time zone database.  The database
+also holds information about leap seconds.  To make computing with leap
+seconds easier, there is a clock that takes leap seconds into account:
+<code>utc_clock</code>.  This clock has an associated family of time points
+called <code>utc_time</code>.
 </p>
 
 <p>
-And for a historical example:
+Full formatting and parsing facilities are available with <code>strftime</code>-like
+formatting strings.
 </p>
 
-<blockquote><pre>
-auto distant_past = locate_zone("America/New_York")-&gt;to_local(day_point(feb/9/1942) + 7h);
-cout &lt;&lt; distant_past.first &lt;&lt; ' ' &lt;&lt; distant_past.second &lt;&lt; '\n';
-</pre></blockquote>
+<a name="Examples"><h3>Examples</h3>
 
 <p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-1942-02-09 03:00:00 EWT
-</pre></blockquote>
-
-<p>
-The US shifted to "War Time."
-</p>
-
-<hr>
-
-<p>
-If you want to go the other direction (from local time to UTC) use:
-</p>
-
-<blockquote><pre>
-template &lt;class Rep, class Period&gt;
-std::chrono::time_point&lt;std::chrono::system_clock,
-    typename std::common_type&lt;std::chrono::duration&lt;Rep, Period&gt;,
-                              std::chrono::seconds&gt;::type&gt;
-to_sys(std::chrono::time_point&lt;std::chrono::system_clock,
-                               std::chrono::duration&lt;Rep, Period&gt;&gt; tp) const;
-</pre></blockquote>
-
-<p>
-For example:
-</p>
-
-<blockquote><pre>
-auto distant_past = locate_zone("America/New_York")-&gt;to_sys(day_point(feb/9/1942) + 3h);
-cout &lt;&lt; distant_past &lt;&lt; ' ' &lt;&lt; " UTC\n";
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-1942-02-09 07:00:00 UTC
-</pre></blockquote>
-
-<p>
-This function will throw an exception of type <code>nonexistent_local_time</code> if the
-local time does not exist.  This can happen when the local clock is discontinuously set
-forward, such as when moving from standard time to daylight savings time.
-</p>
-
-<p>
-For example:
-</p>
-
-<blockquote><pre>
-try
-{
-    auto distant_past = locate_zone("America/New_York")-&gt;to_sys(day_point(feb/9/1942) + 3h - 1ms);
-    cout &lt;&lt; distant_past &lt;&lt; ' ' &lt;&lt; " UTC\n";
-}
-catch (const exception&amp; e)
-{
-    cout &lt;&lt; e.what() &lt;&lt; '\n';
-}
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-1942-02-09 02:59:59.999 is in a gap between
-1942-02-09 02:00:00 EST and
-1942-02-09 03:00:00 EWT which are both equivalent to
-1942-02-09 07:00:00 UTC
-</pre></blockquote>
-
-<p>
-And sometimes a local time can be ambiguous, mapping to more than one UTC time:
-</p>
-
-<blockquote><pre>
-try
-{
-    auto distant_past = locate_zone("America/New_York")-&gt;to_sys(day_point(sep/30/1945) + 2h - 1ns);
-    cout &lt;&lt; distant_past &lt;&lt; " UTC\n";
-}
-catch (const exception&amp; e)
-{
-    cout &lt;&lt; e.what() &lt;&lt; '\n';
-}
-</pre></blockquote>
-
-<blockquote><pre>
-1945-09-30 01:59:59.999999999 is ambiguous.  It could be
-1945-09-30 01:59:59.999999999 EPT == 1945-09-30 05:59:59.999999999 UTC or
-1945-09-30 01:59:59.999999999 EST == 1945-09-30 06:59:59.999999999 UTC
-</pre></blockquote>
-
-<hr>
-
-<p>
-If you would rather not deal with these rare exceptions, you can choose ahead of time
-to select the earliest time or latest time when a local time falls into a gap:
-</p>
-
-<blockquote><pre>
-auto z = locate_zone("America/New_York");
-auto distant_past = z-&gt;to_sys(day_point(sep/30/1945) + 2h - 1ns, choose::earliest);
-cout &lt;&lt; distant_past &lt;&lt; " UTC\n";
-distant_past =      z-&gt;to_sys(day_point(sep/30/1945) + 2h - 1ns, choose::latest);
-cout &lt;&lt; distant_past &lt;&lt; " UTC\n";
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-1945-09-30 05:59:59.999999999 UTC
-1945-09-30 06:59:59.999999999 UTC
-</pre></blockquote>
-
-<p>
-When using this form of <code>to_sys</code> and the local time is non-existent, both
-choices will map to the single UTC time on either side of the gap:
-</p>
-
-<blockquote><pre>
-auto z = locate_zone("America/New_York");
-auto distant_past = z-&gt;to_sys(day_point(feb/9/1942) + 3h - 1ms, choose::earliest);
-cout &lt;&lt; distant_past &lt;&lt; " UTC\n";
-distant_past =      z-&gt;to_sys(day_point(feb/9/1942) + 3h - 1ms, choose::latest);
-cout &lt;&lt; distant_past &lt;&lt; " UTC\n";
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-1942-02-09 07:00:00.000 UTC
-1942-02-09 07:00:00.000 UTC
-</pre></blockquote>
-
-<hr>
-
-<p>
-So far I've shown how given a <code>Zone</code> and a <code>system_clock::time_point</code>
-of arbitrary precision, you can use <code>to_local</code> to map UTC to local time, and
-<code>to_sys</code> to map local time to UTC, with your choice of either detecting any
-errors, or choosing how to resolve errors.  But what if that is not enough?  You may be
-thinking:  Do I have to call these mapping functions every second?  How often does the
-offset change?
-</p>
-
-<p>
-This library offers a partial solution to this dilemma.  If the location you are concerned
-about doesn't change, and if the database isn't reloaded, then <code>get_info</code> can
-tell you how far into the past, and far into the future a given offset and abbreviation
-are guaranteed to stay valid:
-</p>
-
-<blockquote><pre>
-template &lt;class Rep, class Period&gt;
-sys_info
-get_info(std::chrono::time_point&lt;std::chrono::system_clock,
-                                 std::chrono::duration&lt;Rep, Period&gt;&gt; tp,
-         tz timezone) const;
-</pre></blockquote>
-
-<p>
-Input a <code>time_point tp</code>, and indicate whether <code>tp</code> represents a UTC
-<code>time_point</code> (<code>tz::utc</code>) or a local <code>time_point</code>
-(<code>tz::local</code>), and a struct <code>sys_info</code> for that <code>time_point</code>
-is returned:
-</p>
-
-<blockquote><pre>
-auto sys_info = locate_zone("America/New_York")-&gt;get_info(system_clock::now(), tz::utc);
-</pre></blockquote>
-
-<p>
-Upon return <code>sys_info</code> will contain the following information:
-</p>
-
-<ul>
-<li><p>
-<code>sys_info.offset</code> has type <code>std::chrono::seconds</code> and indicates the
-current offset from UTC.  A positive offset indicates that local time is ahead of UTC and
-a negative offset indicates that local time is behind UTC.
-</p></li>
-
-<li><p>
-<code>sys_info.abbrev</code> has type <code>std::string</code> and indicates the
-current abbreviation for the local time zone.
-</p></li>
-
-<li><p>
-<code>sys_info.begin</code> has type <code>second_point</code> and indicates the first
-instant guaranteed to have this same <code>offset</code> and <code>abbrev</code>. The
-<code>time_point sys_info.begin</code> is implicitly in the UTC time zone. Note that it is
-possible that the instant prior to <code>begin</code> may or may not have a
-different <code>offset</code> or <code>abbrev</code>.
-</p></li>
-
-<li><p>
-<code>sys_info.end</code> has type <code>second_point</code> and indicates the last instant
-before which it is guaranteed to have this same <code>offset</code> and
-<code>abbrev</code>. The <code>time_point sys_info.end</code> is implicitly in the UTC time
-zone. The <code>offset</code> and <code>abbrev</code> associated with
-<code>sys_info.end</code> and beyond may or may not be different.
-</p></li>
-
-<li><p>
-<code>sys_info.save</code> has type <code>std::chrono::minutes</code> and indicates the
-amount of time that daylight savings time has moved the current offset.  This can be
-used to detect whether or not daylight savings is in effect (no if the value is 0min).
-Note that <code>save</code> is already incorporated into the value of <code>offset</code>,
-so you don't have to look at this field to get the current offset.  This field exists
-just in the spirit of more information is better.
-</p></li>
-</ul>
-
-<p>
-The <code>sys_info</code> also has a streaming operator which is mainly useful for debugging
-purposes.  Here is sample code and output:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; current_zone()-&gt;get_info(system_clock::now(), tz::utc);
-
-2015-03-08 07:00:00
-2015-11-01 06:00:00
--04:00:00
-01:00
-EDT
-</pre></blockquote>
-
-<p>
-This is considered to be a low-level function, and as such there is no error detection
-if you input a local time that either does not exist, or is ambiguous.  Enough information
-is returned for you to compute those conditions.  Indeed, this is exactly how error
-detection is computed in <code>to_sys</code>:  by calling <code>get_info</code> and
-analyzing how the input time relates to <code>begin</code> and <code>end</code>.
-</p>
-
-<p>
-Additionally the <code>Zone</code> is equality and less-than comparable (using the
-<code>name()</code>).  And you can stream the <code>Zone</code> out to a stream, though
-the output may not be crystal clear.  The streaming output is mainly used as an aid in
-debugging this library, not your code.
-</p>
-
-<a name="flightexample1"></a><h3>Flight Example</h3>
-
-<p>
-There's nothing like a real-world example to help demonstrate things.  Imagine a
-plane flying from New York, New York, USA to Tehran, Iran.  To make it more realistic,
-lets say this flight occurred before the hostage crisis, right at the end of 1978.  Flight
-time for a non-stop one way trip is 14 hours and 44 minutes.
-</p>
-
-<p>
-Given that the departure is one minute past noon on Dec. 30, 1978, local time, what is
-the local arrival time?
+Interesting things can happen to the apparent time when you travel across the globe
+at high speeds.  So departure and arrival times of airplane flights make for good
+examples involving time zone arithmetic.
 </p>
 
 <blockquote><pre>
@@ -1108,53 +564,18 @@ the local arrival time?
 int
 main()
 {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     using namespace date;
-    auto nyc_tz = locate_zone("America/New_York");
-    auto teh_tz = locate_zone("Asia/Tehran");
-    auto nyc_departure_sys = nyc_tz-&gt;to_sys(day_point(dec/30/1978) + 12h + 1min);
-    auto nyc_departure = nyc_tz-&gt;to_local(nyc_departure_sys);
+
+    auto departure = make_zoned("America/New_York", local_days{dec/30/1978} + 12h + 1min);
     auto flight_length = 14h + 44min;
-    auto teh_arrival_sys = nyc_departure_sys + flight_length;
-    auto teh_arrival = teh_tz-&gt;to_local(teh_arrival_sys);
-    std::cout &lt;&lt; "departure NYC time:  " &lt;&lt; nyc_departure.first &lt;&lt; ' '
-                                         &lt;&lt; nyc_departure.second &lt;&lt; '\n';
-    std::cout &lt;&lt; "flight time is " &lt;&lt; make_time(flight_length) &lt;&lt; '\n';
-    std::cout &lt;&lt; "arrival Tehran time: " &lt;&lt; teh_arrival.first &lt;&lt; ' '
-                                         &lt;&lt; teh_arrival.second &lt;&lt; '\n';
+    auto arrival = make_zoned("Asia/Tehran", departure.get_sys_time() + flight_length);
+
+    std::cout &lt;&lt; "departure NYC time:  " &lt;&lt; departure &lt;&lt; '\n';
+    std::cout &lt;&lt; "flight time is       " &lt;&lt; make_time(flight_length) &lt;&lt; '\n';
+    std::cout &lt;&lt; "arrival Tehran time: " &lt;&lt; arrival &lt;&lt; '\n';
 }
 </pre></blockquote>
-
-<p>
-There are several points to be made about the above code:
-</p>
-
-<ul>
-<li><p>
-A stylistic guide is to use "<code>sys</code>" for <code>system_clock time_points</code>.
-This helps distinguish system times (UTC) from local times.
-</p></li>
-
-<li><p>
-No time arithmetic is done using local <code>time_point</code>s.  All time arithmetic is
-done in the UTC time zone.  Time arithmetic in terms of local <code>time_point</code>s is
-error prone.  Note though that this computation (using
-<code>system_clock::time_point</code>) is ignorant of leap seconds.  If you must, see how
-to take leap seconds into account with <b>utc_clock</b>.
-</p></li>
-
-<li><p>
-There is no <code>using namespace std</code> because "<code>dec</code>" is ambiguous if
-both <code>date</code> and <code>std</code> are brought into scope.  In <code>date</code>
-"<code>dec</code>" means December.  In <code>std</code> "<code>dec</code>" means:
-</p>
-<blockquote><pre>
-ios_base&amp; dec(ios_base&amp; str);
-</pre></blockquote>
-<p>
-Thank goodness for namespaces!
-</p></li>
-</ul>
 
 <p>
 The output of the above program is:
@@ -1162,21 +583,43 @@ The output of the above program is:
 
 <blockquote><pre>
 departure NYC time:  1978-12-30 12:01:00 EST
-flight time is 14:44
+flight time is       14:44
 arrival Tehran time: 1978-12-31 11:45:00 IRST
 </pre></blockquote>
 
 <p>
-And this program is <i>exactly correct</i>.  But what happens with the same flight on
-the following day?
+The departure time is formed by transforming the local calendar date time into a
+<code>local_time</code> and pairing that with the "America/New_York"
+<code>time_zone</code> to form a <code>zoned_time</code>.  The flight time is
+just an ordinary <code>chrono::duration</code>.
+</p>
+
+<p>
+The arrival time is formed by retrieving the departure time in terms of
+<code>sys_time</code>, adding the length of the flight, and pairing that
+<code>sys_time</code> with the "Asia/Tehran" <code>time_zone</code> to form a
+<code>zoned_time</code>.
+</p>
+
+<p>
+By doing the arithmetic (addition of the flight time) in the UTC (well system)
+time zone, we do not have to worry about things like daylight savings time, or
+other political changes to the either UTC offset.  For example if we change one
+line to look at the same flight 24 hours later:
 </p>
 
 <blockquote><pre>
-auto nyc_departure_sys = nyc_tz->to_sys(day_point(dec/<b>31</b>/1978) + 12h + 1min);
+auto departure = make_zoned("America/New_York", local_days{dec/<b>31</b>/1978} + 12h + 1min);
+</pre></blockquote>
 
-departure NYC time:  1978-12-31 12:01:00 EST
-flight time is 14:44
-arrival Tehran time: 1979-01-01 <b>11:15:00</b> IRST
+<p>
+Then the output changes to:
+</p>
+
+<blockquote><pre>
+departure NYC time:  1978-12-<b>31</b> 12:01:00 EST
+flight time is       14:44
+arrival Tehran time: 1979-01-01 11:<b>15</b>:00 IRST
 </pre></blockquote>
 
 <p>
@@ -1184,121 +627,8 @@ Now we have the flight arriving 30min earlier.  This is because the time zone
 "Asia/Tehran" undergoes an offset change while the plane is in the air, shifting its UTC
 offset to 30min earlier.  Is this the final word on this example?  Almost.  If accuracy
 down to the second is required (it is not for a flight arrival), then additional effort
-needs to be expended.  See <b>Flight Example with leap seconds</b>.
-</p>
-
-<a name="utc_clock"></a><h3>utc_clock</h3>
-
-<p>
-One of the first questions everyone asks when a new date-time library comes out is:
-</p>
-
-<blockquote><p>
-Does it handle leap seconds?
-</p></blockquote>
-
-<p>
-The answer here is yes, this library can handle leap seconds.  But be careful what you ask
-for.  Correctly handling leap seconds is error prone.  Therefore this library handles leap
-seconds in a completely different type-safe way, which can't be accidentally mixed with
-everything else presented so far.  The motivation for this separation is born from several
-issues:
-</p>
-
-<ul>
-<li><p>
-<code>system_clock</code> (<a href="https://en.wikipedia.org/wiki/Unix_time">Unix
-time</a>) <i>sort of</i> handles leaps seconds in that "now" in 
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix
-time</a> <i>always</i> corresponds to "now" in UTC (UTC being leap second aware).  It is
-just that the difference between two
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> <code>time_point</code>s
-may produce a number of <code>std::chrono::seconds</code> which does not reflect the
-exact number of physical seconds which has actually transpired.
-</p></li>
-
-<li><p>
-Unless you are using a very special computer, directly connected to an atomic clock, your
-computer is likely using <a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a>.
-If you want to correctly interpret things such as time stamps, and you want to correctly
-handle leap seconds,  it is critical to know if those time stamps (the input data) were
-generated by software that correctly handled leap seconds.  Odds are very good that they
-were generated by software following
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a>, or
-<a href="http://www.ntp.org">Network Time Protocol</a> which for our purposes here, treats
-leaps seconds in essentially the same way 
-<a href="https://en.wikipedia.org/wiki/Unix_time">Unix time</a> does (as a clock
-correction).
-</p></li>
-
-<li><p>
-Handling leap seconds is not free.  Don't try to just so you can be "more exact."  Do it
-when your requirements actually demand it, and you have the resources to test that you are
-indeed correctly handling leap seconds.  If the person telling you to correctly handle
-leap seconds has <a href="http://dilbert.com">pointy hair</a>, double down on your
-testing, and have your atomic clock ready. The extra expense is not so much memory or
-performance (those penalties exist but are relatively small), but in the problem of
-believing you've achieved more accuracy when you actually haven't.
-</p></li>
-
-</ul>
-
-<p>
-<code>utc_clock</code> is a <code>std::chrono</code>-conforming clock with the same
-<code>duration</code> as your <code>system_clock</code>, and a <code>now()</code>
-function that returns the actual number of physical seconds since 1970-01-01 00:00:00 UTC
-(counting leap seconds):
-</p>
-
-<blockquote><pre>
-class utc_clock
-{
-public:
-    using duration                  = std::chrono::system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
-    using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
-    static constexpr bool is_steady = true;
-
-    static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-        static
-        std::chrono::time_point&lt;utc_clock,
-            typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-        sys_to_utc(std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt; t);
-
-    template &lt;class Duration&gt;
-        static
-        std::chrono::time_point&lt;std::chrono::system_clock,
-            typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-        utc_to_sys(std::chrono::time_point&lt;utc_clock, Duration&gt; t);
-};
-</pre></blockquote>
-
-<p>
-Additionally <code>utc_clock</code> has static member functions for converting between
-<code>utc_clock</code>-based <code>time_point</code>s to and from
-<code>system_clock</code>-based <code>time_point</code>s of any precision.  But it is
-important to remember that <code>utc_clock</code> isn't connected to a super accurate
-atomic clock.  All it does is look its <code>time_point</code> up in the database to
-see how many leap seconds have passed since 1972, and adds or subtracts that number of
-seconds to do the conversion.  The <code>utc_clock::now()</code> function simply calls
-<code>system_clock::now()</code> and adds the current total of leaps seconds (currently
-26) to the result.  This is useful behavior but it is important to understand that
-<code>utc_clock</code> is not a highly accurate scientific instrument.  It is precisely
-as accurate as your existing <code>std::chrono::system_clock</code>.
-</p>
-
-<a name="flightexample2"></a><h3>Flight Example with leap seconds</h3>
-
-<p>
-In the preceding section a flight from New York City to Tehran was offered, demonstrating
-how local political changes in the rules governing UTC offsets can affect time
-computations.  As it turns out, while that flight departing on <code>dec/31/1978</code>
-was in the air, we also underwent a leap second addition.  How does that impact the
-computation, and how can this library be used to account for that (should it actually be
-important)?
+needs to be expended.  Because there was also a leap second insertion while the plane
+was in the air.  This can be taken into account with the following code:
 </p>
 
 <blockquote><pre>
@@ -1308,409 +638,114 @@ important)?
 int
 main()
 {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     using namespace date;
-    auto nyc_tz = locate_zone("America/New_York");
-    auto teh_tz = locate_zone("Asia/Tehran");
-    auto nyc_departure_sys = nyc_tz-&gt;to_sys(day_point(dec/31/1978) + 12h + 1min);
-    auto nyc_departure = nyc_tz-&gt;to_local(nyc_departure_sys);
-    <b>auto nyc_departure_utc = utc_clock::sys_to_utc(nyc_departure_sys);
-    </b>auto flight_length = 14h + 44min;<b>
-    auto teh_arrival_utc = nyc_departure_utc + flight_length;
-    auto teh_arrival_sys = utc_clock::utc_to_sys(teh_arrival_utc);</b>
-    auto teh_arrival = teh_tz-&gt;to_local(teh_arrival_sys);
-    std::cout &lt;&lt; "departure NYC time:  " &lt;&lt; nyc_departure.first &lt;&lt; ' '
-                                         &lt;&lt; nyc_departure.second &lt;&lt; '\n';
-    std::cout &lt;&lt; "flight time is " &lt;&lt; make_time(flight_length) &lt;&lt; '\n';
-    std::cout &lt;&lt; "arrival Tehran time: " &lt;&lt; teh_arrival.first &lt;&lt; ' '
-                                         &lt;&lt; teh_arrival.second &lt;&lt; '\n';
-}
 
+    auto departure = make_zoned("America/New_York", local_days{dec/31/1978} + 12h + 1min);
+    <b>auto departure_utc = to_utc_time(departure.get_sys_time());</b>
+    auto flight_length = 14h + 44min;
+    auto arrival = make_zoned("Asia/Tehran", <b>to_sys_time(departure_utc + flight_length)</b>);
+
+    std::cout &lt;&lt; "departure NYC time:  " &lt;&lt; departure &lt;&lt; '\n';
+    std::cout &lt;&lt; "flight time is       " &lt;&lt; make_time(flight_length) &lt;&lt; '\n';
+    std::cout &lt;&lt; "arrival Tehran time: " &lt;&lt; arrival &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+This is just like the previous example except that the arithmetic (departure
+time + flight length) is done in <code>utc_time</code> instead of
+<code>sys_time</code>.  To accomplish this, there is a conversion from
+<code>sys_time</code> to <code>utc_time</code> before the arithmetic, and
+another conversion from <code>utc_time</code> to <code>sys_time</code> after the
+arithmetic.  And the result changes to:
+</p>
+
+<blockquote><pre>
 departure NYC time:  1978-12-31 12:01:00 EST
-flight time is 14:44
-arrival Tehran time: 1979-01-01 <b>11:14:59</b> IRST
+flight time is       14:44
+arrival Tehran time: 1979-01-01 11:<b>14:59</b> IRST
 </pre></blockquote>
 
 <p>
-As can be seen, we now report an arrival time 1s before the arrival time we computed
-without taking leap seconds into account.  The key to working with leap seconds is to make
-sure that all your time arithmetic takes place using <code>utc_clock</code>-based
-<code>time_point</code>s, instead of <code>system_clock</code>-based
-<code>time_point</code>s.  Just convert to <code>system_clock</code> when you're ready to
-break the date and time up into field-based structures, or are ready to further convert it
-into a local <code>time_point</code>.  In this example, the only time arithmetic is:
+A common task in dealing with dates and times is converting from one string format
+to another.  This library is extremely flexible in handling this task.  As an
+example, let's say that you need to convert strings that look like this:
 </p>
 
 <blockquote><pre>
-auto teh_arrival_utc = nyc_departure_utc + flight_length;
+Sun Sep 16 01:03:52 -0500 1973
 </pre></blockquote>
 
 <p>
-The reset of the code is simply about converting from local, to <code>system_clock</code>
-to <code>utc_clock</code> and back.
+Into strings that look like this:
 </p>
 
-<blockquote><p>
-<i>Digression:</i> Doing computations with leap seconds is cool.  But perhaps the true
-power of this library is revealed in the ease with which I created this example.  I sat
-back and said to myself:
-</p>
-<blockquote><p>
-I want to find a time and location where a timezone offset changed within 12 hours
-of a leap second insertion.  And then build my flight time example around that event.
-</p></blockquote>
-<p>
-Subsequently I wrote the following code to search the entire planet, and the last 45
-years, to find these rare chronological events:
-</p>
 <blockquote><pre>
-const auto&amp; db = get_tzdb();
-for (auto const&amp; leap : db.leaps)
+1973-09-16T06:03:52.000Z
+</pre></blockquote>
+
+<p>
+That is, given a local time with UTC offset, you need to not only update the format
+to something more modern, but it also has to be converted to the UTC timezone and to
+a precision of milliseconds.  The code to do this is quite straight forward:
+</p>
+
+<blockquote><pre>
+std::string
+convert(const std::string&amp; input)
 {
-    for (auto const&amp; zone : db.zones)
-    {
-        auto info = zone.get_info(leap.date(), tz::utc);
-        if (leap.date() - info.begin &lt;= 12h)
-        {
-            auto prev = zone.get_info(info.begin - 1s, tz::utc);
-            if (prev.offset != info.offset)
-                std::cout &lt;&lt; zone.name() &lt;&lt; "  " &lt;&lt; info.begin &lt;&lt; " : "
-                          &lt;&lt;  leap &lt;&lt; ' '
-                          &lt;&lt; make_time(info.offset-prev.offset) &lt;&lt; '\n';
-        }
-        if (info.end - leap.date() &lt;= 12h)
-        {
-            auto next = zone.get_info(info.end, tz::utc);
-            if (next.offset != info.offset)
-                std::cout &lt;&lt; zone.name() &lt;&lt; " " &lt;&lt; info.end &lt;&lt;  " : "
-                          &lt;&lt;  leap &lt;&lt; ' '
-                          &lt;&lt; make_time(next.offset - info.offset) &lt;&lt; '\n';
-        }
-    }
-}
-</pre></blockquote>
-<p>
-The flight time example wasn't really about Iran, the US, and politics after all.  It was
-about finding this needle in a haystack of time and space, which turned out to be
-relatively easy and incredibly efficient.
-</p>
-<p>
-You too can analyze the <a href="http://www.iana.org/time-zones">IANA Time Zone
-Database</a> in creative and interesting ways no one else has thought of.  There is a lot
-of history here.
-</p></blockquote>
-
-<a name="Formatting"></a><h3>Formatting</h3>
-
-<p>
-All of the types in this library, as well as in
-<a href="date.html"><code>date.h</code></a> are streamable when you need quick and
-simple output.  However in addition to this simplistic streaming there is more
-sophisticated formatting built on top of the C++11 <code>time_put&lt;char&gt;</code>
-facet.  <code>time_put&lt;char&gt;</code> itself is built on C's <code>strftime</code>
-function.  But <code>time_put&lt;char&gt;</code> is sensitive to C++ <code>locale</code>s.
-</p>
-
-<p>
-The basic way to use formatting is to call the <code>format</code> function like this:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; format("%A %F %T", floor&lt;seconds&gt;(system_clock::now())) &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-Which just output for me:
-</p>
-
-<blockquote><pre>
-Sunday 2016-04-03 22:02:19
-</pre></blockquote>
-
-<p>
-Note the cast to <code>seconds</code> precision in the call.  This is how you control
-the precision of the <code>seconds</code> output (if any).  The modifiers <code>%S</code>
-and <code>%T</code> will output seconds to whatever the precision is of the
-<code>time_point</code>.  For example:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; format("%A %F %T", floor&lt;milliseconds&gt;(system_clock::now())) &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-would instead output:
-</p>
-
-<blockquote><pre>
-Sunday 2016-04-03 22:02:19.656
-</pre></blockquote>
-
-<p>
-Note that there is an implicit time zone being used here:  UTC.  The <code>%z</code> and
-<code>%Z</code> modifiers can be used to show this:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; format("%A %F %T %z %Z", floor&lt;milliseconds&gt;(system_clock::now())) &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-would instead output:
-</p>
-
-<blockquote><pre>
-Sunday 2016-04-03 22:02:19.656 +0000 UTC
-</pre></blockquote>
-
-<p>
-A <code>Zone</code> can also be passed in and then the  <code>%z</code> and
-<code>%Z</code> modifiers will reflect that passed-in zone.  It is important to
-remember however that <code>format</code> <em>never</em> shifts the
-<code>time_point</code> for you.  Instead you pass in a <code>Zone</code> that you know
-to be associated with your <code>time_point</code>.  For example:
-</p>
-
-<blockquote><pre>
-auto zone = locate_zone("Europe/Berlin");
-auto local = zone-&gt;to_local(floor&lt;milliseconds&gt;(system_clock::now())).first;
-cout &lt;&lt; format("%A %F %T %z %Z", local, zone) &lt;&lt; '\n';
-</pre></blockquote>
-
-<blockquote><pre>
-Monday 2016-04-04 00:02:19.656 +0200 CEST
-</pre></blockquote>
-
-<p>
-The <i>only</i> thing <code>format</code> ever does with a <code>Zone</code> is extract
-the offset and/or the abbreviation for use with the <code>%z</code> and <code>%Z</code>
-modifiers.
-</p>
-
-<p>
-You can also pass in a <code>locale</code> to <code>format</code>:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; format(locale("de_DE"), "%A %F %T %z %Z", local, zone) &lt;&lt; '\n';
-</pre></blockquote>
-
-<blockquote><pre>
-Montag 2016-04-04 00:02:19,656 +0200 CEST
-</pre></blockquote>
-
-<p>
-The set of named locales that your OS supports is defined by your OS, not this library.
-</p>
-
-<p>
-Instead of a <code>time_point</code> you can also pass in anything that is implicitly
-convertible to <code>day_point</code>:
-</p>
-
-<blockquote><pre>
-cout &lt;&lt; format(locale("de_DE"), "%A %B %e, %Y", 2016_y/jul/mon[1]) &lt;&lt; '\n';
-</pre></blockquote>
-
-<blockquote><pre>
-Montag Juli  4, 2016
-</pre></blockquote>
-
-<p>
-In summary, use <code>format</code> by passing in a format string and a
-<code>time_point</code>, or something implicitly convertible to a <code>day_point</code>.
-You can optionally pass in a <code>locale</code> as the first parameter, and a
-<code>Zone</code> as the last parameter.  <code>format</code> will never alter the value
-of your <code>time_point</code>.  The precision of the <code>time_point</code> controls
-the precision of seconds with the <code>%S</code> and <code>%T</code> modifiers. If you
-pass in a <code>Zone</code>, this will only impact the output of <code>%z</code> and
-<code>%Z</code> (which default to <code>+0000</code> and <code>UTC</code> respectively).
-The output of <code>format</code> is a <code>std::string</code>.
-</p>
-
-<a name="Parsing"></a><h3>Parsing</h3>
-
-<p>
-Since all parts of all date-types in this library can be constructed with integral types,
-you can parse any format you wish as integrals, and create dates from any format you
-wish that way.
-</p>
-
-<p>
-However this section introduces a <code>parse</code> function which is built on top
-of the C++11 <code>time_get</code> facet which can also be used:
-</p>
-
-<blockquote><pre>
-template &lt;class Duration&gt;
-void
-parse(std::istream&amp; is, const std::string&amp; format,
-      std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp);
-</pre></blockquote>
-
-<p>
-You can input any <code>istream</code>, and a format string much like that used for
-<code>format</code> and <code>strftime</code>, and a <code>time_point</code> of any
-precision, and this function will attempt to extract the <code>time_point</code> from
-the <code>istream</code> by using the format <code>string</code>.  If not successful,
-the <code>time_point</code> will not be altered.
-</p>
-
-<p>
-Example use:
-</p>
-
-<blockquote><pre>
-istringstream is("Montag 2016-04-04 00:02:19,656 +0200");
-is.imbue(locale("de_DE"));
-system_clock::time_point tp;
-parse(is, "%A %F %T %z", tp);
-cout &lt;&lt; tp &lt;&lt; '\n';
-</pre></blockquote>
-
-<p>
-Which outputs:
-</p>
-
-<blockquote><pre>
-2016-04-03 22:02:19.656000
-</pre></blockquote>
-
-<p>
-Note that the <code>locale</code> associated with the <code>istream</code> is respected. 
-If the format string contains a <code>%z</code> which matches the input stream, this is
-used to convert the value to UTC.  If there is no <code>%z</code>, then no conversion
-happens (you can assume whatever timezone you want).  Note that fractional seconds are
-accepted as long as one uses <code>%T</code> or <code>%S</code>, and the precision of the
-<code>time_point</code> is fine enough to accept fractional seconds.
-</p>
-
-<p>
-<code>%Z</code> is not accepted as the mapping from a timezone abbreviation to UTC is
-in general, ambiguous.  If you have a <code>%Z</code> in the format string, this will
-result in <code>is.fail()</code> returning <code>true</code> after the call to
-<code>parse</code>.
-</p>
-
-<p>
-However, if you absolutely must parse a timestamp with a timezone abbreviation in it,
-an extra <code>parse</code> overload is provided:
-</p>
-
-<blockquote><pre>
-template &lt;class Duration&gt;
-void
-parse(std::istream&amp; is, const std::string&amp; format,
-      std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp,
-      std::string& abbrev);
-</pre></blockquote>
-
-<p>
-Now if <code>%Z</code> matches a word in <code>is</code> <em>and</em> if the rest of
-<code>is</code> correctly parses according to <code>format</code>, then
-<code>abbrev</code> will be assigned the word which matched <code>%Z</code>.  This
-<i>will not</i> have any impact on the value of <code>tp</code> (no timezone offset
-applied).  However perhaps there is enough a-priori knowledge in your application to
-make use of the value of <code>abbrev</code> to correctly interpret the meaning of
-the timestamp and the resulting value of <code>tp</code>.
-</p>
-
-<p>
-As an example of how this option can be both useful <i>and</i> dangerous, consider
-an example where we need to parse the timestamp "Thu Apr 07 11:45:28 AEST 2016", and
-we want to discover what the corresponding time is in UTC, and what timezone this
-timestamp represents.
-</p>
-
-<p>
-The following program parses this, and then searches
-the entire timezone database looking for timezones which have "AEST" as an abbreviation
-at a local time of Apr 07 11:45:28 2016.  The program finds the first one, notes its UTC
-offset, and then searches for more.  If it finds more, and the UTC offset is the same,
-it simply outputs the name of each additional timezone found.  If the additional timezones
-have a different UTC offset, that is noted too by outputting the UTC timestamp associated
-with the additional timezone.
-</p>
-
-<blockquote><pre>
-#include "tz.h"
-#include &lt;string&gt;
-#include &lt;iostream&gt;
-#include &lt;sstream&gt;
-#include &lt;cassert&gt;
-
-int
-main()
-{
+    using namespace std;
     using namespace std::chrono;
     using namespace date;
-    auto&amp; db = get_tzdb();
-    std::istringstream in("Thu Apr 07 11:45:28 AEST 2016");
-    time_point&lt;system_clock, seconds&gt; tp_local;
-    std::string abbrev;
-    parse(in, "%a %b %d %T %Z %Y", tp_local, abbrev);
-    assert(!in.fail());
-    auto i = std::find_if(db.zones.begin(), db.zones.end(),
-                          [&amp;tp_local, &amp;abbrev](auto const&amp; z)
-                          {
-                              return z.get_info(tp_local, tz::local).abbrev == abbrev;
-                          });
-    if (i != db.zones.end())
-    {
-        auto tp_utc = i-&gt;to_sys(tp_local);
-        std::cout &lt;&lt; tp_utc &lt;&lt; " UTC " &lt;&lt; i-&gt;name() &lt;&lt; '\n';
-        for (++i; i != db.zones.end(); ++i)
-        {
-            if (i-&gt;get_info(tp_local, tz::local).abbrev != abbrev)
-                continue;
-            auto tp = i-&gt;to_sys(tp_local);
-            if (tp != tp_utc)
-                std::cout &lt;&lt; tp &lt;&lt; " UTC ";
-            std::cout &lt;&lt; i-&gt;name() &lt;&lt; '\n';
-        }
-    }
+    istringstream stream{input};
+    sys_time&lt;milliseconds&gt; t;
+    parse(stream, "%a %b %d %T %z %Y", t);
+    if (stream.fail())
+        throw runtime_error("failed to parse " + input);
+    return format("%FT%TZ", t);
 }
 </pre></blockquote>
 
 <p>
-This program outputs:
-</p>
-
-<blockquote><pre>
-2016-04-07 01:45:28 UTC Australia/Brisbane
-Australia/Currie
-Australia/Hobart
-Australia/Lindeman
-Australia/Melbourne
-Australia/Sydney
-</pre></blockquote>
-
-<p>
-This indicates that "Thu Apr 07 11:45:28 AEST 2016" unambiguously refers to
-2016-04-07 01:45:28 UTC (a UTC offset of +1000).  However which IANA timezone is referred
-to is ambiguous.  This means that past or future timepoints using any of these timezones
-may or may not have the same UTC offsets (or abbreviations) among this set of timezones.
+Let's walk through this:
 </p>
 
 <p>
-And this is a good case.  Consider just altering the abbreviation in the above example
-from AEST to BST.  Now the output is:
-</p>
-
-<blockquote><pre>
-2016-04-07 10:45:28 UTC Europe/London
-2016-04-07 00:45:28 UTC Pacific/Bougainville
-</pre></blockquote>
-
-<p>
-Meaning:  Not only do we not know what timezone this refers to, it could mean one of
-two different UTC timepoints!
+First, <code>date::parse</code> works with <code>istream</code>s so you can parse from
+files, from strings, or anything else that is an <code>istream</code>.
 </p>
 
 <p>
-So in summary, it is dangerous to parse timezone abbreviations.  You should avoid it if at
-all possible.  However, if you are forced to, this library has the power to find out every
-thing that is knowable about that timestamp.
+Second, while we don't need to parse to a precision of milliseconds, we need to
+format to that precision.  It is easy just to parse into a
+milliseconds-precision <code>sys_time</code> so that we can then just format it
+back out with no change.  If we needed to parse at finer precision than
+formatting, then we would need to parse at the higher precision, truncate it (by
+some rounding mode &mdash; <code>truncate</code>, <code>floor,</code>
+<code>ceil</code> or <code>round</code>), and then format the truncated value.
+</p>
+
+<p>
+To have the <code>parse</code> interpret the string as a local time offset by the
+UTC offset, we need to ask for a <code>sys_time</code> to be parsed, and use
+the <code>%z</code> in the proper location.  The <code>parse</code> function will
+then subtract the UTC offset to give us the proper <code>sys_time</code> value.
+</p>
+
+<p>
+If <code>parse</code> fails to find <i>everything</i> in the parse/format string,
+exactly as specified, it will set <code>failbit</code> in the <code>istream</code>.
+</p>
+
+<p>
+Finally, once we know we have a successfully parsed
+<code>sys_time&lt;milliseconds&gt;</code> it is a very simple matter to format
+it back out in whatever format is desired.  As confirmed in the
+<a href="#Reference">Reference</a>, <code>%S</code> and <code>%T</code> are
+sensitive to the precision of the time point argument, and so there is no need
+for extension formatting flags to indicate fractional seconds.  <code>%S</code>
+and <code>%T</code> just work.
 </p>
 
 <a name="Reference"></a><h2>Reference</h2>

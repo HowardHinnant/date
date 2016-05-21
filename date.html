@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-15<br/>
+2016-05-20<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -1314,7 +1314,6 @@ Here is a function which will discover the limits for a single durration <code>D
 #include "date.h"
 #include &lt;iomanip&gt;
 #include &lt;iostream&gt;
-#include &lt;limits&gt;
 #include &lt;cstdint&gt;
 
 template &lt;class D&gt;
@@ -1325,8 +1324,8 @@ limit(const std::string&amp; msg)
     using namespace std;
     using namespace std::chrono;
     using dsecs = sys_time&lt;duration&lt;double&gt;&gt;;
-    constexpr auto ymin = sys_days{year{numeric_limits&lt;int16_t&gt;::min()}/jan/1};
-    constexpr auto ymax = sys_days{year{numeric_limits&lt;int16_t&gt;::max()}/12/last};
+    constexpr auto ymin = sys_days{year::min()}/jan/1};
+    constexpr auto ymax = sys_days{year::max()}/12/last};
     constexpr auto dmin = sys_time&lt;D&gt;::min();
     constexpr auto dmax = sys_time&lt;D&gt;::max();
     cout &lt;&lt; left &lt;&lt; setw(24) &lt;&lt; msg &lt;&lt; " : [";
@@ -2623,7 +2622,7 @@ constexpr bool year::ok() const noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>min() &lt;= *this &amp;&amp; *this &lt;= max()</code>.
+<i>Returns:</i> <code>true</code>.
 </p>
 </blockquote>
 
@@ -2633,12 +2632,7 @@ static constexpr year year::min() noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> A <code>year</code> constructed with the minimum representable year
-number. This year shall be a value such that
-<code>sys_days(min()/jan/1) + Unit{0}</code>, where <code>Unit</code> is one of
-<code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
-<code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
-<code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
+<i>Returns:</i> <code>year{std::numeric_limits&lt;short&gt;::min()}</code>.
 </p>
 </blockquote>
 
@@ -2648,12 +2642,7 @@ static constexpr year year::max() noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> A <code>year</code> constructed with the maximum representable year
-number. This year shall be a value such that
-<code>sys_days(max()/dec/31) + Unit{0}</code>, where <code>Unit</code> is one of
-<code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
-<code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
-<code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
+<i>Returns:</i> <code>year{std::numeric_limits&lt;short&gt;::max()}</code>.
 </p>
 </blockquote>
 

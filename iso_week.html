@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2015-12-23<br/>
+2016-05-21<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -51,7 +51,7 @@ Commons Attribution 4.0 International License</a>.
 This paper fully documents an
 <a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>
 that is fully interoperable with
-<a href="date_v2.html"><code>date</code></a>.
+<a href="date.html"><code>date</code></a>.
 </p>
 
 <a name="Implementation"></a><h2>Implementation</h2>
@@ -101,8 +101,8 @@ and then print them back out when requested.
 
 <p>
 The real power of <code>year_weeknum_weekday</code> is that it can implicitly convert to
-and from <a href="date_v2.html#day_point"><code>day_point</code></a>.  And
- <a href="date_v2.html#day_point"><code>day_point</code></a> is just a type alias for:
+and from <a href="date.html#sys_days"><code>sys_days</code></a>.  And
+ <a href="date.html#sys_days"><code>sys_days</code></a> is just a type alias for:
 </p>
 
 <blockquote><pre>
@@ -110,11 +110,11 @@ std::chrono::time_point&lt;std::chrono::system_clock, days&gt;
 </pre></blockquote>
 
 <p>
-This is the exact same <code>day_point</code> used by the
-<a href="date_v2.html"><code>date</code></a> and <a href="tz.html">time zone</a>
-libraries.  And so by simply having conversions to and from <code>day_point</code>,
+This is the exact same <code>sys_days</code> used by the
+<a href="date.html"><code>date</code></a> and <a href="tz.html">time zone</a>
+libraries.  And so by simply having conversions to and from <code>sys_days</code>,
 <code>iso_week::year_weeknum_weekday</code> becomes seamlessly interoperable with all
-of the types in <a href="date_v2.html"><code>date</code></a> and
+of the types in <a href="date.html"><code>date</code></a> and
 <a href="tz.html">time zone</a> such as <code>date::year_month_day</code> and
 <code>date::Zone</code>:
 </p>
@@ -194,7 +194,7 @@ In particular, note that for this day, the <code>iso_week::year</code> is 2015 a
 This brings us to an important type-safety feature of these libraries:  The
 <code>iso_week::year</code> and the <code>date::year</code> are two <i>distinct</i> types.
 They represent concepts that are <i>very</i> similar.  They almost always have the same
-value for the same <code>day_point</code>.  But as in this example, they are occasionally
+value for the same <code>sys_days</code>.  But as in this example, they are occasionally
 different.  It is not unheard of for computer systems to conflate these two very similar
 types, resulting in bugs that are hard to find because they are relatively rare.  Having
 the C++ type system help you keep these similar but different concepts distinct is a
@@ -219,7 +219,7 @@ and predictable.
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 <tr><td>time_point</td><td>&nbsp;</td></tr>
-<tr><td>&nbsp;</td><td><a href="#day_point"><code>day_point</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#sys_days"><code>sys_days</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 <tr><td>types</td><td>&nbsp;</td></tr>
@@ -289,7 +289,7 @@ etc.) are in namespace <code>iso_week::literals</code> and imported into namespa
 This definition is not an SI unit but <a
 href="http://www.bipm.org/en/publications/si-brochure/table6.html">is accepted for use
 with SI</a>.  <code>days</code> is the resultant type when subtracting two
-<code>day_point</code>s.
+<code>sys_days</code>s.
 </p>
 <pre>
 using days = std::chrono::duration
@@ -325,20 +325,20 @@ using years = std::chrono::duration
     &lt;int, std::ratio_multiply&lt;std::ratio&lt;146097, 400&gt;, days::period&gt;&gt;;
 </pre></blockquote>
 
-<a name="day_point"></a><h3><code>day_point</code></h3>
+<a name="sys_days"></a><h3><code>sys_days</code></h3>
 
 <blockquote>
 <p>
-<code>day_point</code> is a <code>std::chrono::time_point</code> using
+<code>sys_days</code> is a <code>std::chrono::time_point</code> using
 <code>std::chrono::system_clock</code> and <code>days</code>.  This makes
-<code>day_point</code> interoperable with
+<code>sys_days</code> interoperable with
 <code>std::chrono::system_clock::time_point</code>.  It is simply a count of days since
 the epoch of <code>std::chrono::system_clock</code> which in every implementation is
-Jan. 1, 1970.  <code>day_point</code> is a serial-based time point with a resolution of
+Jan. 1, 1970.  <code>sys_days</code> is a serial-based time point with a resolution of
 <code>days</code>.
 </p>
 <pre>
-using day_point = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
+using sys_days = std::chrono::time_point&lt;std::chrono::system_clock, days&gt;;
 </pre>
 </blockquote>
 
@@ -389,7 +389,7 @@ class weekday
     unsigned char wd_;  // exposition only
 public:
     explicit constexpr weekday(unsigned wd) noexcept;
-    constexpr weekday(const day_point&amp; dp) noexcept;
+    constexpr weekday(const sys_days&amp; dp) noexcept;
     constexpr weekday(date::weekday wd) noexcept;
     explicit weekday(int) = delete;
 
@@ -447,7 +447,7 @@ day of the week.
 </p>
 
 <p>
-A <code>weekday</code> can be implicitly constructed from a <code>day_point</code>. This
+A <code>weekday</code> can be implicitly constructed from a <code>sys_days</code>. This
 is the computation that discovers the day of the week of an arbitrary date.
 </p>
 
@@ -481,13 +481,13 @@ explicit constexpr weekday::weekday(unsigned wd) noexcept;
 </blockquote>
 
 <pre>
-constexpr weekday(const day_point&amp; dp) noexcept;
+constexpr weekday(const sys_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>weekday</code> by computing what day
-of the week corresponds to the <code>day_point dp</code>, and representing that day of
+of the week corresponds to the <code>sys_days dp</code>, and representing that day of
 the week in <code>wd_</code>.
 </p>
 <p>
@@ -1221,7 +1221,7 @@ static constexpr year year::min() noexcept;
 <p>
 <i>Returns:</i> A <code>year</code> constructed with the minimum representable year
 number. This year shall be a value such that
-<code>day_point{min()/1_w/mon} + Unit{0}</code>, where <code>Unit</code> is one of
+<code>sys_days{min()/1_w/mon} + Unit{0}</code>, where <code>Unit</code> is one of
 <code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
 <code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
 <code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
@@ -1236,7 +1236,7 @@ static constexpr year year::max() noexcept;
 <p>
 <i>Returns:</i> A <code>year</code> constructed with the maximum representable year
 number. This year shall be a value such that
-<code>day_point{max()/last/sun} + Unit{0}</code>, where <code>Unit</code> is one of
+<code>sys_days{max()/last/sun} + Unit{0}</code>, where <code>Unit</code> is one of
 <code>microseconds</code>, <code>milliseconds</code>, <code>seconds</code>,
 <code>minutes</code>, or <code>hours</code>, there shall be no overflow.  [<i>Note:</i>
 <code>nanoseconds</code> is intentionally omitted from this list. &mdash; <i>end note</i>]
@@ -2163,7 +2163,7 @@ public:
     constexpr year_weeknum_weekday(const iso_week::year&amp; y, const iso_week::weeknum&amp; wn,
                                    const iso_week::weekday&amp; wd) noexcept;
     constexpr year_weeknum_weekday(const year_lastweek_weekday&amp; x) noexcept;
-    constexpr year_weeknum_weekday(const day_point&amp; dp) noexcept;
+    constexpr year_weeknum_weekday(const sys_days&amp; dp) noexcept;
 
     year_weeknum_weekday&amp; operator+=(const years&amp; y) noexcept;
     year_weeknum_weekday&amp; operator-=(const years&amp; y) noexcept;
@@ -2172,7 +2172,7 @@ public:
     constexpr iso_week::weeknum weeknum() const noexcept;
     constexpr iso_week::weekday weekday() const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr operator sys_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -2197,7 +2197,7 @@ std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_weeknum_week
 and <code>weekday</code> in the
 <a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>.
 One can observe each field. <code>year_weeknum_weekday</code> supports year-oriented
-arithmetic. There is an implicit conversion to and from <code>day_point</code>. There is
+arithmetic. There is an implicit conversion to and from <code>sys_days</code>. There is
 also an implicit conversion from <code>year_lastweek_weekday</code>.
 <code>year_weeknum_weekday</code> is equality and less-than comparable.
 </p>
@@ -2237,7 +2237,7 @@ constructing <code>y_</code> with <code>x.year()</code>, <code>wn_</code> with
 </blockquote>
 
 <pre>
-constexpr year_weeknum_weekday::year_weeknum_weekday(const day_point&amp; dp) noexcept;
+constexpr year_weeknum_weekday::year_weeknum_weekday(const sys_days&amp; dp) noexcept;
 </pre>
 
 <blockquote>
@@ -2248,7 +2248,7 @@ corresponds to the date represented by <code>dp</code>.
 <p>
 <i>Remarks:</i> For any value of <code>year_weeknum_weekday</code>, <code>x</code>, for
 which <code>x.ok()</code> is <code>true</code>, this equality will also be
-<code>true</code>: <code>x == year_weeknum_weekday{day_point{x}}</code>.
+<code>true</code>: <code>x == year_weeknum_weekday{sys_days{x}}</code>.
 </p>
 </blockquote>
 
@@ -2309,12 +2309,12 @@ constexpr iso_week::weekday year_weeknum_weekday::weekday() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_weeknum_weekday::operator day_point() const noexcept;
+constexpr year_weeknum_weekday::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
 </p>
 </blockquote>
@@ -2464,7 +2464,7 @@ public:
     constexpr iso_week::weeknum weeknum() const noexcept;
     constexpr iso_week::weekday weekday() const noexcept;
 
-    constexpr operator day_point() const noexcept;
+    constexpr operator sys_days() const noexcept;
     constexpr bool ok() const noexcept;
 };
 
@@ -2489,7 +2489,7 @@ std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_lastweek_wee
 and <code>weekday</code> in the last week of the
 <a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week date calendar</a>.
 One can observe each field. <code>year_lastweek_weekday</code> supports year-oriented
-arithmetic. There is an implicit conversion to <code>day_point</code>.
+arithmetic. There is an implicit conversion to <code>sys_days</code>.
 <code>year_lastweek_weekday</code> is equality and less-than comparable.
 </p>
 
@@ -2571,12 +2571,12 @@ constexpr iso_week::weekday year_lastweek_weekday::weekday() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year_lastweek_weekday::operator day_point() const noexcept;
+constexpr year_lastweek_weekday::operator sys_days() const noexcept;
 </pre>
 
 <blockquote>
 <p>
-<i>Returns:</i> A <code>day_point</code> which represents the date represented by
+<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
 <code>*this</code>.
 </p>
 </blockquote>
