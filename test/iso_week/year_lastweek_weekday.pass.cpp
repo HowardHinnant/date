@@ -33,7 +33,7 @@
 //     constexpr iso_week::weeknum weeknum() const noexcept;
 //     constexpr iso_week::weekday weekday() const noexcept;
 // 
-//     constexpr operator day_point() const noexcept;
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
 // 
@@ -69,10 +69,10 @@ static_assert(std::is_literal_type<iso_week::year_lastweek_weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<iso_week::year_lastweek_weekday,
                                                  iso_week::year, iso_week::weekday>{}, "");
-static_assert( std::is_nothrow_constructible<iso_week::day_point,
+static_assert( std::is_nothrow_constructible<iso_week::sys_days,
                                                  iso_week::year_lastweek_weekday>{}, "");
 static_assert( std::is_convertible<iso_week::year_lastweek_weekday,
-                                       iso_week::day_point>{}, "");
+                                       iso_week::sys_days>{}, "");
 
 int
 main()
@@ -100,8 +100,8 @@ main()
     assert(x3.weeknum() == 53_w);
     assert(x3.weekday() == tue);
 
-    constexpr day_point dp = 2015_y/last/wed;
-    static_assert(dp == day_point{days{16799}}, "");
+    constexpr sys_days dp = 2015_y/last/wed;
+    static_assert(dp == sys_days{days{16799}}, "");
 
     static_assert(x0.ok(), "");
     assert(x3.ok());

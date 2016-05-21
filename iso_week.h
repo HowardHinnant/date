@@ -41,9 +41,6 @@ using years = date::years;
 using sys_days = date::sys_days;
 using local_days = date::local_days;
 
-// deprecated:
-using day_point = sys_days;
-
 // types
 
 struct last_week

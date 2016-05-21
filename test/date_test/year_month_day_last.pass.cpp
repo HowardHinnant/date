@@ -36,7 +36,7 @@
 //     constexpr date::month_day_last month_day_last() const noexcept;
 //     constexpr date::day            day()            const noexcept;
 // 
-//     constexpr operator day_point() const noexcept;
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
 
@@ -94,9 +94,9 @@ static_assert( std::is_trivially_move_assignable<date::year_month_day_last>{}, "
 
 static_assert(std::is_nothrow_constructible<date::year_month_day_last,
                                                 date::year, date::month_day_last>{}, "");
-static_assert(std::is_nothrow_constructible<date::day_point,
+static_assert(std::is_nothrow_constructible<date::sys_days,
                                                 date::year_month_day_last>{}, "");
-static_assert(std::is_convertible<date::year_month_day_last, date::day_point>{}, "");
+static_assert(std::is_convertible<date::year_month_day_last, date::sys_days>{}, "");
 
 void
 test_arithmetic()
@@ -154,7 +154,7 @@ main()
     static_assert(ymdl1.month_day_last() == month_day_last{aug}, "");
 #if __cplusplus >= 201402
     static_assert(ymdl1.day() == 31_d, "");
-    constexpr day_point dp = ymdl1;
+    constexpr sys_days dp = ymdl1;
     constexpr year_month_day ymd = dp;
     static_assert(ymd == 2015_y/aug/31, "");
 #endif

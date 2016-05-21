@@ -223,36 +223,6 @@ operator<<(std::ostream& os, const local_info& r);
 using Info = sys_info;
 
 class time_zone;
-// deprecated:
-using Zone = time_zone;
-
-namespace detail
-{
-
-inline
-days
-sum()
-{
-    return days{0};
-}
-
-template <class Duration>
-inline
-Duration
-sum(Duration d)
-{
-    return d;
-}
-
-template <class D1, class D2, class... Durations>
-inline
-std::common_type_t<D1, D2, Durations...>
-sum(D1 d1, D2 d2, Durations ...durations)
-{
-    return d1 + d2 + sum(durations...);
-}
-
-}  // detail
 
 template <class Duration>
 class zoned_time

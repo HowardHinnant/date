@@ -25,7 +25,7 @@
 //     unsigned char wd_;
 // public:
 //     explicit constexpr weekday(unsigned wd) noexcept;
-//     constexpr weekday(const day_point& dp) noexcept;
+//     constexpr weekday(const sys_days& dp) noexcept;
 // 
 //     weekday& operator++()    noexcept;
 //     weekday  operator++(int) noexcept;
@@ -76,10 +76,10 @@ static_assert( std::is_trivially_move_constructible<date::weekday>{}, "");
 static_assert( std::is_trivially_move_assignable<date::weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<date::weekday, unsigned>{}, "");
-static_assert( std::is_nothrow_constructible<date::weekday, date::day_point>{}, "");
+static_assert( std::is_nothrow_constructible<date::weekday, date::sys_days>{}, "");
 static_assert( std::is_nothrow_constructible<unsigned, date::weekday>{}, "");
 static_assert(!std::is_convertible<unsigned, date::weekday>{}, "");
-static_assert( std::is_convertible<date::day_point, date::weekday>{}, "");
+static_assert( std::is_convertible<date::sys_days, date::weekday>{}, "");
 static_assert(!std::is_convertible<date::weekday, unsigned>{}, "");
 static_assert(static_cast<unsigned>(date::weekday{1u}) == 1, "");
 

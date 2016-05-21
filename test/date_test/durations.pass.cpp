@@ -36,7 +36,7 @@
 // 
 // time_point
 // 
-// using day_point = std::chrono::time_point<std::chrono::system_clock, days>;
+// using sys_days = std::chrono::time_point<std::chrono::system_clock, days>;
 
 #include "date.h"
 
@@ -54,7 +54,7 @@ static_assert(date::years{400} == date::days{146097}, "");
 static_assert(date::days{365} < date::years{1} && date::years{1} < date::days{366}, "");
 static_assert(date::weeks{52} < date::years{1} && date::years{1} < date::weeks{53}, "");
 
-static_assert(std::is_same<date::day_point::duration, date::days>{}, "");
+static_assert(std::is_same<date::sys_days::duration, date::days>{}, "");
 
 int
 main()

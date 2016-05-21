@@ -26,7 +26,7 @@
 // public:
 //     explicit constexpr weekday(unsigned wd) noexcept;
 //     constexpr weekday(date::weekday wd) noexcept;
-//     constexpr weekday(const day_point& dp) noexcept;
+//     constexpr weekday(const sys_days& dp) noexcept;
 // 
 //     weekday& operator++()    noexcept;
 //     weekday  operator++(int) noexcept;
@@ -85,12 +85,12 @@ static_assert(std::is_standard_layout<iso_week::weekday>{}, "");
 static_assert(std::is_literal_type<iso_week::weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<iso_week::weekday, unsigned>{}, "");
-static_assert( std::is_nothrow_constructible<iso_week::weekday, iso_week::day_point>{}, "");
+static_assert( std::is_nothrow_constructible<iso_week::weekday, iso_week::sys_days>{}, "");
 static_assert( std::is_nothrow_constructible<iso_week::weekday, date::weekday>{}, "");
 static_assert( std::is_nothrow_constructible<date::weekday, iso_week::weekday>{}, "");
 static_assert( std::is_nothrow_constructible<unsigned, iso_week::weekday>{}, "");
 static_assert(!std::is_convertible<unsigned, iso_week::weekday>{}, "");
-static_assert( std::is_convertible<iso_week::day_point, iso_week::weekday>{}, "");
+static_assert( std::is_convertible<iso_week::sys_days, iso_week::weekday>{}, "");
 static_assert( std::is_convertible<iso_week::weekday, date::weekday>{}, "");
 static_assert( std::is_convertible<date::weekday, iso_week::weekday>{}, "");
 static_assert(!std::is_convertible<iso_week::weekday, unsigned>{}, "");

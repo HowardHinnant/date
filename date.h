@@ -101,9 +101,6 @@ template <class Duration>
 using local_seconds = local_time<std::chrono::seconds>;
 using local_days    = local_time<days>;
 
-// deprecated:
-using day_point = sys_days;
-
 // types
 
 struct last_spec
@@ -1326,19 +1323,14 @@ year::is_leap() const NOEXCEPT
 }
 
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
-CONSTCD11 inline bool year::ok() const NOEXCEPT {return min() <= *this && *this <= max();}
+CONSTCD11 inline bool year::ok() const NOEXCEPT {return true;}
 
 CONSTCD11
 inline
 year
 year::min() NOEXCEPT
 {
-    using namespace std::chrono;
-    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
-    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
-    return sizeof(minutes)*CHAR_BIT < 34 ?
-        year{1970} + duration_cast<years>(minutes::min()) :
-        year{std::numeric_limits<short>::min()};
+    return year{std::numeric_limits<short>::min()};
 }
 
 CONSTCD11
@@ -1346,12 +1338,7 @@ inline
 year
 year::max() NOEXCEPT
 {
-    using namespace std::chrono;
-    static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
-    static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
-    return sizeof(minutes)*CHAR_BIT < 34 ?
-        year{1969} + duration_cast<years>(minutes::max()) :
-        year{std::numeric_limits<short>::max()};
+    return year{std::numeric_limits<short>::max()};
 }
 
 CONSTCD11
@@ -2709,7 +2696,7 @@ inline
 days
 year_month_weekday::to_days() const NOEXCEPT
 {
-    auto d = day_point(y_/m_/1);
+    auto d = sys_days(y_/m_/1);
     return (d + (wdi_.weekday() - date::weekday(d) + days{(wdi_.index()-1)*7})
            ).time_since_epoch();
 }
