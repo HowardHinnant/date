@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-20<br/>
+2016-05-22<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -2088,10 +2088,38 @@ For the overloads taking a <code>zoned_time</code> it is the value returned by
 
 <a name="parse"></a><h3><code>parse</code></h3>
 <blockquote>
+<p>
+One can parse in a <code>sys_time&lt;Duration&gt;</code> or a
+<code>local_time&lt;Duration&gt;</code>.  Optionally, one can also pass in a reference
+to a <code>std::string</code> in order to capture the time zone abbreviation, or one
+can pass in a reference to a <code>std::chrono::minutes</code> to capture a time zone
+UTC offset (formatted as <code>+0000</code>), or one can pass in both in either order.
+</p>
+
 <pre>
 template &lt;class Duration&gt;
 void
 parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      std::string&amp; abbrev);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      std::string&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::string&amp; abbrev);
 
 template &lt;class Duration&gt;
 void
@@ -2101,13 +2129,29 @@ template &lt;class Duration&gt;
 void
 parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp,
       std::string&amp; abbrev);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      std::string&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration&gt;
+void
+parse(std::istream&amp; is, const std::string&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::string&amp; abbrev);
 </pre>
 <blockquote>
 <p>
 <i>Effects:</i> These functions attempt to parse a <code>time_point</code> out of
 <code>is</code> according to <code>format</code>.  If the parse is unsuccessful,
 calls <code>is.setstate(std::ios::failbit)</code> which may throw an exception.
-<code>tp</code> is altered only in the event of a successful parse.
+<code>tp</code>, <code>abbrev</code>, and <code>offset</code> are altered only in
+the event of a successful parse.
 </p>
 <blockquote>
 <p>
@@ -2126,27 +2170,35 @@ contributes to the time stamp as if
 
 <li><p>
 If <code>%z</code> appears in the <code>format</code> string and an offset is
-successfully parsed, the first overload (<code>sys_time</code>) interprets the
+successfully parsed, the overloads taking <code>sys_time</code> interprets the
 parsed time as a local time and subtracts the offset prior to assigning the
 value to <code>tp</code>, resulting in a value of <code>tp</code> representing a
-UTC timestamp.  The second and third overloads require a valid parse of the
-offset, but then ignore the offset in assigning a value to the
-<code>local_time&lt;Duration&gt;&amp; tp</code>.
+UTC timestamp.  The overloads taking <code>local_time</code> require a valid
+parse of the offset, but then ignore the offset in assigning a value to the
+<code>local_time&lt;Duration&gt;&amp; tp</code>.  If <code>offset</code> is
+passed in, on successful parse it will hold the value represented by
+<code>%z</code> if present, or will be assigned <code>0min</code> if
+<code>%z</code> is not present.
 </p></li>
 
 <li><p>
-If <code>%Z</code> appears in the <code>format</code> string then an abbreviation
-is required in that position for a successful parse.  However the parsed abbreviation
-does not have to be a valid time zone abbreviation, and has no impact on the value
-parsed into <code>tp</code>.  Using the third overload one can discover what that
-parsed abbreviation is.  If the third overload is used, but <code>%Z</code> does
-not appear in the format, then <code>abbrev</code> is not altered.
+If <code>%Z</code> appears in the <code>format</code> string then an
+abbreviation is required in that position for a successful parse.  The
+abbreviation will be parsed as a <code>std::string</code> (delimited by white
+space).  The parsed abbreviation does not have to be a valid time zone
+abbreviation, and has no impact on the value parsed into <code>tp</code>.  Using
+the overloads that take a <code>std::string&amp;</code> one can discover what
+that parsed abbreviation is.  On successful parse, <code>abbrev</code> will be
+assigned the value represented by <code>%Z</code> if present, or assigned the
+empty string if <code>%Z</code> is not present.
 </p></li>
 </ul>
 </blockquote>
 <p>
 <i>Note:</i>  There is no unique mapping from a time zone abbreviation to a
-<code>time_zone</code>.
+<code>time_zone</code>.  But given a time zone abbreviation and a <code>sys_time</code>
+or <code>local_time</code>, one could make a list of potential <code>time_zone</code>s.
+Given a UTC offset, one might even narrow that list down further.
 </p>
 </blockquote>
 </blockquote>
