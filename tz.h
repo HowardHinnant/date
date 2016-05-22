@@ -1219,8 +1219,8 @@ namespace detail
 
 template <class Duration>
 void
-parse(std::istream& is, const std::string& format,
-      sys_time<Duration>& tp, std::string* abbrev = nullptr)
+parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
+      std::string& abbrev, std::chrono::minutes& offset)
 {
     using namespace std;
     using namespace std::chrono;
@@ -1230,9 +1230,9 @@ parse(std::istream& is, const std::string& format,
         auto& f = use_facet<time_get<char>>(is.getloc());
         ios_base::iostate err = ios_base::goodbit;
         std::tm tm{};
-        minutes offset{};
         Duration subseconds{};
         std::string temp_abbrev;
+        minutes temp_offset{};
 
         auto b = format.data();
         auto i = b;
@@ -1286,10 +1286,10 @@ parse(std::istream& is, const std::string& format,
                             if (!is.fail() && std::isdigit(h1) && std::isdigit(h0)
                                            && std::isdigit(m1) && std::isdigit(m0))
                             {
-                                offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
-                                         10*minutes{m1 - '0'} + minutes{m0 - '0'};
+                                temp_offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
+                                              10*minutes{m1 - '0'} + minutes{m0 - '0'};
                                 if (sign == '-')
-                                    offset = -offset;
+                                    temp_offset = -temp_offset;
                             }
                             else
                                 err |= ios_base::failbit;
@@ -1324,10 +1324,8 @@ parse(std::istream& is, const std::string& format,
                 auto tt = _mkgmtime(&tm);
 #endif
                 tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
-                if (abbrev != nullptr)
-                    *abbrev = std::move(temp_abbrev);
-                else
-                    tp -= offset;
+                abbrev = std::move(temp_abbrev);
+                offset = temp_offset;
             }
         }
         is.setstate(err);
@@ -1341,19 +1339,57 @@ inline
 void
 parse(std::istream& is, const std::string& format, sys_time<Duration>& tp)
 {
-    detail::parse(is, format, tp);
+    std::string abbrev;
+    std::chrono::minutes offset{};
+    detail::parse(is, format, tp, abbrev, offset);
+    if (!is.fail())
+        tp = floor<Duration>(tp - offset);
 }
 
 template <class Duration>
 inline
 void
-parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
+parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
       std::string& abbrev)
 {
-    sys_time<Duration> st;
-    detail::parse(is, format, st, &abbrev);
+    std::chrono::minutes offset{};
+    detail::parse(is, format, tp, abbrev, offset);
     if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
+        tp = floor<Duration>(tp - offset);
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
+      std::chrono::minutes& offset)
+{
+    std::string abbrev;
+    detail::parse(is, format, tp, abbrev, offset);
+    if (!is.fail())
+        tp = floor<Duration>(tp - offset);
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
+      std::string& abbrev, std::chrono::minutes& offset)
+{
+    detail::parse(is, format, tp, abbrev, offset);
+    if (!is.fail())
+        tp = floor<Duration>(tp - offset);
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, sys_time<Duration>& tp,
+      std::chrono::minutes& offset, std::string& abbrev)
+{
+    detail::parse(is, format, tp, abbrev, offset);
+    if (!is.fail())
+        tp = floor<Duration>(tp - offset);
 }
 
 template <class Duration>
@@ -1363,7 +1399,58 @@ parse(std::istream& is, const std::string& format, local_time<Duration>& tp)
 {
     sys_time<Duration> st;
     std::string abbrev;
-    detail::parse(is, format, st, &abbrev);
+    std::chrono::minutes offset{};
+    detail::parse(is, format, st, abbrev, offset);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
+      std::string& abbrev)
+{
+    sys_time<Duration> st;
+    std::chrono::minutes offset{};
+    detail::parse(is, format, st, abbrev, offset);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
+      std::chrono::minutes& offset)
+{
+    sys_time<Duration> st;
+    std::string abbrev;
+    detail::parse(is, format, st, abbrev, offset);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
+      std::string& abbrev, std::chrono::minutes& offset)
+{
+    sys_time<Duration> st;
+    detail::parse(is, format, st, abbrev, offset);
+    if (!is.fail())
+        tp = local_time<Duration>{st.time_since_epoch()};
+}
+
+template <class Duration>
+inline
+void
+parse(std::istream& is, const std::string& format, local_time<Duration>& tp,
+      std::chrono::minutes& offset, std::string& abbrev)
+{
+    sys_time<Duration> st;
+    detail::parse(is, format, st, abbrev, offset);
     if (!is.fail())
         tp = local_time<Duration>{st.time_since_epoch()};
 }
