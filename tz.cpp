@@ -126,6 +126,11 @@ CONSTDATA auto max_day = date::dec/31;
 // | End Configuration |
 // +-------------------+
 
+namespace detail
+{
+class undocumented {explicit undocumented() = default;};
+}
+
 #ifndef _MSC_VER
 static_assert(min_year <= max_year, "Configuration error");
 #endif
@@ -1262,7 +1267,7 @@ time_zone::zonelet::zonelet(const zonelet& i)
 #endif
 }
 
-time_zone::time_zone(const std::string& s)
+time_zone::time_zone(const std::string& s, detail::undocumented)
 #if LAZY_INIT
     : adjusted_(new std::once_flag{})
 #endif
@@ -1923,7 +1928,7 @@ operator<<(std::ostream& os, const Link& x)
 
 // Leap
 
-Leap::Leap(const std::string& s)
+Leap::Leap(const std::string& s, detail::undocumented)
 {
     using namespace date;
     std::istringstream in(s);
@@ -2146,12 +2151,12 @@ init_tzdb()
                 }
                 else if (word == "Leap")
                 {
-                    db.leaps.push_back(Leap(line));
+                    db.leaps.push_back(Leap(line, detail::undocumented{}));
                     continue_zone = false;
                 }
                 else if (word == "Zone")
                 {
-                    db.zones.push_back(time_zone(line));
+                    db.zones.push_back(time_zone(line, detail::undocumented{}));
                     continue_zone = true;
                 }
                 else if (line[0] == '\t' && continue_zone)

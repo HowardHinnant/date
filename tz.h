@@ -99,6 +99,11 @@ namespace date
 
 enum class choose {earliest, latest};
 
+namespace detail
+{
+    class undocumented;
+}
+
 class nonexistent_local_time
     : public std::runtime_error
 {
@@ -321,7 +326,7 @@ public:
     time_zone& operator=(time_zone&& src);
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 
-    explicit time_zone(const std::string& s);
+    explicit time_zone(const std::string& s, detail::undocumented);
 
     const std::string& name() const;
 
@@ -517,7 +522,7 @@ private:
     sys_seconds date_;
 
 public:
-    explicit Leap(const std::string& s);
+    explicit Leap(const std::string& s, detail::undocumented);
 
     sys_seconds date() const {return date_;}
 
