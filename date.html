@@ -1741,7 +1741,7 @@ resolution of <code>seconds</code>.  <code>sys_seconds</code> is also widely kno
 as <a href="href="http://en.wikipedia.org/wiki/Unix_time"">Unix Time</a>.
 </p>
 <pre>
-using sys_days = sys_time&lt;std::chrono::seconds&gt;;
+using sys_seconds = sys_time&lt;std::chrono::seconds&gt;;
 </pre>
 </blockquote>
 
@@ -1769,7 +1769,7 @@ seconds), because they mean two <i>subtly</i> different things, and are both
 struct local_t {};
 
 template &lt;class Duration&gt;
-    using sys_time = std::chrono::time_point&lt;local_t, Duration&gt;;
+    using local_time = std::chrono::time_point&lt;local_t, Duration&gt;;
 </pre>
 </blockquote>
 
@@ -1809,7 +1809,14 @@ There exists a <code>constexpr</code> instance of <code>last_spec</code> named
 a month, or the last weekday of a month.
 </p>
 <pre>
-constexpr struct last_spec {} last{};
+struct last_spec
+{
+    explicit last_spec() = default;
+};
+inline namespace literals
+{
+constexpr last_spec last{};
+}
 </pre>
 </blockquote>
 
@@ -1849,8 +1856,11 @@ constexpr day  operator+(const days&amp; x, const day&amp;  y) noexcept;
 constexpr day  operator-(const day&amp;  x, const days&amp; y) noexcept;
 constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 
-constexpr day operator "" _d(unsigned long long d) noexcept;
 std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const day&amp; d);
+
+inline namespace literals {
+constexpr day operator "" _d(unsigned long long d) noexcept;
+}
 </pre>
 
 <p><b>Overview</b></p>
@@ -2149,6 +2159,7 @@ constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 
 std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month&amp; m);
 
+inline namespace literals {
 constexpr month jan{1};
 constexpr month feb{2};
 constexpr month mar{3};
@@ -2161,6 +2172,7 @@ constexpr month sep{9};
 constexpr month oct{10};
 constexpr month nov{11};
 constexpr month dec{12};
+}
 </pre>
 
 <p><b>Overview</b></p>
@@ -2479,8 +2491,10 @@ constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
 constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
 constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 
-constexpr year operator "" _y(unsigned long long y) noexcept;
 std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year&amp; y);
+inline namespace literals {
+constexpr year operator "" _y(unsigned long long y) noexcept;
+}
 </pre>
 
 <p><b>Overview</b></p>
@@ -2811,6 +2825,7 @@ constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept
 
 std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday&amp; wd);
 
+inline namespace literals {
 constexpr weekday sun{0};
 constexpr weekday mon{1};
 constexpr weekday tue{2};
@@ -2818,6 +2833,7 @@ constexpr weekday wed{3};
 constexpr weekday thu{4};
 constexpr weekday fri{5};
 constexpr weekday sat{6};
+}
 </pre>
 
 <p><b>Overview</b></p>
@@ -6982,7 +6998,6 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
 
 <a name="_46"></a><pre>
 template &lt;class Duration&gt;
-inline
 std::ostream&amp;
 operator&lt;&lt;(std::ostream&amp; os,
            const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp);
