@@ -1904,9 +1904,9 @@ operator<<(std::ostream& os, const time_zone& z)
     return os;
 }
 
-// Link
+// link
 
-Link::Link(const std::string& s)
+link::link(const std::string& s)
 {
     using namespace date;
     std::istringstream in(s);
@@ -1916,7 +1916,7 @@ Link::Link(const std::string& s)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Link& x)
+operator<<(std::ostream& os, const link& x)
 {
     using namespace date;
     detail::save_stream _(os);
@@ -2146,7 +2146,7 @@ init_tzdb()
                 }
                 else if (word == "Link")
                 {
-                    db.links.push_back(Link(line));
+                    db.links.push_back(link(line));
                     continue_zone = false;
                 }
                 else if (word == "Leap")
@@ -2230,7 +2230,7 @@ locate_zone(const std::string& tz_name)
     if (zi == db.zones.end() || zi->name() != tz_name)
     {
         auto li = std::lower_bound(db.links.begin(), db.links.end(), tz_name,
-        [](const Link& z, const std::string& nm)
+        [](const link& z, const std::string& nm)
         {
             return z.name() < nm;
         });

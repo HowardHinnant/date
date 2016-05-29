@@ -494,27 +494,27 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
 
-class Link
+class link
 {
 private:
     std::string name_;
     std::string target_;
 public:
-    explicit Link(const std::string& s);
+    explicit link(const std::string& s);
 
     const std::string& name() const {return name_;}
     const std::string& target() const {return target_;}
 
-    friend bool operator==(const Link& x, const Link& y) {return x.name_ == y.name_;}
-    friend bool operator< (const Link& x, const Link& y) {return x.name_ < y.name_;}
+    friend bool operator==(const link& x, const link& y) {return x.name_ == y.name_;}
+    friend bool operator< (const link& x, const link& y) {return x.name_ < y.name_;}
 
-    friend std::ostream& operator<<(std::ostream& os, const Link& x);
+    friend std::ostream& operator<<(std::ostream& os, const link& x);
 };
 
-inline bool operator!=(const Link& x, const Link& y) {return !(x == y);}
-inline bool operator> (const Link& x, const Link& y) {return   y < x;}
-inline bool operator<=(const Link& x, const Link& y) {return !(y < x);}
-inline bool operator>=(const Link& x, const Link& y) {return !(x < y);}
+inline bool operator!=(const link& x, const link& y) {return !(x == y);}
+inline bool operator> (const link& x, const link& y) {return   y < x;}
+inline bool operator<=(const link& x, const link& y) {return !(y < x);}
+inline bool operator>=(const link& x, const link& y) {return !(x < y);}
 
 class Leap
 {
@@ -682,7 +682,7 @@ struct TZ_DB
 {
     std::string            version;
     std::vector<time_zone> zones;
-    std::vector<Link>      links;
+    std::vector<link>      links;
     std::vector<Leap>      leaps;
     std::vector<Rule>      rules;
 #if TIMEZONE_MAPPING
