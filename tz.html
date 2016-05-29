@@ -65,7 +65,7 @@ Commons Attribution 4.0 International License</a>.
     <li><a href="#format"><code>format</code></a></li>
     <li><a href="#parse"><code>parse</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
-    <li><a href="#Leap"><code>Leap</code></a></li>
+    <li><a href="#leap"><code>leap</code></a></li>
     <li><a href="#link"><code>link</code></a></li>
     </ul>
 </li>
@@ -123,7 +123,7 @@ consolidate the specifications of Zones.
 link:  This is an alternative name for a Zone.
 </p></li>
 <li><p>
-Leap:  The date of the insertion of a leap second.
+leap:  The date of the insertion of a leap second.
 </p></li>
 </ol>
 
@@ -769,7 +769,7 @@ struct TZ_DB
     std::string            version;
     std::vector&lt;time_zone&gt; zones;
     std::vector&lt;link&gt;      links;
-    std::vector&lt;Leap&gt;      leaps;
+    std::vector&lt;leap&gt;      leaps;
     std::vector&lt;Rule&gt;      rules;
 };
 </pre>
@@ -2352,46 +2352,46 @@ Output:
 
 </blockquote>
 
-<a name="Leap"></a><h3><code>Leap</code></h3>
+<a name="leap"></a><h3><code>leap</code></h3>
 <blockquote>
 <pre>
-class Leap
+class leap
 {
 public:
-    Leap(const Leap&amp;)            = default;
-    Leap&amp; operator=(const Leap&amp;) = default;
+    leap(const leap&amp;)            = default;
+    leap&amp; operator=(const leap&amp;) = default;
     
     // Undocumented constructors
 
     sys_seconds date() const;
 };
 
-bool operator==(const Leap&amp; x, const Leap&amp; y);
-bool operator!=(const Leap&amp; x, const Leap&amp; y);
-bool operator&lt; (const Leap&amp; x, const Leap&amp; y);
-bool operator&gt; (const Leap&amp; x, const Leap&amp; y);
-bool operator&lt;=(const Leap&amp; x, const Leap&amp; y);
-bool operator&gt;=(const Leap&amp; x, const Leap&amp; y);
+bool operator==(const leap&amp; x, const leap&amp; y);
+bool operator!=(const leap&amp; x, const leap&amp; y);
+bool operator&lt; (const leap&amp; x, const leap&amp; y);
+bool operator&gt; (const leap&amp; x, const leap&amp; y);
+bool operator&lt;=(const leap&amp; x, const leap&amp; y);
+bool operator&gt;=(const leap&amp; x, const leap&amp; y);
 
-template &lt;class Duration&gt; bool operator==(const const Leap&amp;         x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator==(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
-template &lt;class Duration&gt; bool operator!=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator!=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
-template &lt;class Duration&gt; bool operator&lt; (const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator&lt; (const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
-template &lt;class Duration&gt; bool operator&gt; (const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator&gt; (const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
-template &lt;class Duration&gt; bool operator&lt;=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator&lt;=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
-template &lt;class Duration&gt; bool operator&gt;=(const Leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
-template &lt;class Duration&gt; bool operator&gt;=(const sys_time&lt;Duration&gt;&amp; x, const Leap&amp;               y);
+template &lt;class Duration&gt; bool operator==(const const leap&amp;         x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator==(const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
+template &lt;class Duration&gt; bool operator!=(const leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator!=(const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
+template &lt;class Duration&gt; bool operator&lt; (const leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&lt; (const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
+template &lt;class Duration&gt; bool operator&gt; (const leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&gt; (const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
+template &lt;class Duration&gt; bool operator&lt;=(const leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&lt;=(const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
+template &lt;class Duration&gt; bool operator&gt;=(const leap&amp;               x, const sys_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration&gt; bool operator&gt;=(const sys_time&lt;Duration&gt;&amp; x, const leap&amp;               y);
 </pre>
 
 <p>
-<code>Leap</code> is a copyable class that is constructed and stored in the time zone
+<code>leap</code> is a copyable class that is constructed and stored in the time zone
 database when initialized.  You can explicitly convert it to a <code>sys_seconds</code>
 with the member function <code>date()</code> and that will be the date of the leap second
-insertion.  <code>Leap</code> is equality and less-than comparable, both with itself, and
+insertion.  <code>leap</code> is equality and less-than comparable, both with itself, and
 with <code>sys_time&lt;Duration&gt;</code>.
 </p>
 </blockquote>
