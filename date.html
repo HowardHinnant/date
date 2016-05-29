@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-20<br/>
+2016-05-28<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -1612,16 +1612,16 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
 
 <tr><td>&nbsp;</td><td><a href="#_46">
 <pre>
-template &lt;class Duration&gt;
-std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
 </pre></a></td></tr>
 
 <tr><td>&nbsp;</td><td><a href="#_47">
 <pre>
-template &lt;class Duration&gt;
-std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const local_time&lt;Duration&gt;&amp; tp);
 </pre></a></td></tr>
 
 </table>
@@ -1856,7 +1856,9 @@ constexpr day  operator+(const days&amp; x, const day&amp;  y) noexcept;
 constexpr day  operator-(const day&amp;  x, const days&amp; y) noexcept;
 constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const day&amp; d);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const day&amp; d);
 
 inline namespace literals {
 constexpr day operator "" _d(unsigned long long d) noexcept;
@@ -2106,7 +2108,9 @@ constexpr day operator "" _d(unsigned long long d) noexcept;
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const day&amp; d);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const day&amp; d);
 </pre>
 
 <blockquote>
@@ -2157,7 +2161,9 @@ constexpr month  operator+(const months&amp; x,  const month&amp; y) noexcept;
 constexpr month  operator-(const month&amp;  x, const months&amp; y) noexcept;
 constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month&amp; m);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month&amp; m);
 
 inline namespace literals {
 constexpr month jan{1};
@@ -2434,7 +2440,9 @@ constexpr months operator-(const month&amp;  x, const month&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month&amp; m);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month&amp; m);
 </pre>
 
 <blockquote>
@@ -2491,7 +2499,10 @@ constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
 constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
 constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year&amp; y);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year&amp; y);
+
 inline namespace literals {
 constexpr year operator "" _y(unsigned long long y) noexcept;
 }
@@ -2771,7 +2782,9 @@ constexpr year operator "" _y(unsigned long long y) noexcept;
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year&amp; y);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year&amp; y);
 </pre>
 
 <blockquote>
@@ -2823,7 +2836,9 @@ constexpr weekday operator+(const days&amp;    x, const weekday&amp; y) noexcept
 constexpr weekday operator-(const weekday&amp; x, const days&amp;    y) noexcept;
 constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday&amp; wd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday&amp; wd);
 
 inline namespace literals {
 constexpr weekday sun{0};
@@ -3122,7 +3137,9 @@ constexpr days operator-(const weekday&amp;  x, const weekday&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday&amp; wd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday&amp; wd);
 </pre>
 
 <blockquote>
@@ -3160,7 +3177,9 @@ public:
 constexpr bool operator==(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday_indexed&amp; wdi);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3255,7 +3274,9 @@ constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&am
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday_indexed&amp; wdi);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 </pre>
 
 <blockquote>
@@ -3290,7 +3311,9 @@ public:
 constexpr bool operator==(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday_last&amp; wdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_last&amp; wdl);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3373,7 +3396,9 @@ constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) 
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const weekday_last&amp; wdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_last&amp; wdl);
 </pre>
 
 <blockquote>
@@ -3414,7 +3439,9 @@ constexpr bool operator&gt; (const month_day&amp; x, const month_day&amp; y) noe
 constexpr bool operator&lt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_day&amp; md);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day&amp; md);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3542,7 +3569,9 @@ constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noe
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_day&amp; md);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day&amp; md);
 </pre>
 
 <blockquote>
@@ -3581,7 +3610,9 @@ constexpr bool operator&gt; (const month_day_last&amp; x, const month_day_last&a
 constexpr bool operator&lt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_day_last&amp; mdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day_last&amp; mdl);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3705,7 +3736,9 @@ constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&a
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_day_last&amp; mdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day_last&amp; mdl);
 </pre>
 
 <blockquote>
@@ -3741,7 +3774,9 @@ public:
 constexpr bool operator==(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_weekday&amp; mwd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday&amp; mwd);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3822,7 +3857,9 @@ constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_weekday&amp; mwd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday&amp; mwd);
 </pre>
 
 <blockquote>
@@ -3859,7 +3896,9 @@ public:
 constexpr bool operator==(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_weekday_last&amp; mwdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3942,7 +3981,9 @@ constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_l
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const month_weekday_last&amp; mwdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 </pre>
 
 <blockquote>
@@ -3997,7 +4038,9 @@ constexpr year_month operator+(const year_month&amp; ym, const years&amp; dy) no
 constexpr year_month operator+(const years&amp; dy, const year_month&amp; ym) noexcept;
 constexpr year_month operator-(const year_month&amp; ym, const years&amp; dy) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month&amp; ym);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month&amp; ym);
 </pre>
 
 <p><b>Overview</b></p>
@@ -4250,7 +4293,9 @@ constexpr year_month operator-(const year_month& ym, const years& dy) noexcept;
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month&amp; ym);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month&amp; ym);
 </pre>
 
 <blockquote>
@@ -4311,7 +4356,9 @@ constexpr year_month_day operator+(const years&amp; dy, const year_month_day&amp
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const months&amp; dm) noexcept;
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&amp; dy) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_day&amp; ymd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day&amp; ymd);
 </pre>
 
 <p><b>Overview</b></p>
@@ -4665,7 +4712,9 @@ constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&am
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_day&amp; ymd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day&amp; ymd);
 </pre>
 
 <blockquote>
@@ -4724,7 +4773,9 @@ constexpr year_month_day_last operator+(const years&amp; dy, const year_month_da
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const months&amp; dm) noexcept;
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const years&amp; dy) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_day_last&amp; ymdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 </pre>
 
 <p><b>Overview</b></p>
@@ -5030,7 +5081,9 @@ constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, con
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_day_last&amp; ymdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 </pre>
 
 <blockquote>
@@ -5089,7 +5142,9 @@ constexpr year_month_weekday operator+(const years&amp; dy, const year_month_wee
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const months&amp; dm) noexcept;
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const years&amp; dy) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekday&amp; ymwdi);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
 </pre>
 
 <p><b>Overview</b></p>
@@ -5393,7 +5448,9 @@ constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekday&amp; ymwd);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday&amp; ymwd);
 </pre>
 
 <blockquote>
@@ -5471,7 +5528,9 @@ constexpr
 year_month_weekday_last
 operator-(const year_month_weekday_last&amp; ymwdl, const years&amp; dy) noexcept;
 
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekday_last&amp; ymwdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 </pre>
 
 <p><b>Overview</b></p>
@@ -5734,7 +5793,9 @@ constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; y
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const year_month_weekday_last&amp; ymwdl);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 </pre>
 
 <blockquote>
@@ -6367,7 +6428,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_of_day&lt;std::chrono::hours&gt;&amp; t);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;std::chrono::hours&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6526,7 +6589,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_of_day&lt;std::chrono::minutes&gt;&amp; t);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;std::chrono::minutes&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6700,7 +6765,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_of_day&lt;std::chrono::seconds&gt;&amp; t);
+template&lt;class CharT, class Traits&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;std::chrono::seconds&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6896,7 +6963,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;&amp; t);
+template&lt;class CharT, class Traits, class Rep, class Period&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6997,9 +7066,9 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
 </blockquote>
 
 <a name="_46"></a><pre>
-template &lt;class Duration&gt;
-std::ostream&amp;
-operator&lt;&lt;(std::ostream&amp; os,
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os,
            const std::chrono::time_point&lt;std::chrono::system_clock, Duration&gt;&amp; tp);
 </pre>
 
