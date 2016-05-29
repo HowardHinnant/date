@@ -66,7 +66,7 @@ Commons Attribution 4.0 International License</a>.
     <li><a href="#parse"><code>parse</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
     <li><a href="#Leap"><code>Leap</code></a></li>
-    <li><a href="#Link"><code>Link</code></a></li>
+    <li><a href="#link"><code>link</code></a></li>
     </ul>
 </li>
 <li><a href="#Installation">Installation</a></li>
@@ -120,7 +120,7 @@ Rule:  A specification for a single daylight-saving rule.  This helps implement 
 consolidate the specifications of Zones.
 </p></li>
 <li><p>
-Link:  This is an alternative name for a Zone.
+link:  This is an alternative name for a Zone.
 </p></li>
 <li><p>
 Leap:  The date of the insertion of a leap second.
@@ -768,7 +768,7 @@ struct TZ_DB
 {
     std::string            version;
     std::vector&lt;time_zone&gt; zones;
-    std::vector&lt;Link&gt;      links;
+    std::vector&lt;link&gt;      links;
     std::vector&lt;Leap&gt;      leaps;
     std::vector&lt;Rule&gt;      rules;
 };
@@ -840,9 +840,9 @@ database if this is the first reference to the database.
 <p>
 <i>Returns:</i> If a <code>time_zone</code> is found for which
 <code>name() == tz_name</code>, returns a pointer to that <code>time_zone</code>.
-Otherwise if a <code>Link</code> is found where <code>tz_name == link.name()</code>,
+Otherwise if a <code>link</code> is found where <code>tz_name == link.name()</code>,
 then a pointer is returned to the <code>time_zone</code> for which
-<code>zone.name() == link.target()</code> [<i>Note:</i> A <code>Link</code> is an
+<code>zone.name() == link.target()</code> [<i>Note:</i> A <code>link</code> is an
 alternative name for a <code>time_zone</code>. <i>&mdash; end note</i>]
 </p>
 <p>
@@ -2396,14 +2396,14 @@ with <code>sys_time&lt;Duration&gt;</code>.
 </p>
 </blockquote>
 
-<a name="Link"></a><h3><code>Link</code></h3>
+<a name="link"></a><h3><code>link</code></h3>
 <blockquote>
 <pre>
-class Link
+class link
 {
 public:
-    Link(const Link&amp;)            = default;
-    Link&amp; operator=(const Link&amp;) = default;
+    link(const link&amp;)            = default;
+    link&amp; operator=(const link&amp;) = default;
 
     // Undocumented constructors
 
@@ -2411,17 +2411,17 @@ public:
     const std::string&amp; target() const;
 };
 
-bool operator==(const Link&amp; x, const Link&amp; y);
-bool operator!=(const Link&amp; x, const Link&amp; y);
-bool operator&lt; (const Link&amp; x, const Link&amp; y);
-bool operator&gt; (const Link&amp; x, const Link&amp; y);
-bool operator&lt;=(const Link&amp; x, const Link&amp; y);
-bool operator&gt;=(const Link&amp; x, const Link&amp; y);
+bool operator==(const link&amp; x, const link&amp; y);
+bool operator!=(const link&amp; x, const link&amp; y);
+bool operator&lt; (const link&amp; x, const link&amp; y);
+bool operator&gt; (const link&amp; x, const link&amp; y);
+bool operator&lt;=(const link&amp; x, const link&amp; y);
+bool operator&gt;=(const link&amp; x, const link&amp; y);
 </pre>
 <p>
-A <code>Link</code> is an alternative name for a <code>time_zone</code>.  The alternative
+A <code>link</code> is an alternative name for a <code>time_zone</code>.  The alternative
 name is <code>name()</code>.  The name of the <code>time_zone</code> for which this is
-an alternative name is <code>target()</code>.  <code>Link</code>s will be constructed
+an alternative name is <code>target()</code>.  <code>link</code>s will be constructed
 for you when the time zone database is initialized.
 </p>
 </blockquote>
