@@ -516,23 +516,23 @@ inline bool operator> (const link& x, const link& y) {return   y < x;}
 inline bool operator<=(const link& x, const link& y) {return !(y < x);}
 inline bool operator>=(const link& x, const link& y) {return !(x < y);}
 
-class Leap
+class leap
 {
 private:
     sys_seconds date_;
 
 public:
-    explicit Leap(const std::string& s, detail::undocumented);
+    explicit leap(const std::string& s, detail::undocumented);
 
     sys_seconds date() const {return date_;}
 
-    friend bool operator==(const Leap& x, const Leap& y) {return x.date_ == y.date_;}
-    friend bool operator< (const Leap& x, const Leap& y) {return x.date_ < y.date_;}
+    friend bool operator==(const leap& x, const leap& y) {return x.date_ == y.date_;}
+    friend bool operator< (const leap& x, const leap& y) {return x.date_ < y.date_;}
 
     template <class Duration>
     friend
     bool
-    operator==(const Leap& x, const sys_time<Duration>& y)
+    operator==(const leap& x, const sys_time<Duration>& y)
     {
         return x.date_ == y;
     }
@@ -540,7 +540,7 @@ public:
     template <class Duration>
     friend
     bool
-    operator< (const Leap& x, const sys_time<Duration>& y)
+    operator< (const leap& x, const sys_time<Duration>& y)
     {
         return x.date_ < y;
     }
@@ -548,23 +548,23 @@ public:
     template <class Duration>
     friend
     bool
-    operator< (const sys_time<Duration>& x, const Leap& y)
+    operator< (const sys_time<Duration>& x, const leap& y)
     {
         return x < y.date_;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Leap& x);
+    friend std::ostream& operator<<(std::ostream& os, const leap& x);
 };
 
-inline bool operator!=(const Leap& x, const Leap& y) {return !(x == y);}
-inline bool operator> (const Leap& x, const Leap& y) {return   y < x;}
-inline bool operator<=(const Leap& x, const Leap& y) {return !(y < x);}
-inline bool operator>=(const Leap& x, const Leap& y) {return !(x < y);}
+inline bool operator!=(const leap& x, const leap& y) {return !(x == y);}
+inline bool operator> (const leap& x, const leap& y) {return   y < x;}
+inline bool operator<=(const leap& x, const leap& y) {return !(y < x);}
+inline bool operator>=(const leap& x, const leap& y) {return !(x < y);}
 
 template <class Duration>
 inline
 bool
-operator==(const sys_time<Duration>& x, const Leap& y)
+operator==(const sys_time<Duration>& x, const leap& y)
 {
     return y == x;
 }
@@ -572,7 +572,7 @@ operator==(const sys_time<Duration>& x, const Leap& y)
 template <class Duration>
 inline
 bool
-operator!=(const Leap& x, const sys_time<Duration>& y)
+operator!=(const leap& x, const sys_time<Duration>& y)
 {
     return !(x == y);
 }
@@ -580,7 +580,7 @@ operator!=(const Leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator!=(const sys_time<Duration>& x, const Leap& y)
+operator!=(const sys_time<Duration>& x, const leap& y)
 {
     return !(x == y);
 }
@@ -588,7 +588,7 @@ operator!=(const sys_time<Duration>& x, const Leap& y)
 template <class Duration>
 inline
 bool
-operator> (const Leap& x, const sys_time<Duration>& y)
+operator> (const leap& x, const sys_time<Duration>& y)
 {
     return y < x;
 }
@@ -596,7 +596,7 @@ operator> (const Leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator> (const sys_time<Duration>& x, const Leap& y)
+operator> (const sys_time<Duration>& x, const leap& y)
 {
     return y < x;
 }
@@ -604,7 +604,7 @@ operator> (const sys_time<Duration>& x, const Leap& y)
 template <class Duration>
 inline
 bool
-operator<=(const Leap& x, const sys_time<Duration>& y)
+operator<=(const leap& x, const sys_time<Duration>& y)
 {
     return !(y < x);
 }
@@ -612,7 +612,7 @@ operator<=(const Leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator<=(const sys_time<Duration>& x, const Leap& y)
+operator<=(const sys_time<Duration>& x, const leap& y)
 {
     return !(y < x);
 }
@@ -620,7 +620,7 @@ operator<=(const sys_time<Duration>& x, const Leap& y)
 template <class Duration>
 inline
 bool
-operator>=(const Leap& x, const sys_time<Duration>& y)
+operator>=(const leap& x, const sys_time<Duration>& y)
 {
     return !(x < y);
 }
@@ -628,7 +628,7 @@ operator>=(const Leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator>=(const sys_time<Duration>& x, const Leap& y)
+operator>=(const sys_time<Duration>& x, const leap& y)
 {
     return !(x < y);
 }
@@ -683,7 +683,7 @@ struct TZ_DB
     std::string            version;
     std::vector<time_zone> zones;
     std::vector<link>      links;
-    std::vector<Leap>      leaps;
+    std::vector<leap>      leaps;
     std::vector<Rule>      rules;
 #if TIMEZONE_MAPPING
     // TODO! These need some protection.

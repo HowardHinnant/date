@@ -1926,9 +1926,9 @@ operator<<(std::ostream& os, const link& x)
     return os << x.name_ << " --> " << x.target_;
 }
 
-// Leap
+// leap
 
-Leap::Leap(const std::string& s, detail::undocumented)
+leap::leap(const std::string& s, detail::undocumented)
 {
     using namespace date;
     std::istringstream in(s);
@@ -1941,7 +1941,7 @@ Leap::Leap(const std::string& s, detail::undocumented)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Leap& x)
+operator<<(std::ostream& os, const leap& x)
 {
     using namespace date;
     return os << x.date_ << "  +";
@@ -2151,7 +2151,7 @@ init_tzdb()
                 }
                 else if (word == "Leap")
                 {
-                    db.leaps.push_back(Leap(line, detail::undocumented{}));
+                    db.leaps.push_back(leap(line, detail::undocumented{}));
                     continue_zone = false;
                 }
                 else if (word == "Zone")
