@@ -1034,7 +1034,7 @@ operator<<(std::ostream& os, const Rule& r)
 {
     using namespace date;
     using namespace std::chrono;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(15);
@@ -1853,7 +1853,7 @@ operator<<(std::ostream& os, const time_zone& z)
 {
     using namespace date;
     using namespace std::chrono;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
 #if LAZY_INIT
@@ -1919,7 +1919,7 @@ std::ostream&
 operator<<(std::ostream& os, const link& x)
 {
     using namespace date;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(35);

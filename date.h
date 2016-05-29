@@ -247,7 +247,9 @@ CONSTCD11 day  operator+(const days& x, const day&  y) NOEXCEPT;
 CONSTCD11 day  operator-(const day&  x, const days& y) NOEXCEPT;
 CONSTCD11 days operator-(const day&  x, const day&  y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const day& d);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const day& d);
 
 // month
 
@@ -282,7 +284,9 @@ CONSTCD14 month  operator+(const months& x,  const month& y) NOEXCEPT;
 CONSTCD14 month  operator-(const month&  x, const months& y) NOEXCEPT;
 CONSTCD14 months operator-(const month&  x,  const month& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const month& m);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month& m);
 
 // year
 
@@ -322,7 +326,9 @@ CONSTCD11 year  operator+(const years& x, const year&  y) NOEXCEPT;
 CONSTCD11 year  operator-(const year&  x, const years& y) NOEXCEPT;
 CONSTCD11 years operator-(const year&  x, const year&  y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year& y);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year& y);
 
 // weekday
 
@@ -361,7 +367,9 @@ CONSTCD14 weekday operator+(const days&    x, const weekday& y) NOEXCEPT;
 CONSTCD14 weekday operator-(const weekday& x, const days&    y) NOEXCEPT;
 CONSTCD14 days    operator-(const weekday& x, const weekday& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weekday& wd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd);
 
 // weekday_indexed
 
@@ -381,7 +389,9 @@ public:
 CONSTCD11 bool operator==(const weekday_indexed& x, const weekday_indexed& y) NOEXCEPT;
 CONSTCD11 bool operator!=(const weekday_indexed& x, const weekday_indexed& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weekday_indexed& wdi);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi);
 
 // weekday_last
 
@@ -399,7 +409,9 @@ public:
 CONSTCD11 bool operator==(const weekday_last& x, const weekday_last& y) NOEXCEPT;
 CONSTCD11 bool operator!=(const weekday_last& x, const weekday_last& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weekday_last& wdl);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_last& wdl);
 
 // year_month
 
@@ -438,7 +450,9 @@ CONSTCD11 year_month operator+(const year_month& ym, const years& dy) NOEXCEPT;
 CONSTCD11 year_month operator+(const years& dy, const year_month& ym) NOEXCEPT;
 CONSTCD11 year_month operator-(const year_month& ym, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_month& ym);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month& ym);
 
 // month_day
 
@@ -463,7 +477,9 @@ CONSTCD11 bool operator> (const month_day& x, const month_day& y) NOEXCEPT;
 CONSTCD11 bool operator<=(const month_day& x, const month_day& y) NOEXCEPT;
 CONSTCD11 bool operator>=(const month_day& x, const month_day& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const month_day& md);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_day& md);
 
 // month_day_last
 
@@ -485,7 +501,9 @@ CONSTCD11 bool operator> (const month_day_last& x, const month_day_last& y) NOEX
 CONSTCD11 bool operator<=(const month_day_last& x, const month_day_last& y) NOEXCEPT;
 CONSTCD11 bool operator>=(const month_day_last& x, const month_day_last& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const month_day_last& mdl);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl);
 
 // month_weekday
 
@@ -506,7 +524,9 @@ public:
 CONSTCD11 bool operator==(const month_weekday& x, const month_weekday& y) NOEXCEPT;
 CONSTCD11 bool operator!=(const month_weekday& x, const month_weekday& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const month_weekday& mwd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd);
 
 // month_weekday_last
 
@@ -530,7 +550,9 @@ CONSTCD11
 CONSTCD11
     bool operator!=(const month_weekday_last& x, const month_weekday_last& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const month_weekday_last& mwdl);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl);
 
 // class year_month_day
 
@@ -580,7 +602,9 @@ CONSTCD11 year_month_day operator+(const year_month_day& ymd, const years& dy)  
 CONSTCD11 year_month_day operator+(const years& dy, const year_month_day& ymd)  NOEXCEPT;
 CONSTCD11 year_month_day operator-(const year_month_day& ymd, const years& dy)  NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_month_day& ymd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd);
 
 // year_month_day_last
 
@@ -645,7 +669,9 @@ CONSTCD11
 year_month_day_last
 operator-(const year_month_day_last& ymdl, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_month_day_last& ymdl);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymdl);
 
 // year_month_weekday
 
@@ -710,7 +736,9 @@ CONSTCD11
 year_month_weekday
 operator-(const year_month_weekday& ymwd, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_month_weekday& ymwdi);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday& ymwdi);
 
 // year_month_weekday_last
 
@@ -774,7 +802,9 @@ CONSTCD11
 year_month_weekday_last
 operator-(const year_month_weekday_last& ymwdl, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_month_weekday_last& ymwdl);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last& ymwdl);
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 inline namespace literals
@@ -814,10 +844,11 @@ CONSTCD11 date::year operator "" _y(unsigned long long y) NOEXCEPT;
 // utilities
 namespace detail {
 
+template<class CharT, class Traits = std::char_traits<CharT>>
 class save_stream
 {
-    std::ostream& os_;
-    char fill_;
+    std::basic_ostream<CharT, Traits>& os_;
+    CharT fill_;
     std::ios::fmtflags flags_;
     std::locale loc_;
 
@@ -832,7 +863,7 @@ public:
     save_stream(const save_stream&) = delete;
     save_stream& operator=(const save_stream&) = delete;
 
-    explicit save_stream(std::ostream& os)
+    explicit save_stream(std::basic_ostream<CharT, Traits>& os)
         : os_(os)
         , fill_(os.fill())
         , flags_(os.flags())
@@ -1133,11 +1164,12 @@ operator-(const day& x, const days& y) NOEXCEPT
     return x + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const day& d)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
 {
-    detail::save_stream _(os);
+    detail::save_stream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os.width(2);
@@ -1255,9 +1287,10 @@ operator-(const month& x, const months& y) NOEXCEPT
     return x + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const month& m)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
 {
     switch (static_cast<unsigned>(m))
     {
@@ -1421,11 +1454,12 @@ operator-(const year& x, const years& y) NOEXCEPT
     return year{static_cast<int>(x) - y.count()};
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year& y)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 {
-    detail::save_stream _(os);
+    detail::save_stream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
@@ -1543,9 +1577,10 @@ operator-(const weekday& x, const days& y) NOEXCEPT
     return x + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weekday& wd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
 {
     switch (static_cast<unsigned>(wd))
     {
@@ -1652,9 +1687,10 @@ weekday_indexed::weekday_indexed(const date::weekday& wd, unsigned index) NOEXCE
     , index_(static_cast<decltype(index_)>(index))
     {}
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weekday_indexed& wdi)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi)
 {
     return os << wdi.weekday() << '[' << wdi.index() << ']';
 }
@@ -1705,9 +1741,10 @@ operator!=(const weekday_last& x, const weekday_last& y) NOEXCEPT
     return !(x == y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weekday_last& wdl)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_last& wdl)
 {
     return os << wdl.weekday() << "[last]";
 }
@@ -1875,9 +1912,10 @@ operator-(const year_month& ym, const years& dy) NOEXCEPT
     return ym + -dy;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_month& ym)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month& ym)
 {
     return os << ym.year() << '/' << ym.month();
 }
@@ -1959,9 +1997,10 @@ operator>=(const month_day& x, const month_day& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const month_day& md)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_day& md)
 {
     return os << md.month() << '/' << md.day();
 }
@@ -2020,9 +2059,10 @@ operator>=(const month_day_last& x, const month_day_last& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const month_day_last& mdl)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl)
 {
     return os << mdl.month() << "/last";
 }
@@ -2071,9 +2111,10 @@ operator!=(const month_weekday& x, const month_weekday& y) NOEXCEPT
     return !(x == y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const month_weekday& mwd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd)
 {
     return os << mwd.month() << '/' << mwd.weekday_indexed();
 }
@@ -2122,9 +2163,10 @@ operator!=(const month_weekday_last& x, const month_weekday_last& y) NOEXCEPT
     return !(x == y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const month_weekday_last& mwdl)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl)
 {
     return os << mwdl.month() << '/' << mwdl.weekday_last();
 }
@@ -2270,9 +2312,10 @@ operator>=(const year_month_day_last& x, const year_month_day_last& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_month_day_last& ymdl)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymdl)
 {
     return os << ymdl.year() << '/' << ymdl.month_day_last();
 }
@@ -2487,11 +2530,12 @@ operator>=(const year_month_day& x, const year_month_day& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_month_day& ymd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
 {
-    detail::save_stream _(os);
+    detail::save_stream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os << ymd.year() << '-';
@@ -2718,9 +2762,10 @@ operator!=(const year_month_weekday& x, const year_month_weekday& y) NOEXCEPT
     return !(x == y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_month_weekday& ymwdi)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday& ymwdi)
 {
     return os << ymwdi.year() << '/' << ymwdi.month()
               << '/' << ymwdi.weekday_indexed();
@@ -2885,9 +2930,10 @@ operator!=(const year_month_weekday_last& x, const year_month_weekday_last& y) N
     return !(x == y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_month_weekday_last& ymwdl)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last& ymwdl)
 {
     return os << ymwdl.year() << '/' << ymwdl.month() << '/' << ymwdl.weekday_last();
 }
@@ -3435,12 +3481,13 @@ public:
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
 
+    template<class CharT, class Traits>
     friend
-    std::ostream&
-    operator<<(std::ostream& os, const time_of_day_storage& t)
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream _(os);
+        detail::save_stream<CharT, Traits> _(os);
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
@@ -3501,12 +3548,13 @@ public:
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
 
+    template<class CharT, class Traits>
     friend
-    std::ostream&
-    operator<<(std::ostream& os, const time_of_day_storage& t)
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream _(os);
+        detail::save_stream<CharT, Traits> _(os);
         if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
@@ -3572,12 +3620,13 @@ public:
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
 
+    template<class CharT, class Traits>
     friend
-    std::ostream&
-    operator<<(std::ostream& os, const time_of_day_storage& t)
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream _(os);
+        detail::save_stream<CharT, Traits> _(os);
         if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
@@ -3652,12 +3701,13 @@ public:
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
 
+    template<class CharT, class Traits>
     friend
-    std::ostream&
-    operator<<(std::ostream& os, const time_of_day_storage& t)
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream _(os);
+        detail::save_stream<CharT, Traits> _(os);
         if (static_cast<precision>(t) < std::chrono::hours{0})
             os << '-';
         os.fill('0');
@@ -3808,31 +3858,32 @@ make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
     return time_of_day<std::chrono::duration<Rep, Period>>(h, m, s, sub_s, md);
 }
 
-template <class Duration>
+template <class CharT, class Traits, class Duration>
 inline
 typename std::enable_if
 <
     !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
         std::ratio_less<typename Duration::period, days::period>::value
-    , std::ostream&
+    , std::basic_ostream<CharT, Traits>&
 >::type
-operator<<(std::ostream& os, const sys_time<Duration>& tp)
+operator<<(std::basic_ostream<CharT, Traits>& os, const sys_time<Duration>& tp)
 {
     auto const dp = floor<days>(tp);
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
 }
 
+template <class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const sys_days& dp)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const sys_days& dp)
 {
     return os << year_month_day(dp);
 }
 
-template <class Duration>
+template <class CharT, class Traits, class Duration>
 inline
-std::ostream&
-operator<<(std::ostream& os, const local_time<Duration>& ut)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut)
 {
     return os << sys_time<Duration>{ut.time_since_epoch()};
 }
