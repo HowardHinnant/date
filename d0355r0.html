@@ -31,7 +31,7 @@
 Document number: D0355R0<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-29<br/>
+2016-05-30<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -75,12 +75,12 @@ main()
 <p>
 The above example creates a date in the Gregorian calendar (proposed) with the
 literal <code>2016y/may/29</code>.  The meaning of this literal is without
-question.  It is clearly readable.  This proposal has no knowledge whatsoever of
-the Coptic calendar. However it is relatively easy to create a Coptic calendar
-(which knows nothing about the Gregorian calendar), which will convert to and
-from the Gregorian calendar.  This is done by establishing a clear and simple
-communication channel between calendar systems and the
-<code>&lt;chrono&gt;</code> library (specifically a
+question.  It is conventional and clearly readable.  This proposal has no
+knowledge whatsoever of the Coptic calendar. However it is relatively easy to
+create a Coptic calendar (which knows nothing about the Gregorian calendar),
+which will convert to and from the Gregorian calendar.  This is done by
+establishing a clear and simple communication channel between calendar systems
+and the <code>&lt;chrono&gt;</code> library (specifically a
 <code>system_clock::time_point</code> with a a precision of days). 
 </p>
 
@@ -314,7 +314,7 @@ static_assert(ymd == sun[5]/may/2016);
 The literal <code>sun[5]/may/2016</code> means "the 5th Sunday of May in 2016." 
 The <i>conventional</i> syntax is remarkably readable.  Constructor syntax is
 also available to do the same thing.  The type constructed is
-<code>year_month_weekday</code> which does nothing, but store a
+<code>year_month_weekday</code> which does nothing but store a
 <code>year</code>, <code>month</code>, <code>weekday</code>, and the number 5. 
 This "auxiliary calendar" converts to and from <code>sys_days</code> just like
 <code>year_month_day</code> as demonstrated above.  As such,
@@ -388,7 +388,7 @@ by default, you see the full precision of the <code>zoned_time</code>.
 <p>
 Sometimes, instead of specifying the time in UTC as above, it is convenient to specify
 the time in terms of the local time of the time zone.  It is very easy to change the
-above example to mean 7:30 JST instead of 16:30 JST:
+above example to mean 7:30 JST instead of 7:30 UTC:
 </p>
 
 <blockquote><pre>
@@ -464,6 +464,78 @@ Or perhaps properly localized:
 cout &lt;&lt; format(locale{"fi_FI"}, "%c", make_zoned("Europe/Helsinki", zt)) &lt;&lt; '\n';
 // Ti 21 Kes 16:00:00 2016
 </pre></blockquote>
+
+<p>
+Wait, slow down, this is too much information!  Let's start at the beginning.
+How do I get the current time?
+</p>
+
+<blockquote><pre>
+cout &lt;&lt; system_clock::now() &lt;&lt; " UTC\n";
+// 2016-05-30 17:57:30.694574 UTC
+</pre></blockquote>
+
+<p>
+My current local time?
+</p>
+
+<blockquote><pre>
+cout &lt;&lt; make_zoned(current_zone(), system_clock::now()) &lt;&lt; '\n';
+// 2016-05-30 13:57:30.694574 EDT
+</pre></blockquote>
+
+<p>
+Current time in Budapest?
+</p>
+
+<blockquote><pre>
+cout &lt;&lt; make_zoned("Europe/Budapest", system_clock::now()) &lt;&lt; '\n';
+// 2016-05-30 19:57:30.694574 CEST
+</pre></blockquote>
+
+<p>
+For more documentation about the calendar portion of this proposal, including more
+details, more examples, and performance analyses, please see:
+</p>
+
+<blockquote>
+<a href="http://howardhinnant.github.io/date/date.html">http://howardhinnant.github.io/date/date.html</a>
+</blockquote>
+
+<p>
+For a video introduction to the calendar portion, please see:
+</p>
+
+<blockquote>
+<a href="https://www.youtube.com/watch?v=tzyGjOm8AKo">https://www.youtube.com/watch?v=tzyGjOm8AKo</a>
+</blockquote>
+
+<p>
+For more documentation about the time zone portion of this proposal, including more
+details, and more examples, please see:
+</p>
+
+<blockquote>
+<a href="http://howardhinnant.github.io/date/tz.html">http://howardhinnant.github.io/date/tz.html</a>
+</blockquote>
+
+<p>
+For more examples, some of which are written by users of this library, please see:
+</p>
+
+<blockquote>
+<a href="https://github.com/HowardHinnant/date/wiki/Examples-and-Recipes">https://github.com/HowardHinnant/date/wiki/Examples-and-Recipes</a>
+</blockquote>
+
+<p>
+For another example calendar which models the
+<a href="https://en.wikipedia.org/wiki/ISO_week_date">ISO week-based calendar</a>,
+please see:
+</p>
+
+<blockquote>
+<a href="http://howardhinnant.github.io/date/iso_week.html">http://howardhinnant.github.io/date/iso_week.html</a>
+</blockquote>
 
 <a name="Wording"></a><h2>Proposed Wording</h2>
 
