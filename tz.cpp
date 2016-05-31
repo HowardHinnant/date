@@ -708,7 +708,8 @@ MonthDayTime::to_sys_days(date::year y) const
 sys_seconds
 MonthDayTime::to_time_point(date::year y) const
 {
-    return to_sys_days(y) + h_ + m_ + s_;
+    // Add seconds first to promote to largest rep early to prevent overflow
+    return to_sys_days(y) + s_ + h_ + m_;
 }
 
 void
@@ -871,7 +872,7 @@ operator<<(std::ostream& os, const MonthDayTime& x)
         }
         break;
     }
-    os << date::make_time(x.h_ + x.m_ + x.s_);
+    os << date::make_time(x.s_ + x.h_ + x.m_);
     if (x.zone_ == tz::utc)
         os << "UTC   ";
     else if (x.zone_ == tz::standard)

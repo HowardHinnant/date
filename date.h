@@ -3633,7 +3633,7 @@ public:
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr() + m_ + s_;
+        return to24hr() + s_ + m_;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
@@ -3714,7 +3714,7 @@ public:
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr() + m_ + s_ + sub_s_;
+        return to24hr() + s_ + sub_s_ + m_;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
