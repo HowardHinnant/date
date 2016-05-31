@@ -1,18 +1,18 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -233,7 +233,7 @@ namespace // Put types in an anonymous name space.
 
         // WARNING: this function has a hard-coded value size limit.
         // It is not a general-purpose function.
-        // It should be sufficient for our use cases. 
+        // It should be sufficient for our use cases.
         // The function could be made workable for any size string
         // but we don't need the complexity of implementing that
         // for our meagre purposes right now.
@@ -292,13 +292,13 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
 
     // Open the parent time zone key that has the list of timezones in.
     reg_key zones_key;
-    static const wchar_t zones_key_name[] = 
+    static const wchar_t zones_key_name[] =
     { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
     result = zones_key.open(zones_key_name);
     // TODO! Review if this should happen here or be signalled later.
     // We don't want the process to fail on startup because of this.
     if (result != ERROR_SUCCESS)
-        throw std::runtime_error("Time Zone registry key could not be opened: " 
+        throw std::runtime_error("Time Zone registry key could not be opened: "
         + get_win32_message(result));
 
     DWORD size;
@@ -316,7 +316,7 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
         auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
             nullptr, nullptr, nullptr, nullptr);
         if (status != ERROR_SUCCESS && status != ERROR_NO_MORE_ITEMS)
-            throw std::runtime_error("Can't enumerate time zone registry key" 
+            throw std::runtime_error("Can't enumerate time zone registry key"
             + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
@@ -410,7 +410,7 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     std::string copyright;
     for (int i = 0; i < 4; ++i)
         getline(is, copyright);
-    
+
     for (;;)
     {
         detail::timezone_mapping zm{};
@@ -444,7 +444,7 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
 }
 
 static bool
-native_to_standard_timezone_name(const std::string& native_tz_name, 
+native_to_standard_timezone_name(const std::string& native_tz_name,
                                  std::string& standard_tz_name)
 {
     // TOOD! Need be a case insensitive compare?
@@ -1808,7 +1808,7 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
             return timezone == tz::utc ? t < zl.until_utc_ :
                                          t < sys_seconds{zl.until_loc_.time_since_epoch()};
         });
-    
+
     sys_info r{};
     if (i != zonelets_.end())
     {
@@ -2365,7 +2365,7 @@ current_zone()
     if (tz_result == TIME_ZONE_ID_INVALID)
     {
         auto error_code = ::GetLastError(); // Store this quick before it gets overwritten.
-        throw std::runtime_error("GetTimeZoneInformation failed: " 
+        throw std::runtime_error("GetTimeZoneInformation failed: "
             + get_win32_message(error_code));
     }
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

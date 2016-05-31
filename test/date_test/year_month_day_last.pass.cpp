@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2015 Howard Hinnant
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,17 +25,17 @@
 // public:
 //     constexpr year_month_day_last(const date::year& y,
 //                                   const date::month_day_last& mdl) noexcept;
-// 
+//
 //     year_month_day_last& operator+=(const months& m) noexcept;
 //     year_month_day_last& operator-=(const months& m) noexcept;
 //     year_month_day_last& operator+=(const years& y)  noexcept;
 //     year_month_day_last& operator-=(const years& y)  noexcept;
-// 
+//
 //     constexpr date::year           year()           const noexcept;
 //     constexpr date::month          month()          const noexcept;
 //     constexpr date::month_day_last month_day_last() const noexcept;
 //     constexpr date::day            day()            const noexcept;
-// 
+//
 //     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
@@ -56,23 +56,23 @@
 // constexpr
 // year_month_day_last
 // operator+(const year_month_day_last& ymdl, const months& dm) noexcept;
-// 
+//
 // constexpr
 // year_month_day_last
 // operator+(const months& dm, const year_month_day_last& ymdl) noexcept;
-// 
+//
 // constexpr
 // year_month_day_last
 // operator+(const year_month_day_last& ymdl, const years& dy) noexcept;
-// 
+//
 // constexpr
 // year_month_day_last
 // operator+(const years& dy, const year_month_day_last& ymdl) noexcept;
-// 
+//
 // constexpr
 // year_month_day_last
 // operator-(const year_month_day_last& ymdl, const months& dm) noexcept;
-// 
+//
 // constexpr
 // year_month_day_last
 // operator-(const year_month_day_last& ymdl, const years& dy) noexcept;
