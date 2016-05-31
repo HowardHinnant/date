@@ -2,7 +2,7 @@
 #include <iostream>
 
 void
-test_info(const date::time_zone* zone, const date::Info& info)
+test_info(const date::time_zone* zone, const date::sys_info& info)
 {
     using namespace date;
     using namespace std::chrono;
