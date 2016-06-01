@@ -272,12 +272,6 @@ namespace // Put types in an anonymous name space.
     };
 } // anonymous namespace
 
-template < typename T, size_t N >
-static inline size_t countof(T(&arr)[N])
-{
-    return std::extent< T[N] >::value;
-}
-
 // This function returns an exhaustive list of time zone information
 // from the Windows registry.
 // The routine tries to load as many time zone entries as possible despite errors.
@@ -397,7 +391,7 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
         throw std::runtime_error(msg);
     }
 
-    std::stringstream sis;
+    std::istringstream sis;
     auto error = [&](const char* info)
     {
         std::string msg = "Error reading zone mapping file \"";
@@ -408,7 +402,14 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
         msg += info;
         throw std::runtime_error(msg);
     };
-
+    auto read_field_quote = [&]()
+    {
+        char field_delim;
+        sis.read(&field_delim, 1);
+        auto read_count = sis.gcount();
+        if (sis.gcount() != 1 || field_delim != '"')
+            error("field '\"' expected.");        
+    };
     auto read_field_delim = [&]()
     {
         char field_delim;
@@ -460,19 +461,17 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
         sis.str(linebuf);
 
         char ch;
-        sis.read(&ch, 1);
+        read_field_quote();
         std::getline(sis, zm.other, '\"');
         read_field_delim();
 
-        sis.read(&ch, 1);
+        read_field_quote();
         std::getline(sis, zm.territory, '\"');
         read_field_delim();
 
-        sis.read(&ch, 1);
+        read_field_quote();
         std::getline(sis, zm.type, '\"');
-
-        sis.read(&ch, 1);
-        if (!sis.eof()) // Excess characters? We should have processed all in the line buffer.
+        if ((size_t)sis.tellg() != linebuf.length()) // Excess characters? We should have processed all in the line buffer.
             error("Formatting error.");
         ++line;
         mappings.push_back(std::move(zm));
