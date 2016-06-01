@@ -50,15 +50,13 @@
 #if TIMEZONE_MAPPING
 // Timezone mapping maps native (e.g. Windows) timezone names to the "Standard" names
 // used by this library.
-// The mapping process parses a CSV file of mapping data and uses std::quoted to do that.
-// Because std::quoted is a C++14 feature found in <iomanip> any platforms using
-// the mapping process require C++14.
-// Windows uses the mapping process so C++14 is required on Windows.
-// VS2015 supports std::quoted but there is no -std=c++14 flag required to enable it.
-// MinGW on Windows also requires the mapping process so -std=c++14 is required
-// when using g++ or clang.
-// On Linux/Mac, no mapping / CSV file is required so std::quoted and C++14 isn't needed
-// and so on these platforms C++11 should work but C++14 is preferred even there too
+// The mapping process parses a CSV file of mapping data where each line is of the format:
+// "other","territory","type"<newline>
+// e.g. "GMT Standard Time", "001", "Europe/London"
+// and <newline>
+// Windows typically uses CRLF, Linux/Unix/Mac OS use LF, and old Mac's use CR.
+// On Linux/Mac, no mapping file is required as that is the native format already.
+// C++11 should work but C++14 is preferred even there too
 // because the date library in general works better with C++14.
 #include <iomanip>
 #endif
@@ -381,19 +379,30 @@ static const detail::timezone_info* find_native_timezone_by_standard_name(
 static std::vector<detail::timezone_mapping>
 load_timezone_mappings_from_csv_file(const std::string& input_path)
 {
-    size_t line = 1;
+    size_t line = 0;
     std::vector<detail::timezone_mapping> mappings;
-    std::ifstream is(input_path, std::ios_base::in | std::ios_base::binary);
+    std::ifstream is(input_path,
+#if _WIN32
+        std::ios_base::in // open in text mode on Win32, so getline will eat '\n' and '\r\n'
+#else
+        std::ios_base::in | std::ios_base::binary
+#endif
+    );
     if (!is.is_open())
     {
         // We don't emit file exceptions because that's an implementation detail.
-        std::string msg = "Error opening time zone mapping file: ";
+        std::string msg = "Error opening time zone mapping file \"";
         msg += input_path;
+        msg += "\".";
         throw std::runtime_error(msg);
     }
+
+    std::stringstream sis;
     auto error = [&](const char* info)
     {
-        std::string msg = "Error reading zone mapping file at line ";
+        std::string msg = "Error reading zone mapping file \"";
+        msg += input_path;
+        msg += "\" at line ";
         msg += std::to_string(line);
         msg += ": ";
         msg += info;
@@ -403,39 +412,68 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
     auto read_field_delim = [&]()
     {
         char field_delim;
-        is.read(&field_delim, 1);
-        if (is.gcount() != 1 || field_delim != ',')
-            error("delimiter ',' expected");
+        sis.read(&field_delim, 1);
+        if (sis.gcount() != 1 || field_delim != ',')
+            error("delimiter ',' expected.");
     };
     std::string copyright;
-    for (int i = 0; i < 4; ++i)
-        getline(is, copyright);
+    bool blank = false;
+    for (;;)
+    {
+        std::getline(is, copyright);
+        ++line; // Make sure our line number is in sync with however many copyright lines we have.
+        if (is.eof())
+            break;
+        if (copyright.empty())
+        {
+            --line;
+            blank = true;
+            break;
+        }
+    }
+    const int min_copyright_lines = 3;
+    if (!blank || line < min_copyright_lines)
+    {
+        std::string msg = "Expected at least ";
+        msg += std::to_string(min_copyright_lines);
+        msg += " lines of copyright notice followed by a blank line.";
+        error(msg.c_str());
+    }
+    ++line;
 
+    std::string linebuf;
     for (;;)
     {
         detail::timezone_mapping zm{};
+        std::getline(is, linebuf);
+        // Stop on error or first blank line.
+        // linebuf.size() is the length read but it excludes the length of any line delimiter actually read (e.g. LF/CRLF).
+        // If linebuf.size() is 0 it *might* not mean nothing was read (error) or eof, it could just
+        // indicate only a line delimiter was read. Use is.eof() to distinquish end of file from a blank line.
+        if (linebuf.empty()) // on eof linebuf will be empty.
+        {
+            if (is.eof())
+                break;
+            error("Formatting error. Blank lines not allowed.");
+        }
+        sis.clear();
+        sis.str(linebuf);
+
         char ch;
-
-        is.read(&ch, 1);
-        if (is.eof())
-            break;
-        std::getline(is, zm.other, '\"');
+        sis.read(&ch, 1);
+        std::getline(sis, zm.other, '\"');
         read_field_delim();
 
-        is.read(&ch, 1);
-        std::getline(is, zm.territory, '\"');
+        sis.read(&ch, 1);
+        std::getline(sis, zm.territory, '\"');
         read_field_delim();
 
-        is.read(&ch, 1);
-        std::getline(is, zm.type, '\"');
+        sis.read(&ch, 1);
+        std::getline(sis, zm.type, '\"');
 
-        is.read(&ch, 1);
-        if (is.gcount() != 1 || ch != '\n')
-            error("record delimiter LF expected");
-
-        if (is.fail() || is.eof())
-            error("unexpected end of file, file read error or formatting error.");
-
+        sis.read(&ch, 1);
+        if (!sis.eof()) // Excess characters? We should have processed all in the line buffer.
+            error("Formatting error.");
         ++line;
         mappings.push_back(std::move(zm));
     }
