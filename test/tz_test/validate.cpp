@@ -83,8 +83,8 @@ test_info(const date::time_zone* zone, const date::sys_info& info)
     }
 }
 
-int
-main()
+void
+tzmain()
 {
     using namespace date;
     using namespace std::chrono;
@@ -142,4 +142,19 @@ main()
         }
         std::cout << '\n';
     }
+}
+
+int
+main()
+{
+    try
+    {
+        tzmain();
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "An exception occured: " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
