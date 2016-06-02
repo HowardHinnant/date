@@ -48,6 +48,8 @@ On Windows, the names are never "Standard" so mapping is always required.
 Technically any OS may use the mapping process but currently only Windows does use it.
 */
 
+#include <iostream>
+
 #ifdef _WIN32
 #ifndef TIMEZONE_MAPPING
 #define TIMEZONE_MAPPING 1
@@ -1091,31 +1093,44 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
     // Handle these specially
     // %S  append fractional seconds if tp has precision finer than seconds
     // %T  append fractional seconds if tp has precision finer than seconds
-    // %z  replace with offset from zone
+    // %z  replace with offset from zone on +/-hhmm format
+    // %Ez, %Oz replace with offset from zone on +/-hh:mm format
     // %Z  replace with abbreviation from zone
 
     using namespace std;
     using namespace std::chrono;
+    auto command = false;
+    auto modified = false;
     for (std::size_t i = 0; i < format.size(); ++i)
     {
-        if (format[i] == '%' && i < format.size()-1)
+        switch (format[i])
         {
-            switch (format[i+1])
+        case '%':
+            command = true;
+            modified = false;
+            break;
+        case 'O':
+        case 'E':
+            modified = true;
+            break;
+        case 'S':
+        case 'T':
+            if (command && !modified && ratio_less<typename Duration::period, ratio<1>>::value)
             {
-            case 'S':
-            case 'T':
-                if (ratio_less<typename Duration::period, ratio<1>>::value)
-                {
-                    basic_ostringstream<CharT, Traits> os;
-                    os.imbue(loc);
-                    os << make_time(tp - floor<seconds>(tp));
-                    auto s = os.str();
-                    s.erase(0, 8);
-                    format.insert(i+2, s);
-                    i += 2 + s.size() - 1;
-                }
-                break;
-            case 'z':
+                basic_ostringstream<CharT, Traits> os;
+                os.imbue(loc);
+                os << make_time(tp - floor<seconds>(tp));
+                auto s = os.str();
+                s.erase(0, 8);
+                format.insert(i+1, s);
+                i += s.size() - 1;
+            }
+            command = false;
+            modified = false;
+            break;
+        case 'z':
+            if (command)
+            {
                 if (zone == nullptr)
                     throw std::runtime_error("Can not format local_time with %z");
                 else
@@ -1127,12 +1142,18 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
                         os << '+';
                     os << make_time(offset);
                     auto s = os.str();
-                    s.erase(s.find(':'), 1);
-                    format.replace(i, 2, s);
+                    if (!modified)
+                        s.erase(s.find(':'), 1);
+                    format.replace(i - 1 - modified, 2 + modified, s);
                     i += s.size() - 1;
                 }
-                break;
-            case 'Z':
+            }
+            command = false;
+            modified = false;
+            break;
+        case 'Z':
+            if (command && !modified)
+            {
                 if (zone == nullptr)
                     throw std::runtime_error("Can not format local_time with %z");
                 else
@@ -1142,8 +1163,14 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
                                             (info.abbrev.begin(), info.abbrev.end()));
                     i += info.abbrev.size() - 1;
                 }
-                break;
             }
+            command = false;
+            modified = false;
+            break;
+        default:
+            command = false;
+            modified = false;
+            break;
         }
     }
     auto& f = use_facet<time_put<CharT>>(loc);
@@ -1296,21 +1323,30 @@ parse(std::basic_istream<CharT, Traits>& is,
         auto b = format.data();
         auto i = b;
         auto e = b + format.size();
+        auto command = false;
+        auto modified = false;
         for (; i < e; ++i)
         {
-            if (*i == '%' && i < e-1)
+            switch (*i)
             {
-                switch (i[1])
+            case '%':
+                command = true;
+                modified = false;
+                break;
+            case 'O':
+            case 'E':
+                modified = true;
+                break;
+            case 'T':
+            case 'S':
+                if (command && !modified)
                 {
-                case 'T':
-                case 'S':
-                    f.get(is, 0, is, err, &tm, b, i);
-                    ++i;
+                    f.get(is, 0, is, err, &tm, b, i-1);
                     b = i+1;
                     if (*i == 'T')
                     {
-                        const CharT hm[] = {'%', 'H', ':', '%', 'M', ':', 0};
-                        f.get(is, 0, is, err, &tm, hm, hm);
+                        const CharT hm[] = {'%', 'H', ':', '%', 'M', ':'};
+                        f.get(is, 0, is, err, &tm, hm, hm+6);
                     }
                     if (ratio_less<typename Duration::period, ratio<1>>::value)
                     {
@@ -1326,10 +1362,14 @@ parse(std::basic_istream<CharT, Traits>& is,
                         const CharT hm[] = {'%', 'S'};
                         f.get(is, 0, is, err, &tm, hm, hm+2);
                     }
-                    break;
-                case 'z':
-                    f.get(is, 0, is, err, &tm, b, i);
-                    ++i;
+                }
+                command = false;
+                modified = false;
+                break;
+            case 'z':
+                if (command)
+                {
+                    f.get(is, 0, is, err, &tm, b, i-1-modified);
                     b = i+1;
                     if ((err & ios_base::failbit) == 0)
                     {
@@ -1338,12 +1378,16 @@ parse(std::basic_istream<CharT, Traits>& is,
                         if (!is.fail() && (sign == '+' || sign == '-'))
                         {
                             char h1, h0, m1, m0;
+                            char colon = '\0';
                             h1 = static_cast<char>(is.get());
                             h0 = static_cast<char>(is.get());
+                            if (modified)
+                                colon = static_cast<char>(is.get());
                             m1 = static_cast<char>(is.get());
                             m0 = static_cast<char>(is.get());
                             if (!is.fail() && std::isdigit(h1) && std::isdigit(h0)
-                                           && std::isdigit(m1) && std::isdigit(m0))
+                                           && std::isdigit(m1) && std::isdigit(m0)
+                                           && (!modified || colon == ':'))
                             {
                                 temp_offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
                                               10*minutes{m1 - '0'} + minutes{m0 - '0'};
@@ -1356,10 +1400,14 @@ parse(std::basic_istream<CharT, Traits>& is,
                         else
                             err |= ios_base::failbit;
                     }
-                    break;
-                case 'Z':
-                    f.get(is, 0, is, err, &tm, b, i);
-                    ++i;
+                }
+                command = false;
+                modified = false;
+                break;
+            case 'Z':
+                if (command && !modified)
+                {
+                    f.get(is, 0, is, err, &tm, b, i-1);
                     b = i+1;
                     if ((err & ios_base::failbit) == 0)
                     {
@@ -1367,8 +1415,14 @@ parse(std::basic_istream<CharT, Traits>& is,
                         if (is.fail())
                             err |= ios_base::failbit;
                     }
-                    break;
                 }
+                command = false;
+                modified = false;
+                break;
+            default:
+                command = false;
+                modified = false;
+                break;
             }
         }
         if ((err & ios_base::failbit) == 0)
