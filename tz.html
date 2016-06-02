@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-05-28<br/>
+2016-06-01<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -2080,6 +2080,11 @@ used.
 <code>sys_time</code>: <code>"+0000"</code> is used.
 </li>
 </ul>
+<p>
+If <code>%z</code> is modified by either <code>E</code> or <code>O</code>
+(that is, <code>%Ez</code> or <code>%Oz</code>), then a colon is inserted
+between the hours and minutes: <code>+00:00</code>.
+</p>
 </li>
 
 <li><p>
@@ -2271,7 +2276,14 @@ parse of the offset, but then ignore the offset in assigning a value to the
 passed in, on successful parse it will hold the value represented by
 <code>%z</code> if present, or will be assigned <code>0min</code> if
 <code>%z</code> is not present.
-</p></li>
+</p>
+<p>
+The format of the offset is <code>+/-hhmm</code>.  The leading plus or minus
+sign is required.  If the format string was modified (i.e. <code>%Ez</code>
+or <code>%Oz</code>), a colon is required between hours and minutes:
+<code>+/-hh:mm</code>.
+</p>
+</li>
 
 <li><p>
 If <code>%Z</code> appears in the <code>format</code> string then an
