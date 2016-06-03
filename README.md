@@ -11,3 +11,7 @@ This is actually three separate C++11/C++14 libraries:
 3. `"iso_week.h"` is a header-only library built on top of the `"date.h"` library which implements the ISO week date calendar.  See http://howardhinnant.github.io/date/iso_week.html for more details.
 
 There has been a recent change in the library design.  If you are trying to migrate from the previous design, rename `day_point` to `sys_days` everywhere, and that ought to bring the number of errors down to a small roar.
+
+`"date.h"` and `"tz.h"` are now proposed for standardization here:
+
+    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0355r0.html
