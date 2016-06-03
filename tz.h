@@ -95,6 +95,7 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  include <memory>
 #  include <mutex>
 #endif
+#include <time.h>
 
 namespace date
 {
@@ -1431,10 +1432,17 @@ parse(std::basic_istream<CharT, Traits>& is,
                 f.get(is, 0, is, err, &tm, b, e);
             if ((err & ios_base::failbit) == 0)
             {
+#if _WIN32
+                auto tt = _mkgmtime(&tm);
+#else
+                auto tt = timegm(&tm);
+#endif
+#if 0
 #ifndef _MSC_VER
                 auto tt = timegm(&tm);
 #else
                 auto tt = _mkgmtime(&tm);
+#endif
 #endif
                 tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
                 abbrev = std::move(temp_abbrev);
