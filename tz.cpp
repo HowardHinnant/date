@@ -126,7 +126,7 @@ CONSTDATA auto max_day = date::dec/31;
 
 namespace detail
 {
-class undocumented {public: explicit undocumented() = default;};
+struct undocumented {explicit undocumented() = default;};
 }
 
 #ifndef _MSC_VER

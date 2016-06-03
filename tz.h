@@ -1437,13 +1437,6 @@ parse(std::basic_istream<CharT, Traits>& is,
 #else
                 auto tt = timegm(&tm);
 #endif
-#if 0
-#ifndef _MSC_VER
-                auto tt = timegm(&tm);
-#else
-                auto tt = _mkgmtime(&tm);
-#endif
-#endif
                 tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
                 abbrev = std::move(temp_abbrev);
                 offset = temp_offset;
