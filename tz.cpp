@@ -126,7 +126,7 @@ CONSTDATA auto max_day = date::dec/31;
 
 namespace detail
 {
-class undocumented {explicit undocumented() = default;};
+struct undocumented {explicit undocumented() = default;};
 }
 
 #ifndef _MSC_VER
@@ -460,7 +460,6 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
         sis.clear();
         sis.str(linebuf);
 
-        char ch;
         read_field_quote();
         std::getline(sis, zm.other, '\"');
         read_field_delim();

@@ -95,6 +95,7 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  include <memory>
 #  include <mutex>
 #endif
+#include <time.h>
 
 namespace date
 {
@@ -103,7 +104,7 @@ enum class choose {earliest, latest};
 
 namespace detail
 {
-    class undocumented;
+    struct undocumented;
 }
 
 class nonexistent_local_time
@@ -1431,10 +1432,10 @@ parse(std::basic_istream<CharT, Traits>& is,
                 f.get(is, 0, is, err, &tm, b, e);
             if ((err & ios_base::failbit) == 0)
             {
-#ifndef _MSC_VER
-                auto tt = timegm(&tm);
-#else
+#if _WIN32
                 auto tt = _mkgmtime(&tm);
+#else
+                auto tt = timegm(&tm);
 #endif
                 tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
                 abbrev = std::move(temp_abbrev);

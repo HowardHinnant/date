@@ -101,14 +101,14 @@ tzmain()
     {
         std::cout << name << '\n';
         auto z = locate_zone(name);
-        auto begin = sys_days(jan/1/year::min()) + 0s;
-        auto end   = sys_days(jan/1/2035) + 0s;
+        auto begin = sys_days(jan/1/year::min()) + seconds{0};
+        auto end   = sys_days(jan/1/2035) + seconds{0};
         auto info = z->get_info(begin);
         std::cout << "Initially:           ";
-        if (info.offset >= 0s)
+        if (info.offset >= seconds{0})
             std::cout << '+';
         std::cout << make_time(info.offset);
-        if (info.save == 0min)
+        if (info.save == minutes{0})
             std::cout << " standard ";
         else
             std::cout << " daylight ";
@@ -128,10 +128,10 @@ tzmain()
             auto ymd = year_month_day(dp);
             auto time = make_time(begin - dp);
             std::cout << ymd << ' ' << time << "Z ";
-            if (info.offset >= 0s)
+            if (info.offset >= seconds{0})
                 std::cout << '+';
             std::cout << make_time(info.offset);
-            if (info.save == 0min)
+            if (info.save == minutes{0})
                 std::cout << " standard ";
             else
                 std::cout << " daylight ";
