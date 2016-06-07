@@ -2168,14 +2168,14 @@ init_tzdb()
 
 static
 TZ_DB
-init_tzdb(const std::vector<std::string> & lines, const std::vector<tz_mapping_t> & mappings)
+init_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
 {
 	assert(lines.size() > 0);
 	TZ_DB db;
 	load_tzdb(db, lines);
 #if TIMEZONE_MAPPING
 	for (auto && mapping_row : mappings)
-		db.mappings.push_back(timezone_mapping{ mapping_row.a, mapping_row.b, mapping_row.c });
+		db.mappings.push_back(timezone_mapping{ std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
 	get_windows_timezone_info(db.native_zones);
 #endif
 	return db;
@@ -2208,12 +2208,12 @@ get_tzdb()
 }
 #else
 const TZ_DB&
-reload_tzdb(const std::vector<std::string> & lines, const std::vector<tz_mapping_t> & mappings)
+reload_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
 {
 	return access_tzdb() = init_tzdb(lines, mappings);
 }
 const TZ_DB&
-get_tzdb(const std::vector<std::string> & lines, const std::vector<tz_mapping_t> & mappings)
+get_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
 {
 	static const TZ_DB& ref = access_tzdb() = init_tzdb(lines, mappings);
 	return ref;
