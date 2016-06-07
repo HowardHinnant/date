@@ -48,8 +48,6 @@ On Windows, the names are never "Standard" so mapping is always required.
 Technically any OS may use the mapping process but currently only Windows does use it.
 */
 
-#include <iostream>
-
 #ifdef _WIN32
 #ifndef TIMEZONE_MAPPING
 #define TIMEZONE_MAPPING 1
@@ -1058,10 +1056,18 @@ utc_clock::utc_to_sys(utc_time<Duration> t)
     using duration = typename std::common_type<Duration, seconds>::type;
     auto const& leaps = get_tzdb().leaps;
     auto tp = sys_time<duration>{t.time_since_epoch()};
-    auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
-    tp -= seconds{lt-leaps.begin()};
-    if (lt != leaps.begin() && tp + seconds{1} < lt[-1])
-        tp += seconds{1};
+    if (tp >= leaps.front())
+    {
+        auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
+        tp -= seconds{lt-leaps.begin()};
+        if (tp < lt[-1])
+        {
+            if (tp >= lt[-1].date() - seconds{1})
+                tp = lt[-1].date() - duration{1};
+            else
+                tp += seconds{1};
+        }
+    }
     return tp;
 }
 
@@ -1079,6 +1085,34 @@ utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(sys_time<Duration> st)
 {
     return utc_clock::sys_to_utc(st);
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto const& leaps = get_tzdb().leaps;
+    auto tp = sys_time<duration>{t.time_since_epoch()};
+    if (tp >= leaps.front())
+    {
+        auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
+        tp -= seconds{lt-leaps.begin()};
+        if (tp < lt[-1])
+        {
+            if (tp >= lt[-1].date() - seconds{1})
+            {
+                auto const dp = floor<days>(tp);
+                auto time = make_time(tp-dp);
+                time.seconds() += seconds{1};
+                return os << year_month_day(dp) << ' ' << time;
+            }
+            else
+                tp += seconds{1};
+        }
+    }
+    return os << tp;
 }
 
 // format
