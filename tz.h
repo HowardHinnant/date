@@ -658,8 +658,12 @@ std::ostream& operator<<(std::ostream& os, const TZ_DB& db);
 const TZ_DB& get_tzdb();
 const TZ_DB& reload_tzdb();
 #else
-const TZ_DB& get_tzdb(const std::vector<std::string> & lines = {}, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings = {});
-const TZ_DB& reload_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings);
+struct tz_mapping_t
+{
+	std::string a, b, c;
+};
+const TZ_DB& get_tzdb(const std::vector<std::string> & lines = {}, const std::vector<tz_mapping_t> & mappings = {});
+const TZ_DB& reload_tzdb(const std::vector<std::string> & lines, const std::vector<tz_mapping_t> & mappings);
 #endif
 
 
