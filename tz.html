@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-06-06<br/>
+2016-06-07<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -65,6 +65,8 @@ Commons Attribution 4.0 International License</a>.
     <li><a href="#format"><code>format</code></a></li>
     <li><a href="#parse"><code>parse</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
+    <li><a href="#tai_clock"><code>tai_clock</code></a></li>
+    <li><a href="#gps_clock"><code>gps_clock</code></a></li>
     <li><a href="#leap"><code>leap</code></a></li>
     <li><a href="#link"><code>link</code></a></li>
     </ul>
@@ -2472,6 +2474,293 @@ seconds specifier when the value represents an inserted leap second.
 
 </blockquote>
 
+<a name="tai_clock"></a><h3><code>tai_clock</code></h3>
+<blockquote>
+<pre>
+class tai_clock
+{
+public:
+    using duration                  = std::chrono::system_clock::duration;
+    using rep                       = duration::rep;
+    using period                    = duration::period;
+    using time_point                = std::chrono::time_point&lt;tai_clock&gt;;
+    static constexpr bool is_steady = true;
+
+    static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+        static
+        tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        utc_to_tai(utc_time&lt;Duration&gt; t);
+
+    template &lt;class Duration&gt;
+        static
+        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        tai_to_utc(tai_time&lt;Duration&gt; u);
+};
+
+template &lt;class Duration&gt;
+    using tai_time = std::chrono::time_point&lt;tai_clock, Duration&gt;;
+
+using tai_seconds = tai_time&lt;std::chrono::seconds&gt;;
+</pre>
+
+<p>
+<code>tai_time</code> counts physical seconds continuously like <code>utc_itme</code>,
+but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
+is 1958-01-01 and is offset ahead of <code>utc_time</code> by 10s in 1970-01-01.
+With each leap second, the offset from <code>utc_time</code> grows by another
+second.
+</p>
+
+<pre>
+static tai_clock::time_point tai_clock::now() noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_tai_time(utc_clock::now())</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_clock::utc_to_tai(utc_time&lt;Duration&gt; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>tai_time</code> which represents time as measured by
+TAI at the same instant as the time <code>t</code> in UTC.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_clock::tai_to_utc(tai_time&lt;Duration&gt; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
+<code>tai_clock::utc_to_tai(u) == t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_utc_time(tai_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>tai_clock::tai_to_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_tai_time(utc_time&lt;Duration&gt; u)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>tai_clock::utc_to_tai(u)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const tai_time&lt;Duration&gt;& t)
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T".
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
+<a name="gps_clock"></a><h3><code>gps_clock</code></h3>
+<blockquote>
+<pre>
+class gps_clock
+{
+public:
+    using duration                  = std::chrono::system_clock::duration;
+    using rep                       = duration::rep;
+    using period                    = duration::period;
+    using time_point                = std::chrono::time_point&lt;gps_clock&gt;;
+    static constexpr bool is_steady = true;
+
+    static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+        static
+        gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        utc_to_gps(utc_time&lt;Duration&gt; t);
+
+    template &lt;class Duration&gt;
+        static
+        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+        gps_to_utc(gps_time&lt;Duration&gt; u);
+};
+
+template &lt;class Duration&gt;
+    using gps_time = std::chrono::time_point&lt;gps_clock, Duration&gt;;
+
+using gps_seconds = gps_time&lt;std::chrono::seconds&gt;;
+</pre>
+
+<p>
+<code>gps_time</code> counts physical seconds continuously like <code>utc_itme</code>,
+but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
+is 1980-01-06 and was equivalent to UTC at that time.  If falls ahead of UTC
+with each inserted leap second.  It is always exactly 19s behind TAI.
+</p>
+
+<pre>
+static gps_clock::time_point gps_clock::now() noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_gps_time(utc_clock::now())</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::utc_to_gps(utc_time&lt;Duration&gt; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>gps_time</code> which represents time as measured by
+GPS at the same instant as the time <code>t</code> in UTC.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::gps_to_utc(gps_time&lt;Duration&gt; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
+<code>gps_clock::utc_to_gps(u) == t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_utc_time(gps_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>gps_clock::gps_to_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_gps_time(utc_time&lt;Duration&gt; u)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>gps_clock::utc_to_gps(u)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const gps_time&lt;Duration&gt;& t)
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T".
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<p>
+[<i>Example:</i>
+</p>
+
+<p>
+The following code prints out equivalent time stamps to millisecond precision for
+times near the 2015-06-30 leap second insertion.  Note that the mapping to
+<code>sys_time</code> during the leap second collapses down to the last instant
+prior to the leap second.  But the maping between UTC, TAI and GPS is all one-to-one.
+</p>
+
+<blockquote><pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono;
+    auto start = to_utc_time(sys_days{2015_y/jul/1} - 500ms);
+    auto end = start + 2s;
+    for (auto utc = start; utc &lt; end; utc += 100ms)
+    {
+        auto sys = to_sys_time(utc);
+        auto tai = to_tai_time(utc);
+        auto gps = to_gps_time(utc);
+        std::cout &lt;&lt; sys &lt;&lt; " SYS  ==  " 
+                  &lt;&lt; utc &lt;&lt; " UTC  ==  "
+                  &lt;&lt; tai &lt;&lt; " TAI  ==  "
+                  &lt;&lt; gps &lt;&lt; " GPS\n";
+    }
+}
+</pre>
+<p>
+Output:
+</p>
+<pre>
+2015-06-30 23:59:59.500 SYS  ==  2015-06-30 23:59:59.500 UTC  ==  2015-07-01 00:00:34.500 TAI  ==  2015-07-01 00:00:15.500 GPS
+2015-06-30 23:59:59.600 SYS  ==  2015-06-30 23:59:59.600 UTC  ==  2015-07-01 00:00:34.600 TAI  ==  2015-07-01 00:00:15.600 GPS
+2015-06-30 23:59:59.700 SYS  ==  2015-06-30 23:59:59.700 UTC  ==  2015-07-01 00:00:34.700 TAI  ==  2015-07-01 00:00:15.700 GPS
+2015-06-30 23:59:59.800 SYS  ==  2015-06-30 23:59:59.800 UTC  ==  2015-07-01 00:00:34.800 TAI  ==  2015-07-01 00:00:15.800 GPS
+2015-06-30 23:59:59.900 SYS  ==  2015-06-30 23:59:59.900 UTC  ==  2015-07-01 00:00:34.900 TAI  ==  2015-07-01 00:00:15.900 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.000</b> UTC  ==  2015-07-01 00:00:35.000 TAI  ==  2015-07-01 00:00:16.000 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.100</b> UTC  ==  2015-07-01 00:00:35.100 TAI  ==  2015-07-01 00:00:16.100 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.200</b> UTC  ==  2015-07-01 00:00:35.200 TAI  ==  2015-07-01 00:00:16.200 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.300</b> UTC  ==  2015-07-01 00:00:35.300 TAI  ==  2015-07-01 00:00:16.300 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.400</b> UTC  ==  2015-07-01 00:00:35.400 TAI  ==  2015-07-01 00:00:16.400 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.500</b> UTC  ==  2015-07-01 00:00:35.500 TAI  ==  2015-07-01 00:00:16.500 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.600</b> UTC  ==  2015-07-01 00:00:35.600 TAI  ==  2015-07-01 00:00:16.600 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.700</b> UTC  ==  2015-07-01 00:00:35.700 TAI  ==  2015-07-01 00:00:16.700 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.800</b> UTC  ==  2015-07-01 00:00:35.800 TAI  ==  2015-07-01 00:00:16.800 GPS
+2015-06-30 23:59:<b>59.999</b> SYS  ==  2015-06-30 23:59:<b>60.900</b> UTC  ==  2015-07-01 00:00:35.900 TAI  ==  2015-07-01 00:00:16.900 GPS
+2015-07-01 00:00:00.000 SYS  ==  2015-07-01 00:00:00.000 UTC  ==  2015-07-01 00:00:36.000 TAI  ==  2015-07-01 00:00:17.000 GPS
+2015-07-01 00:00:00.100 SYS  ==  2015-07-01 00:00:00.100 UTC  ==  2015-07-01 00:00:36.100 TAI  ==  2015-07-01 00:00:17.100 GPS
+2015-07-01 00:00:00.200 SYS  ==  2015-07-01 00:00:00.200 UTC  ==  2015-07-01 00:00:36.200 TAI  ==  2015-07-01 00:00:17.200 GPS
+2015-07-01 00:00:00.300 SYS  ==  2015-07-01 00:00:00.300 UTC  ==  2015-07-01 00:00:36.300 TAI  ==  2015-07-01 00:00:17.300 GPS
+2015-07-01 00:00:00.400 SYS  ==  2015-07-01 00:00:00.400 UTC  ==  2015-07-01 00:00:36.400 TAI  ==  2015-07-01 00:00:17.400 GPS
+</pre>
+</blockquote>
+
+<p>
+<i>&mdash; end example</i>]
+</p>
+
+</blockquote>
 <a name="leap"></a><h3><code>leap</code></h3>
 <blockquote>
 <pre>
