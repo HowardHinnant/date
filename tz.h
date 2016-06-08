@@ -1115,6 +1115,176 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
     return os << tp;
 }
 
+// tai_clock
+
+class tai_clock
+{
+public:
+    using duration                  = std::chrono::system_clock::duration;
+    using rep                       = duration::rep;
+    using period                    = duration::period;
+    using time_point                = std::chrono::time_point<tai_clock>;
+    static const bool is_steady     = true;
+
+    static time_point now() noexcept;
+
+    template <class Duration>
+        static
+        std::chrono::time_point<tai_clock,
+            typename std::common_type<Duration, std::chrono::seconds>::type>
+        utc_to_tai(utc_time<Duration> t);
+
+    template <class Duration>
+        static
+        utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+        tai_to_utc(std::chrono::time_point<tai_clock, Duration> t);
+};
+
+template <class Duration>
+    using tai_time = std::chrono::time_point<tai_clock, Duration>;
+
+using tai_seconds = tai_time<std::chrono::seconds>;
+
+template <class Duration>
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+tai_clock::utc_to_tai(utc_time<Duration> t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return tai_time<duration>{t.time_since_epoch()} + 
+            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + 10s);
+}
+
+template <class Duration>
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+tai_clock::tai_to_utc(tai_time<Duration> t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return utc_time<duration>{t.time_since_epoch()} - 
+            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + 10s);
+}
+
+template <class Duration>
+inline
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_utc_time(tai_time<Duration> t)
+{
+    return tai_clock::tai_to_utc(t);
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(utc_time<Duration> t)
+{
+    return tai_clock::utc_to_tai(t);
+}
+
+inline
+tai_clock::time_point
+tai_clock::now() noexcept
+{
+    using namespace std::chrono;
+    return to_tai_time(utc_clock::now());
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto tp = sys_time<duration>{t.time_since_epoch()} -
+                (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1});
+    return os << tp;
+}
+
+// gps_clock
+
+class gps_clock
+{
+public:
+    using duration                  = std::chrono::system_clock::duration;
+    using rep                       = duration::rep;
+    using period                    = duration::period;
+    using time_point                = std::chrono::time_point<gps_clock>;
+    static const bool is_steady     = true;
+
+    static time_point now() noexcept;
+
+    template <class Duration>
+        static
+        std::chrono::time_point<gps_clock,
+            typename std::common_type<Duration, std::chrono::seconds>::type>
+        utc_to_gps(utc_time<Duration> t);
+
+    template <class Duration>
+        static
+        utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+        gps_to_utc(std::chrono::time_point<gps_clock, Duration> t);
+};
+
+template <class Duration>
+    using gps_time = std::chrono::time_point<gps_clock, Duration>;
+
+using gps_seconds = gps_time<std::chrono::seconds>;
+
+template <class Duration>
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+gps_clock::utc_to_gps(utc_time<Duration> t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return gps_time<duration>{t.time_since_epoch()} -
+            (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1} + 9s);
+}
+
+template <class Duration>
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+gps_clock::gps_to_utc(gps_time<Duration> t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return utc_time<duration>{t.time_since_epoch()} +
+            (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1} + 9s);
+}
+
+template <class Duration>
+inline
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_utc_time(gps_time<Duration> t)
+{
+    return gps_clock::gps_to_utc(t);
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(utc_time<Duration> t)
+{
+    return gps_clock::utc_to_gps(t);
+}
+
+inline
+gps_clock::time_point
+gps_clock::now() noexcept
+{
+    using namespace std::chrono;
+    return to_gps_time(utc_clock::now());
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto tp = sys_time<duration>{t.time_since_epoch()} +
+                (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1});
+    return os << tp;
+}
+
 // format
 
 namespace detail
