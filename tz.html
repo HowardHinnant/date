@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-06-07<br/>
+2016-06-08<br/>
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"> <img alt="Creative
 Commons License" style="border-width:0"
 src="http://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /> This work is licensed
@@ -2692,6 +2692,74 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<p><b>Convenience converters</b></p>
+
+<pre>
+template &lt;class Duration&gt;
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_sys_time(tai_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_sys_time(to_utc_time(t))</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_sys_time(gps_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_sys_time(to_utc_time(t))</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_tai_time(sys_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_tai_time(to_utc_time(t))</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_tai_time(gps_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_tai_time(to_utc_time(t))</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_gps_time(sys_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_gps_time(to_utc_time(t))</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_gps_time(tai_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>to_gps_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
