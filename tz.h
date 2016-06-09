@@ -1237,7 +1237,7 @@ gps_clock::utc_to_gps(utc_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1} + 9s);
+            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + 9s);
 }
 
 template <class Duration>
@@ -1247,7 +1247,7 @@ gps_clock::gps_to_utc(gps_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} +
-            (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1} + 9s);
+            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + 9s);
 }
 
 template <class Duration>
@@ -1281,8 +1281,56 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto tp = sys_time<duration>{t.time_since_epoch()} +
-                (sys_days{1980_y/jan/6} - sys_days{1970_y/jan/1});
+                (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1});
     return os << tp;
+}
+
+template <class Duration>
+inline
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_sys_time(tai_time<Duration> t)
+{
+    return to_sys_time(to_utc_time(t));
+}
+
+template <class Duration>
+inline
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_sys_time(gps_time<Duration> t)
+{
+    return to_sys_time(to_utc_time(t));
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(sys_time<Duration> t)
+{
+    return to_tai_time(to_utc_time(t));
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(gps_time<Duration> t)
+{
+    return to_tai_time(to_utc_time(t));
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(sys_time<Duration> t)
+{
+    return to_gps_time(to_utc_time(t));
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(tai_time<Duration> t)
+{
+    return to_gps_time(to_utc_time(t));
 }
 
 // format
