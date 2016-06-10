@@ -3628,7 +3628,7 @@ public:
 
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
     CONSTCD11 std::chrono::minutes minutes() const NOEXCEPT {return m_;}
-    CONSTCD11 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
+    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
     CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
     CONSTCD11 unsigned mode() const NOEXCEPT {return mode_;}
 
@@ -3709,7 +3709,7 @@ public:
 
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
     CONSTCD11 std::chrono::minutes minutes() const NOEXCEPT {return m_;}
-    CONSTCD11 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
+    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
     CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
     CONSTCD11 precision subseconds() const NOEXCEPT {return sub_s_;}
     CONSTCD11 unsigned mode() const NOEXCEPT {return mode_;}
