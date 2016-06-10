@@ -1152,7 +1152,7 @@ tai_clock::utc_to_tai(utc_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return tai_time<duration>{t.time_since_epoch()} + 
-            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + 10s);
+            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + seconds{10});
 }
 
 template <class Duration>
@@ -1162,7 +1162,7 @@ tai_clock::tai_to_utc(tai_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} - 
-            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + 10s);
+            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + seconds{10});
 }
 
 template <class Duration>
@@ -1237,7 +1237,7 @@ gps_clock::utc_to_gps(utc_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + 9s);
+            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + seconds{9});
 }
 
 template <class Duration>
@@ -1247,7 +1247,7 @@ gps_clock::gps_to_utc(gps_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} +
-            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + 9s);
+            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + seconds{9});
 }
 
 template <class Duration>
