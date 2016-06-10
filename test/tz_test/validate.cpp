@@ -2,38 +2,42 @@
 #include <iostream>
 
 void
-test_info(const date::Zone* zone, const date::Info& info)
+test_info(const date::time_zone* zone, const date::sys_info& info)
 {
     using namespace date;
     using namespace std::chrono;
     auto begin = info.begin;
     auto end = info.end - microseconds{1};
-    auto mid = begin + (end - begin) /2 ;
+    auto mid = begin + (end - begin) /2;
+    using sys_microseconds = sys_time<microseconds>;
+    using zoned_microseconds = zoned_time<microseconds>;
+    using local_microseconds = local_time<microseconds>;
+    zoned_microseconds local{zone};
 
-    if (begin > day_point{jan/1/1700})
+    if (begin > sys_days{jan/1/1700})
     {
-        auto local = zone->to_local(begin).first;
-        auto prev_local = zone->to_local(begin - seconds{1}).first;
-        if (prev_local < local - seconds{1})
+        auto prev_local = local;
+        local = begin;
+        prev_local = begin - seconds{1};
+        auto slocal = local.get_local_time();
+        auto plocal = prev_local.get_local_time();
+        if (plocal < slocal - seconds{1})
         {
-            assert(zone->to_sys(local) == begin);
-            auto imaginary = prev_local + (local - seconds{1} - prev_local) / 2;
+            assert(sys_microseconds{local} == begin);
             try
             {
-                zone->to_sys(imaginary);
+                local = plocal + (slocal - seconds{1} - plocal) / 2;
                 assert(false);
             }
             catch (const nonexistent_local_time&)
             {
             }
         }
-        else if (prev_local > local - seconds{1})
+        else if (plocal > slocal - seconds{1})
         {
-            auto ambiguous = local - seconds{1} +
-                             (prev_local - (local - seconds{1})) / 2;
             try
             {
-                zone->to_sys(ambiguous);
+                local = slocal - seconds{1} + (plocal - (slocal - seconds{1})) / 2;
                 assert(false);
             }
             catch (const ambiguous_local_time&)
@@ -42,33 +46,34 @@ test_info(const date::Zone* zone, const date::Info& info)
         }
     }
 
-    auto local = zone->to_local(mid).first;
-    assert(zone->to_sys(local) == mid);
+    local = mid;
+    assert(sys_microseconds{local} == mid);
 
-    if (end < day_point{jan/1/3000})
+    if (end < sys_days{jan/1/3000})
     {
-        auto local = zone->to_local(end).first;
-        auto next_local = zone->to_local(info.end).first;
-        if (next_local < local + microseconds{1})
+        local = end;
+        auto next_local = local;
+        next_local = info.end;
+        auto slocal = local.get_local_time();
+        auto nlocal = next_local.get_local_time();
+        if (nlocal < slocal + microseconds{1})
         {
-            auto ambiguous = next_local + (local + microseconds{1} - next_local) / 2;
             try
             {
-                zone->to_sys(ambiguous);
+                local = nlocal + (slocal + microseconds{1} - nlocal) / 2;
                 assert(false);
             }
             catch (const ambiguous_local_time&)
             {
             }
         }
-        else if (next_local > local + microseconds{1})
+        else if (nlocal > slocal + microseconds{1})
         {
-            assert(zone->to_sys(local) == end);
-            auto imaginary = local + microseconds{1} +
-                             (next_local - (local + microseconds{1})) / 2;
+            assert(sys_microseconds{local} == end);
             try
             {
-                zone->to_sys(imaginary);
+                local = slocal + microseconds{1} +
+                        (nlocal - (slocal + microseconds{1})) / 2;
                 assert(false);
             }
             catch (const nonexistent_local_time&)
@@ -78,8 +83,8 @@ test_info(const date::Zone* zone, const date::Info& info)
     }
 }
 
-int
-main()
+void
+tzmain()
 {
     using namespace date;
     using namespace std::chrono;
@@ -96,14 +101,14 @@ main()
     {
         std::cout << name << '\n';
         auto z = locate_zone(name);
-        auto begin = day_point(jan/1/year::min()) + 0s;
-        auto end   = day_point(jan/1/2035) + 0s;
-        auto info = z->get_info(begin, tz::utc);
+        auto begin = sys_days(jan/1/year::min()) + seconds{0};
+        auto end   = sys_days(jan/1/2035) + seconds{0};
+        auto info = z->get_info(begin);
         std::cout << "Initially:           ";
-        if (info.offset >= 0s)
+        if (info.offset >= seconds{0})
             std::cout << '+';
         std::cout << make_time(info.offset);
-        if (info.save == 0min)
+        if (info.save == minutes{0})
             std::cout << " standard ";
         else
             std::cout << " daylight ";
@@ -114,7 +119,7 @@ main()
         auto prev_save = info.save;
         for (begin = info.end; begin < end; begin = info.end)
         {
-            info = z->get_info(begin, tz::utc);
+            info = z->get_info(begin);
             test_info(z, info);
             if (info.offset == prev_offset && info.abbrev == prev_abbrev &&
                     info.save == prev_save)
@@ -122,11 +127,11 @@ main()
             auto dp = floor<days>(begin);
             auto ymd = year_month_day(dp);
             auto time = make_time(begin - dp);
-            std::cout << ymd << 'T' << time << "Z ";
-            if (info.offset >= 0s)
+            std::cout << ymd << ' ' << time << "Z ";
+            if (info.offset >= seconds{0})
                 std::cout << '+';
             std::cout << make_time(info.offset);
-            if (info.save == 0min)
+            if (info.save == minutes{0})
                 std::cout << " standard ";
             else
                 std::cout << " daylight ";
@@ -137,4 +142,19 @@ main()
         }
         std::cout << '\n';
     }
+}
+
+int
+main()
+{
+    try
+    {
+        tzmain();
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "An exception occured: " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }

@@ -2,19 +2,19 @@
 #define TZ_PRIVATE_H
 
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,11 +22,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// Our apologies.  When the previous paragraph was written, lowercase had not yet
+// been invented (that woud involve another several millennia of evolution).
+// We did not mean to shout.
 
 #include "tz.h"
 
 namespace date
 {
+
+enum class tz {utc, local, standard};
 
 class MonthDayTime
 {
@@ -61,9 +67,9 @@ private:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
         U() : month_day_{date::jan/1} {}
 #else
-        U() : 
-            month_day_(date::jan/1), 
-            month_weekday_last_(date::month(0U), date::weekday_last(date::weekday(0U))) 
+        U() :
+            month_day_(date::jan/1),
+            month_weekday_last_(date::month(0U), date::weekday_last(date::weekday(0U)))
         {}
 
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -80,7 +86,7 @@ private:
 
 public:
     MonthDayTime() = default;
-    MonthDayTime(second_point tp, tz timezone);
+    MonthDayTime(local_seconds tp, tz timezone);
     MonthDayTime(const date::month_day& md, tz timezone);
 
     date::day day() const;
@@ -89,11 +95,11 @@ public:
 
     void canonicalize(date::year y);
 
-    second_point
+    sys_seconds
        to_sys(date::year y, std::chrono::seconds offset, std::chrono::seconds save) const;
-    date::day_point to_day_point(date::year y) const;
+    sys_days to_sys_days(date::year y) const;
 
-    second_point to_time_point(date::year y) const;
+    sys_seconds to_time_point(date::year y) const;
     int compare(date::year y, const MonthDayTime& x, date::year yx,
                 std::chrono::seconds offset, std::chrono::minutes prev_save) const;
 
@@ -181,7 +187,7 @@ inline bool operator> (const std::string& x, const Rule& y) {return   y < x;}
 inline bool operator<=(const std::string& x, const Rule& y) {return !(y < x);}
 inline bool operator>=(const std::string& x, const Rule& y) {return !(x < y);}
 
-struct Zone::zonelet
+struct time_zone::zonelet
 {
     enum tag {has_rule, has_save, is_empty};
 
@@ -203,14 +209,14 @@ struct Zone::zonelet
         U& operator=(const U&) = delete;
     } u;
 
-    std::string          format_;
-    date::year           until_year_{0};
-    MonthDayTime         until_date_;
-    second_point         until_utc_;
-    second_point         until_std_;
-    second_point         until_loc_;
-    std::chrono::minutes initial_save_{};
-    std::string          initial_abbrev_;
+    std::string                        format_;
+    date::year                         until_year_{0};
+    MonthDayTime                       until_date_;
+    sys_seconds                        until_utc_;
+    local_seconds                      until_std_;
+    local_seconds                      until_loc_;
+    std::chrono::minutes               initial_save_{};
+    std::string                        initial_abbrev_;
     std::pair<const Rule*, date::year> first_rule_{nullptr, date::year::min()};
     std::pair<const Rule*, date::year> last_rule_{nullptr, date::year::max()};
 

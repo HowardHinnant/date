@@ -1,18 +1,18 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,6 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// Our apologies.  When the previous paragraph was written, lowercase had not yet
+// been invented (that woud involve another several millennia of evolution).
+// We did not mean to shout.
 
 #include "tz_private.h"
 
@@ -46,15 +50,13 @@
 #if TIMEZONE_MAPPING
 // Timezone mapping maps native (e.g. Windows) timezone names to the "Standard" names
 // used by this library.
-// The mapping process parses a CSV file of mapping data and uses std::quoted to do that.
-// Because std::quoted is a C++14 feature found in <iomanip> any platforms using
-// the mapping process require C++14.
-// Windows uses the mapping process so C++14 is required on Windows.
-// VS2015 supports std::quoted but there is no -std=c++14 flag required to enable it.
-// MinGW on Windows also requires the mapping process so -std=c++14 is required
-// when using g++ or clang.
-// On Linux/Mac, no mapping / CSV file is required so std::quoted and C++14 isn't needed
-// and so on these platforms C++11 should work but C++14 is preferred even there too
+// The mapping process parses a CSV file of mapping data where each line is of the format:
+// "other","territory","type"<newline>
+// e.g. "GMT Standard Time", "001", "Europe/London"
+// and <newline>
+// Windows typically uses CRLF, Linux/Unix/Mac OS use LF, and old Mac's use CR.
+// On Linux/Mac, no mapping file is required as that is the native format already.
+// C++11 should work but C++14 is preferred even there too
 // because the date library in general works better with C++14.
 #include <iomanip>
 #endif
@@ -115,23 +117,20 @@ static const std::vector<std::string> files =
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
 
-// Arbitrary day of the year that will be away from any limits.
-// Used with year::min() and year::max().
-CONSTDATA auto boring_day = date::aug/18;
+CONSTDATA auto min_day = date::jan/1;
+CONSTDATA auto max_day = date::dec/31;
 
 // +-------------------+
 // | End Configuration |
 // +-------------------+
 
-#if _MSC_VER && ! defined(__clang__) && ! defined( __GNUG__)
-// We can't use static_assert here for MSVC (yet) because
-// the expression isn't constexpr in MSVC yet.
-// FIXME! Remove this when MSVC's constexpr support improves.
-#else
+namespace detail
+{
+struct undocumented {explicit undocumented() = default;};
+}
+
+#ifndef _MSC_VER
 static_assert(min_year <= max_year, "Configuration error");
-#endif
-#if __cplusplus >= 201402
-static_assert(boring_day.ok(), "Configuration error");
 #endif
 
 // Until filesystem arrives.
@@ -232,7 +231,7 @@ namespace // Put types in an anonymous name space.
 
         // WARNING: this function has a hard-coded value size limit.
         // It is not a general-purpose function.
-        // It should be sufficient for our use cases. 
+        // It should be sufficient for our use cases.
         // The function could be made workable for any size string
         // but we don't need the complexity of implementing that
         // for our meagre purposes right now.
@@ -273,31 +272,25 @@ namespace // Put types in an anonymous name space.
     };
 } // anonymous namespace
 
-template < typename T, size_t N >
-static inline size_t countof(T(&arr)[N])
-{
-    return std::extent< T[N] >::value;
-}
-
 // This function returns an exhaustive list of time zone information
 // from the Windows registry.
 // The routine tries to load as many time zone entries as possible despite errors.
 // We don't want to fail to load the whole database just because one record can't be read.
 
-static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
+static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
 {
     tz_list.clear();
     LONG result;
 
     // Open the parent time zone key that has the list of timezones in.
     reg_key zones_key;
-    static const wchar_t zones_key_name[] = 
+    static const wchar_t zones_key_name[] =
     { L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" };
     result = zones_key.open(zones_key_name);
     // TODO! Review if this should happen here or be signalled later.
     // We don't want the process to fail on startup because of this.
     if (result != ERROR_SUCCESS)
-        throw std::runtime_error("Time Zone registry key could not be opened: " 
+        throw std::runtime_error("Time Zone registry key could not be opened: "
         + get_win32_message(result));
 
     DWORD size;
@@ -309,13 +302,13 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
     std::wstring full_zone_key_name;
     for (DWORD zone_index = 0; ; ++zone_index)
     {
-        timezone_info tz;
+        detail::timezone_info tz;
 
         size = (DWORD) sizeof(zone_key_name)/sizeof(zone_key_name[0]);
         auto status = RegEnumKeyExW(zones_key.handle(), zone_index, zone_key_name, &size,
             nullptr, nullptr, nullptr, nullptr);
         if (status != ERROR_SUCCESS && status != ERROR_NO_MORE_ITEMS)
-            throw std::runtime_error("Can't enumerate time zone registry key" 
+            throw std::runtime_error("Can't enumerate time zone registry key"
             + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
@@ -360,7 +353,7 @@ static void get_windows_timezone_info(std::vector<timezone_info>& tz_list)
 // under the windows registry key Time Zones.
 // To be clear, standard_name does NOT represent a windows timezone id
 // or an IANA tzid
-static const timezone_info* find_native_timezone_by_standard_name(
+static const detail::timezone_info* find_native_timezone_by_standard_name(
     const std::string& standard_name)
 {
     // TODO! we can improve on linear search.
@@ -377,64 +370,108 @@ static const timezone_info* find_native_timezone_by_standard_name(
 // Read CSV file of "other","territory","type".
 // See timezone_mapping structure for more info.
 // This function should be kept in sync with the code that writes this file.
-static std::vector<timezone_mapping>
+static std::vector<detail::timezone_mapping>
 load_timezone_mappings_from_csv_file(const std::string& input_path)
 {
-    size_t line = 1;
-    std::vector<timezone_mapping> mappings;
-    std::ifstream is(input_path, std::ios_base::in | std::ios_base::binary);
+    size_t line = 0;
+    std::vector<detail::timezone_mapping> mappings;
+    std::ifstream is(input_path,
+#if _WIN32
+        std::ios_base::in // open in text mode on Win32, so getline will eat '\n' and '\r\n'
+#else
+        std::ios_base::in | std::ios_base::binary
+#endif
+    );
     if (!is.is_open())
     {
         // We don't emit file exceptions because that's an implementation detail.
-        std::string msg = "Error opening time zone mapping file: ";
+        std::string msg = "Error opening time zone mapping file \"";
         msg += input_path;
+        msg += "\".";
         throw std::runtime_error(msg);
     }
+
+    std::istringstream sis;
     auto error = [&](const char* info)
     {
-        std::string msg = "Error reading zone mapping file at line ";
+        std::string msg = "Error reading zone mapping file \"";
+        msg += input_path;
+        msg += "\" at line ";
         msg += std::to_string(line);
         msg += ": ";
         msg += info;
         throw std::runtime_error(msg);
     };
-
+    auto read_field_quote = [&]()
+    {
+        char field_delim;
+        sis.read(&field_delim, 1);
+        auto read_count = sis.gcount();
+        if (sis.gcount() != 1 || field_delim != '"')
+            error("field '\"' expected.");        
+    };
     auto read_field_delim = [&]()
     {
         char field_delim;
-        is.read(&field_delim, 1);
-        if (is.gcount() != 1 || field_delim != ',')
-            error("delimiter ',' expected");
+        sis.read(&field_delim, 1);
+        if (sis.gcount() != 1 || field_delim != ',')
+            error("delimiter ',' expected.");
     };
     std::string copyright;
-    for (int i = 0; i < 4; ++i)
-        getline(is, copyright);
-    
+    bool blank = false;
     for (;;)
     {
-        timezone_mapping zm{};
-        char ch;
-
-        is.read(&ch, 1);
+        std::getline(is, copyright);
+        ++line; // Make sure our line number is in sync with however many copyright lines we have.
         if (is.eof())
             break;
-        std::getline(is, zm.other, '\"');
+        if (copyright.empty())
+        {
+            --line;
+            blank = true;
+            break;
+        }
+    }
+    const int min_copyright_lines = 3;
+    if (!blank || line < min_copyright_lines)
+    {
+        std::string msg = "Expected at least ";
+        msg += std::to_string(min_copyright_lines);
+        msg += " lines of copyright notice followed by a blank line.";
+        error(msg.c_str());
+    }
+    ++line;
+
+    std::string linebuf;
+    for (;;)
+    {
+        detail::timezone_mapping zm{};
+        std::getline(is, linebuf);
+        // Stop on error or first blank line.
+        // linebuf.size() is the length read but it excludes the length of any line delimiter actually read (e.g. LF/CRLF).
+        // If linebuf.size() is 0 it *might* not mean nothing was read (error) or eof, it could just
+        // indicate only a line delimiter was read. Use is.eof() to distinquish end of file from a blank line.
+        if (linebuf.empty()) // on eof linebuf will be empty.
+        {
+            if (is.eof())
+                break;
+            error("Formatting error. Blank lines not allowed.");
+        }
+        sis.clear();
+        sis.str(linebuf);
+
+        read_field_quote();
+        std::getline(sis, zm.other, '\"');
         read_field_delim();
 
-        is.read(&ch, 1);
-        std::getline(is, zm.territory, '\"');
+        read_field_quote();
+        std::getline(sis, zm.territory, '\"');
         read_field_delim();
 
-        is.read(&ch, 1);
-        std::getline(is, zm.type, '\"');
-
-        is.read(&ch, 1);
-        if (is.gcount() != 1 || ch != '\n')
-            error("record delimiter LF expected");
-
-        if (is.fail() || is.eof())
-            error("unexpected end of file, file read error or formatting error.");
-
+        read_field_quote();
+        std::getline(sis, zm.type, '\"');
+        if ((size_t)sis.tellg() != linebuf.length()) // Excess characters? We should have processed all in the line buffer.
+            error("Formatting error.");
         ++line;
         mappings.push_back(std::move(zm));
     }
@@ -443,7 +480,7 @@ load_timezone_mappings_from_csv_file(const std::string& input_path)
 }
 
 static bool
-native_to_standard_timezone_name(const std::string& native_tz_name, 
+native_to_standard_timezone_name(const std::string& native_tz_name,
                                  std::string& standard_tz_name)
 {
     // TOOD! Need be a case insensitive compare?
@@ -549,7 +586,7 @@ parse_signed_time(std::istream& in)
 
 // MonthDayTime
 
-MonthDayTime::MonthDayTime(second_point tp, tz timezone)
+MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     : zone_(timezone)
 {
     using namespace date;
@@ -606,8 +643,8 @@ MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
 {
     if (zone_ != x.zone_)
     {
-        auto dp0 = to_day_point(y);
-        auto dp1 = x.to_day_point(yx);
+        auto dp0 = to_sys_days(y);
+        auto dp1 = x.to_sys_days(yx);
         if (std::abs((dp0-dp1).count()) > 1)
             return dp0 < dp1 ? -1 : 1;
         if (zone_ == tz::local)
@@ -642,7 +679,7 @@ MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
     return t0 < t1 ? -1 : t0 == t1 ? 0 : 1;
 }
 
-second_point
+sys_seconds
 MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
                      std::chrono::seconds save) const
 {
@@ -677,23 +714,23 @@ MonthDayTime::U::operator=(const pair& x)
     return *this;
 }
 
-date::day_point
-MonthDayTime::to_day_point(date::year y) const
+date::sys_days
+MonthDayTime::to_sys_days(date::year y) const
 {
     using namespace std::chrono;
     using namespace date;
     switch (type_)
     {
     case month_day:
-        return day_point(y/u.month_day_);
+        return sys_days(y/u.month_day_);
     case month_last_dow:
-        return day_point(y/u.month_weekday_last_);
+        return sys_days(y/u.month_weekday_last_);
     case lteq:
         {
             auto const x = y/u.month_day_weekday_.month_day_;
             auto const wd1 = weekday(x);
             auto const wd0 = u.month_day_weekday_.weekday_;
-            return day_point(x) - (wd1-wd0);
+            return sys_days(x) - (wd1-wd0);
         }
     case gteq:
         break;
@@ -701,13 +738,14 @@ MonthDayTime::to_day_point(date::year y) const
     auto const x = y/u.month_day_weekday_.month_day_;
     auto const wd1 = u.month_day_weekday_.weekday_;
     auto const wd0 = weekday(x);
-    return day_point(x) + (wd1-wd0);
+    return sys_days(x) + (wd1-wd0);
 }
 
-second_point
+sys_seconds
 MonthDayTime::to_time_point(date::year y) const
 {
-    return to_day_point(y) + h_ + m_ + s_;
+    // Add seconds first to promote to largest rep early to prevent overflow
+    return to_sys_days(y) + s_ + h_ + m_;
 }
 
 void
@@ -721,7 +759,7 @@ MonthDayTime::canonicalize(date::year y)
         return;
     case month_last_dow:
         {
-            auto const ymd = year_month_day(y/u.month_weekday_last_);
+            auto const ymd = year_month_day(sys_days{y/u.month_weekday_last_});
             u.month_day_ = ymd.month()/ymd.day();
             type_ = month_day;
             return;
@@ -731,7 +769,7 @@ MonthDayTime::canonicalize(date::year y)
             auto const x = y/u.month_day_weekday_.month_day_;
             auto const wd1 = weekday(x);
             auto const wd0 = u.month_day_weekday_.weekday_;
-            auto const ymd = year_month_day(day_point(x) - (wd1-wd0));
+            auto const ymd = year_month_day(sys_days(x) - (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
             type_ = month_day;
             return;
@@ -741,7 +779,7 @@ MonthDayTime::canonicalize(date::year y)
             auto const x = y/u.month_day_weekday_.month_day_;
             auto const wd1 = u.month_day_weekday_.weekday_;
             auto const wd0 = weekday(x);
-            auto const ymd = year_month_day(day_point(x) + (wd1-wd0));
+            auto const ymd = year_month_day(sys_days(x) + (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
             type_ = month_day;
             return;
@@ -870,7 +908,7 @@ operator<<(std::ostream& os, const MonthDayTime& x)
         }
         break;
     }
-    os << date::make_time(x.h_ + x.m_ + x.s_);
+    os << date::make_time(x.s_ + x.h_ + x.m_);
     if (x.zone_ == tz::utc)
         os << "UTC   ";
     else if (x.zone_ == tz::standard)
@@ -1033,7 +1071,7 @@ operator<<(std::ostream& os, const Rule& r)
 {
     using namespace date;
     using namespace std::chrono;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(15);
@@ -1218,9 +1256,9 @@ Rule::split_overlaps(std::vector<Rule>& rules)
     rules.shrink_to_fit();
 }
 
-// Zone
+// time_zone
 
-Zone::zonelet::~zonelet()
+time_zone::zonelet::~zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     using minutes = std::chrono::minutes;
@@ -1232,14 +1270,14 @@ Zone::zonelet::~zonelet()
 #endif
 }
 
-Zone::zonelet::zonelet()
+time_zone::zonelet::zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     ::new(&u.rule_) std::string();
 #endif
 }
 
-Zone::zonelet::zonelet(const zonelet& i)
+time_zone::zonelet::zonelet(const zonelet& i)
     : gmtoff_(i.gmtoff_)
     , tag_(i.tag_)
     , format_(i.format_)
@@ -1266,7 +1304,7 @@ Zone::zonelet::zonelet(const zonelet& i)
 #endif
 }
 
-Zone::Zone(const std::string& s)
+time_zone::time_zone(const std::string& s, detail::undocumented)
 #if LAZY_INIT
     : adjusted_(new std::once_flag{})
 #endif
@@ -1290,7 +1328,7 @@ Zone::Zone(const std::string& s)
 }
 
 void
-Zone::add(const std::string& s)
+time_zone::add(const std::string& s)
 {
     try
     {
@@ -1310,7 +1348,7 @@ Zone::add(const std::string& s)
 }
 
 void
-Zone::parse_info(std::istream& in)
+time_zone::parse_info(std::istream& in)
 {
     using namespace date;
     using namespace std::chrono;
@@ -1326,7 +1364,7 @@ Zone::parse_info(std::istream& in)
     if (in.eof() || in.peek() == '#')
     {
         zonelet.until_year_ = year::max();
-        zonelet.until_date_ = MonthDayTime(boring_day, tz::utc);
+        zonelet.until_date_ = MonthDayTime(max_day, tz::utc);
     }
     else
     {
@@ -1489,8 +1527,9 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
 static
 std::pair<const Rule*, date::year>
 find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
-                   const second_point& tp_utc, const second_point& tp_std,
-                   const second_point& tp_loc)
+                   const sys_seconds& tp_utc,
+                   const local_seconds& tp_std,
+                   const local_seconds& tp_loc)
 {
     using namespace std::chrono;
     using namespace date;
@@ -1508,10 +1547,10 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
             found = tp_utc < r->mdt().to_time_point(ry);
             break;
         case tz::standard:
-            found = tp_std < r->mdt().to_time_point(ry);
+            found = sys_seconds{tp_std.time_since_epoch()} < r->mdt().to_time_point(ry);
             break;
         case tz::local:
-            found = tp_loc < r->mdt().to_time_point(ry);
+            found = sys_seconds{tp_loc.time_since_epoch()} < r->mdt().to_time_point(ry);
             break;
         }
         if (found)
@@ -1525,7 +1564,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
 }
 
 static
-Info
+sys_info
 find_rule(const std::pair<const Rule*, date::year>& first_rule,
           const std::pair<const Rule*, date::year>& last_rule,
           const date::year& y, const std::chrono::seconds& offset,
@@ -1536,8 +1575,8 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
     using namespace date;
     auto r = first_rule.first;
     auto ry = first_rule.second;
-    Info x{day_point(year::min()/boring_day), day_point(year::max()/boring_day),
-           seconds{0}, initial_save, initial_abbrev};
+    sys_info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
+               seconds{0}, initial_save, initial_abbrev};
     while (r != nullptr)
     {
         auto tr = r->mdt().to_sys(ry, offset, x.save);
@@ -1569,7 +1608,7 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
                 x.end = r->mdt().to_sys(ry, offset, x.save);
             }
             else
-                x.end = day_point(year::max()/boring_day);
+                x.end = sys_days(year::max()/max_day);
             break;
         }
         x.save = r->save();
@@ -1580,7 +1619,7 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
 }
 
 void
-Zone::adjust_infos(const std::vector<Rule>& rules)
+time_zone::adjust_infos(const std::vector<Rule>& rules)
 {
     using namespace std::chrono;
     using namespace date;
@@ -1640,7 +1679,7 @@ Zone::adjust_infos(const std::vector<Rule>& rules)
                 final_save = z.last_rule_.first->save();
         }
         z.until_utc_ = z.until_date_.to_sys(z.until_year_, z.gmtoff_, final_save);
-        z.until_std_ = z.until_utc_ + z.gmtoff_;
+        z.until_std_ = local_seconds{z.until_utc_.time_since_epoch()} + z.gmtoff_;
         z.until_loc_ = z.until_std_ + final_save;
 
         if (z.tag_ == zonelet::has_rule)
@@ -1750,31 +1789,64 @@ format_abbrev(std::string format, const std::string& variable, std::chrono::seco
     return format;
 }
 
-Info
-Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
+sys_info
+time_zone::get_info_impl(sys_seconds tp) const
+{
+    return get_info_impl(tp, static_cast<int>(tz::utc));
+}
+
+local_info
+time_zone::get_info_impl(local_seconds tp) const
+{
+    using namespace std::chrono;
+    local_info i{};
+    i.first = get_info_impl(sys_seconds{tp.time_since_epoch()}, static_cast<int>(tz::local));
+    auto tps = sys_seconds{(tp - i.first.offset).time_since_epoch()};
+    if (tps < i.first.begin)
+    {
+        i.second = std::move(i.first);
+        i.first = get_info_impl(i.second.begin - seconds{1}, static_cast<int>(tz::utc));
+        i.result = local_info::nonexistent;
+    }
+    else if (i.first.end - tps <= days{1})
+    {
+        i.second = get_info_impl(i.first.end, static_cast<int>(tz::utc));
+        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
+        if (tps >= i.second.begin)
+            i.result = local_info::ambiguous;
+        else
+            i.second = {};
+    }
+    return i;
+}
+
+sys_info
+time_zone::get_info_impl(sys_seconds tp, int tz_int) const
 {
     using namespace std::chrono;
     using namespace date;
+    tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
     auto y = year_month_day(floor<days>(tp)).year();
     if (y < min_year || y > max_year)
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
                                  + std::to_string(static_cast<int>(max_year)) + "]");
-    auto tps = floor<seconds>(tp);
 #if LAZY_INIT
-    std::call_once(*adjusted_, [this]()
-                               {
-                                   const_cast<Zone*>(this)->adjust_infos(get_tzdb().rules);
-                               });
+    std::call_once(*adjusted_,
+                   [this]()
+                   {
+                       const_cast<time_zone*>(this)->adjust_infos(get_tzdb().rules);
+                   });
 #endif
-    auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tps,
-        [timezone](second_point t, const zonelet& zl)
+    auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tp,
+        [timezone](sys_seconds t, const zonelet& zl)
         {
-            return timezone == tz::utc ? t < zl.until_utc_ : t < zl.until_loc_;
+            return timezone == tz::utc ? t < zl.until_utc_ :
+                                         t < sys_seconds{zl.until_loc_.time_since_epoch()};
         });
-    
-    Info r{};
+
+    sys_info r{};
     if (i != zonelets_.end())
     {
         if (i->tag_ == zonelet::has_save)
@@ -1782,7 +1854,7 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
             if (i != zonelets_.begin())
                 r.begin = i[-1].until_utc_;
             else
-                r.begin = day_point(year::min()/boring_day);
+                r.begin = sys_days(year::min()/min_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_ + i->u.save_;
             r.save = i->u.save_;
@@ -1792,15 +1864,15 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
             if (i != zonelets_.begin())
                 r.begin = i[-1].until_utc_;
             else
-                r.begin = day_point(year::min()/boring_day);
+                r.begin = sys_days(year::min()/min_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_;
         }
         else
         {
             r = find_rule(i->first_rule_, i->last_rule_, y, i->gmtoff_,
-                          MonthDayTime(tps, timezone), i->initial_save_,
-                          i->initial_abbrev_);
+                          MonthDayTime(local_seconds{tp.time_since_epoch()}, timezone),
+                          i->initial_save_, i->initial_abbrev_);
             r.offset = i->gmtoff_ + r.save;
             if (i != zonelets_.begin() && r.begin < i[-1].until_utc_)
                 r.begin = i[-1].until_utc_;
@@ -1814,18 +1886,19 @@ Zone::get_info(std::chrono::system_clock::time_point tp, tz timezone) const
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Zone& z)
+operator<<(std::ostream& os, const time_zone& z)
 {
     using namespace date;
     using namespace std::chrono;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
 #if LAZY_INIT
-    std::call_once(*z.adjusted_, [&z]()
-                                 {
-                                     const_cast<Zone&>(z).adjust_infos(get_tzdb().rules);
-                                 });
+    std::call_once(*z.adjusted_,
+                   [&z]()
+                   {
+                       const_cast<time_zone&>(z).adjust_infos(get_tzdb().rules);
+                   });
 #endif
     os.width(35);
     os << z.name_;
@@ -1837,7 +1910,7 @@ operator<<(std::ostream& os, const Zone& z)
             os << ' ';
         os << make_time(s.gmtoff_) << "   ";
         os.width(15);
-        if (s.tag_ != Zone::zonelet::has_save)
+        if (s.tag_ != time_zone::zonelet::has_save)
             os << s.u.rule_;
         else
         {
@@ -1868,9 +1941,9 @@ operator<<(std::ostream& os, const Zone& z)
     return os;
 }
 
-// Link
+// link
 
-Link::Link(const std::string& s)
+link::link(const std::string& s)
 {
     using namespace date;
     std::istringstream in(s);
@@ -1880,19 +1953,19 @@ Link::Link(const std::string& s)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Link& x)
+operator<<(std::ostream& os, const link& x)
 {
     using namespace date;
-    detail::save_stream _(os);
+    detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
     os.width(35);
     return os << x.name_ << " --> " << x.target_;
 }
 
-// Leap
+// leap
 
-Leap::Leap(const std::string& s)
+leap::leap(const std::string& s, detail::undocumented)
 {
     using namespace date;
     std::istringstream in(s);
@@ -1905,7 +1978,7 @@ Leap::Leap(const std::string& s)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Leap& x)
+operator<<(std::ostream& os, const leap& x)
 {
     using namespace date;
     return os << x.date_ << "  +";
@@ -2061,17 +2134,17 @@ load_tzdb(TZ_DB & db, const std::vector<std::string> & lines)
 		}
 		else if (word == "Link")
 		{
-			db.links.push_back(Link(line));
+			db.links.push_back(link(line));
 			continue_zone = false;
 		}
 		else if (word == "Leap")
 		{
-			db.leaps.push_back(Leap(line));
+			db.leaps.push_back(leap(line, detail::undocumented{}));
 			continue_zone = false;
 		}
 		else if (word == "Zone")
 		{
-			db.zones.push_back(Zone(line));
+			db.zones.push_back(time_zone(line, detail::undocumented{}));
 			continue_zone = true;
 		}
 		else if (line[0] == '\t' && continue_zone)
@@ -2175,7 +2248,7 @@ init_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<s
 	load_tzdb(db, lines);
 #if TIMEZONE_MAPPING
 	for (auto && mapping_row : mappings)
-		db.mappings.push_back(timezone_mapping{ std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
+		db.mappings.push_back(detail::timezone_mapping{ std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
 	get_windows_timezone_info(db.native_zones);
 #endif
 	return db;
@@ -2220,26 +2293,26 @@ get_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<st
 }
 #endif
 
-const Zone*
+const time_zone*
 locate_zone(const std::string& tz_name)
 {
     const auto& db = get_tzdb();
     auto zi = std::lower_bound(db.zones.begin(), db.zones.end(), tz_name,
-        [](const Zone& z, const std::string& nm)
+        [](const time_zone& z, const std::string& nm)
         {
             return z.name() < nm;
         });
     if (zi == db.zones.end() || zi->name() != tz_name)
     {
         auto li = std::lower_bound(db.links.begin(), db.links.end(), tz_name,
-        [](const Link& z, const std::string& nm)
+        [](const link& z, const std::string& nm)
         {
             return z.name() < nm;
         });
         if (li != db.links.end() && li->name() == tz_name)
         {
             zi = std::lower_bound(db.zones.begin(), db.zones.end(), li->target(),
-                [](const Zone& z, const std::string& nm)
+                [](const time_zone& z, const std::string& nm)
                 {
                     return z.name() < nm;
                 });
@@ -2253,7 +2326,7 @@ locate_zone(const std::string& tz_name)
 
 #ifdef TZ_TEST
 #ifdef _WIN32
-const Zone*
+const time_zone*
 locate_native_zone(const std::string& native_tz_name)
 {
     std::string standard_tz_name;
@@ -2330,9 +2403,8 @@ operator<<(std::ostream& os, const TZ_DB& db)
 // -----------------------
 
 std::ostream&
-operator<<(std::ostream& os, const Info& r)
+operator<<(std::ostream& os, const sys_info& r)
 {
-    using namespace date;
     os << r.begin << '\n';
     os << r.end << '\n';
     os << make_time(r.offset) << "\n";
@@ -2341,9 +2413,25 @@ operator<<(std::ostream& os, const Info& r)
     return os;
 }
 
+std::ostream&
+operator<<(std::ostream& os, const local_info& r)
+{
+    if (r.result == local_info::nonexistent)
+        os << "nonexistent between\n";
+    else if (r.result == local_info::ambiguous)
+        os << "ambiguous between\n";
+    os << r.first;
+    if (r.result != local_info::unique)
+    {
+        os << "and\n";
+        os << r.second;
+    }
+    return os;
+}
+
 #ifdef _WIN32
 
-const Zone*
+const time_zone*
 current_zone()
 {
 #if TIMEZONE_MAPPING
@@ -2352,7 +2440,7 @@ current_zone()
     if (tz_result == TIME_ZONE_ID_INVALID)
     {
         auto error_code = ::GetLastError(); // Store this quick before it gets overwritten.
-        throw std::runtime_error("GetTimeZoneInformation failed: " 
+        throw std::runtime_error("GetTimeZoneInformation failed: "
             + get_win32_message(error_code));
     }
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -2384,7 +2472,7 @@ current_zone()
 
 #else // ! WIN32
 
-const Zone*
+const time_zone*
 current_zone()
 {
     // On some versions of some linux distro's (e.g. Ubuntu),

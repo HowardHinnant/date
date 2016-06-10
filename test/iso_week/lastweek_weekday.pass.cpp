@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,22 +23,22 @@
 // class lastweek_weekday
 // {
 //     iso_week::weekday wd_;  // exposition only
-// 
+//
 // public:
 //     explicit constexpr lastweek_weekday(const iso_week::weekday& wd) noexcept;
-// 
+//
 //     constexpr iso_week::weekday weekday() const noexcept;
-// 
+//
 //     constexpr bool ok() const noexcept;
 // };
-// 
+//
 // constexpr bool operator==(const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
 // constexpr bool operator!=(const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
 // constexpr bool operator< (const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
 // constexpr bool operator> (const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
 // constexpr bool operator<=(const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
 // constexpr bool operator>=(const lastweek_weekday& x, const lastweek_weekday& y) noexcept;
-// 
+//
 // std::ostream& operator<<(std::ostream& os, const lastweek_weekday& md);
 
 #include "iso_week.h"

@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,20 +24,20 @@
 // {
 // public:
 //     explicit constexpr year(int y) noexcept;
-// 
+//
 //     year& operator++()    noexcept;
 //     year  operator++(int) noexcept;
 //     year& operator--()    noexcept;
 //     year  operator--(int) noexcept;
-// 
+//
 //     year& operator+=(const years& y) noexcept;
 //     year& operator-=(const years& y) noexcept;
-// 
+//
 //     constexpr bool is_leap() const noexcept;
-// 
+//
 //     constexpr explicit operator int() const noexcept;
 //     constexpr bool ok() const noexcept;
-// 
+//
 //     static constexpr year min() noexcept;
 //     static constexpr year max() noexcept;
 // };
@@ -108,29 +108,29 @@ main()
 
 #if __cplusplus >= 201402
     using int64_t = std::int64_t;
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(days::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(hours::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(minutes::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(seconds::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(milliseconds::min()), "");
-    static_assert(day_point(year::min()/jan/1)  - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(microseconds::min()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(microseconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(milliseconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(seconds::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(minutes::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(hours::max()), "");
-    static_assert(day_point(year::max()/dec/31) - day_point(1970_y/jan/1)
+    static_assert(sys_days(year::max()/dec/31) - sys_days(1970_y/jan/1)
         <= as<int64_t>(days::max()), "");
 #endif
 

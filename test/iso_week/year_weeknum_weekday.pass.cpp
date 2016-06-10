@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,30 +28,30 @@
 //     constexpr year_weeknum_weekday(const iso_week::year& y, const iso_week::weeknum& wn,
 //                                    const iso_week::weekday& wd) noexcept;
 //     constexpr year_weeknum_weekday(const year_lastweek_weekday& ylwwd) noexcept;
-//     constexpr year_weeknum_weekday(const day_point& dp) noexcept;
-// 
+//     constexpr year_weeknum_weekday(const sys_days& dp) noexcept;
+//
 //     year_weeknum_weekday& operator+=(const years& y) noexcept;
 //     year_weeknum_weekday& operator-=(const years& y) noexcept;
-// 
+//
 //     constexpr iso_week::year    year()    const noexcept;
 //     constexpr iso_week::weeknum weeknum() const noexcept;
 //     constexpr iso_week::weekday weekday() const noexcept;
-// 
-//     constexpr operator day_point() const noexcept;
+//
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
-// 
+//
 // constexpr bool operator==(const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
 // constexpr bool operator!=(const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
 // constexpr bool operator< (const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
 // constexpr bool operator> (const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
 // constexpr bool operator<=(const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
 // constexpr bool operator>=(const year_weeknum_weekday& x, const year_weeknum_weekday& y) noexcept;
-// 
+//
 // constexpr year_weeknum_weekday operator+(const year_weeknum_weekday& ywnwd, const years& y) noexcept;
 // constexpr year_weeknum_weekday operator+(const years& y, const year_weeknum_weekday& ywnwd) noexcept;
 // constexpr year_weeknum_weekday operator-(const year_weeknum_weekday& ywnwd, const years& y) noexcept;
-// 
+//
 // std::ostream& operator<<(std::ostream& os, const year_weeknum_weekday& ywnwd);
 
 #include "iso_week.h"
@@ -79,13 +79,13 @@ static_assert( std::is_nothrow_constructible<iso_week::year_weeknum_weekday,
 static_assert( std::is_convertible<iso_week::year_lastweek_weekday,
                                        iso_week::year_weeknum_weekday>{}, "");
 static_assert( std::is_nothrow_constructible<iso_week::year_weeknum_weekday,
-                                                 iso_week::day_point>{}, "");
-static_assert( std::is_convertible<iso_week::day_point,
+                                                 iso_week::sys_days>{}, "");
+static_assert( std::is_convertible<iso_week::sys_days,
                                        iso_week::year_weeknum_weekday>{}, "");
-static_assert( std::is_nothrow_constructible<iso_week::day_point,
+static_assert( std::is_nothrow_constructible<iso_week::sys_days,
                                                  iso_week::year_weeknum_weekday>{}, "");
 static_assert( std::is_convertible<iso_week::year_weeknum_weekday,
-                                       iso_week::day_point>{}, "");
+                                       iso_week::sys_days>{}, "");
 
 int
 main()
@@ -102,7 +102,7 @@ main()
     static_assert(x1.weeknum() == 53_w, "");
     static_assert(x1.weekday() == tue, "");
 
-    constexpr year_weeknum_weekday x2 = day_point{days{16792}};
+    constexpr year_weeknum_weekday x2 = sys_days{days{16792}};
     static_assert(x2.year() == 2015_y, "");
     static_assert(x2.weeknum() == 52_w, "");
     static_assert(x2.weekday() == wed, "");
@@ -118,8 +118,8 @@ main()
     assert(x3.weeknum() == 52_w);
     assert(x3.weekday() == wed);
 
-    constexpr day_point dp = 2015_y/52_w/wed;
-    static_assert(dp == day_point{days{16792}}, "");
+    constexpr sys_days dp = 2015_y/52_w/wed;
+    static_assert(dp == sys_days{days{16792}}, "");
 
     static_assert(x0.ok(), "");
     static_assert(x1.ok(), "");

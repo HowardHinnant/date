@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,18 +26,18 @@
 //     constexpr year_month_day(const date::year& y, const date::month& m,
 //                                const date::day& d) noexcept;
 //     constexpr year_month_day(const year_month_day_last& ymdl) noexcept;
-//     constexpr year_month_day(const day_point& dp) noexcept;
-// 
+//     constexpr year_month_day(const sys_days& dp) noexcept;
+//
 //     year_month_day& operator+=(const months& m) noexcept;
 //     year_month_day& operator-=(const months& m) noexcept;
 //     year_month_day& operator+=(const years& y)  noexcept;
 //     year_month_day& operator-=(const years& y)  noexcept;
-// 
+//
 //     constexpr date::year  year()  const noexcept;
 //     constexpr date::month month() const noexcept;
 //     constexpr date::day   day()   const noexcept;
-// 
-//     constexpr operator day_point() const noexcept;
+//
+//     constexpr operator sys_days() const noexcept;
 //     constexpr bool ok() const noexcept;
 // };
 
@@ -76,10 +76,10 @@ static_assert(std::is_nothrow_constructible<date::year_month_day, date::year,
 static_assert(std::is_nothrow_constructible<date::year_month_day,
                                             date::year_month_day_last>{}, "");
 static_assert(std::is_convertible<date::year_month_day_last, date::year_month_day>{}, "");
-static_assert(std::is_nothrow_constructible<date::year_month_day, date::day_point>{}, "");
-static_assert(std::is_convertible<date::day_point, date::year_month_day>{}, "");
-static_assert(std::is_nothrow_constructible<date::day_point, date::year_month_day>{}, "");
-static_assert(std::is_convertible<date::year_month_day, date::day_point>{}, "");
+static_assert(std::is_nothrow_constructible<date::year_month_day, date::sys_days>{}, "");
+static_assert(std::is_convertible<date::sys_days, date::year_month_day>{}, "");
+static_assert(std::is_nothrow_constructible<date::sys_days, date::year_month_day>{}, "");
+static_assert(std::is_convertible<date::year_month_day, date::sys_days>{}, "");
 
 void
 test_arithmetic()
@@ -131,7 +131,7 @@ test_day_point_conversion()
     using namespace date;
     year y   = year{-1000};
     year end =       3000_y;
-    day_point prev_dp = day_point(year_month_day{y, jan, 1_d}) - days{1};
+    sys_days prev_dp = sys_days(year_month_day{y, jan, 1_d}) - days{1};
     weekday   prev_wd = weekday{prev_dp};
     for (; y <= end; ++y)
     {
@@ -143,7 +143,7 @@ test_day_point_conversion()
             {
                 year_month_day ymd = {y, m, d};
                 assert(ymd.ok());
-                day_point dp = ymd;
+                sys_days dp = ymd;
                 assert(dp == prev_dp + days{1});
                 year_month_day ymd2 = dp;
                 assert(ymd2 == ymd);
@@ -171,7 +171,7 @@ main()
     static_assert(ymd1.day() == 9_d, "");
 
 #if __cplusplus >= 201402
-    constexpr day_point dp = ymd1;
+    constexpr sys_days dp = ymd1;
     static_assert(dp.time_since_epoch() == days{16656}, "");
     constexpr year_month_day ymd2 = dp;
     static_assert(ymd1 == ymd2, "");
@@ -186,7 +186,7 @@ main()
     static_assert(ymd3.day() == 31_d, "");
 
 #if __cplusplus >= 201402
-    constexpr day_point dp3 = ymd3;
+    constexpr sys_days dp3 = ymd3;
     static_assert(dp3.time_since_epoch() == days{-1}, "");
     constexpr year_month_day ymd4 = dp3;
     static_assert(ymd3 == ymd4, "");
@@ -211,9 +211,9 @@ main()
     static_assert( (2100_y/feb/28).ok(), "");
     static_assert(!(2100_y/feb/29).ok(), "");
 
-    static_assert(day_point(2100_y/feb/28) + days{1} == day_point(2100_y/mar/1), "");
-    static_assert(day_point(2000_y/mar/1) - day_point(2000_y/feb/28) == days{2}, "");
-    static_assert(day_point(2100_y/mar/1) - day_point(2100_y/feb/28) == days{1}, "");
+    static_assert(sys_days(2100_y/feb/28) + days{1} == sys_days(2100_y/mar/1), "");
+    static_assert(sys_days(2000_y/mar/1) - sys_days(2000_y/feb/28) == days{2}, "");
+    static_assert(sys_days(2100_y/mar/1) - sys_days(2100_y/feb/28) == days{1}, "");
 
     static_assert(jan/31/2015 == jan/last/2015, "");
     static_assert(feb/28/2015 == feb/last/2015, "");

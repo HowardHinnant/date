@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,19 +25,19 @@
 //     unsigned char wd_;
 // public:
 //     explicit constexpr weekday(unsigned wd) noexcept;
-//     constexpr weekday(const day_point& dp) noexcept;
-// 
+//     constexpr weekday(const sys_days& dp) noexcept;
+//
 //     weekday& operator++()    noexcept;
 //     weekday  operator++(int) noexcept;
 //     weekday& operator--()    noexcept;
 //     weekday  operator--(int) noexcept;
-// 
+//
 //     weekday& operator+=(const days& d) noexcept;
 //     weekday& operator-=(const days& d) noexcept;
-// 
+//
 //     constexpr explicit operator unsigned() const noexcept;
 //     constexpr bool ok() const noexcept;
-// 
+//
 //     // tested with weekday_indexed
 //     constexpr weekday_indexed operator[](unsigned index) const noexcept;
 //     // tested with weekday_last
@@ -76,10 +76,10 @@ static_assert( std::is_trivially_move_constructible<date::weekday>{}, "");
 static_assert( std::is_trivially_move_assignable<date::weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<date::weekday, unsigned>{}, "");
-static_assert( std::is_nothrow_constructible<date::weekday, date::day_point>{}, "");
+static_assert( std::is_nothrow_constructible<date::weekday, date::sys_days>{}, "");
 static_assert( std::is_nothrow_constructible<unsigned, date::weekday>{}, "");
 static_assert(!std::is_convertible<unsigned, date::weekday>{}, "");
-static_assert( std::is_convertible<date::day_point, date::weekday>{}, "");
+static_assert( std::is_convertible<date::sys_days, date::weekday>{}, "");
 static_assert(!std::is_convertible<date::weekday, unsigned>{}, "");
 static_assert(static_cast<unsigned>(date::weekday{1u}) == 1, "");
 

@@ -2,19 +2,19 @@
 #define ISO_WEEK_H
 
 // The MIT License (MIT)
-// 
-// Copyright (c) 2015 Howard Hinnant
-// 
+//
+// Copyright (c) 2015, 2016 Howard Hinnant
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,8 @@ using years = date::years;
 
 // time_point
 
-using day_point = date::day_point;
+using sys_days = date::sys_days;
+using local_days = date::local_days;
 
 // types
 
@@ -95,7 +96,8 @@ public:
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
     CONSTCD11 weekday(date::weekday wd) NOEXCEPT;
     explicit weekday(int) = delete;
-    CONSTCD11 weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
+    CONSTCD11 explicit weekday(const local_days& dp) NOEXCEPT;
 
     weekday& operator++()    NOEXCEPT;
     weekday  operator++(int) NOEXCEPT;
@@ -123,7 +125,9 @@ CONSTCD14 weekday operator+(const days&    x, const weekday& y) NOEXCEPT;
 CONSTCD14 weekday operator-(const weekday& x, const days&    y) NOEXCEPT;
 CONSTCD14 days    operator-(const weekday& x, const weekday& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weekday& wd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd);
 
 // year
 
@@ -161,7 +165,9 @@ CONSTCD11 year  operator+(const years& x, const year&  y) NOEXCEPT;
 CONSTCD11 year  operator-(const year&  x, const years& y) NOEXCEPT;
 CONSTCD11 years operator-(const year&  x, const year&  y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year& y);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year& y);
 
 // weeknum
 
@@ -196,7 +202,9 @@ CONSTCD11 weeknum  operator+(const weeks&   x, const weeknum& y) NOEXCEPT;
 CONSTCD11 weeknum  operator-(const weeknum& x, const weeks&   y) NOEXCEPT;
 CONSTCD11 weeks    operator-(const weeknum& x, const weeknum& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weeknum& wn);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weeknum& wn);
 
 // year_weeknum
 
@@ -228,7 +236,9 @@ CONSTCD11 year_weeknum operator+(const year_weeknum& ym, const years& dy) NOEXCE
 CONSTCD11 year_weeknum operator+(const years& dy, const year_weeknum& ym) NOEXCEPT;
 CONSTCD11 year_weeknum operator-(const year_weeknum& ym, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_weeknum& ym);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_weeknum& ym);
 
 // year_lastweek
 
@@ -259,7 +269,9 @@ CONSTCD11 year_lastweek operator+(const year_lastweek& ym, const years& dy) NOEX
 CONSTCD11 year_lastweek operator+(const years& dy, const year_lastweek& ym) NOEXCEPT;
 CONSTCD11 year_lastweek operator-(const year_lastweek& ym, const years& dy) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_lastweek& ym);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_lastweek& ym);
 
 // weeknum_weekday
 
@@ -285,7 +297,9 @@ CONSTCD11 bool operator> (const weeknum_weekday& x, const weeknum_weekday& y) NO
 CONSTCD11 bool operator<=(const weeknum_weekday& x, const weeknum_weekday& y) NOEXCEPT;
 CONSTCD11 bool operator>=(const weeknum_weekday& x, const weeknum_weekday& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const weeknum_weekday& md);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weeknum_weekday& md);
 
 // lastweek_weekday
 
@@ -308,7 +322,9 @@ CONSTCD11 bool operator> (const lastweek_weekday& x, const lastweek_weekday& y) 
 CONSTCD11 bool operator<=(const lastweek_weekday& x, const lastweek_weekday& y) NOEXCEPT;
 CONSTCD11 bool operator>=(const lastweek_weekday& x, const lastweek_weekday& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const lastweek_weekday& md);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const lastweek_weekday& md);
 
 // year_lastweek_weekday
 
@@ -328,7 +344,8 @@ public:
     CONSTCD11 iso_week::weeknum weeknum() const NOEXCEPT;
     CONSTCD11 iso_week::weekday weekday() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -343,7 +360,9 @@ CONSTCD11 year_lastweek_weekday operator+(const year_lastweek_weekday& ywnwd, co
 CONSTCD11 year_lastweek_weekday operator+(const years& y, const year_lastweek_weekday& ywnwd) NOEXCEPT;
 CONSTCD11 year_lastweek_weekday operator-(const year_lastweek_weekday& ywnwd, const years& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_lastweek_weekday& ywnwd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_lastweek_weekday& ywnwd);
 
 // class year_weeknum_weekday
 
@@ -357,7 +376,8 @@ public:
     CONSTCD11 year_weeknum_weekday(const iso_week::year& y, const iso_week::weeknum& wn,
                                    const iso_week::weekday& wd) NOEXCEPT;
     CONSTCD14 year_weeknum_weekday(const year_lastweek_weekday& ylwwd) NOEXCEPT;
-    CONSTCD14 year_weeknum_weekday(const day_point& dp) NOEXCEPT;
+    CONSTCD14 year_weeknum_weekday(const sys_days& dp) NOEXCEPT;
+    CONSTCD14 explicit year_weeknum_weekday(const local_days& dp) NOEXCEPT;
 
     year_weeknum_weekday& operator+=(const years& y) NOEXCEPT;
     year_weeknum_weekday& operator-=(const years& y) NOEXCEPT;
@@ -366,11 +386,12 @@ public:
     CONSTCD11 iso_week::weeknum weeknum() const NOEXCEPT;
     CONSTCD11 iso_week::weekday weekday() const NOEXCEPT;
 
-    CONSTCD14 operator day_point() const NOEXCEPT;
+    CONSTCD14 operator sys_days() const NOEXCEPT;
+    CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-    static CONSTCD14 year_weeknum_weekday from_day_point(const day_point& dp) NOEXCEPT;
+    static CONSTCD14 year_weeknum_weekday from_days(days dp) NOEXCEPT;
 };
 
 CONSTCD11 bool operator==(const year_weeknum_weekday& x, const year_weeknum_weekday& y) NOEXCEPT;
@@ -384,7 +405,9 @@ CONSTCD11 year_weeknum_weekday operator+(const year_weeknum_weekday& ywnwd, cons
 CONSTCD11 year_weeknum_weekday operator+(const years& y, const year_weeknum_weekday& ywnwd) NOEXCEPT;
 CONSTCD11 year_weeknum_weekday operator-(const year_weeknum_weekday& ywnwd, const years& y) NOEXCEPT;
 
-std::ostream& operator<<(std::ostream& os, const year_weeknum_weekday& ywnwd);
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_weeknum_weekday& ywnwd);
 
 //----------------+
 // Implementation |
@@ -426,12 +449,18 @@ weekday::weekday(unsigned wd) NOEXCEPT
 CONSTCD11
 inline
 weekday::weekday(date::weekday wd) NOEXCEPT
-    : wd_(to_iso_encoding(unsigned{wd}))
+    : wd_(to_iso_encoding(static_cast<unsigned>(wd)))
     {}
 
 CONSTCD11
 inline
-weekday::weekday(const day_point& dp) NOEXCEPT
+weekday::weekday(const sys_days& dp) NOEXCEPT
+    : wd_(weekday_from_days(dp.time_since_epoch().count()))
+    {}
+
+CONSTCD11
+inline
+weekday::weekday(const local_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
     {}
 
@@ -523,9 +552,10 @@ operator-(const weekday& x, const days& y) NOEXCEPT
     return x + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weekday& wd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
 {
     switch (static_cast<unsigned>(wd))
     {
@@ -676,11 +706,12 @@ operator-(const year& x, const years& y) NOEXCEPT
     return year{static_cast<int>(x) - y.count()};
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year& y)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 {
-    date::detail::save_stream _(os);
+    date::detail::save_stream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
@@ -837,11 +868,12 @@ operator-(const weeknum& x, const weeks& y) NOEXCEPT
     return x + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weeknum& wn)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weeknum& wn)
 {
-    date::detail::save_stream _(os);
+    date::detail::save_stream<CharT, Traits> _(os);
     os << 'W';
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
@@ -863,7 +895,7 @@ CONSTCD11 inline year year_weeknum::year() const NOEXCEPT {return y_;}
 CONSTCD11 inline weeknum year_weeknum::weeknum() const NOEXCEPT {return wn_;}
 CONSTCD11 inline bool year_weeknum::ok() const NOEXCEPT
 {
-    return y_.ok() && 1u <= unsigned{wn_} && wn_ <= (y_/last).weeknum();
+    return y_.ok() && 1u <= static_cast<unsigned>(wn_) && wn_ <= (y_/last).weeknum();
 }
 
 inline
@@ -956,9 +988,10 @@ operator-(const year_weeknum& ym, const years& dy) NOEXCEPT
     return ym + -dy;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_weeknum& ywn)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_weeknum& ywn)
 {
     return os << ywn.year() << '-' << ywn.weeknum();
 }
@@ -979,9 +1012,9 @@ inline
 weeknum
 year_lastweek::weeknum() const NOEXCEPT
 {
-    const auto y = date::year{int{y_}};
-    const auto s0 = day_point{(y-years{1})/12/date::thu[date::last]};
-    const auto s1 = day_point{y/12/date::thu[date::last]};
+    const auto y = date::year{static_cast<int>(y_)};
+    const auto s0 = sys_days{(y-years{1})/12/date::thu[date::last]};
+    const auto s1 = sys_days{y/12/date::thu[date::last]};
     return iso_week::weeknum(date::trunc<weeks>(s1-s0).count());
 }
 
@@ -1075,9 +1108,10 @@ operator-(const year_lastweek& ym, const years& dy) NOEXCEPT
     return ym + -dy;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_lastweek& ywn)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_lastweek& ywn)
 {
     return os << ywn.year() << "-W last";
 }
@@ -1126,7 +1160,7 @@ operator<(const weeknum_weekday& x, const weeknum_weekday& y) NOEXCEPT
 {
     return x.weeknum() < y.weeknum() ? true
         : (x.weeknum() > y.weeknum() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())));
 }
 
 CONSTCD11
@@ -1153,9 +1187,10 @@ operator>=(const weeknum_weekday& x, const weeknum_weekday& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const weeknum_weekday& md)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weeknum_weekday& md)
 {
     return os << md.weeknum() << '-' << md.weekday();
 }
@@ -1199,7 +1234,7 @@ inline
 bool
 operator<(const lastweek_weekday& x, const lastweek_weekday& y) NOEXCEPT
 {
-    return unsigned{x.weekday()} < unsigned{y.weekday()};
+    return static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday());
 }
 
 CONSTCD11
@@ -1226,9 +1261,10 @@ operator>=(const lastweek_weekday& x, const lastweek_weekday& y) NOEXCEPT
     return !(x < y);
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const lastweek_weekday& md)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const lastweek_weekday& md)
 {
     return os << "W last-" << md.weekday();
 }
@@ -1273,10 +1309,18 @@ CONSTCD11 inline weekday year_lastweek_weekday::weekday() const NOEXCEPT {return
 
 CONSTCD14
 inline
-year_lastweek_weekday::operator day_point() const NOEXCEPT
+year_lastweek_weekday::operator sys_days() const NOEXCEPT
 {
-    return day_point{date::year{int{y_}}/date::dec/date::thu[date::last]} + (mon - thu)
-         - (mon - wd_);
+    return sys_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+         + (mon - thu) - (mon - wd_);
+}
+
+CONSTCD14
+inline
+year_lastweek_weekday::operator local_days() const NOEXCEPT
+{
+    return local_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+         + (mon - thu) - (mon - wd_);
 }
 
 CONSTCD11
@@ -1310,7 +1354,7 @@ operator<(const year_lastweek_weekday& x, const year_lastweek_weekday& y) NOEXCE
 {
     return x.year() < y.year() ? true
         : (x.year() > y.year() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())));
 }
 
 CONSTCD11
@@ -1361,9 +1405,10 @@ operator-(const year_lastweek_weekday& ywnwd, const years& y)  NOEXCEPT
     return ywnwd + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_lastweek_weekday& ywnwd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_lastweek_weekday& ywnwd)
 {
     return os << ywnwd.year() << "-W last-" << ywnwd.weekday();
 }
@@ -1390,8 +1435,14 @@ year_weeknum_weekday::year_weeknum_weekday(const year_lastweek_weekday& ylwwd) N
 
 CONSTCD14
 inline
-year_weeknum_weekday::year_weeknum_weekday(const day_point& dp) NOEXCEPT
-    : year_weeknum_weekday(from_day_point(dp))
+year_weeknum_weekday::year_weeknum_weekday(const sys_days& dp) NOEXCEPT
+    : year_weeknum_weekday(from_days(dp.time_since_epoch()))
+    {}
+
+CONSTCD14
+inline
+year_weeknum_weekday::year_weeknum_weekday(const local_days& dp) NOEXCEPT
+    : year_weeknum_weekday(from_days(dp.time_since_epoch()))
     {}
 
 inline
@@ -1416,10 +1467,18 @@ CONSTCD11 inline weekday year_weeknum_weekday::weekday() const NOEXCEPT {return 
 
 CONSTCD14
 inline
-year_weeknum_weekday::operator day_point() const NOEXCEPT
+year_weeknum_weekday::operator sys_days() const NOEXCEPT
 {
-    return day_point{date::year{int{y_}-1}/date::dec/date::thu[date::last]}
-         + (date::mon - date::thu) + weeks{unsigned{wn_}-1} + (wd_ - mon);
+    return sys_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+         + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
+}
+
+CONSTCD14
+inline
+year_weeknum_weekday::operator local_days() const NOEXCEPT
+{
+    return local_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+         + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
 }
 
 CONSTCD14
@@ -1433,18 +1492,19 @@ year_weeknum_weekday::ok() const NOEXCEPT
 CONSTCD14
 inline
 year_weeknum_weekday
-year_weeknum_weekday::from_day_point(const day_point& dp) NOEXCEPT
+year_weeknum_weekday::from_days(days d) NOEXCEPT
 {
+    const auto dp = sys_days{d};
     const auto wd = iso_week::weekday{dp};
     auto y = date::year_month_day{dp + days{3}}.year();
-    auto start = day_point{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+    auto start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
     if (dp < start)
     {
         --y;
-        start = day_point{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+        start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
     }
     const auto wn = iso_week::weeknum(date::trunc<weeks>(dp - start).count() + 1);
-    return {iso_week::year(int{y}), wn, wd};
+    return {iso_week::year(static_cast<int>(y)), wn, wd};
 }
 
 CONSTCD11
@@ -1472,7 +1532,7 @@ operator<(const year_weeknum_weekday& x, const year_weeknum_weekday& y) NOEXCEPT
         : (x.year() > y.year() ? false
         : (x.weeknum() < y.weeknum() ? true
         : (x.weeknum() > y.weeknum() ? false
-        : (unsigned{x.weekday()} < unsigned{y.weekday()}))));
+        : (static_cast<unsigned>(x.weekday()) < static_cast<unsigned>(y.weekday())))));
 }
 
 CONSTCD11
@@ -1523,9 +1583,10 @@ operator-(const year_weeknum_weekday& ywnwd, const years& y)  NOEXCEPT
     return ywnwd + -y;
 }
 
+template<class CharT, class Traits>
 inline
-std::ostream&
-operator<<(std::ostream& os, const year_weeknum_weekday& ywnwd)
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year_weeknum_weekday& ywnwd)
 {
     return os << ywnwd.year() << '-' << ywnwd.weeknum() << '-' << ywnwd.weekday();
 }
