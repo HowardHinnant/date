@@ -2437,20 +2437,6 @@ current_zone()
 const time_zone*
 current_zone()
 {
-    // On some versions of some linux distro's (e.g. Ubuntu),
-    // the current timezone might be in the first line of
-    // the /etc/timezone file. So we check that.
-#if __linux
-    std::ifstream timezone_file("/etc/timezone");
-    if (timezone_file.is_open())
-    {
-        std::string line;
-        std::getline(timezone_file, line);
-        if (!line.empty())
-            return locate_zone(line);
-        // Fall through to try other means.
-    }
-#endif
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
     // containing time zone details or a symlink to such a file.
@@ -2466,25 +2452,56 @@ current_zone()
     // "../usr/share/zoneinfo/America/Los_Angeles".
     struct stat sb;
     CONSTDATA auto timezone = "/etc/localtime";
-    if (lstat(timezone, &sb) == -1 || sb.st_size == 0)
-        throw std::runtime_error("Could not get lstat on /etc/localtime");
-    std::string result(sb.st_size, '\0');
-    while (true)
+    if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
+        std::string result(sb.st_size, '\0');
         auto sz = readlink(timezone, &result.front(), result.size());
         if (sz == -1)
             throw std::runtime_error("readlink failure");
         auto tmp = result.size();
         result.resize(sz);
-        if (sz <= tmp)
-            break;
+        const char zonepath[] = "/usr/share/zoneinfo/";
+        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const size_t pos = result.find(zonepath);
+        if (pos != result.npos)
+            result.erase(0, zonepath_len+pos);
+        return locate_zone(result);
     }
-    const char zonepath[] = "/usr/share/zoneinfo/";
-    const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-    const size_t pos = result.find(zonepath);
-    if (pos != result.npos)
-        result.erase(0, zonepath_len+pos);
-    return locate_zone(result);
+    {
+    // On some versions of some linux distro's (e.g. Ubuntu),
+    // the current timezone might be in the first line of
+    // the /etc/timezone file.
+        std::ifstream timezone_file("/etc/timezone");
+        if (timezone_file.is_open())
+        {
+            std::string result;
+            std::getline(timezone_file, result);
+            if (!result.empty())
+                return locate_zone(result);
+        }
+        // Fall through to try other means.
+    }
+    {
+    // On some versions of some linux distro's (e.g. Red Hat),
+    // the current timezone might be in the first line of
+    // the /etc/sysconfig/clock file as:
+    // ZONE="US/Eastern"
+        std::ifstream timezone_file("/etc/sysconfig/clock");
+        std::string result;
+        while (timezone_file)
+        {
+            std::getline(timezone_file, result);
+            auto p = result.find("ZONE=\"");
+            if (p != std::string::npos)
+            {
+                result.erase(p, p+6);
+                result.erase(result.rfind('"'));
+                return locate_zone(result);
+            }
+        }
+        // Fall through to try other means.
+    }
+    throw std::runtime_error("Could not get current timezone");
 }
 #endif
 
