@@ -228,9 +228,8 @@ namespace date
 
 static std::string get_install()
 {
-    std::string install;
 #if _WIN32
-    install = get_download_folder();
+    std::string install = get_download_folder();
     install += folder_delimiter;
     install += "tzdata";
 #else
@@ -2185,6 +2184,7 @@ make_directory(const std::string& folder)
 #endif
 }
 
+#if _WIN32
 static DWORD run_program(const std::string& command)
 {
     STARTUPINFO si{};
@@ -2207,6 +2207,7 @@ static DWORD run_program(const std::string& command)
     }
     return EXIT_FAILURE;
 }
+#endif
 
 static bool delete_file(const std::string& file)
 {
@@ -2234,12 +2235,14 @@ static bool move_file(const std::string& from, const std::string& to)
     return !!::MoveFile(from.c_str(), to.c_str());
 #endif
 #else
-    return std::system(("mv " + file).c_str() == EXIT_SUCCESS);
+    return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
 #endif
 }
 
 static bool extract_gz_file(const std::string& version, const std::string& gz_file, const std::string& dest_folder)
 {
+    auto tar_file = get_download_tar_file(version);
+
 #if _WIN32
     auto unzip_prog = get_unzip_program();
     bool unzip_result = false;
@@ -2268,7 +2271,6 @@ static bool extract_gz_file(const std::string& version, const std::string& gz_fi
 
     // Use the unzip program extract the data from the tar file that was
     // just extracted from the archive.
-    auto tar_file = get_download_tar_file(version);
     cmd = '\"';
     cmd += unzip_prog;
     cmd += "\" x \"";
@@ -2287,10 +2289,14 @@ static bool extract_gz_file(const std::string& version, const std::string& gz_fi
 
     delete_file(tar_file);
     return unzip_result;
-#else
-    if (std::system(("tar -xzf " + tarfile + " -C " + install).c_str()) == EXIT_SUCCESS)
-        success = true;
-    retun std::system(("rm " + tarfile).c_str() == EXIT_SUCCESS);
+
+#else //! _WIN32
+    if (std::system(("tar -xzf " + tar_file + " -C " + install).c_str()) == EXIT_SUCCESS)
+    {        
+        if (std::system(("rm " + tar_file).c_str()) == EXIT_SUCCESS)
+            return true;
+    }
+    return false;
 #endif
 }
 
