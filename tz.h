@@ -59,11 +59,7 @@ Technically any OS may use the mapping process but currently only Windows does u
 #endif
 
 #ifndef HAS_REMOTE_API
-#  ifndef _MSC_VER
 #    define HAS_REMOTE_API 1
-#  else
-#    define HAS_REMOTE_API 0
-#  endif
 #endif
 
 #ifndef AUTO_DOWNLOAD

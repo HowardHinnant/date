@@ -25,6 +25,23 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
+#ifdef _WIN32
+// Windows.h will be included directly and indirectly (e.g. by curl).
+// We don't need everything Windows.h has to offer though and some
+// things like min/max will prevent compilation.
+// So define some macros early to prevent Windows.h bringing in more
+// than we need, whenever it arrives.
+// Prevent windows defining min/max macros as they interfere with the C++ versions.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#endif // _WIN32
+
 #include "tz_private.h"
 
 #include <algorithm>
@@ -39,46 +56,38 @@
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
-#if HAS_REMOTE_API
-#include <curl/curl.h>
-#endif
+
 #ifdef _WIN32
 #include <locale>
 #include <codecvt>
-#endif
-
-#if TIMEZONE_MAPPING
-// Timezone mapping maps native (e.g. Windows) timezone names to the "Standard" names
-// used by this library.
-// The mapping process parses a CSV file of mapping data where each line is of the format:
-// "other","territory","type"<newline>
-// e.g. "GMT Standard Time", "001", "Europe/London"
-// and <newline>
-// Windows typically uses CRLF, Linux/Unix/Mac OS use LF, and old Mac's use CR.
-// On Linux/Mac, no mapping file is required as that is the native format already.
-// C++11 should work but C++14 is preferred even there too
-// because the date library in general works better with C++14.
-#include <iomanip>
-#endif
+#include <direct.h> // _mkdir
+#endif // _WIN32
 
 // unistd.h is used on some platforms as part of the the means to get
 // the current time zone. On Win32 Windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
-// Prevent windows defining min/max macros that will interfere with C++ versions.
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-// We don't need everything Windows.h has to offer.
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
 #include <Windows.h>
 #include <io.h>
+#if HAS_REMOTE_API
+#include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
+#include <Shellapi.h> // ShFileOperation etc.
+#endif
 #else
 #include <unistd.h>
 #include <wordexp.h>
+#endif
+
+#if HAS_REMOTE_API
+// Note curl includes windows.h so we must include curl AFTER definitions of things
+// that effect windows.h such as NOMINMAX.
+#include <curl/curl.h>
+#endif
+
+#if TIMEZONE_MAPPING
+// See comments in tz.h regarding the XML mapping file.
+#include "tinyxml2/tinyxml2.h"
 #endif
 
 namespace date
@@ -87,25 +96,174 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
-#if _WIN32 // TODO: sensible default for all platforms.
-static const std::string install{ "c:\\tzdata" };
-#else  // !_WIN32
+// Until filesystem arrives.
+#ifdef _WIN32
+    static CONSTDATA char folder_delimiter = '\\';
+#else
+    static CONSTDATA char folder_delimiter = '/';
+#endif
 
-static
-std::string
-expand_path(std::string path)
+    namespace
+    {
+#if HAS_REMOTE_API
+        using curl_write_callback = std::size_t(*)(char* contents, std::size_t size, std::size_t nmemb, void* userp);
+        enum class download_file_options { binary, text };
+#endif
+#if _WIN32
+        struct task_mem_deleter
+        {
+            void operator()(wchar_t buf[])
+            {
+                if (buf != nullptr)
+                    CoTaskMemFree(buf);
+            }
+        };
+        using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
+#endif
+    }
+
+#if _WIN32
+
+    // We might need to know certain locations even if not using the remote API,
+    // so keep these routines out of that block for now.
+    static std::string get_known_folder(const GUID& folderid)
+    {
+        std::string folder;
+        PWSTR pfolder = nullptr;
+        HRESULT hr = SHGetKnownFolderPath(folderid, KF_FLAG_DEFAULT, NULL, &pfolder);
+        if (SUCCEEDED(hr))
+        {
+            co_task_mem_ptr folder_ptr(pfolder);
+            folder = std::string(folder_ptr.get(), folder_ptr.get() + wcslen(folder_ptr.get()));
+        }
+        return folder;
+    }
+
+    static std::string get_program_folder()
+    {
+        return get_known_folder(FOLDERID_ProgramFiles);
+    }
+#endif
+
+#if HAS_REMOTE_API
+
+#if _WIN32
+
+    static std::string get_download_folder()
+    {
+        return get_known_folder(FOLDERID_Downloads);
+    }
+
+    // Note folder can and usually does contain spaces.
+    // Note assume's 7 zip is in the default installation location.
+    // TODO! consider more certain means of finding it such as looking in the registry.
+    static std::string get_unzip_program()
+    {
+        std::string path;
+        path += get_program_folder();
+        path += folder_delimiter;
+        path += "7-Zip\\7z.exe";
+        return path;
+    }
+
+#if TIMEZONE_MAPPING
+    static std::vector<date::detail::timezone_mapping> load_zone_mappings_from_xml_file(const std::string& input_path)
+    {
+        using tinyxml2::XMLDocument;
+        std::vector<date::detail::timezone_mapping> zone_map_list;
+        XMLDocument doc;
+        doc.LoadFile(input_path.c_str());
+        auto supplementalData = doc.FirstChildElement("supplementalData");
+        auto windowsZones = supplementalData->FirstChildElement("windowsZones");
+        auto mapTimeZones = windowsZones->FirstChildElement("mapTimezones");
+
+        for (auto mapZone = mapTimeZones->FirstChildElement("mapZone");
+            mapZone != nullptr; mapZone = mapZone->NextSiblingElement())
+        {
+            auto other = mapZone->Attribute("other");
+            auto territory = mapZone->Attribute("territory");
+            auto type = mapZone->Attribute("type");
+            zone_map_list.emplace_back(other, territory, type);
+        }
+        return zone_map_list;
+    }
+
+    static void sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
+    {
+        std::sort(mappings.begin(), mappings.end(),
+            [](const auto& lhs, const auto& rhs)->bool
+        {
+            auto other_result = lhs.other.compare(rhs.other);
+            if (other_result < 0)
+                return true;
+            else if (other_result == 0)
+            {
+                auto territory_result = lhs.territory.compare(rhs.territory);
+                if (territory_result < 0)
+                    return true;
+                else if (territory_result == 9)
+                {
+                    if (lhs.type < rhs.type)
+                        return true;
+                }
+            }
+            return false;
+        });
+    }
+#endif
+
+#else  // !_WIN32
+    static
+        std::string
+        expand_path(std::string path)
+    {
+        ::wordexp_t w{};
+        ::wordexp(path.c_str(), &w, 0);
+        assert(w.we_wordc == 1);
+        path = w.we_wordv[0];
+        ::wordfree(&w);
+        return path;
+    }
+#endif  // !_WIN32
+
+static std::string get_install()
 {
-    ::wordexp_t w{};
-    ::wordexp(path.c_str(), &w, 0);
-    assert(w.we_wordc == 1);
-    path = w.we_wordv[0];
-    ::wordfree(&w);
-    return path;
+    std::string install;
+#if _WIN32
+    install = get_download_folder();
+    install += folder_delimiter;
+    install += "tzdata";
+#else
+    std::string install = expand_path("~/Downloads/tzdata");
+#endif
+    return install;
 }
 
-static const std::string install = expand_path("~/Downloads/tzdata");
+static const std::string install = get_install();
 
-#endif  // !_WIN32
+static std::string get_download_gz_file(const std::string& version)
+{
+    auto file = install + version + ".tar.gz";
+    return file;
+}
+
+static std::string get_download_tar_file(const std::string& version)
+{
+    auto file = install;
+    file += folder_delimiter;
+    file += "tzdata";
+    file += version;
+    file += ".tar";
+    return file;
+}
+
+#if TIMEZONE_MAPPING
+static std::string get_download_mapping_file(const std::string& version)
+{
+    auto file = install + version + "windowsZones.xml";
+    return file;
+}
+#endif
 
 static const std::vector<std::string> files =
 {
@@ -133,14 +291,6 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
-// Until filesystem arrives.
-static CONSTDATA char folder_delimiter =
-#ifdef _WIN32
-'\\';
-#else
-'/';
-#endif
-
 static bool file_exists(const std::string& filename)
 {
 #ifdef _WIN32
@@ -151,8 +301,7 @@ static bool file_exists(const std::string& filename)
 }
 
 #ifdef _WIN32
-// Win32 support requires calling OS functions.
-// This routine maps OS error codes to readable text strngs.
+// This routine maps Win32 OS error codes to readable text strngs.
 static std::string get_win32_message(DWORD error_code)
 {
     struct free_message {
@@ -229,12 +378,8 @@ namespace // Put types in an anonymous name space.
             return ERROR_SUCCESS;
         }
 
-        // WARNING: this function has a hard-coded value size limit.
-        // It is not a general-purpose function.
-        // It should be sufficient for our use cases.
-        // The function could be made workable for any size string
-        // but we don't need the complexity of implementing that
-        // for our meagre purposes right now.
+        // WARNING: this function is not a general-purpose function.
+        // It has a hard-coded value size limit that should be sufficient for our use cases.
         bool get_string(const wchar_t* key_name, std::string& value)
         {
             value.clear();
@@ -353,7 +498,8 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
 // under the windows registry key Time Zones.
 // To be clear, standard_name does NOT represent a windows timezone id
 // or an IANA tzid
-static const detail::timezone_info* find_native_timezone_by_standard_name(
+static const detail::timezone_info*
+find_native_timezone_by_standard_name(
     const std::string& standard_name)
 {
     // TODO! we can improve on linear search.
@@ -365,118 +511,6 @@ static const detail::timezone_info* find_native_timezone_by_standard_name(
     }
 
     return nullptr;
-}
-
-// Read CSV file of "other","territory","type".
-// See timezone_mapping structure for more info.
-// This function should be kept in sync with the code that writes this file.
-static std::vector<detail::timezone_mapping>
-load_timezone_mappings_from_csv_file(const std::string& input_path)
-{
-    size_t line = 0;
-    std::vector<detail::timezone_mapping> mappings;
-    std::ifstream is(input_path,
-#if _WIN32
-        std::ios_base::in // open in text mode on Win32, so getline will eat '\n' and '\r\n'
-#else
-        std::ios_base::in | std::ios_base::binary
-#endif
-    );
-    if (!is.is_open())
-    {
-        // We don't emit file exceptions because that's an implementation detail.
-        std::string msg = "Error opening time zone mapping file \"";
-        msg += input_path;
-        msg += "\".";
-        throw std::runtime_error(msg);
-    }
-
-    std::istringstream sis;
-    auto error = [&](const char* info)
-    {
-        std::string msg = "Error reading zone mapping file \"";
-        msg += input_path;
-        msg += "\" at line ";
-        msg += std::to_string(line);
-        msg += ": ";
-        msg += info;
-        throw std::runtime_error(msg);
-    };
-    auto read_field_quote = [&]()
-    {
-        char field_delim;
-        sis.read(&field_delim, 1);
-        auto read_count = sis.gcount();
-        if (sis.gcount() != 1 || field_delim != '"')
-            error("field '\"' expected.");        
-    };
-    auto read_field_delim = [&]()
-    {
-        char field_delim;
-        sis.read(&field_delim, 1);
-        if (sis.gcount() != 1 || field_delim != ',')
-            error("delimiter ',' expected.");
-    };
-    std::string copyright;
-    bool blank = false;
-    for (;;)
-    {
-        std::getline(is, copyright);
-        ++line; // Make sure our line number is in sync with however many copyright lines we have.
-        if (is.eof())
-            break;
-        if (copyright.empty())
-        {
-            --line;
-            blank = true;
-            break;
-        }
-    }
-    const int min_copyright_lines = 3;
-    if (!blank || line < min_copyright_lines)
-    {
-        std::string msg = "Expected at least ";
-        msg += std::to_string(min_copyright_lines);
-        msg += " lines of copyright notice followed by a blank line.";
-        error(msg.c_str());
-    }
-    ++line;
-
-    std::string linebuf;
-    for (;;)
-    {
-        detail::timezone_mapping zm{};
-        std::getline(is, linebuf);
-        // Stop on error or first blank line.
-        // linebuf.size() is the length read but it excludes the length of any line delimiter actually read (e.g. LF/CRLF).
-        // If linebuf.size() is 0 it *might* not mean nothing was read (error) or eof, it could just
-        // indicate only a line delimiter was read. Use is.eof() to distinquish end of file from a blank line.
-        if (linebuf.empty()) // on eof linebuf will be empty.
-        {
-            if (is.eof())
-                break;
-            error("Formatting error. Blank lines not allowed.");
-        }
-        sis.clear();
-        sis.str(linebuf);
-
-        read_field_quote();
-        std::getline(sis, zm.other, '\"');
-        read_field_delim();
-
-        read_field_quote();
-        std::getline(sis, zm.territory, '\"');
-        read_field_delim();
-
-        read_field_quote();
-        std::getline(sis, zm.type, '\"');
-        if ((size_t)sis.tellg() != linebuf.length()) // Excess characters? We should have processed all in the line buffer.
-            error("Formatting error.");
-        ++line;
-        mappings.push_back(std::move(zm));
-    }
-    is.close();
-    return mappings;
 }
 
 static bool
@@ -2007,38 +2041,72 @@ curl_init()
     return std::unique_ptr<CURL, decltype(curl_delete)>{::curl_easy_init(), curl_delete};
 }
 
+static bool
+download_to_string(const std::string& url, std::string& str)
+{
+    str.empty();
+    auto curl = curl_init();
+    if (!curl)
+        return false;
+    std::string version;
+    curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+    curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb, void* userp)
+        -> std::size_t
+    {
+        auto& str = *static_cast<std::string*>(userp);
+        auto realsize = size * nmemb;
+        str.append(contents, realsize);
+        return realsize;
+    };
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
+    auto res = curl_easy_perform(curl.get());
+    return (res == CURLE_OK);
+}
+
+static bool
+download_to_file(const std::string& url, const std::string& local_filename, download_file_options opts)
+{
+    auto curl = curl_init();
+    if (!curl)
+        return false;
+    curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+    curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb, void* userp)
+        -> std::size_t
+    {
+        auto& of = *static_cast<std::ofstream*>(userp);
+        auto realsize = size * nmemb;
+        // TODO! We probably should signal write failures here via the return value, but we don't know
+        // how much data was actually written to do that. Throwing is dubious as it might affect
+        // curl as it's C based. In any case other parts of the process like tar unpacking are more
+        // likely disk affected than here and they aren't caught either yet so worry about here later.
+        of.write(contents, realsize);
+        return realsize;
+    };
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
+    decltype(curl_easy_perform(curl.get())) res;
+    {
+        std::ofstream of(local_filename,
+            opts == download_file_options::binary ? std::ofstream::out | std::ofstream::binary : std::ofstream::out);
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
+        res = curl_easy_perform(curl.get());
+    }
+    return res == CURLE_OK;
+}
+
 std::string
 remote_version()
 {
     std::string version;
-    auto curl = curl_init();
-    if (curl != nullptr)
+    std::string str;
+    if (download_to_string("http://www.iana.org/time-zones", str))
     {
-        curl_easy_setopt(curl.get(), CURLOPT_URL, "http://www.iana.org/time-zones");
-        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
-                                             std::size_t nmemb, void* userp);
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-            static_cast<curl_callback>(
-            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
-                -> std::size_t
-            {
-                auto& str = *static_cast<std::string*>(userp);
-                auto realsize = size * nmemb;
-                auto data = static_cast<const char*>(contents);
-                str.append(data, realsize);
-                return realsize;
-            }));
-        std::string str;
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
-        auto res = curl_easy_perform(curl.get());
-        if (res == CURLE_OK)
-        {
-            CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
-            CONSTDATA auto db_size = sizeof(db) - 1;
-            auto p = str.find(db, 0, db_size);
-            if (p != std::string::npos && p + (db_size + 5) <= str.size())
-                version = str.substr(p + db_size, 5);
-        }
+        CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
+        CONSTDATA auto db_size = sizeof(db) - 1;
+        auto p = str.find(db, 0, db_size);
+        const int ver_str_len = 5;
+        if (p != std::string::npos && p + (db_size + ver_str_len) <= str.size())
+            version = str.substr(p + db_size, ver_str_len);
     }
     return version;
 }
@@ -2047,35 +2115,183 @@ bool
 remote_download(const std::string& version)
 {
     assert(!version.empty());
-    auto curl = curl_init();
-    if (curl != nullptr)
+    auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version + ".tar.gz";
+    bool result = download_to_file(url, get_download_gz_file(version), download_file_options::binary);
+#if TIMEZONE_MAPPING
+    if (result)
     {
-        auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" +
-                   version + ".tar.gz";
-        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
-        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
-                                             std::size_t nmemb, void* userp);
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-            static_cast<curl_callback>(
-            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
-                -> std::size_t
-            {
-                auto& of = *static_cast<std::ofstream*>(userp);
-                auto realsize = size * nmemb;
-                auto data = static_cast<const char*>(contents);
-                of.write(data, realsize);
-                return realsize;
-            }));
-        auto tarfile = install + version + ".tar.gz";
-        decltype(curl_easy_perform(curl.get())) res;
-        {
-            std::ofstream of(tarfile);
-            curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
-            res = curl_easy_perform(curl.get());
-        }
-        return res == CURLE_OK;
+        auto mapping_file = get_download_mapping_file(version);
+        result = download_to_file("http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml",
+            mapping_file, download_file_options::text);
     }
+#endif
+    return result;
+}
+
+// TODO! Using system() create a process and a console window.
+// This is useful to see what errors may occur but is slow and distracting.
+// Consider implementing this functionality more directly, such as
+// using _mkdir and CreateProcess etc.
+// But use the current means now as matches Unix implementations and while
+// in proof of concept / testing phase.
+
+static bool
+remove_folder_and_subfolders(const std::string& folder)
+{
+#if _WIN32
+#if USE_SHELL_API
+    // Delete the folder contents by deleting the folder.
+    std::string cmd = "rd /s /q \"";
+    cmd += folder;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#else
+    // Create a buffer containing the path to delete. It must be terminated
+    // by two nulls. Who designs these API's...
+    std::vector<char> from;
+    from.assign(folder.begin(), folder.end());
+    from.push_back('\0');
+    from.push_back('\0');
+    SHFILEOPSTRUCT fo{}; // Zero initialize.
+    fo.wFunc = FO_DELETE;
+    fo.pFrom = from.data();
+    fo.fFlags = FOF_NO_UI;
+    int ret = SHFileOperation(&fo);
+    if (ret == 0 && !fo.fAnyOperationsAborted)
+        return true;
+#endif
     return false;
+#endif
+#else
+    return std::system(("rm -R " + folder).c_str()) == EXIT_SUCCESS;
+#endif
+}
+
+static bool
+make_directory(const std::string& folder)
+{
+#if _WIN32
+#if USE_SHELL_API
+    // Re-create the folder.
+    std::string cmd = "mkdir \"";
+    cmd += folder;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#else
+    return _mkdir(folder.c_str()) == 0;
+#endif
+#else
+    return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
+#endif
+}
+
+static DWORD run_program(const std::string& command)
+{
+    STARTUPINFO si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+
+    std::string mutable_command(command); // Because alledgedly CreateProcess overwrites the command line. Ugh.
+    if (CreateProcess(nullptr, &mutable_command[0], nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD exit_code;
+        bool got_exit_code = !!GetExitCodeProcess(pi.hProcess, &exit_code);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        // Not 100% sure about this still active thing is correct but I'm going with it. See:
+        // I *think* WaitForSingleObject might return in some cases without INFINITE-ly waiting.
+        // But i'm not quite sure why GetExitCodeProcess wouldn't return false in that case. Anyway...
+        if (got_exit_code && exit_code != STILL_ACTIVE)
+            return exit_code;
+    }
+    return EXIT_FAILURE;
+}
+
+static bool delete_file(const std::string& file)
+{
+#if _WIN32
+    std::string cmd = "del \"";
+    cmd += file;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == 0;
+#else
+    return std::system(("rm " + file).c_str()) == EXIT_SUCCESS;
+#endif
+}
+
+static bool move_file(const std::string& from, const std::string& to)
+{
+#if _WIN32
+#if USE_SHELL_API
+    std::string cmd = "move \"";
+    cmd += from;
+    cmd += "\" \"";
+    cmd += to;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#else
+    return !!::MoveFile(from.c_str(), to.c_str());
+#endif
+#else
+    return std::system(("mv " + file).c_str() == EXIT_SUCCESS);
+#endif
+}
+
+static bool extract_gz_file(const std::string& version, const std::string& gz_file, const std::string& dest_folder)
+{
+#if _WIN32
+    auto unzip_prog = get_unzip_program();
+    bool unzip_result = false;
+    // Use the unzip program to extract the tar file from the archive.
+    // Extra quotes are required around the whole command which already has more
+    // quotes than shakespear could ever come up with if using the shell.
+    // It's weird but neccessary it seems, see:
+    // http://stackoverflow.com/questions/27975969/how-to-run-an-executable-with-spaces-using-stdsystem-on-windows
+    std::string cmd;
+    cmd = '\"';
+    cmd += unzip_prog;
+    cmd += "\" x \"";
+    cmd += gz_file;
+    cmd += "\" -o\"";
+    cmd += dest_folder;
+    cmd += '\"';
+#if USE_SHELL_API
+    cmd = "\"" + cmd + "\"";
+    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+        unzip_result = true;
+#else
+    if (run_program(cmd) == EXIT_SUCCESS)
+        unzip_result = true;
+#endif
+    delete_file(gz_file);
+
+    // Use the unzip program extract the data from the tar file that was
+    // just extracted from the archive.
+    auto tar_file = get_download_tar_file(version);
+    cmd = '\"';
+    cmd += unzip_prog;
+    cmd += "\" x \"";
+    cmd += tar_file;
+    cmd += "\" -o\"";
+    cmd += install;
+    cmd += '\"';
+#if USE_SHELL_API
+    cmd = "\"" + cmd + "\"";
+    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+        unzip_result = true;
+#else
+    if (run_program(cmd) == EXIT_SUCCESS)
+        unzip_result = true;
+#endif
+
+    delete_file(tar_file);
+    return unzip_result;
+#else
+    if (std::system(("tar -xzf " + tarfile + " -C " + install).c_str()) == EXIT_SUCCESS)
+        success = true;
+    retun std::system(("rm " + tarfile).c_str() == EXIT_SUCCESS);
+#endif
 }
 
 bool
@@ -2083,19 +2299,28 @@ remote_install(const std::string& version)
 {
     auto success = false;
     assert(!version.empty());
-    auto tarfile = install + version + ".tar.gz";
-    if (file_exists(tarfile))
+
+    auto gz_file = get_download_gz_file(version);
+    if (file_exists(gz_file))
     {
         if (file_exists(install))
-            std::system(("rm -R " + install).c_str());
-        if (std::system(("mkdir " + install + " && "
-                 "tar -xzf " + tarfile + " -C " + install).c_str()) == 0)
-            success = true;
-        std::system(("rm " + tarfile).c_str());
+            remove_folder_and_subfolders(install);
+        if (make_directory(install))
+        {
+            if (extract_gz_file(version, gz_file, install))
+                success = true;
+        }
+#if TIMEZONE_MAPPING
+        auto mapping_file_source = get_download_mapping_file(version);
+        auto mapping_file_dest = install;
+        mapping_file_dest += folder_delimiter;
+        mapping_file_dest += "windowsZones.xml";
+        if (!move_file(mapping_file_source, mapping_file_dest))
+            success = false;
+#endif
     }
     return success;
 }
-
 #endif  // HAS_REMOTE_API
 
 static
@@ -2131,7 +2356,17 @@ init_tzdb()
     {
         auto rv = remote_version();
         if (!rv.empty() && remote_download(rv))
-            remote_install(rv);
+        {
+            if (!remote_install(rv))
+            {
+                std::string msg = "Timezone database version \"";
+                msg += rv;
+                msg += "\" did not install correctly to \"";
+                msg += install;
+                msg += "\"";
+                throw std::runtime_error(msg);
+            }
+        }
         if (!file_exists(install))
         {
             std::string msg = "Timezone database not found at \"";
@@ -2221,10 +2456,11 @@ init_tzdb()
     db.leaps.shrink_to_fit();
 
 #if TIMEZONE_MAPPING
-    std::string mapping_file = path + "TimeZoneMappings.csv";
-    db.mappings = load_timezone_mappings_from_csv_file(mapping_file);
+    std::string mapping_file = path + "windowsZones.xml";
+    db.mappings = load_zone_mappings_from_xml_file(mapping_file);
+    sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
-#endif
+#endif // TIMEZONE_MAPPING
 
     return db;
 }
@@ -2427,7 +2663,14 @@ current_zone()
     }
     return date::locate_zone(standard_tzid);
 #else
-    // Currently Win32 requires mapping for this function to work.
+    // Currently Win32 requires iana <--> windows tz name mappings
+    // for this function to work.
+    // TODO! we should really support not enabling mapping at all on Windows,
+    // and when not done enabled tz should have a file it reads that contains
+    // the current time zone. In this scenario the TZ library
+    // doesnt know or care about windows timezones/names and
+    // instead just uses iana names with one configured for this
+    // machine somewhere.
     throw std::runtime_error("current_zone not implemented.");
 #endif
 }
