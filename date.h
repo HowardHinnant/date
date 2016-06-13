@@ -50,17 +50,20 @@ namespace date
 // MSVC's constexpr support is still a WIP, even in VS2015.
 // Fall back to a lesser mode to support it.
 // TODO: Remove this or retest later once MSVC's constexpr improves.
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && ! defined(__clang__)
+// MS cl compiler.
 #  define CONSTDATA const
 #  define CONSTCD11
 #  define CONSTCD14
 #  define NOEXCEPT _NOEXCEPT
 #elif __cplusplus >= 201402
+// C++14
 #  define CONSTDATA constexpr
 #  define CONSTCD11 constexpr
 #  define CONSTCD14 constexpr
 #  define NOEXCEPT noexcept
 #else
+// C++11
 #  define CONSTDATA constexpr
 #  define CONSTCD11 constexpr
 #  define CONSTCD14
@@ -3826,14 +3829,16 @@ class time_of_day
 {
     using base = detail::time_of_day_storage<Duration>;
 public:
-#ifndef _MSC_VER
+#if !(_MSC_VER && !defined(__clang__))
+    // C++11
     using base::base;
 #else
+    // MS cl compiler workaround.
     template <class ...Args>
     explicit time_of_day(Args&& ...args)
         : base(std::forward<Args>(args)...)
         {}
-#endif // _MSC_VER
+#endif
 };
 
 template <class Rep, class Period,
