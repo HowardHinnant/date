@@ -25,7 +25,7 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
-#ifdef _WIN32
+#if _WIN32
 // Windows.h will be included directly and indirectly (e.g. by curl).
 // We don't need everything Windows.h has to offer though and some
 // things like min/max will prevent compilation.
@@ -57,7 +57,7 @@
 #include <vector>
 #include <sys/stat.h>
 
-#ifdef _WIN32
+#if _WIN32
 #include <locale>
 #include <codecvt>
 #include <direct.h> // _mkdir
@@ -67,11 +67,11 @@
 // the current time zone. On Win32 Windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
-#ifdef _WIN32
+#if _WIN32
 #include <Windows.h>
 #include <io.h>
-#if HAS_REMOTE_API
 #include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
+#if HAS_REMOTE_API
 #include <Shellapi.h> // ShFileOperation etc.
 #endif
 #else
@@ -87,7 +87,7 @@
 
 #if TIMEZONE_MAPPING
 // See comments in tz.h regarding the XML mapping file.
-#include "tinyxml2/tinyxml2.h"
+#include "tinyxml2.h"
 #endif
 
 namespace date
@@ -97,7 +97,7 @@ namespace date
 // +---------------------+
 
 // Until filesystem arrives.
-#ifdef _WIN32
+#if _WIN32
     static CONSTDATA char folder_delimiter = '\\';
 #else
     static CONSTDATA char folder_delimiter = '/';
@@ -143,17 +143,16 @@ namespace date
     {
         return get_known_folder(FOLDERID_ProgramFiles);
     }
-#endif
-
-#if HAS_REMOTE_API
-
-#if _WIN32
-
+    
     static std::string get_download_folder()
     {
         return get_known_folder(FOLDERID_Downloads);
     }
+#endif
 
+#if _WIN32
+
+#if HAS_REMOTE_API
     // Note folder can and usually does contain spaces.
     // Note assume's 7 zip is in the default installation location.
     // TODO! consider more certain means of finding it such as looking in the registry.
@@ -165,6 +164,7 @@ namespace date
         path += "7-Zip\\7z.exe";
         return path;
     }
+#endif // HAS_REMOTE_API
 
 #if TIMEZONE_MAPPING
     static std::vector<date::detail::timezone_mapping> load_zone_mappings_from_xml_file(const std::string& input_path)
@@ -210,7 +210,7 @@ namespace date
             return false;
         });
     }
-#endif
+#endif // TIMEZONE_MAPPING
 
 #else  // !_WIN32
     static
@@ -292,14 +292,14 @@ static_assert(min_year <= max_year, "Configuration error");
 
 static bool file_exists(const std::string& filename)
 {
-#ifdef _WIN32
+#if _WIN32
     return ::_access(filename.c_str(), 0) == 0;
 #else
     return ::access(filename.c_str(), F_OK) == 0;
 #endif
 }
 
-#ifdef _WIN32
+#if _WIN32
 // This routine maps Win32 OS error codes to readable text strngs.
 static std::string get_win32_message(DWORD error_code)
 {
@@ -2158,7 +2158,6 @@ remove_folder_and_subfolders(const std::string& folder)
     int ret = SHFileOperation(&fo);
     if (ret == 0 && !fo.fAnyOperationsAborted)
         return true;
-#endif
     return false;
 #endif
 #else
@@ -2529,7 +2528,7 @@ locate_zone(const std::string& tz_name)
 }
 
 #ifdef TZ_TEST
-#ifdef _WIN32
+#if _WIN32
 const time_zone*
 locate_native_zone(const std::string& native_tz_name)
 {
@@ -2633,7 +2632,7 @@ operator<<(std::ostream& os, const local_info& r)
     return os;
 }
 
-#ifdef _WIN32
+#if _WIN32
 
 const time_zone*
 current_zone()
