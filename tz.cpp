@@ -422,7 +422,7 @@ void
 sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
 {
     std::sort(mappings.begin(), mappings.end(),
-        [](const auto& lhs, const auto& rhs)->bool
+        [](const date::detail::timezone_mapping& lhs, const date::detail::timezone_mapping& rhs)->bool
     {
         auto other_result = lhs.other.compare(rhs.other);
         if (other_result < 0)
