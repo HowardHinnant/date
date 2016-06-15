@@ -2235,6 +2235,7 @@ delete_file(const std::string& file)
 #endif
 }
 
+#if TIMEZONE_MAPPING
 static
 bool
 move_file(const std::string& from, const std::string& to)
@@ -2254,6 +2255,7 @@ move_file(const std::string& from, const std::string& to)
     return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
 #endif
 }
+#endif
 
 #if _WIN32
 // Note folder can and usually does contain spaces.
@@ -2359,9 +2361,9 @@ extract_gz_file(const std::string& version,
 
 #else //! _WIN32
     if (std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS)
-    {        
-        if (std::system(("rm " + gz_file).c_str()) == EXIT_SUCCESS)
-            return true;
+    {
+        delete_file(gz_file);
+        return true;
     }
     return false;
 #endif
@@ -2382,15 +2384,15 @@ remote_install(const std::string& version)
         {
             if (extract_gz_file(version, gz_file, install))
                 success = true;
-        }
 #if TIMEZONE_MAPPING
-        auto mapping_file_source = get_download_mapping_file(version);
-        auto mapping_file_dest = install;
-        mapping_file_dest += folder_delimiter;
-        mapping_file_dest += "windowsZones.xml";
-        if (!move_file(mapping_file_source, mapping_file_dest))
-            success = false;
+            auto mapping_file_source = get_download_mapping_file(version);
+            auto mapping_file_dest = install;
+            mapping_file_dest += folder_delimiter;
+            mapping_file_dest += "windowsZones.xml";
+            if (!move_file(mapping_file_source, mapping_file_dest))
+                success = false;
 #endif
+        }
     }
     return success;
 }
@@ -2772,7 +2774,6 @@ current_zone()
         auto sz = readlink(timezone, &result.front(), result.size());
         if (sz == -1)
             throw std::runtime_error("readlink failure");
-        auto tmp = result.size();
         result.resize(sz);
         const char zonepath[] = "/usr/share/zoneinfo/";
         const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
