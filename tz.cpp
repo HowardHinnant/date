@@ -195,6 +195,7 @@ get_known_folder(const GUID& folderid)
     return folder;
 }
 
+// Usually something like "c:\Program Files".
 static
 std::string
 get_program_folder()
@@ -202,6 +203,7 @@ get_program_folder()
     return get_known_folder(FOLDERID_ProgramFiles);
 }
 
+// Usually something like "c:\Users\username\Downloads".
 static
 std::string
 get_download_folder()
@@ -2336,7 +2338,8 @@ extract_gz_file(const std::string& version,
     if (run_program(cmd) == EXIT_SUCCESS)
         unzip_result = true;
 #endif
-    delete_file(gz_file);
+    if (unzip_result)
+        delete_file(gz_file);
 
     // Use the unzip program extract the data from the tar file that was
     // just extracted from the archive.
@@ -2356,7 +2359,9 @@ extract_gz_file(const std::string& version,
         unzip_result = true;
 #endif
 
-    delete_file(tar_file);
+    if (unzip_result)
+        delete_file(tar_file);
+
     return unzip_result;
 
 #else //! _WIN32
