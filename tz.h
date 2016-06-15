@@ -48,9 +48,13 @@ On Windows, the names are never "Standard" so mapping is always required.
 Technically any OS may use the mapping process but currently only Windows does use it.
 */
 
-#ifdef _WIN32
+#if _WIN32
 #ifndef TIMEZONE_MAPPING
 #define TIMEZONE_MAPPING 1
+#endif
+#else
+#if TIMEZONE_MAPPING
+#error "Timezone mapping is not required or not implemented for this platform."
 #endif
 #endif
 
@@ -59,10 +63,10 @@ Technically any OS may use the mapping process but currently only Windows does u
 #endif
 
 #ifndef HAS_REMOTE_API
-#  ifndef _MSC_VER
-#    define HAS_REMOTE_API 1
-#  else
+#  if _WIN32
 #    define HAS_REMOTE_API 0
+#  else
+#    define HAS_REMOTE_API 1
 #  endif
 #endif
 
@@ -735,7 +739,7 @@ bool        remote_install(const std::string& version);
 
 const time_zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST
-#ifdef _WIN32
+#if _WIN32
 const time_zone* locate_native_zone(const std::string& native_tz_name);
 #endif
 #endif
