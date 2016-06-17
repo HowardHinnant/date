@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-06-08<br/>
+2016-06-16<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2914,15 +2914,16 @@ contains the following string near the top:
 </p>
 
 <blockquote><pre>
-static std::string install{"~/Downloads/tzdata"};  //  "c:\\tzdata" on Windows
+static std::string install{"~/Downloads/tzdata"};  //  "c:\%homedrive%\%homepath%\downloads\tzdata" on Windows
 </pre></blockquote>
 
 <p>
-You should set this such that <code>install</code> points to the directory
-where your library or application can find the downloaded and uncompressed
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> (or where
-you want the software to install it for you if you compile with
-<code>AUTO_DOWNLOAD == 1</code>).
+You should set this such that <code>install</code> points to the directory where your
+library or application can find the downloaded and uncompressed <a
+href="http://www.iana.org/time-zones">IANA Time Zone Database -- tzdataYYYYv.tar.gz</a>
+(or where you want the software to install it for you if you compile with
+<code>AUTO_DOWNLOAD == 1</code>).  On Windows a utility such as
+<a href="http://www.7-zip.org/">7-zip</a> can be used to decompress the database.
 </p>
 
 <p>
@@ -2970,6 +2971,40 @@ However one can download it for Windows.
 If <code>AUTO_DOWNLOAD</code> is 1 then first access to the timezone database will install
 it if it hasn't been installed, and if it has, will use the remote API to install the
 latest version if not already installed.
+</p>
+
+<h3>Windows specific:</h3>
+
+<p>
+If you want to enable <code>HAS_REMOTE_API</code> and/or <code>AUTO_DOWNLOAD</code> on
+Windows you will have to manually install
+<a href="https://curl.haxx.se/libcurl/">curl</a> and
+<a href="http://www.7-zip.org/">7-zip</a> into their default locations.
+</p>
+
+<p>
+If you do not enable <code>HAS_REMOTE_API</code>, you will need to also install
+<a href="http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml">
+http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a> into your
+<code>install</code> location.  This will be done for you if you have enabled
+<code>HAS_REMOTE_API</code> and let <code>AUTO_DOWNLOAD</code> default to 1.
+</p>
+
+<p>
+To enable <code>HAS_REMOTE_API</code> you can either edit tz.h, adding:
+</p>
+
+<blockquote><pre>
+#define HAS_REMOTE_API 1
+</pre></blockquote>
+
+<p>
+Or you can put <code>/DHAS_REMOTE_API=1</code> on the command line.  When
+<code>HAS_REMOTE_API == 1</code>, <code>AUTO_DOWNLOAD</code> defaults to 1.
+</p>
+
+<p>
+mingw users:  <code>-lpthread</code> is required.
 </p>
 
 <h3>Optional installation tweaks</h3>
