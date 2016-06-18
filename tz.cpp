@@ -107,6 +107,14 @@
 #else   // !WIN32
 #  include <unistd.h>
 #  include <wordexp.h>
+#  if !USE_SHELL_API
+#    include <sys/stat.h>
+#    include <sys/fcntl.h>
+#    include <dirent.h>
+#    include <cstring>
+#    include <sys/wait.h>
+#    include <sys/types.h>
+#  endif //!USE_SHELL_API
 #endif  // !WIN32
 
 #if HAS_REMOTE_API
@@ -2168,7 +2176,7 @@ remote_download(const std::string& version)
 // using _mkdir and CreateProcess etc.
 // But use the current means now as matches Unix implementations and while
 // in proof of concept / testing phase.
-
+// TODO! Use <filesystem> eventually.
 static
 bool
 remove_folder_and_subfolders(const std::string& folder)
@@ -2182,7 +2190,7 @@ remove_folder_and_subfolders(const std::string& folder)
     return std::system(cmd.c_str()) == EXIT_SUCCESS;
 #  else  // !USE_SHELL_API
     // Create a buffer containing the path to delete. It must be terminated
-    // by two nulls. Who designs these API's...
+    // by two nuls. Who designs these API's...
     std::vector<char> from;
     from.assign(folder.begin(), folder.end());
     from.push_back('\0');
@@ -2197,7 +2205,53 @@ remove_folder_and_subfolders(const std::string& folder)
     return false;
 #  endif  // !USE_SHELL_API
 #else   // !WIN32
+#if USE_SHELL_API
     return std::system(("rm -R " + folder).c_str()) == EXIT_SUCCESS;
+#else // !USE_SHELL_API
+    struct dir_deleter {
+        dir_deleter() {}
+        void operator()(DIR* d) {
+            if (d != nullptr)
+            {
+                int result = closedir(d);
+                assert(result == 0);
+            }
+        }
+    };    
+    using closedir_ptr = std::unique_ptr<DIR, dir_deleter>;
+
+    std::string filename;
+    struct stat statbuf;
+    size_t folder_len = folder.length();
+    struct dirent *p = nullptr;
+
+    closedir_ptr d(opendir(folder.c_str()));
+    bool r = d.get() != nullptr;
+    while (r && (p=readdir(d.get())) != nullptr)
+    {           
+        if (strcmp(p->d_name, ".") == 0 || strcmp(p->d_name, "..") == 0)
+           continue;
+        
+        // + 2 for path delimiter and nul terminator.
+        size_t buf_len = folder_len + strlen(p->d_name) + 2;
+        filename.resize(buf_len);
+        size_t path_len = static_cast<size_t>(
+            snprintf(&filename[0], buf_len, "%s/%s", folder.c_str(), p->d_name));
+        assert(path_len == buf_len - 1);
+        filename.resize(path_len);
+        
+        if (stat(filename.c_str(), &statbuf) ==0)
+            r = S_ISDIR(statbuf.st_mode)
+              ? remove_folder_and_subfolders(filename)
+              : unlink(filename.c_str()) == 0;    
+   }
+   d.reset();
+    
+    if (r)
+        r = rmdir(folder.c_str()) == 0;
+    
+    return r;
+#endif // !USE_SHELL_API
 #endif  // !WIN32
 }
 
@@ -2216,7 +2270,11 @@ make_directory(const std::string& folder)
     return _mkdir(folder.c_str()) == 0;
 #  endif // !USE_SHELL_API
 #else // !WIN32
+#  if USE_SHELL_API
     return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
+#  else // !USE_SHELL_API
+    return mkdir(folder.c_str(), 0777) == 0;
+#  endif // !USE_SHELL_API
 #endif
 }
 
@@ -2234,7 +2292,11 @@ delete_file(const std::string& file)
     return _unlink(file.c_str()) == 0;
 #  endif // !USE_SHELL_API
 #else  // !WIN32
+#  if USE_SHELL_API
     return std::system(("rm " + file).c_str()) == EXIT_SUCCESS;
+#  else // !USE_SHELL_API
+    return unlink(file.c_str()) == 0;
+#  endif // !USE_SHELL_API
 #endif // !WIN32
 }
 
@@ -2278,6 +2340,7 @@ get_unzip_program()
     return path;
 }
 
+#if !USE_SHELL_API
 static
 int
 run_program(const std::string& command)
@@ -2305,6 +2368,7 @@ run_program(const std::string& command)
     }
     return EXIT_FAILURE;
 }
+#endif // !USE_SHELL_API
 
 static
 std::string
@@ -2381,11 +2445,67 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
 
 #else  // !_WIN32
 
+#if !USE_SHELL_API
+static
+int
+run_program(const char* prog, const char*const args[])
+{
+    pid_t pid = fork();
+    if (pid == -1) // Child failed to start.
+        return EXIT_FAILURE;
+
+    if (pid != 0)
+    {
+        // We are in the parent. Child started. Wait for it.
+        pid_t ret;
+        int status;
+        while ((ret = waitpid(pid, &status, 0)) == -1)
+        {
+            if (errno != EINTR)
+                break;
+        }        
+        if (ret != -1)
+        {
+            if (WIFEXITED(status))
+                return WEXITSTATUS(status);
+        }
+        printf("Child issues!\n");
+
+        return EXIT_FAILURE; // Not sure what status of child is.
+    }
+    else // We are in the child process. Start the program the parent wants to run.
+    {
+        
+        if (execv(prog, const_cast<char**>(args)) == -1) // Does not return.
+        {            
+            perror("unreachable 0\n");
+            _Exit(127);
+        }
+        printf("unreachable 2\n");
+    }
+    printf("unreachable 2\n");
+    // Unreachable.
+    assert(false);
+    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
+}
+#endif // !USE_SHELL_API
+
 static
 bool
 extract_gz_file(const std::string&, const std::string& gz_file, const std::string&)
 {
-    if (std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS)
+#if USE_SHELL_API    
+    bool unzipped = (std::system("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS);
+#else
+    const char prog[] = {"/usr/bin/tar"};
+    const char*const args[] =
+    {
+        prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
+    };
+    bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
+#endif
+    if (unzipped)
     {
         delete_file(gz_file);
         return true;
