@@ -1408,7 +1408,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
                 else
                 {
                     auto info = zone->get_info(tp).first;
-                    format.replace(i, 2, std::basic_string<CharT, Traits>
+                    format.replace(i - 1, 2, std::basic_string<CharT, Traits>
                                             (info.abbrev.begin(), info.abbrev.end()));
                     i += info.abbrev.size() - 1;
                 }
