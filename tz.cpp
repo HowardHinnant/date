@@ -360,7 +360,16 @@ load_zone_mappings_from_xml_file(const std::string& input_path)
     using tinyxml2::XMLDocument;
     std::vector<date::detail::timezone_mapping> zone_map_list;
     XMLDocument doc;
-    doc.LoadFile(input_path.c_str());
+
+    auto result = doc.LoadFile(input_path.c_str());
+    if (result != tinyxml2::XML_SUCCESS)
+    {
+        std::string msg = "Could not load the timezone mapping file at \"";
+        msg += input_path;
+        msg += '\"';
+        throw std::runtime_error(msg);
+    }
+
     auto supplementalData = doc.FirstChildElement("supplementalData");
     auto windowsZones = supplementalData->FirstChildElement("windowsZones");
     auto mapTimeZones = windowsZones->FirstChildElement("mapTimezones");
