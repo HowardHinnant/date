@@ -2558,6 +2558,17 @@ init_tzdb()
 
 #if TIMEZONE_MAPPING
     std::string mapping_file = path + "windowsZones.xml";
+    
+    #if !AUTO_DOWNLOAD
+    if (!file_exists(mapping_file))
+    {
+        std::string msg = "Timezone mapping file not found at \"";
+        msg += mapping_file;
+        msg += "\"";
+        throw std::runtime_error(msg);
+    }
+    #endif // !AUTO_DOWNLOAD
+    
     db.mappings = load_zone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
