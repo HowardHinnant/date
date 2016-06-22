@@ -352,7 +352,16 @@ load_zone_mappings_from_xml_file(const std::string& input_path)
     using tinyxml2::XMLDocument;
     std::vector<date::detail::timezone_mapping> zone_map_list;
     XMLDocument doc;
-    doc.LoadFile(input_path.c_str());
+
+    auto result = doc.LoadFile(input_path.c_str());
+    if (result != tinyxml2::XML_SUCCESS)
+    {
+        std::string msg = "Could not load the timezone mapping file at \"";
+        msg += input_path;
+        msg += '\"';
+        throw std::runtime_error(msg);
+    }
+
     auto supplementalData = doc.FirstChildElement("supplementalData");
     auto windowsZones = supplementalData->FirstChildElement("windowsZones");
     auto mapTimeZones = windowsZones->FirstChildElement("mapTimezones");
@@ -2558,17 +2567,6 @@ init_tzdb()
 
 #if TIMEZONE_MAPPING
     std::string mapping_file = path + "windowsZones.xml";
-    
-    #if !AUTO_DOWNLOAD
-    if (!file_exists(mapping_file))
-    {
-        std::string msg = "Timezone mapping file not found at \"";
-        msg += mapping_file;
-        msg += "\"";
-        throw std::runtime_error(msg);
-    }
-    #endif // !AUTO_DOWNLOAD
-    
     db.mappings = load_zone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
