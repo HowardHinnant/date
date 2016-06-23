@@ -312,7 +312,7 @@ public:
 
     // WARNING: this function is not a general-purpose function.
     // It has a hard-coded value size limit that should be sufficient for our use cases.
-    bool get_string(const wchar_t* key_name, std::string& value)
+    bool get_string(const wchar_t* key_name, std::string& value, std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>& converter)
     {
         value.clear();
         wchar_t value_buffer[256];
@@ -324,7 +324,6 @@ public:
         {
             // Function does not guarantee to null terminate.
             value_buffer[size/sizeof(value_buffer[0])] = L'\0';
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             value = converter.to_bytes(value_buffer);
             return true;
         }
@@ -468,6 +467,7 @@ get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
     DWORD size;
     wchar_t zone_key_name[256];
     std::wstring value;
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
     // Iterate through the list of keys of the parent time zones key to get
     // each key that identifies each individual timezone.
@@ -484,7 +484,6 @@ get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
             + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         tz.timezone_id = converter.to_bytes(zone_key_name);
 
         full_zone_key_name = zones_key_name;
@@ -499,13 +498,13 @@ get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
         if (zone_key.open(full_zone_key_name.c_str()) != ERROR_SUCCESS)
             continue;
 
-        if (!zone_key.get_string(L"Std", tz.standard_name))
+        if (!zone_key.get_string(L"Std", tz.standard_name, converter))
             continue;
 
 #if 0
         // TBD these fields are not required yet.
         // They might be useful for test cases though.
-        if (!zone_key.get_string("Display", tz.display_name))
+        if (!zone_key.get_string("Display", tz.display_name, converter))
             continue;
 
         if (!zone_key.get_binary("TZI", &tz.tzi, sizeof(TZI)))
@@ -2328,7 +2327,11 @@ move_file(const std::string& from, const std::string& to)
     return !!::MoveFile(from.c_str(), to.c_str());
 #  endif // !USE_SHELL_API
 #else  // !WIN32
+#  if USE_SHELL_API
     return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
+#  else
+    return rename(from, to) == 0);
+#  endif
 #endif // !WIN32
 }
 
@@ -2337,13 +2340,37 @@ move_file(const std::string& from, const std::string& to)
 #if _WIN32
 
 // Note folder can and usually does contain spaces.
-// Note assume's 7 zip is in the default installation location.
-// TODO! consider more certain means of finding it such as looking in the registry.
 static
 std::string
 get_unzip_program()
 {
     std::string path;
+
+    // 7-Zip appears to note its location in the registry.
+    // If that doesn't work, fall through and take a guess, but it will likely be wrong.
+    HKEY hKey = nullptr;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\7-Zip", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        char value_buffer[MAX_PATH + 1]; // fyi 260 at time of writing.
+        // in/out parameter. Documentation say that size is a count of bytes not chars.
+        DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
+        DWORD tzi_type = REG_SZ;
+        // Testing shows Path key value is "C:\Program Files\7-Zip\" i.e. always with trailing \.
+        bool got_value = (RegQueryValueExA(hKey, "Path", nullptr, &tzi_type,
+            reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS);
+        RegCloseKey(hKey); // Close now incase of throw later.
+        if (got_value)
+        {
+            // Function does not guarantee to null terminate.
+            value_buffer[size / sizeof(value_buffer[0])] = '\0';
+            path = value_buffer;
+            if (!path.empty())
+            {
+                path += "7z.exe";
+                return path;
+            }
+        }
+    }
     path += get_program_folder();
     path += folder_delimiter;
     path += "7-Zip\\7z.exe";
