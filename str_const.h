@@ -32,7 +32,7 @@ namespace date
 			str_const a, b, c;
 		};
 
-		template<int N> constexpr str_const get(const map_t &) { static_assert(N >= 0 && N <= 2); }
+		template<int N> constexpr str_const get(const map_t &) { return str_const(""); }
 		template<> constexpr str_const get<0>(const map_t & m) { return m.a; };
 		template<> constexpr str_const get<1>(const map_t & m) { return m.b; };
 		template<> constexpr str_const get<2>(const map_t & m) { return m.c; };

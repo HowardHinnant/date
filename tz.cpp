@@ -2126,7 +2126,7 @@ load_tzdb(TZ_DB & db, const _Lines_t & lines)
 {
 	bool continue_zone = false;
 	for(auto && line : lines)
-	if (std::size(line) != 0 && line[0] != '#')
+	if (std::distance(std::begin(line), std::end(line)) != 0 && line[0] != '#')
 	{
 		std::istringstream in(line);
 		std::string word;
