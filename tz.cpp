@@ -81,6 +81,10 @@
 #include <wordexp.h>
 #endif
 
+#if TZ_LITERAL_INIT
+#include "tz_data.h"
+#endif
+
 namespace date
 {
 // +---------------------+
@@ -2116,13 +2120,13 @@ get_version(const std::string& path)
     throw std::runtime_error("Unable to get Timezone database version from " + path);
 }
 
-static
+template<class _Lines_t>
 void
-load_tzdb(TZ_DB & db, const std::vector<std::string> & lines)
+load_tzdb(TZ_DB & db, const _Lines_t & lines)
 {
 	bool continue_zone = false;
 	for(auto && line : lines)
-	if (!line.empty() && line[0] != '#')
+	if (std::size(line) != 0 && line[0] != '#')
 	{
 		std::istringstream in(line);
 		std::string word;
@@ -2239,16 +2243,18 @@ init_tzdb()
     return db;
 }
 
-static
+template<class _Lines_t, class _Mappings_t>
 TZ_DB
-init_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+init_tzdb(const _Lines_t & lines, const _Mappings_t & mappings)
 {
-	assert(lines.size() > 0);
+	using namespace std;
+	using namespace detail;
+	assert(size(lines) > 0);
 	TZ_DB db;
 	load_tzdb(db, lines);
 #if TIMEZONE_MAPPING
 	for (auto && mapping_row : mappings)
-		db.mappings.push_back(detail::timezone_mapping{ std::get<0>(mapping_row), std::get<1>(mapping_row), std::get<2>(mapping_row) });
+		db.mappings.push_back(timezone_mapping{ get<0>(mapping_row), get<1>(mapping_row), get<2>(mapping_row) });
 	get_windows_timezone_info(db.native_zones);
 #endif
 	return db;
@@ -2281,14 +2287,14 @@ get_tzdb()
 }
 #else
 const TZ_DB&
-reload_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+reload_tzdb()
 {
-	return access_tzdb() = init_tzdb(lines, mappings);
+	return access_tzdb() = init_tzdb(tz_data::timezones, tz_data::mappings);
 }
 const TZ_DB&
-get_tzdb(const std::vector<std::string> & lines, const std::vector<std::tuple<std::string, std::string, std::string>> & mappings)
+get_tzdb()
 {
-	static const TZ_DB& ref = access_tzdb() = init_tzdb(lines, mappings);
+	static const TZ_DB& ref = access_tzdb() = init_tzdb(tz_data::timezones, tz_data::mappings);
 	return ref;
 }
 #endif
