@@ -18,6 +18,8 @@ namespace date
 		}
 		constexpr std::size_t size() const { return sz_; } // size()
 		constexpr const char* c_str() const { return p_; }
+		constexpr const char* begin() const { return &p_[0]; }
+		constexpr const char* end() const { return &p_[sz_-1]+1; }
 		operator std::string() const { return std::string(p_); }
 	};
 	namespace {
