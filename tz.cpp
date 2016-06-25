@@ -436,8 +436,8 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     bool mapTZoneCloseTagFound = false;
     size_t mapZonePos = std::string::npos;
     size_t mapTimezonesPos = std::string::npos;
-    static char mapTimeZonesOpeningTag[] = "<mapTimezones ";
-    static char mapZoneOpeningTag[] = "<mapZone ";
+    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+    CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
     size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) / sizeof(mapZoneOpeningTag[0]) - 1;
     for (;;)
     {
