@@ -84,7 +84,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <vector>
 #include <sys/stat.h>
 
@@ -123,13 +122,7 @@
 #include <curl/curl.h>
 #endif
 
-#if TIMEZONE_MAPPING
-// See comments in tz.h regarding the XML mapping file.
-#include "tinyxml2.h"
-#endif
-
 #if _WIN32
-
 static CONSTDATA char folder_delimiter = '\\';
 
 namespace
@@ -352,36 +345,164 @@ get_download_mapping_file(const std::string& version)
     return file;
 }
 
+// Parse this XML file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// The parsing method is designed to be simple and quick. It is not overly
+// forgiving of change but it should diagnose basic format issues.
+// See timezone_mapping structure for more info.
 static
-std::vector<date::detail::timezone_mapping>
-load_zone_mappings_from_xml_file(const std::string& input_path)
+std::vector<detail::timezone_mapping>
+load_timezone_mappings_from_xml_file(const std::string& input_path)
 {
-    using tinyxml2::XMLDocument;
-    std::vector<date::detail::timezone_mapping> zone_map_list;
-    XMLDocument doc;
+    std::size_t line_num = 0;
+    std::vector<detail::timezone_mapping> mappings;
+    std::string line;
 
-    auto result = doc.LoadFile(input_path.c_str());
-    if (result != tinyxml2::XML_SUCCESS)
+    std::ifstream is(input_path);
+    if (!is.is_open())
     {
-        std::string msg = "Could not load the timezone mapping file at \"";
+        // We don't emit file exceptions because that's an implementation detail.
+        std::string msg = "Error opening time zone mapping file \"";
         msg += input_path;
-        msg += '\"';
+        msg += "\".";
         throw std::runtime_error(msg);
     }
 
-    auto supplementalData = doc.FirstChildElement("supplementalData");
-    auto windowsZones = supplementalData->FirstChildElement("windowsZones");
-    auto mapTimeZones = windowsZones->FirstChildElement("mapTimezones");
-
-    for (auto mapZone = mapTimeZones->FirstChildElement("mapZone");
-        mapZone != nullptr; mapZone = mapZone->NextSiblingElement())
+    auto error = [&input_path, &line_num](const char* info)
     {
-        auto other = mapZone->Attribute("other");
-        auto territory = mapZone->Attribute("territory");
-        auto type = mapZone->Attribute("type");
-        zone_map_list.emplace_back(other, territory, type);
+        std::string msg = "Error loading time zone mapping file \"";
+        msg += input_path;
+        msg += "\" at line ";
+        msg += std::to_string(line_num);
+        msg += ": ";
+        msg += info;
+        throw std::runtime_error(msg);
+    };
+    // [optional space]a="b"
+    auto read_attribute = [&line_num, &line, &error](const char* name, std::string& value, std::size_t startPos)->std::size_t
+    {
+        value.clear();
+        // Skip leading space before attribute name.
+        std::size_t spos = line.find_first_not_of(' ', startPos);
+        if (spos == std::string::npos)
+            spos = startPos;
+        // Assume everything up to next = is the attribute name
+        // and that an = will always delimit that.
+        std::size_t epos = line.find('=', spos);
+        if (epos == std::string::npos)
+            error("Expected \'=\' right after attribute name.");
+        std::size_t name_len = epos - spos;
+        // Expect the name we find matches the name we expect.
+        if (line.compare(spos, name_len, name) != 0)
+        {
+            std::string msg;
+            msg = "Expected attribute name \'";
+            msg += name;
+            msg += "\' around position ";
+            msg += std::to_string(spos);
+            msg += " but found something else.";
+            error(msg.c_str());
+        }
+        ++epos; // Skip the '=' that is after the attribute name.
+        spos = epos;
+        if (spos < line.length() && line[spos] == '\"')
+            ++spos; // Skip the quote that is before the attribute value.
+        else
+        {
+            std::string msg = "Expected '\"' to begin value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        epos = line.find('\"', spos);
+        if (epos == std::string::npos)
+        {
+            std::string msg = "Expected '\"' to end value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        // Extract everything in between the quotes. Note no escaping is done.
+        std::size_t value_len = epos - spos;
+        value.assign(line, spos, value_len);
+        ++epos; // Skip the quote that is after the attribute value;
+        return epos;
+    };
+
+    // Quick but not overly forgiving XML mapping file processing.
+    bool mapTimezonesOpenTagFound = false;
+    bool mapTimezonesCloseTagFound = false;
+    bool mapZoneOpenTagFound = false;
+    bool mapTZoneCloseTagFound = false;
+    std::size_t mapZonePos = std::string::npos;
+    std::size_t mapTimezonesPos = std::string::npos;
+    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+    CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
+    std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) / sizeof(mapZoneOpeningTag[0]) - 1;
+    for (;;)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+            break;
+        mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
+        mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
+        if (mapTimezonesOpenTagFound)
+            break;
     }
-    return zone_map_list;
+    if (!mapTimezonesOpenTagFound)
+    {
+        // If there is no mapTimezones tag is it an error?
+        // Perhaps if there are no mapZone mappings it might be ok for
+        // its parent mapTimezones element to be missing?
+        // We treat this as an error though on the assumption that if there
+        // really are no mappings we should still get a mapTimezones parent
+        // element but no mapZone elements inside. Assuming we must
+        // find something will hopefully at least catch more drastic formatting
+        // changes or errors than if we don't do this and assume nothing found.
+        error("Expected a mapTimezones opening tag.");
+    }
+
+    // NOTE: We could extract the version info that folllows the opening
+    // mapTimezones tag and compare that to the version of other data we have.
+    // I would have expected them to be kept in synch but testing has shown
+    // it is typically does not match anyway. So what's the point?
+    for (;;)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+            break;
+        if (line.empty())
+            continue;
+        mapZonePos = line.find(mapZoneOpeningTag);
+        if (mapZonePos != std::string::npos)
+        {
+            mapZonePos += mapZoneOpeningTagLen;
+            detail::timezone_mapping zm{};
+            std::size_t pos = read_attribute("other", zm.other, mapZonePos);
+            pos = read_attribute("territory", zm.territory, pos);
+            read_attribute("type", zm.type, pos);
+            mappings.push_back(std::move(zm));
+
+            continue;
+        }
+        mapTimezonesPos = line.find("</mapTimezones>");
+        mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
+        if (mapTimezonesCloseTagFound) // That's all folks.
+            break;
+        else
+        {
+            std::size_t commentPos = line.find("<!--");
+            if (commentPos == std::string::npos)
+                error("Unexpected mapping record found. A xml mapZone or comment attribute or mapTimezones closing tag was expected.");
+        }
+    }
+    if (mapTimezonesOpenTagFound && !mapTimezonesCloseTagFound)
+        error("Expected a mapTimezones closing tag.");
+
+    is.close();
+    return mappings;
 }
 
 static
@@ -2231,7 +2352,7 @@ remove_folder_and_subfolders(const std::string& folder)
 
     std::string filename;
     struct stat statbuf;
-    size_t folder_len = folder.length();
+    std::size_t folder_len = folder.length();
     struct dirent* p = nullptr;
 
     closedir_ptr d(opendir(folder.c_str()));
@@ -2242,9 +2363,9 @@ remove_folder_and_subfolders(const std::string& folder)
            continue;
 
         // + 2 for path delimiter and nul terminator.
-        size_t buf_len = folder_len + strlen(p->d_name) + 2;
+        std::size_t buf_len = folder_len + strlen(p->d_name) + 2;
         filename.resize(buf_len);
-        size_t path_len = static_cast<size_t>(
+        std::size_t path_len = static_cast<std::size_t>(
             snprintf(&filename[0], buf_len, "%s/%s", folder.c_str(), p->d_name));
         assert(path_len == buf_len - 1);
         filename.resize(path_len);
@@ -2715,7 +2836,7 @@ init_tzdb()
 
 #if TIMEZONE_MAPPING
     std::string mapping_file = path + "windowsZones.xml";
-    db.mappings = load_zone_mappings_from_xml_file(mapping_file);
+    db.mappings = load_timezone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
 #endif // TIMEZONE_MAPPING
@@ -2942,8 +3063,8 @@ current_zone()
             throw std::runtime_error("readlink failure");
         result.resize(sz);
         const char zonepath[] = "/usr/share/zoneinfo/";
-        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-        const size_t pos = result.find(zonepath);
+        const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const std::size_t pos = result.find(zonepath);
         if (pos != result.npos)
             result.erase(0, zonepath_len+pos);
         return locate_zone(result);
