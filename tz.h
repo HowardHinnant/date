@@ -455,7 +455,7 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose z, std::false_type) const
     }
     else if (i.result == local_info::ambiguous)
     {
-        if (z == choose::earliest)
+        if (z == choose::latest)
             return sys_time<Duration>{tp.time_since_epoch()} - i.second.offset;
     }
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
@@ -1336,8 +1336,8 @@ namespace detail
 
 template <class CharT, class Traits, class Duration>
 std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
-       local_time<Duration> tp, const time_zone* zone = nullptr)
+format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
+       local_time<Duration> tp, const sys_info* info = nullptr)
 {
     // Handle these specially
     // %S  append fractional seconds if tp has precision finer than seconds
@@ -1350,9 +1350,9 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
     using namespace std::chrono;
     auto command = false;
     auto modified = false;
-    for (std::size_t i = 0; i < format.size(); ++i)
+    for (std::size_t i = 0; i < fmt.size(); ++i)
     {
-        switch (format[i])
+        switch (fmt[i])
         {
         case '%':
             command = true;
@@ -1371,7 +1371,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
                 os << make_time(tp - floor<seconds>(tp));
                 auto s = os.str();
                 s.erase(0, 8);
-                format.insert(i+1, s);
+                fmt.insert(i+1, s);
                 i += s.size() - 1;
             }
             command = false;
@@ -1380,12 +1380,11 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
         case 'z':
             if (command)
             {
-                if (zone == nullptr)
+                if (info == nullptr)
                     throw std::runtime_error("Can not format local_time with %z");
                 else
                 {
-                    auto info = zone->get_info(tp).first;
-                    auto offset = duration_cast<minutes>(info.offset);
+                    auto offset = duration_cast<minutes>(info->offset);
                     basic_ostringstream<CharT, Traits> os;
                     if (offset >= minutes{0})
                         os << '+';
@@ -1393,7 +1392,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
                     auto s = os.str();
                     if (!modified)
                         s.erase(s.find(':'), 1);
-                    format.replace(i - 1 - modified, 2 + modified, s);
+                    fmt.replace(i - 1 - modified, 2 + modified, s);
                     i += s.size() - 1;
                 }
             }
@@ -1403,14 +1402,13 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
         case 'Z':
             if (command && !modified)
             {
-                if (zone == nullptr)
+                if (info == nullptr)
                     throw std::runtime_error("Can not format local_time with %z");
                 else
                 {
-                    auto info = zone->get_info(tp).first;
-                    format.replace(i - 1, 2, std::basic_string<CharT, Traits>
-                                            (info.abbrev.begin(), info.abbrev.end()));
-                    i += info.abbrev.size() - 1;
+                    fmt.replace(i - 1, 2, std::basic_string<CharT, Traits>
+                                            (info->abbrev.begin(), info->abbrev.end()));
+                    i += info->abbrev.size() - 1;
                 }
             }
             command = false;
@@ -1431,7 +1429,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
 #else
     gmtime_s(&tm, &tt);
 #endif
-    f.put(os, os, os.fill(), &tm, format.data(), format.data() + format.size());
+    f.put(os, os, os.fill(), &tm, fmt.data(), fmt.data() + fmt.size());
     return os.str();
 }
 
@@ -1440,56 +1438,54 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> format,
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
+format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
        local_time<Duration> tp)
 {
-    return detail::format(loc, std::move(format), tp);
+    return detail::format(loc, std::move(fmt), tp);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, local_time<Duration> tp)
+format(std::basic_string<CharT, Traits> fmt, local_time<Duration> tp)
 {
-    return detail::format(std::locale{}, std::move(format), tp);
+    return detail::format(std::locale{}, std::move(fmt), tp);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
+format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
        const zoned_time<Duration>& tp)
 {
-    return detail::format(loc, std::move(format), tp.get_local_time(),
-                          tp.get_time_zone());
+    auto const info = tp.get_info();
+    return detail::format(loc, std::move(fmt), tp.get_local_time(), &info);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, const zoned_time<Duration>& tp)
+format(std::basic_string<CharT, Traits> fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(std::locale{}, std::move(format), tp.get_local_time(),
-                          tp.get_time_zone());
+    auto const info = tp.get_info();
+    return detail::format(std::locale{}, std::move(fmt), tp.get_local_time(), &info);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
+format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
        sys_time<Duration> tp)
 {
-    return detail::format(loc, std::move(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
+    return format(loc, std::move(fmt), make_zoned(locate_zone("UTC"), tp));
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, sys_time<Duration> tp)
+format(std::basic_string<CharT, Traits> fmt, sys_time<Duration> tp)
 {
-    return detail::format(std::locale{}, std::move(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
+    return format(std::move(fmt), make_zoned(locate_zone("UTC"), tp));
 }
 
 // const CharT* formats
@@ -1497,53 +1493,53 @@ format(std::basic_string<CharT, Traits> format, sys_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, local_time<Duration> tp)
+format(const std::locale& loc, const CharT* fmt, local_time<Duration> tp)
 {
-    return detail::format(loc,  std::basic_string<CharT>(format), tp);
+    return detail::format(loc,  std::basic_string<CharT>(fmt), tp);
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* format, local_time<Duration> tp)
+format(const CharT* fmt, local_time<Duration> tp)
 {
-    return detail::format(std::locale{}, std::basic_string<CharT>(format), tp);
+    return detail::format(std::locale{}, std::basic_string<CharT>(fmt), tp);
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, const zoned_time<Duration>& tp)
+format(const std::locale& loc, const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(loc, std::basic_string<CharT>(format), tp.get_local_time(),
-                          tp.get_time_zone());
+    auto const info = tp.get_info();
+    return detail::format(loc, std::basic_string<CharT>(fmt), tp.get_local_time(),
+                          &info);
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* format, const zoned_time<Duration>& tp)
+format(const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(std::locale{}, std::basic_string<CharT>(format),
-                          tp.get_local_time(), tp.get_time_zone());
+    auto const info = tp.get_info();
+    return detail::format(std::locale{}, std::basic_string<CharT>(fmt),
+                          tp.get_local_time(), &info);
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, sys_time<Duration> tp)
+format(const std::locale& loc, const CharT* fmt, sys_time<Duration> tp)
 {
-    return detail::format(loc, std::basic_string<CharT>(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
+    return format(loc, fmt, make_zoned(locate_zone("UTC"), tp));
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* format, sys_time<Duration> tp)
+format(const CharT* fmt, sys_time<Duration> tp)
 {
-    return detail::format(std::locale{}, std::basic_string<CharT>(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
+    return format(fmt, make_zoned(locate_zone("UTC"), tp));
 }
 
 // parse
