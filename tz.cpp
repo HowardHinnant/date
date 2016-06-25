@@ -368,7 +368,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
         throw std::runtime_error(msg);
     }
 
-    auto error = [&](const char* info)
+    auto error = [&input_path, &line_num](const char* info)
     {
         std::string msg = "Error loading time zone mapping file \"";
         msg += input_path;
@@ -379,7 +379,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
         throw std::runtime_error(msg);
     };
     // [optional space]a="b"
-    auto read_attribute = [&](const char* name, std::string& value, size_t startPos)->size_t
+    auto read_attribute = [&line_num, &line, &error](const char* name, std::string& value, size_t startPos)->size_t
     {
         value.clear();
         // Skip leading space before attribute name.
