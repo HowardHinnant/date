@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>julian</title>
+
+	<style>
+	p {text-align:justify}
+	li {text-align:justify}
+	blockquote.note
+	{
+		background-color:#E0E0E0;
+		padding-left: 15px;
+		padding-right: 15px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+	}
+	ins {color:#00A000}
+	del {color:#A00000}
+	code {white-space:pre;}
+	</style>
+</head>
+<body>
+
+<address align=right>
+<br/>
+<br/>
+<a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
+2016-06-26<br/>
+</address>
+<hr/>
+<h1 align=center><code>julian</code></h1>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="https://github.com/HowardHinnant/date">github link</a></li>
+<li><a href="#Introduction">Introduction</a></li>
+</ul>
+
+<a name="Introduction"></a><h2>Introduction</h2>
+
+<p>
+This is a Julian calendar in the style of
+<a href="date.html">date.h</a>.
+Everthing is the same here as for
+<a href="date.html">date.h</a>,
+except that the calendrical arithmetic implements a proleptic Julian calendar.
+</p>
+
+<p>
+The <code>julian</code> calendar can interoperate with
+<a href="date.html">date.h</a> and <a href="tz.html">tz.h</a> just by
+paying attention to the namespace.  For example to convert the <i>civil</i>
+date <code>2016_y/jun/26</code> to a julian date, just do:
+</p>
+
+<blockquote><pre>
+#include "julian.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date::literals;
+    std::cout &lt;&lt; julian::year_month_day{2016_y/jun/26} &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+This outputs:
+</p>
+
+<blockquote><pre>
+2016-06-13
+</pre></blockquote>
+
+<p>
+And here is the reverse conversion:
+</p>
+
+<blockquote><pre>
+#include "julian.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace julian::literals;
+    std::cout &lt;&lt; date::year_month_day{2016_y/jun/13} &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+Which outputs:
+</p>
+
+<blockquote><pre>
+2016-06-26
+</pre></blockquote>
+
+<p>
+You can even convert directly to the ISO-week-based calendar:
+</p>
+
+<blockquote><pre>
+#include "iso_week.h"
+#include "julian.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace julian::literals;
+    std::cout &lt;&lt; iso_week::year_weeknum_weekday{2016_y/jun/13} &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+Which outputs:
+</p>
+
+<blockquote><pre>
+2016-W25-Sun
+</pre></blockquote>
+
+<p>
+
+<p>
+You can find the current local julian date and time with:
+</p>
+
+<blockquote><pre>
+#include "julian.h"
+#include "tz.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    auto zt = date::make_zoned(date::current_zone(), std::chrono::system_clock::now());
+    auto ld = date::floor&lt;date::days&gt;(zt.get_local_time());
+    julian::year_month_day ymd{ld};
+    auto time = date::make_time(zt.get_local_time() - ld);
+    std::cout &lt;&lt; ymd &lt;&lt; ' ' &lt;&lt; time &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+Example output:
+</p>
+
+<blockquote><pre>
+2016-06-13 18:38:30.049598
+</pre></blockquote>
+
+
+</body>
+</html>
