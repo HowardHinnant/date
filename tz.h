@@ -274,6 +274,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration1>& t);
 
 private:
+    template <class D> friend class zoned_time;
 
     static_assert(std::is_convertible<std::chrono::seconds, Duration>::value,
                   "zoned_time must have a precision of seconds or finer");
