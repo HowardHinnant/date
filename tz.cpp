@@ -2249,7 +2249,7 @@ init_tzdb(const _Lines_t & lines, const _Mappings_t & mappings)
 {
 	using namespace std;
 	using namespace detail;
-	assert(size(lines) > 0);
+	assert(std::distance(std::begin(lines), std::end(lines)) > 0);
 	TZ_DB db;
 	load_tzdb(db, lines);
 #if TIMEZONE_MAPPING
