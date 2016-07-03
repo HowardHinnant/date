@@ -25,7 +25,7 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
-#if _WIN32
+#ifdef _WIN32
 // Windows.h will be included directly and indirectly (e.g. by curl).
 // We need to define these macros to prevent Windows.h bringing in
 // more than we need and do it eearly so Windows.h doesn't get included
@@ -49,7 +49,7 @@
 // https://msdn.microsoft.com/en-nz/library/windows/desktop/aa383745(v=vs.85).aspx
 // that "If you define NTDDI_VERSION, you must also define _WIN32_WINNT."
 // So we declare we require Vista or greater.
-#if __MINGW32__
+#ifdef __MINGW32__
 
 #ifndef NTDDI_VERSION
 #define NTDDI_VERSION 0x06000000
@@ -87,7 +87,7 @@
 #include <vector>
 #include <sys/stat.h>
 
-#if _WIN32
+#ifdef _WIN32
 #include <locale>
 #include <codecvt>
 #endif // _WIN32
@@ -96,7 +96,7 @@
 // the current time zone. On Win32 Windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
-#if _WIN32
+#ifdef _WIN32
 #  include <io.h> // _unlink etc.
 #  include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
 #  if HAS_REMOTE_API
@@ -122,7 +122,7 @@
 #include <curl/curl.h>
 #endif
 
-#if _WIN32
+#ifdef _WIN32
 static CONSTDATA char folder_delimiter = '\\';
 
 namespace
@@ -197,7 +197,7 @@ namespace date
 
 static std::string get_install()
 {
-#if _WIN32
+#ifdef _WIN32
     std::string install = get_download_folder();
     install += folder_delimiter;
     install += "tzdata";
@@ -243,7 +243,7 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
 
 namespace // Put types in an anonymous name space.
 {
@@ -2167,7 +2167,7 @@ static
 bool
 file_exists(const std::string& filename)
 {
-#if _WIN32
+#ifdef _WIN32
     return ::_access(filename.c_str(), 0) == 0;
 #else
     return ::access(filename.c_str(), F_OK) == 0;
@@ -2283,7 +2283,7 @@ remote_download(const std::string& version)
                ".tar.gz";
     bool result = download_to_file(url, get_download_gz_file(version),
                                    download_file_options::binary);
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
     if (result)
     {
         auto mapping_file = get_download_mapping_file(version);
@@ -2306,7 +2306,7 @@ static
 bool
 remove_folder_and_subfolders(const std::string& folder)
 {
-#if _WIN32
+#ifdef _WIN32
 #  if USE_SHELL_API
     // Delete the folder contents by deleting the folder.
     std::string cmd = "rd /s /q \"";
@@ -2385,7 +2385,7 @@ static
 bool
 make_directory(const std::string& folder)
 {
-#if _WIN32
+#ifdef _WIN32
 #  if USE_SHELL_API
     // Re-create the folder.
     std::string cmd = "mkdir \"";
@@ -2408,7 +2408,7 @@ static
 bool
 delete_file(const std::string& file)
 {
-#if _WIN32
+#ifdef _WIN32
 #  if USE_SHELL_API
     std::string cmd = "del \"";
     cmd += file;
@@ -2426,13 +2426,13 @@ delete_file(const std::string& file)
 #endif // !WIN32
 }
 
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
 
 static
 bool
 move_file(const std::string& from, const std::string& to)
 {
-#if _WIN32
+#ifdef _WIN32
 #  if USE_SHELL_API
     std::string cmd = "move \"";
     cmd += from;
@@ -2454,7 +2454,7 @@ move_file(const std::string& from, const std::string& to)
 
 #endif  // TIMEZONE_MAPPING
 
-#if _WIN32
+#ifdef _WIN32
 
 // Note folder can and usually does contain spaces.
 static
@@ -2684,7 +2684,7 @@ remote_install(const std::string& version)
         {
             if (extract_gz_file(version, gz_file, install))
                 success = true;
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
             auto mapping_file_source = get_download_mapping_file(version);
             auto mapping_file_dest = install;
             mapping_file_dest += folder_delimiter;
@@ -2830,7 +2830,7 @@ init_tzdb()
     std::sort(db.leaps.begin(), db.leaps.end());
     db.leaps.shrink_to_fit();
 
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
     std::string mapping_file = path + "windowsZones.xml";
     db.mappings = load_timezone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
@@ -2983,12 +2983,12 @@ operator<<(std::ostream& os, const local_info& r)
     return os;
 }
 
-#if _WIN32
+#ifdef _WIN32
 
 const time_zone*
 current_zone()
 {
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
     TIME_ZONE_INFORMATION tzi{};
     DWORD tz_result = ::GetTimeZoneInformation(&tzi);
     if (tz_result == TIME_ZONE_ID_INVALID)
@@ -3104,7 +3104,7 @@ current_zone()
 
 #endif // !WIN32
 
-#if TZ_TEST && TIMEZONE_MAPPING
+#if defined(TZ_TEST) && defined(TIMEZONE_MAPPING)
 
 const time_zone*
 locate_native_zone(const std::string& native_tz_name)
