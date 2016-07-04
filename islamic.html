@@ -141,7 +141,7 @@ main()
 {
     auto zt = date::make_zoned(date::current_zone(), std::chrono::system_clock::now());
     auto ld = date::floor&lt;date::days&gt;(zt.get_local_time());
-    julian::year_month_day ymd{ld};
+    islamic::year_month_day ymd{ld};
     auto time = date::make_time(zt.get_local_time() - ld);
     std::cout &lt;&lt; ymd &lt;&lt; ' ' &lt;&lt; time &lt;&lt; '\n';
 }
