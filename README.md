@@ -14,6 +14,8 @@ This is actually several separate C++11/C++14 libraries:
 
 4. `"julian.h"` is a header-only library built on top of the `"date.h"` library which implements a proleptic Julian calendar which is fully interoperable with everything above.  See http://howardhinnant.github.io/date/julian.html for more details.
 
+5. `"islamic.h"` is a header-only library built on top of the `"date.h"` library which implements a proleptic Islamic calendar which is fully interoperable with everything above.  See http://howardhinnant.github.io/date/islamic.html for more details.
+
 There has been a recent change in the library design.  If you are trying to migrate from the previous design, rename `day_point` to `sys_days` everywhere, and that ought to bring the number of errors down to a small roar.
 
 `"date.h"` and `"tz.h"` are now proposed for standardization here:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0355r0.html
