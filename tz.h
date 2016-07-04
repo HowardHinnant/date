@@ -40,12 +40,12 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
-#if _WIN32
+#ifdef _WIN32
 #  ifndef TIMEZONE_MAPPING
 #    define TIMEZONE_MAPPING 1
 #  endif
 #else
-#  if TIMEZONE_MAPPING
+#  ifdef TIMEZONE_MAPPING
 #    error "Timezone mapping is not required or not implemented for this platform."
 #  endif
 #endif
@@ -55,7 +55,7 @@
 #endif
 
 #ifndef HAS_REMOTE_API
-#  if _WIN32
+#  ifdef _WIN32
 #    define HAS_REMOTE_API 0
 #  else
 #    define HAS_REMOTE_API 1
@@ -625,7 +625,7 @@ operator>=(const sys_time<Duration>& x, const leap& y)
     return !(x < y);
 }
 
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
 
 namespace detail
 {
@@ -677,7 +677,7 @@ struct TZ_DB
     std::vector<link>      links;
     std::vector<leap>      leaps;
     std::vector<Rule>      rules;
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
     // TODO! These need some protection.
     std::vector<detail::timezone_mapping> mappings;
     std::vector<detail::timezone_info> native_zones;
@@ -1677,7 +1677,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                 f.get(is, 0, is, err, &tm, b, e);
             if ((err & ios_base::failbit) == 0)
             {
-#if _WIN32
+#ifdef _WIN32
                 auto tt = _mkgmtime(&tm);
 #else
                 auto tt = timegm(&tm);

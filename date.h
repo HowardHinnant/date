@@ -3829,7 +3829,7 @@ class time_of_day
 {
     using base = detail::time_of_day_storage<Duration>;
 public:
-#if !(_MSC_VER && !defined(__clang__))
+#if !(defined(_MSC_VER) && !defined(__clang__))
     // C++11
     using base::base;
 #else
