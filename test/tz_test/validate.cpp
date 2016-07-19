@@ -90,9 +90,9 @@ tzmain()
     auto& db = get_tzdb();
     std::vector<std::string> names;
     names.reserve(db.zones.size() + db.links.size());
-    for (auto& zone : db.zones)
+    for (const auto& zone : db.zones)
         names.push_back(zone.name());
-    for (auto& link : db.links)
+    for (const auto& link : db.links)
         names.push_back(link.name());
     std::sort(names.begin(), names.end());
     std::cout << db.version << "\n\n";
