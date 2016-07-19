@@ -85,6 +85,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <array>
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -106,14 +107,12 @@
 #else   // !WIN32
 #  include <unistd.h>
 #  include <wordexp.h>
-#  if !USE_SHELL_API
 #    include <sys/stat.h>
 #    include <sys/fcntl.h>
 #    include <dirent.h>
 #    include <cstring>
 #    include <sys/wait.h>
 #    include <sys/types.h>
-#  endif //!USE_SHELL_API
 #endif  // !WIN32
 
 #if HAS_REMOTE_API
@@ -153,14 +152,6 @@ get_known_folder(const GUID& folderid)
         folder = std::string(folder_ptr.get(), folder_ptr.get() + wcslen(folder_ptr.get()));
     }
     return folder;
-}
-
-// Usually something like "c:\Program Files".
-static
-std::string
-get_program_folder()
-{
-    return get_known_folder(FOLDERID_ProgramFiles);
 }
 
 // Usually something like "c:\Users\username\Downloads".
@@ -217,7 +208,7 @@ get_download_gz_file(const std::string& version)
     return file;
 }
 
-static const std::vector<std::string> files =
+static const std::array<const std::string, 12> files
 {
     "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
     "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
@@ -434,8 +425,6 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     // Quick but not overly forgiving XML mapping file processing.
     bool mapTimezonesOpenTagFound = false;
     bool mapTimezonesCloseTagFound = false;
-    bool mapZoneOpenTagFound = false;
-    bool mapTZoneCloseTagFound = false;
     std::size_t mapZonePos = std::string::npos;
     std::size_t mapTimezonesPos = std::string::npos;
     CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
@@ -1719,7 +1708,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
     const Rule* prev_rule = nullptr;
     while (r != nullptr)
     {
-        bool found;
+        bool found = false;
         switch (r->mdt().zone())
         {
         case tz::utc:
@@ -1820,6 +1809,7 @@ time_zone::adjust_infos(const std::vector<Rule>& rules)
                 {
                     using namespace std::chrono;
                     using string = std::string;
+                    in.clear();
                     in.str(z.u.rule_);
                     auto tmp = duration_cast<minutes>(parse_signed_time(in));
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -2289,35 +2279,21 @@ remote_download(const std::string& version)
         auto mapping_file = get_download_mapping_file(version);
         result = download_to_file("http://unicode.org/repos/cldr/trunk/common/"
                                   "supplemental/windowsZones.xml",
-            mapping_file, download_file_options::text);
+                                  mapping_file, download_file_options::text);
     }
 #endif
     return result;
 }
 
-// TODO! Using system() create a process and a console window.
-// This is useful to see what errors may occur but is slow and distracting.
-// Consider implementing this functionality more directly, such as
-// using _mkdir and CreateProcess etc.
-// But use the current means now as matches Unix implementations and while
-// in proof of concept / testing phase.
 // TODO! Use <filesystem> eventually.
 static
 bool
 remove_folder_and_subfolders(const std::string& folder)
 {
 #ifdef _WIN32
-#  if USE_SHELL_API
-    // Delete the folder contents by deleting the folder.
-    std::string cmd = "rd /s /q \"";
-    cmd += folder;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
     // Create a buffer containing the path to delete. It must be terminated
     // by two nuls. Who designs these API's...
-    std::vector<char> from;
-    from.assign(folder.begin(), folder.end());
+    std::vector<char> from(folder.begin(), folder.end());
     from.push_back('\0');
     from.push_back('\0');
     SHFILEOPSTRUCT fo{}; // Zero initialize.
@@ -2328,11 +2304,7 @@ remove_folder_and_subfolders(const std::string& folder)
     if (ret == 0 && !fo.fAnyOperationsAborted)
         return true;
     return false;
-#  endif  // !USE_SHELL_API
 #else   // !WIN32
-#  if USE_SHELL_API
-    return std::system(("rm -R " + folder).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
     struct dir_deleter {
         dir_deleter() {}
         void operator()(DIR* d) const
@@ -2377,7 +2349,6 @@ remove_folder_and_subfolders(const std::string& folder)
         r = rmdir(folder.c_str()) == 0;
 
     return r;
-#  endif // !USE_SHELL_API
 #endif  // !WIN32
 }
 
@@ -2386,21 +2357,9 @@ bool
 make_directory(const std::string& folder)
 {
 #ifdef _WIN32
-#  if USE_SHELL_API
-    // Re-create the folder.
-    std::string cmd = "mkdir \"";
-    cmd += folder;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
     return _mkdir(folder.c_str()) == 0;
-#  endif // !USE_SHELL_API
 #else // !WIN32
-#  if USE_SHELL_API
-    return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
     return mkdir(folder.c_str(), 0777) == 0;
-#  endif // !USE_SHELL_API
 #endif
 }
 
@@ -2409,20 +2368,9 @@ bool
 delete_file(const std::string& file)
 {
 #ifdef _WIN32
-#  if USE_SHELL_API
-    std::string cmd = "del \"";
-    cmd += file;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == 0;
-#  else  // !USE_SHELL_API
     return _unlink(file.c_str()) == 0;
-#  endif // !USE_SHELL_API
 #else  // !WIN32
-#  if USE_SHELL_API
-    return std::system(("rm " + file).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
     return unlink(file.c_str()) == 0;
-#  endif // !USE_SHELL_API
 #endif // !WIN32
 }
 
@@ -2433,28 +2381,23 @@ bool
 move_file(const std::string& from, const std::string& to)
 {
 #ifdef _WIN32
-#  if USE_SHELL_API
-    std::string cmd = "move \"";
-    cmd += from;
-    cmd += "\" \"";
-    cmd += to;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
     return !!::MoveFile(from.c_str(), to.c_str());
-#  endif // !USE_SHELL_API
 #else  // !WIN32
-#  if USE_SHELL_API
-    return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
-#  else
     return rename(from, to) == 0);
-#  endif
 #endif // !WIN32
 }
 
 #endif  // TIMEZONE_MAPPING
 
 #ifdef _WIN32
+
+// Usually something like "c:\Program Files".
+static
+std::string
+get_program_folder()
+{
+    return get_known_folder(FOLDERID_ProgramFiles);
+}
 
 // Note folder can and usually does contain spaces.
 static
@@ -2488,13 +2431,12 @@ get_unzip_program()
             }
         }
     }
-    path += get_program_folder();
+    path = get_program_folder();
     path += folder_delimiter;
     path += "7-Zip\\7z.exe";
     return path;
 }
 
-#if !USE_SHELL_API
 static
 int
 run_program(const std::string& command)
@@ -2522,7 +2464,6 @@ run_program(const std::string& command)
     }
     return EXIT_FAILURE;
 }
-#endif // !USE_SHELL_API
 
 static
 std::string
@@ -2557,18 +2498,8 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd += dest_folder;
     cmd += '\"';
 
-#if USE_SHELL_API
-    // When using shelling out with std::system() extra quotes are required around the
-    // whole command. It's weird but neccessary it seems, see:
-    // http://stackoverflow.com/q/27975969/576911
-
-    cmd = "\"" + cmd + "\"";
-    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
-        unzip_result = true;
-#else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
         unzip_result = true;
-#endif // !USE_SHELL_API
     if (unzip_result)
         delete_file(gz_file);
 
@@ -2582,15 +2513,8 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd += "\" -o\"";
     cmd += install;
     cmd += '\"';
-#if USE_SHELL_API
-    cmd = "\"" + cmd + "\"";
-    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
-        unzip_result = true;
-#else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
         unzip_result = true;
-#endif // !USE_SHELL_API
-
     if (unzip_result)
         delete_file(tar_file);
 
@@ -2599,7 +2523,6 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
 
 #else  // !_WIN32
 
-#if !USE_SHELL_API
 static
 int
 run_program(const char* prog, const char*const args[])
@@ -2629,7 +2552,6 @@ run_program(const char* prog, const char*const args[])
     }
     else // We are in the child process. Start the program the parent wants to run.
     {
-
         if (execv(prog, const_cast<char**>(args)) == -1) // Does not return.
         {
             perror("unreachable 0\n");
@@ -2643,22 +2565,17 @@ run_program(const char* prog, const char*const args[])
     exit(EXIT_FAILURE);
     return EXIT_FAILURE;
 }
-#endif // !USE_SHELL_API
 
 static
 bool
 extract_gz_file(const std::string&, const std::string& gz_file, const std::string&)
 {
-#if USE_SHELL_API
-    bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS;
-#else  // !USE_SHELL_API
     const char prog[] = {"/usr/bin/tar"};
     const char*const args[] =
     {
         prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
     };
     bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
-#endif // !USE_SHELL_API
     if (unzipped)
     {
         delete_file(gz_file);
@@ -2722,8 +2639,6 @@ init_tzdb()
 {
     using namespace date;
     const std::string path = install + folder_delimiter;
-    std::string line;
-    bool continue_zone = false;
     TZ_DB db;
 
 #if AUTO_DOWNLOAD
@@ -2775,9 +2690,19 @@ init_tzdb()
     db.version = get_version(path);
 #endif  // !AUTO_DOWNLOAD
 
+    std::string line;
+    bool continue_zone = false;
     for (const auto& filename : files)
     {
-        std::ifstream infile(path + filename);
+        std::string infile_name{path + filename};
+        std::ifstream infile(infile_name);
+        if (!infile)
+        {
+            std::string msg = "Error opening time zone data file \"";
+            msg += infile_name;
+            msg += "\".";
+            throw std::runtime_error(msg);
+        }
         while (infile)
         {
             std::getline(infile, line);
