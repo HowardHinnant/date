@@ -432,8 +432,6 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     // Quick but not overly forgiving XML mapping file processing.
     bool mapTimezonesOpenTagFound = false;
     bool mapTimezonesCloseTagFound = false;
-    bool mapZoneOpenTagFound = false;
-    bool mapTZoneCloseTagFound = false;
     std::size_t mapZonePos = std::string::npos;
     std::size_t mapTimezonesPos = std::string::npos;
     CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
