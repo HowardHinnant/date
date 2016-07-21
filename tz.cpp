@@ -154,14 +154,6 @@ get_known_folder(const GUID& folderid)
     return folder;
 }
 
-// Usually something like "c:\Program Files".
-static
-std::string
-get_program_folder()
-{
-    return get_known_folder(FOLDERID_ProgramFiles);
-}
-
 // Usually something like "c:\Users\username\Downloads".
 static
 std::string
@@ -2397,6 +2389,14 @@ move_file(const std::string& from, const std::string& to)
 #endif  // TIMEZONE_MAPPING
 
 #ifdef _WIN32
+
+// Usually something like "c:\Program Files".
+static
+std::string
+get_program_folder()
+{
+    return get_known_folder(FOLDERID_ProgramFiles);
+}
 
 // Note folder can and usually does contain spaces.
 static
