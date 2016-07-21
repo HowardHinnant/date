@@ -1715,7 +1715,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
     const Rule* prev_rule = nullptr;
     while (r != nullptr)
     {
-        bool found;
+        bool found = false;
         switch (r->mdt().zone())
         {
         case tz::utc:
