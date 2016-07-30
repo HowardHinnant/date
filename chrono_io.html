@@ -1,0 +1,332 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>chrono_io</title>
+
+	<style>
+	p {text-align:justify}
+	li {text-align:justify}
+	blockquote.note
+	{
+		background-color:#E0E0E0;
+		padding-left: 15px;
+		padding-right: 15px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+	}
+	ins {color:#00A000}
+	del {color:#A00000}
+	code {white-space:pre;}
+	</style>
+</head>
+<body>
+
+<address align=right>
+<br/>
+<br/>
+<a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
+2016-07-30<br/>
+</address>
+<hr/>
+<h1 align=center><code>chrono_io</code></h1>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="https://github.com/HowardHinnant/date">github link</a></li>
+<li><a href="#Introduction">Introduction</a></li>
+<li><a href="#Examples">Examples</a></li>
+<li><a href="#Implementation">Implementation Details</a></li>
+<li><a href="#Reference">Reference</a></li>
+</ul>
+
+<a name="Introduction"></a><h2>Introduction</h2>
+
+<p>
+This is a small library which does nothing but add non-configurable, non-localizable
+streaming to <code>std::chrono::duration</code>.  The streaming operator lives in
+<code>namespace date</code> for convenience purposes, and does not live in 
+<code>namespace std::chrono</code> as that would violate the standard.
+</p>
+
+<p>
+The entire API of this library is:
+</p>
+
+<blockquote><pre>
+namespace date
+{
+
+template &lt;class CharT, class Traits, class Rep, class Period&gt;
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os,
+           const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
+
+}  // namespace date
+</pre></blockquote>
+
+<p>
+Just one signature for an entire library?  Are you serious?!
+</p>
+
+<blockquote>
+<p>
+Very serious.
+</p>
+<p>
+Parsing is not included because there are a million ways to parse durations, and none
+of them are universally agreed upon.  And they are all easily implementable without
+private access to <code>std::chrono::duration</code> just by parsing arithmetic types
+and strings.
+</p>
+</blockquote>
+
+<p>
+No formatting options?!
+</p>
+
+<blockquote>
+<p>
+No.
+</p>
+<p>
+The formatting provided here is based on an international SI standard. There is
+no need for localization.  If you need other formatting options for streaming
+your durations that is easy enough for you to supply. What is needed here is
+zero-effort streaming of <code>chrono::duration</code>s without hassle. 
+Streaming <code>chrono::duration</code>s is the biggest use of
+<code>.count()</code> (a dangerous type cast), and that use should be handled by
+a library such as this.
+</p>
+</blockquote>
+
+<a name="Examples"></a><h2>Examples</h2>
+
+<blockquote><pre>
+#include "chrono_io.h"
+#include &lt;iostream&gt;
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono;
+    auto t0 = steady_clock::now();
+    auto t1 = steady_clock::now();
+    std::cout &lt;&lt; t1 - t0 &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+With this library, you don't have to specify the duration type (and cast to it) in timing
+situations like this.  This will create whatever duration is native to
+<code>steady_clock</code> and print out the value <i>and</i> units for that duration,
+for example:
+</p>
+
+<blockquote><pre>
+104ns
+</pre></blockquote>
+
+<p>
+Change <code>steady_clock</code> to <code>system_clock</code> (and if that clock has
+different units on your platform), and the output automatically changes units for you:
+</p>
+
+<blockquote><pre>
+auto t0 = system_clock::now();
+auto t1 = system_clock::now();
+std::cout &lt;&lt; t1 - t0 &lt;&lt; '\n';
+</pre></blockquote>
+
+<blockquote><pre>
+0&micro;s
+</pre></blockquote>
+
+<p>
+And yes, it really does print out the Greek letter <code>&micro;</code> and not
+<code>u</code>.  When streaming to <code>char</code>-based streams it uses UTF-8 encoding
+to represent the Unicode character 'MICRO SIGN' (U+00B5).  Otherwise it uses UTF-16 or
+UTF-32 based on the size of character the stream is using.
+</p>
+
+<p>
+In general, if the duration tick period is the same type as one of the non-optional
+<code>std::ratio</code> SI convenience typedefs (<code>atto</code> thru <code>exa</code>),
+then the unit will use the internationally accepted symbol for the
+<a href="https://en.wikipedia.org/wiki/Metric_prefix">metric prefix</a> followed
+by <code>'s'</code>.
+</p>
+
+<p>
+In addition, if the duration tick period is <code>ratio&lt;60&gt;</code>, then the
+printed unit is <code>min</code>.  And if the duration tick period is
+<code>ratio&lt;3600&gt;</code>, then the unit is <code>h</code>.
+</p>
+
+<blockquote><pre>
+std::cout &lt;&lt; 1s &lt;&lt; '\n';
+std::cout &lt;&lt; 2min &lt;&lt; '\n';
+std::cout &lt;&lt; 3h &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+Outputs:
+</p>
+
+<blockquote><pre>
+1s
+2min
+3h
+</pre></blockquote>
+
+<p>
+Sometimes odd durations pop up which have no widely recognized names.  For example
+consider this code:
+</p>
+
+<blockquote><pre>
+using frames = duration&lt;int, ratio&lt;1, 60&gt;&gt;;
+std::cout &lt;&lt; 45ms + frames{5} &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+This sum can't be exactly represented as either milliseconds or frames (1/60 of a second).
+The compiler figures out the coarsest unit which can exactly represent the sum of
+any millisecond and any frame and auto-generates that unit to hold the sum.  For this
+example that duration will have a tick period of 1/3000 of a second.  This library
+puts that ratio inside of square brackets, and then appends <code>'s'</code>:
+</p>
+
+<blockquote><pre>
+385[1/3000]s
+</pre></blockquote>
+
+<p>
+If the durations tick period is a whole number of seconds (<code>period::den == 1</code>),
+then the <code>/1</code> is dropped inside of the square brackets.  The following example
+uses <code>months</code> from <a href="https://github.com/HowardHinnant/date">date.h</a>.
+</p>
+
+<blockquote><pre>
+std::cout &lt;&lt; months{6} &lt;&lt; '\n';
+</pre></blockquote>
+
+<blockquote><pre>
+6[2629746]s
+</pre></blockquote>
+
+<p>
+<i>Trivia:</i> 2,629,746s is the exact length of the average Gregorian month, which is also exactly
+30.436875 24h days.
+</p>
+
+<a name="Implementation"></a><h2>Implementation Details</h2>
+
+<p>
+<i>Question:</i>  Why are there separate implementations for C++11 and C++14?
+</p>
+
+<p>
+<i>Answer:</i>  The units of a <code>duration</code> are <i>always</i> known at compile
+time.  Thus the string representation of the units is always known at compile time.  This
+is true even when the unit is of the form <code>[num/den]s</code>.  But only C++14 has
+the gravitas to do the complete string conversion at compile time.  And now that I've
+claimed that, I'm sure someone will come up with a C++11 that VS-2015 won't compile anyway.
+So I need a run-time solution (based on <code>std::basic_string&lt;CharT&gt;</code>,
+and a compile-time solution that currently only gcc and clang with <code>-std=c++14</code>
+can handle.
+</p>
+
+<p>
+For example if you compile the following code with <code>-std=c++14</code> and clang:
+</p>
+
+<blockquote><pre>
+using frames = std::chrono::duration&lt;int, std::ratio&lt;1, 60&gt;&gt;;
+
+void
+test(std::ostream&amp; os, std::chrono::milliseconds x, frames y)
+{
+    using namespace date;
+    os &lt;&lt; x + y;
+}
+</pre></blockquote>
+
+<p>
+And then inspect the generated assembly, it contains this:
+</p>
+
+<blockquote><pre>
+movabsq	$6714920027984703835, %rax ## imm = 0x5D303030332F315B
+</pre></blockquote>
+
+<p>
+Which is assembly-speak for "[1/3000]" all boiled down to one x86_64 instruction.  The
+<code>'s'</code> wouldn't quite fit within this one instruction and follows in a later
+instruction.  C++14 can do some <i>amazing</i> things at compile time!  For C++11 I just
+gave up and called <code>std::to_string</code>.
+</p>
+
+<a name="Reference"></a><h2>Reference</h2>
+
+<blockquote><pre>
+template &lt;class CharT, class Traits, class Rep, class Period&gt;
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os,
+           const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to:
+</p>
+<blockquote><pre>
+os &lt;&lt; d.count() &lt;&lt; detail::get_units&lt;CharT&gt;(duration&lt;Rep, typename Period::type&gt;{});
+</pre>
+<p>
+Where <code>detail::get_units&lt;CharT&gt;()</code> returns a null-terminated string of
+<code>CharT</code> which depends only on <code>Period::type</code> as follows (let
+<code>period</code> be the type <code>Period::type</code>):
+</p>
+
+<ul>
+<li>If <code>period</code> is type <code>std::atto</code>, <code>as</code>, else</li>
+<li>if <code>period</code> is type <code>std::femto</code>, <code>fs</code>, else</li>
+<li>if <code>period</code> is type <code>std::pico</code>, <code>ps</code>, else</li>
+<li>if <code>period</code> is type <code>std::nano</code>, <code>ns</code>, else</li>
+<li>if <code>period</code> is type <code>std::micro</code>, <code>&micro;s</code> (U+00B5), else</li>
+<li>if <code>period</code> is type <code>std::milli</code>, <code>ms</code>, else</li>
+<li>if <code>period</code> is type <code>std::centi</code>, <code>cs</code>, else</li>
+<li>if <code>period</code> is type <code>std::deci</code>, <code>ds</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;1&gt;</code>, <code>s</code>, else</li>
+<li>if <code>period</code> is type <code>std::deca</code>, <code>das</code>, else</li>
+<li>if <code>period</code> is type <code>std::hecto</code>, <code>hs</code>, else</li>
+<li>if <code>period</code> is type <code>std::kilo</code>, <code>ks</code>, else</li>
+<li>if <code>period</code> is type <code>std::mega</code>, <code>Ms</code>, else</li>
+<li>if <code>period</code> is type <code>std::giga</code>, <code>Gs</code>, else</li>
+<li>if <code>period</code> is type <code>std::tera</code>, <code>Ts</code>, else</li>
+<li>if <code>period</code> is type <code>std::peta</code>, <code>Ps</code>, else</li>
+<li>if <code>period</code> is type <code>std::exa</code>, <code>Es</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;60&gt;</code>, <code>min</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;3600&gt;</code>, <code>h</code>, else</li>
+<li>if <code>period::den == 1</code>, <code>[num]s</code>, else</li>
+<li><code>[num/den]s</code>.</li>
+</ul>
+
+<p>
+In the list above the use of <code>num</code> and <code>den</code> refer to the
+static data members of <code>period</code> which are converted to arrays of
+<code>CharT</code> using a decimal conversion with no leading zeroes.
+</p>
+
+</blockquote>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+</blockquote>
+
+</body>
+</html>
