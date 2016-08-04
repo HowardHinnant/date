@@ -465,7 +465,7 @@ inline
 std::basic_string<CharT>
 msl(std::atto) noexcept
 {
-    return {1, 'a'};
+    return {'a'};
 }
 
 template <class CharT>
@@ -474,7 +474,7 @@ inline
 std::basic_string<CharT>
 msl(std::femto) noexcept
 {
-    return {1, 'f'};
+    return {'f'};
 }
 
 template <class CharT>
@@ -483,7 +483,7 @@ inline
 std::basic_string<CharT>
 msl(std::pico) noexcept
 {
-    return {1, 'p'};
+    return {'p'};
 }
 
 template <class CharT>
@@ -492,7 +492,7 @@ inline
 std::basic_string<CharT>
 msl(std::nano) noexcept
 {
-    return {1, 'n'};
+    return {'n'};
 }
 
 template <class CharT>
@@ -518,7 +518,7 @@ typename std::enable_if
 >::type
 msl(std::micro) noexcept
 {
-    return {1, CharT(static_cast<unsigned char>('\xB5'))};
+    return {CharT(static_cast<unsigned char>('\xB5'))};
 }
 
 template <class CharT>
@@ -527,7 +527,7 @@ inline
 std::basic_string<CharT>
 msl(std::milli) noexcept
 {
-    return {1, 'm'};
+    return {'m'};
 }
 
 template <class CharT>
@@ -536,7 +536,7 @@ inline
 std::basic_string<CharT>
 msl(std::centi) noexcept
 {
-    return {1, 'c'};
+    return {'c'};
 }
 
 template <class CharT>
@@ -545,7 +545,7 @@ inline
 std::basic_string<CharT>
 msl(std::deci) noexcept
 {
-    return {1, 'd'};
+    return {'d'};
 }
 
 template <class CharT>
@@ -563,7 +563,7 @@ inline
 std::basic_string<CharT>
 msl(std::hecto) noexcept
 {
-    return {1, 'h'};
+    return {'h'};
 }
 
 template <class CharT>
@@ -572,7 +572,7 @@ inline
 std::basic_string<CharT>
 msl(std::kilo) noexcept
 {
-    return {1, 'k'};
+    return {'k'};
 }
 
 template <class CharT>
@@ -581,7 +581,7 @@ inline
 std::basic_string<CharT>
 msl(std::mega) noexcept
 {
-    return {1, 'M'};
+    return {'M'};
 }
 
 template <class CharT>
@@ -590,7 +590,7 @@ inline
 std::basic_string<CharT>
 msl(std::giga) noexcept
 {
-    return {1, 'G'};
+    return {'G'};
 }
 
 template <class CharT>
@@ -599,7 +599,7 @@ inline
 std::basic_string<CharT>
 msl(std::tera) noexcept
 {
-    return {1, 'T'};
+    return {'T'};
 }
 
 template <class CharT>
@@ -608,7 +608,7 @@ inline
 std::basic_string<CharT>
 msl(std::peta) noexcept
 {
-    return {1, 'P'};
+    return {'P'};
 }
 
 template <class CharT>
@@ -617,7 +617,7 @@ inline
 std::basic_string<CharT>
 msl(std::exa) noexcept
 {
-    return {1, 'E'};
+    return {'E'};
 }
 
 template <class CharT, class Rep, class Period>
@@ -631,7 +631,7 @@ template <class CharT, class Rep>
 std::basic_string<CharT>
 get_units(const std::chrono::duration<Rep, std::ratio<1>>&)
 {
-    return {1, 's'};
+    return {'s'};
 }
 
 template <class CharT, class Rep>
@@ -645,7 +645,7 @@ template <class CharT, class Rep>
 std::basic_string<CharT>
 get_units(const std::chrono::duration<Rep, std::ratio<3600>>&)
 {
-    return {1, 'h'};
+    return {'h'};
 }
 
 #endif  //  __cplusplus >= 201402
