@@ -2920,46 +2920,51 @@ You will need the following four source files:
 <a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>.
 These sources are located at the github repository
 <a href="https://github.com/HowardHinnant/date">https://github.com/HowardHinnant/date</a>.
-The source
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>
-contains the following string near the top:
-</p>
-
-<blockquote><pre>
-static std::string install{"~/Downloads/tzdata"};  //  "%homedrive%\%homepath%\downloads\tzdata" on Windows
-</pre></blockquote>
-
-<p>
-You should set this such that <code>install</code> points to the directory where your
-library or application can find the downloaded and uncompressed <a
-href="http://www.iana.org/time-zones">IANA Time Zone Database -- tzdataYYYYv.tar.gz</a>
-(or where you want the software to install it for you if you compile with
-<code>AUTO_DOWNLOAD == 1</code>).  On Windows a utility such as
-<a href="http://www.7-zip.org/">7-zip</a> can be used to decompress the database.
 </p>
 
 <p>
-There are three configuration macros that can be defined on the command line during
-compilation, or you can ignore them and they will take on default values.
+Compile <a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>
+along with your other sources while providing pointers to your compiler for the location
+of the header files (i.e. <a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>tz.h</code></a>).
+</p>
+
+<p>
+You can also customize the build by defining macros (e.g. on the command line) as follows:
 </p>
 
 <blockquote>
-<table cellpadding="5">
-<tr>
-<td><code>HAS_REMOTE_API</code></td>
-<td>Defaults to 1 on Linux and OS X, and to 0 on Windows</td>
-</tr>
-<tr>
-<td><code>AUTO_DOWNLOAD</code></td>
-<td>Defaults to <code>HAS_REMOTE_API</code></td>
-</tr>
-<tr>
-<td><code>LAZY_INIT</code></td>
-<td>Defaults to 1</td>
-</tr>
-</table>
-</blockquote>
+<dl>
 
+<dt><code>INSTALL</code></dt>
+<dd>
+<p>
+This is the location of your uncompressed
+<a href="http://www.iana.org/time-zones">IANA Time Zone Database -- tzdataYYYYv.tar.gz</a>
+(or where you want the software to install it for you if you compile with
+<code>AUTO_DOWNLOAD == 1</code>).
+</p>
+<p>
+If specified, <code>"/tzdata"</code> will be appended to whatever you supply
+(<code>"\tzdata"</code> on Windows).
+</p>
+<p>
+<i>Default:</i> <code>"~/Downloads/tzdata"</code>
+(<code>"%homedrive%\%homepath%\downloads\tzdata"</code> on Windows).
+</p>
+<p>
+<i>Example:</i>  Put the database in the current directory:
+</p>
+<blockquote><pre>
+-DINSTALL=.
+</pre></blockquote>
+<p>
+<i>Warning:</i> When coupled with <code>AUTO_DOWNLOAD=1</CODE>, this <i>will</i> overwrite
+everthing at <code>INSTALL/tzdata</code> if it already exists.  Set with care.
+</p>
+</dd>
+
+<dt><code>HAS_REMOTE_API</code></dt>
+<dd>
 <p>
 If <code>HAS_REMOTE_API</code> is 1 then the <a href="#database">remote API</a> exists,
 else it doesn't:
@@ -2974,16 +2979,89 @@ bool        remote_install(const std::string&amp; version);
 <p>
 The remote API requires linking against <code>libcurl</code>
 (<a href="https://curl.haxx.se/libcurl">https://curl.haxx.se/libcurl</a>).
-On OS X and Linux this is done with <code>-lcurl</code>.
-<code>libcurl</code> comes pre-installed on OS X and Linux, but not on Windows.
+On macOS and Linux this is done with <code>-lcurl</code>.
+<code>libcurl</code> comes pre-installed on macOS and Linux, but not on Windows.
 However one can download it for Windows.
+</p>
+<p>
+<i>Default:</i> <code>1</code> on Linux and macOS, <code>0</code> on Windows.
+</p>
+<p>
+<i>Example:</i>  Disable the <a href="#database">remote API</a>:
+</p>
+<blockquote><pre>
+-DHAS_REMOTE_API=0
+</pre></blockquote>
+</dd>
+
+<dt><code>AUTO_DOWNLOAD</code></dt>
+<dd>
+<p>
+If <code>AUTO_DOWNLOAD</code> is <code>1</code> then first access to the
+timezone database will install it if it hasn't been installed, and if it has,
+will use the remote API to install the latest version if not already installed.
+</p>
+<p>
+If <code>AUTO_DOWNLOAD</code> is not enabled, you are responsible for keeping your
+<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> up to date.  New
+versions of it are released several times a year.  This library is not bundled with a
+specific version of the database already installed, nor is any specific version of the
+database blessed.
 </p>
 
 <p>
-If <code>AUTO_DOWNLOAD</code> is 1 then first access to the timezone database will install
-it if it hasn't been installed, and if it has, will use the remote API to install the
-latest version if not already installed.
+If <code>AUTO_DOWNLOAD</code> is <code>1</code> then <code>HAS_REMOTE_API</code>
+must be <code>1</code>, else a compile-time error will be emitted.
 </p>
+<p>
+<i>Default:</i> Equal to <code>HAS_REMOTE_API</code>.
+</p>
+<p>
+<i>Example:</i>  Disable automatic downloading of the timezone database:
+</p>
+<blockquote><pre>
+-DAUTO_DOWNLOAD=0
+</pre></blockquote>
+<p>
+<i>Warning:</i> This <i>will</i> overwrite everthing at <code>INSTALL/tzdata</code> if
+it already exists.
+</p>
+</dd>
+
+<dt><code>USE_SHELL_API</code></dt>
+<dd>
+<p>
+If <code>USE_SHELL_API</code> is <code>1</code> then <code>std::system</code> is used
+to execute commands for downloading the timezone database.  This may be useful (for
+example) if your <code>tar</code> utility is installed in some place other than
+<code>/usr/bin/tar</code>.
+</p>
+<p>
+If <code>USE_SHELL_API</code> is <code>0</code> then <code>fork</code> is used
+to execute commands for downloading the timezone database (<code>CreateProcess</code>
+on Windows).
+</p>
+<p>
+<i>Default:</i> <code>0</code>.
+</p>
+<p>
+<i>Example:</i>  Enable the use of the shell API:
+</p>
+<blockquote><pre>
+-DUSE_SHELL_API=1
+</pre></blockquote>
+</dd>
+
+</dl>
+</blockquote>
+
+<p>
+Example compile command I commonly use on macOS:
+</p>
+
+<blockquote><pre>
+clang++ -std=c++14 test.cpp -I../date ../date/tz.cpp -O3 -lcurl
+</pre></blockquote>
 
 <h3>Windows specific:</h3>
 
@@ -3003,124 +3081,7 @@ http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a> int
 </p>
 
 <p>
-To enable <code>HAS_REMOTE_API</code> you can either edit tz.h, adding:
-</p>
-
-<blockquote><pre>
-#define HAS_REMOTE_API 1
-</pre></blockquote>
-
-<p>
-Or you can put <code>/DHAS_REMOTE_API=1</code> on the command line.  When
-<code>HAS_REMOTE_API == 1</code>, <code>AUTO_DOWNLOAD</code> defaults to 1.
-</p>
-
-<p>
 mingw users:  <code>-lpthread</code> is required.
-</p>
-
-<h3>Optional installation tweaks</h3>
-
-<p>
-If <code>LAZY_INIT</code> is on, the <code>Zone</code>s are not fully compiled upon first
-access to the database.  As each <code>Zone</code> is accessed individaully by the
-programmer (when they are used), they are fully compiled at that point.  However, this
-further <code>Zone</code> compilation does not involve any access to the local copy of the
-tz database files.
-</p>
-
-<p>
-If <code>LAZY_INIT</code> is off, every <code>Zone</code> is fully compiled upon first
-access to the database.
-</p>
-
-<p>
-<code>LAZY_INIT</code> speeds up the initialization of the database, but slows down the
-first use of any individual <code>Zone</code>.  If you are only using a few
-<code>Zone</code>s then <code>LAZY_INIT</code> is a clear win.  If you are immediately
-using all of the <code>Zone</code>s (say for some database analysis) then
-<code>LAZY_INIT</code> is not a win.
-</p>
-
-<p>
-If <code>LAZY_INIT</code> is off, and you are on multi-core hardware, and your application
-has other unrelated initialization it has to take care of, spinning off timezone
-initialization into a detached thread can be an attractive option:
-</p>
-
-<blockquote><pre>
-int
-main()
-{
-    std::thread(date::get_tzdb).detach();
-    // other initialization ...
-}
-</pre></blockquote>
-
-<p>
-By the time your application actually needs to use the timezone database, it is likely to
-be fully initialized and ready to go.  And if it is not, C++11 threadsafe function local
-statics ensure there is no race condition on the initialization.
-</p>
-
-<p>
-If you would like to trade off functionality for size, you can reduce the size of the
-database in two ways:
-</p>
-
-<ul>
-<li>Limit geography.</li>
-<li>Limit history.</li>
-</ul>
-
-<p>
-You can limit geography by removing one or more of the files in this list:
-</p>
-
-<blockquote><pre>
-const std::vector&lt;const std::string&gt; files =
-{
-    "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
-    "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
-};
-</pre></blockquote>
-
-<p>
-You can limit history by setting <code>min_year</code> to something more recent such as:
-</p>
-
-<blockquote><pre>
-CONSTDATA auto min_year = 2015_y;
-</pre></blockquote>
-
-<p>
-When you do so, if you ask to convert a date prior to <code>min_year</code>, an exception
-will be thrown.
-</p>
-
-<p>
-The entire database consumes about 859Kb.
-</p>
-
-<p>
-Compile
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>
-in with the rest of your library or application.
-</p>
-
-<p>
-If <code>AUTO_DOWNLOAD</code> is not enabled, you are responsible for keeping your
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> up to date.  New
-versions of it are released several times a year.  This library is not bundled with a
-specific version of the database already installed, nor is any specific version of the
-database blessed.
-</p>
-
-<p>
-There is no preprocessing of the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a> required.  This
-library efficiently initializes itself directly from the files of the
-<a href="http://www.iana.org/time-zones">IANA Time Zone Database</a>.
 </p>
 
 <a name="Acknowledgements"></a><h2>Acknowledgements</h2>
