@@ -207,7 +207,19 @@ static std::string get_install()
     return install;
 }
 
+#ifndef INSTALL
+
 static const std::string install = get_install();
+
+#else   // INSTALL
+
+#define STRINGIZEIMP(x) #x
+#define STRINGIZE(x) STRINGIZEIMP(x)
+
+static const std::string install = STRINGIZE(INSTALL) +
+                                   std::string(1, folder_delimiter) + "tzdata";
+
+#endif  // INSTALL
 
 static
 std::string
