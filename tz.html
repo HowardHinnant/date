@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-06-27<br/>
+2016-08-08<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2289,8 +2289,9 @@ passed in, on successful parse it will hold the value represented by
 <p>
 The format of the offset is <code>+/-hhmm</code>.  The leading plus or minus
 sign is required.  If the format string was modified (i.e. <code>%Ez</code>
-or <code>%Oz</code>), a colon is required between hours and minutes:
-<code>+/-hh:mm</code>.
+or <code>%Oz</code>), a colon is required between hours and minutes, and the leading
+hours digit is optional:
+<code>+/-[h]h:mm</code>.
 </p>
 </li>
 
