@@ -1600,10 +1600,35 @@ parse(std::basic_istream<CharT, Traits>& is,
                     }
                     if (ratio_less<typename Duration::period, ratio<1>>::value)
                     {
-                        double s;
-                        is >> s;
-                        if (!is.fail())
-                            subseconds = round<Duration>(duration<double>{s});
+                        CharT decimal_point =
+                            use_facet<numpunct<CharT>>(is.getloc()).decimal_point();
+                        string buf;
+                        while (true)
+                        {
+                            auto k = is.peek();
+                            if (Traits::eq_int_type(k, Traits::eof()))
+                               break;
+                            if (k == decimal_point)
+                            {
+                                buf += '.';
+                                is.get();
+                            }
+                            else
+                            {
+                                auto c = static_cast<char>(Traits::to_char_type(k));
+                                if (isdigit(c))
+                                {
+                                    buf += c;
+                                    is.get();
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        };
+                        if (!buf.empty())
+                            subseconds = round<Duration>(duration<double>{stod(buf)});
                         else
                             err |= ios_base::failbit;
                     }
@@ -1628,16 +1653,25 @@ parse(std::basic_istream<CharT, Traits>& is,
                         if (!is.fail() && (sign == '+' || sign == '-'))
                         {
                             char h1, h0, m1, m0;
-                            char colon = '\0';
+                            char colon = ':';
                             h1 = static_cast<char>(is.get());
                             h0 = static_cast<char>(is.get());
                             if (modified)
-                                colon = static_cast<char>(is.get());
+                            {
+                                if (h0 == ':')
+                                {
+                                    colon = h0;
+                                    h0 = h1;
+                                    h1 = '0';
+                                }
+                                else
+                                    colon = static_cast<char>(is.get());
+                            }
                             m1 = static_cast<char>(is.get());
                             m0 = static_cast<char>(is.get());
                             if (!is.fail() && std::isdigit(h1) && std::isdigit(h0)
                                            && std::isdigit(m1) && std::isdigit(m0)
-                                           && (!modified || colon == ':'))
+                                           && colon == ':')
                             {
                                 temp_offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
                                               10*minutes{m1 - '0'} + minutes{m0 - '0'};
