@@ -1600,17 +1600,18 @@ parse(std::basic_istream<CharT, Traits>& is,
                     }
                     if (ratio_less<typename Duration::period, ratio<1>>::value)
                     {
-                        CharT decimal_point =
-                            use_facet<numpunct<CharT>>(is.getloc()).decimal_point();
+                        auto decimal_point = Traits::to_int_type(
+                            use_facet<numpunct<CharT>>(is.getloc()).decimal_point());
                         string buf;
                         while (true)
                         {
                             auto k = is.peek();
                             if (Traits::eq_int_type(k, Traits::eof()))
                                break;
-                            if (k == decimal_point)
+                            if (Traits::eq_int_type(k, decimal_point))
                             {
                                 buf += '.';
+                                decimal_point = Traits::eof();
                                 is.get();
                             }
                             else
