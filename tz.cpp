@@ -2,6 +2,7 @@
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
+// Copyright (c) 2016 Alexander Kormanovsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -116,6 +117,10 @@
 #  endif //!USE_SHELL_API
 #endif  // !WIN32
 
+#ifdef HAS_IOS
+#include "ios.h"
+#endif
+
 #if HAS_REMOTE_API
 // Note curl includes windows.h so we must include curl AFTER definitions of things
 // that effect windows.h such as NOMINMAX.
@@ -179,12 +184,16 @@ static
 std::string
 expand_path(std::string path)
 {
+#ifndef HAS_IOS
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
+#else
+    return date::iOSUtils::get_tzdata_path();
+#endif
 }
 
 #endif  // !_WIN32
