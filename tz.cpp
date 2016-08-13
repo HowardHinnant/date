@@ -116,6 +116,10 @@
 #  endif //!USE_SHELL_API
 #endif  // !WIN32
 
+#ifdef HAS_IOS
+#include "ios.h"
+#endif
+
 #if HAS_REMOTE_API
 // Note curl includes windows.h so we must include curl AFTER definitions of things
 // that effect windows.h such as NOMINMAX.
@@ -179,12 +183,16 @@ static
 std::string
 expand_path(std::string path)
 {
+#ifndef HAS_IOS
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
+#else
+    return ankorm::iOSUtils::get_tzdata_path();
+#endif
 }
 
 #endif  // !_WIN32
