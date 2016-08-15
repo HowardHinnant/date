@@ -1408,7 +1408,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
             if (command && !modified)
             {
                 if (info == nullptr)
-                    throw std::runtime_error("Can not format local_time with %z");
+                    throw std::runtime_error("Can not format local_time with %Z");
                 else
                 {
                     fmt.replace(i - 1, 2, std::basic_string<CharT, Traits>
