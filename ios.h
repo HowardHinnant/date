@@ -1,7 +1,4 @@
 //
-//  ios.h
-//  DateTimeLib
-//
 // The MIT License (MIT)
 //
 // Copyright (c) 2016 Alexander Kormanovsky
@@ -23,20 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
 
 #ifndef ios_hpp
 #define ios_hpp
 
 #include <string>
 
-namespace date
-{
-namespace iOSUtils
-{
+namespace ankorm {
     
-std::string get_tzdata_path();
+    class iOSUtils {
+        
+    public:
+        
+        static std::string get_tzdata_path();
+        
+    };
     
-}  // namespace iOSUtils
-}  // namespace date
+}
 
-#endif // ios_hpp
+#endif /* ios_hpp */
