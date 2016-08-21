@@ -117,7 +117,7 @@
 #  endif //!USE_SHELL_API
 #endif  // !WIN32
 
-#ifdef HAS_IOS
+#ifdef TARGET_OS_IPHONE
 #include "ios.h"
 #endif
 
@@ -184,7 +184,7 @@ static
 std::string
 expand_path(std::string path)
 {
-#ifndef HAS_IOS
+#ifndef TARGET_OS_IPHONE
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
