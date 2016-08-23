@@ -3085,6 +3085,20 @@ http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a> int
 mingw users:  <code>-lpthread</code> is required.
 </p>
 
+<h3>iOS specific:</h3>
+
+<p>
+    In addition to four aforementioned source files you will need following files:
+    <a href="https://github.com/HowardHinnant/date/blob/master/ios.h"><code>ios.h</code></a>,
+    <a href="https://github.com/HowardHinnant/date/blob/master/ios.cpp"><code>ios.cpp</code></a>.
+</p>
+<p>
+    In Xcode in <i>[Your Target]->Build Settings->Other C Flags</i> set following flags: <code>-DHAS_REMOTE_API=0</code>, <code>-DUSE_SHELL_API</code>, <code>-x objective-c++</code>.
+</p>
+<p>
+    Also you have to add IANA database archive (<code>*.tar.gz</code>) manually to your project, automatic download for iOS is not supported, this archive will be unpacked automatically into subdirectory <i>Library/tzdata</i> of installed application.
+</p>
+
 <a name="Acknowledgements"></a><h2>Acknowledgements</h2>
 
 <p>
