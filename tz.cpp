@@ -75,6 +75,7 @@
 #endif // _WIN32
 
 #include "tz_private.h"
+#include "ios.h"
 
 #include <algorithm>
 #include <cctype>
@@ -117,9 +118,6 @@
 #  endif //!USE_SHELL_API
 #endif  // !WIN32
 
-#ifdef TARGET_OS_IPHONE
-#include "ios.h"
-#endif
 
 #if HAS_REMOTE_API
 // Note curl includes windows.h so we must include curl AFTER definitions of things
@@ -184,15 +182,15 @@ static
 std::string
 expand_path(std::string path)
 {
-#ifndef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
+    return date::iOSUtils::get_tzdata_path();
+#else
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
-#else
-    return date::iOSUtils::get_tzdata_path();
 #endif
 }
 
