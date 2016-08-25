@@ -40,6 +40,7 @@
 #include <ratio>
 #include <type_traits>
 #include <sstream>
+#include <cctype>
 
 namespace date
 {
