@@ -39,6 +39,7 @@
 #include <ostream>
 #include <ratio>
 #include <type_traits>
+#include <sstream>
 
 namespace date
 {
