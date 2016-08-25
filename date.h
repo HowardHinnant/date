@@ -4063,7 +4063,7 @@ format(std::basic_string<CharT, Traits> fmt, sys_time<Duration> tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(std::move(fmt), local_time<Duration>{tp.time_since_epoch()},
+    return detail::format(std::locale{}, std::move(fmt), local_time<Duration>{tp.time_since_epoch()},
                           &abbrev, &offset);
 }
 
