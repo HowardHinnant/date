@@ -4015,7 +4015,8 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
     }
     auto& f = use_facet<time_put<CharT>>(loc);
     basic_ostringstream<CharT, Traits> os;
-    auto tt = system_clock::to_time_t(time_point_cast<system_clock::duration>(sys_time<Duration>{tp.time_since_epoch()}));
+    auto tt = system_clock::to_time_t(
+                floor<system_clock::duration>(sys_time<Duration>{tp.time_since_epoch()}));
     std::tm tm{};
 #ifndef _MSC_VER
     gmtime_r(&tt, &tm);
