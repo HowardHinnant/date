@@ -27,20 +27,25 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
+#include <cctype>
 #include <chrono>
-#include <climits>
 #if !(__cplusplus >= 201402)
 #  include <cmath>
 #endif
 #include <cstdint>
 #include <cstdlib>
+#include <ctime>
+#include <istream>
+#include <ios>
 #include <limits>
 #include <locale>
 #include <ostream>
 #include <ratio>
-#include <type_traits>
 #include <sstream>
-#include <cctype>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <type_traits>
 
 namespace date
 {
@@ -3957,7 +3962,8 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
             break;
         case 'S':
         case 'T':
-            if (command && !modified && ratio_less<typename Duration::period, ratio<1>>::value)
+            if (command && !modified && ratio_less<typename Duration::period,
+                                                   ratio<1>>::value)
             {
                 basic_ostringstream<CharT, Traits> os;
                 os.imbue(loc);
@@ -4065,8 +4071,8 @@ format(std::basic_string<CharT, Traits> fmt, sys_time<Duration> tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(std::locale{}, std::move(fmt), local_time<Duration>{tp.time_since_epoch()},
-                          &abbrev, &offset);
+    return detail::format(std::locale{}, std::move(fmt),
+                          local_time<Duration>{tp.time_since_epoch()}, &abbrev, &offset);
 }
 
 // const CharT* formats

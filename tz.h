@@ -78,22 +78,19 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cstdint>
 #include <istream>
 #include <locale>
+#if LAZY_INIT
+#  include <memory>
+#  include <mutex>
+#endif
 #include <ostream>
-#include <ratio>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#if LAZY_INIT
-#  include <memory>
-#  include <mutex>
-#endif
-#include <time.h>
 
 namespace date
 {
