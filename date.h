@@ -4021,14 +4021,18 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
     }
     auto& f = use_facet<time_put<CharT>>(loc);
     basic_ostringstream<CharT, Traits> os;
-    auto tt = system_clock::to_time_t(
-                floor<system_clock::duration>(sys_time<Duration>{tp.time_since_epoch()}));
+    auto ld = floor<days>(tp);
+    auto ymd = year_month_day{ld};
+    auto hms = make_time(floor<seconds>(tp - ld));
     std::tm tm{};
-#ifndef _MSC_VER
-    gmtime_r(&tt, &tm);
-#else
-    gmtime_s(&tm, &tt);
-#endif
+    tm.tm_sec = static_cast<int>(hms.seconds().count());
+    tm.tm_min = static_cast<int>(hms.minutes().count());
+    tm.tm_hour = static_cast<int>(hms.hours().count());
+    tm.tm_mday = static_cast<int>(unsigned{ymd.day()});
+    tm.tm_mon = static_cast<int>(unsigned{ymd.month()} - 1);
+    tm.tm_year = int{ymd.year()} - 1900;
+    tm.tm_wday = static_cast<int>(unsigned{weekday{ld}});
+    tm.tm_yday = static_cast<int>((ld - local_days{ymd.year()/1/1}).count());
     f.put(os, os, os.fill(), &tm, fmt.data(), fmt.data() + fmt.size());
     return os.str();
 }
