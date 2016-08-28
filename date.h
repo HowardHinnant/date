@@ -4286,12 +4286,12 @@ parse(std::basic_istream<CharT, Traits>& is,
                 f.get(is, 0, is, err, &tm, b, e);
             if ((err & ios_base::failbit) == 0)
             {
-#ifdef _WIN32
-                auto tt = _mkgmtime(&tm);
-#else
-                auto tt = timegm(&tm);
-#endif
-                tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
+                using namespace std::chrono;
+                tp = floor<Duration>(sys_days{year{tm.tm_year + 1900}/
+                                             (tm.tm_mon+1)/
+                                             (tm.tm_mday)} +
+                                     hours{tm.tm_hour} +  minutes{tm.tm_min} +
+                                     seconds{tm.tm_sec} + subseconds);
                 abbrev = std::move(temp_abbrev);
                 offset = temp_offset;
             }
