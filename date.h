@@ -4028,10 +4028,10 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
     tm.tm_sec = static_cast<int>(hms.seconds().count());
     tm.tm_min = static_cast<int>(hms.minutes().count());
     tm.tm_hour = static_cast<int>(hms.hours().count());
-    tm.tm_mday = static_cast<int>(unsigned{ymd.day()});
-    tm.tm_mon = static_cast<int>(unsigned{ymd.month()} - 1);
-    tm.tm_year = int{ymd.year()} - 1900;
-    tm.tm_wday = static_cast<int>(unsigned{weekday{ld}});
+    tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
+    tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
+    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
     tm.tm_yday = static_cast<int>((ld - local_days{ymd.year()/1/1}).count());
     f.put(os, os, os.fill(), &tm, fmt.data(), fmt.data() + fmt.size());
     return os.str();
