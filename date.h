@@ -4032,7 +4032,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
     tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
     tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
-    tm.tm_yday = static_cast<int>((ld - local_days{ymd.year()/1/1}).count());
+    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
     f.put(os, os, os.fill(), &tm, fmt.data(), fmt.data() + fmt.size());
     return os.str();
 }
@@ -4291,9 +4291,9 @@ parse(std::basic_istream<CharT, Traits>& is,
             if ((err & ios_base::failbit) == 0)
             {
                 using namespace std::chrono;
-                tp = floor<Duration>(sys_days{year{tm.tm_year + 1900}/
+                tp = floor<Duration>(sys_days(year{tm.tm_year + 1900}/
                                              (tm.tm_mon+1)/
-                                             (tm.tm_mday)} +
+                                             (tm.tm_mday)) +
                                      hours{tm.tm_hour} +  minutes{tm.tm_min} +
                                      seconds{tm.tm_sec} + subseconds);
                 abbrev = std::move(temp_abbrev);
