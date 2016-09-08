@@ -1,5 +1,7 @@
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+_**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/JwuDJwuiTnAglDIz)**_
+
 This is actually several separate C++11/C++14 libraries:
 
 1.  `"date.h"` is a header-only library which builds upon `<chrono>`.  It adds some new `duration` types, and new `time_point` types.  It also adds "field" types such as `year_month_day` which is a struct `{year, month, day}`.  And it provides convenient means to convert between the "field" types and the `time_point` types.  See http://howardhinnant.github.io/date/date.html for more details.
