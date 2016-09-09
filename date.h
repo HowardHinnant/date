@@ -4167,6 +4167,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                 {
                     f.get(is, 0, is, err, &tm, b, i-1);
                     if( err & ios_base::failbit ) {
+                      command = modified = false;
                       break; // break the switch/case
                     }
                     b = i+1;
@@ -4175,6 +4176,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                         const CharT hm[] = {'%', 'H', ':', '%', 'M', ':'};
                         f.get(is, 0, is, err, &tm, hm, hm+6);
                         if( err & ios_base::failbit ) {
+                          command = modified = false;
                           break; // break the switch/case
                         }
                     }
