@@ -4149,7 +4149,7 @@ parse(std::basic_istream<CharT, Traits>& is,
         auto e = b + format.size();
         auto command = false;
         auto modified = false;
-        for (; i < e; ++i)
+        for (; i < e && 0 == (err & ios_base::failbit); ++i)
         {
             switch (*i)
             {
@@ -4166,11 +4166,21 @@ parse(std::basic_istream<CharT, Traits>& is,
                 if (command && !modified)
                 {
                     f.get(is, 0, is, err, &tm, b, i-1);
+                    if (err & ios_base::failbit)
+                    {
+                        command = modified = false;
+                        break; // break the switch/case
+                    }
                     b = i+1;
                     if (*i == 'T')
                     {
                         const CharT hm[] = {'%', 'H', ':', '%', 'M', ':'};
                         f.get(is, 0, is, err, &tm, hm, hm+6);
+                        if (err & ios_base::failbit)
+                        {
+                            command = modified = false;
+                            break; // break the switch/case
+                        }
                     }
                     if (ratio_less<typename Duration::period, ratio<1>>::value)
                     {
@@ -4302,6 +4312,8 @@ parse(std::basic_istream<CharT, Traits>& is,
         }
         is.setstate(err);
     }
+    else
+        is.setstate(ios_base::failbit);
 }
 
 }  // namespace detail
