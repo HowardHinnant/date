@@ -4157,6 +4157,20 @@ parse(std::basic_istream<CharT, Traits>& is,
                 command = true;
                 modified = false;
                 break;
+            case 'F':
+                if (command && !modified)
+                {
+                    f.get(is, 0, is, err, &tm, b, i-1);
+                    b = i+1;
+                    if ((err & ios_base::failbit) == 0)
+                    {
+                        const CharT ymd[] = {'%', 'Y', '-', '%', 'm', '-', '%', 'd'};
+                        f.get(is, 0, is, err, &tm, ymd, ymd+8);
+                    }
+                }
+                command = false;
+                modified = false;
+                break;
             case 'O':
             case 'E':
                 modified = true;
