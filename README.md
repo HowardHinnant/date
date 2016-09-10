@@ -1,6 +1,6 @@
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-_**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/JwuDJwuiTnAglDIz)**_
+_**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/zKiDqIUK0XwePf7Y)**_
 
 This is actually several separate C++11/C++14 libraries:
 
