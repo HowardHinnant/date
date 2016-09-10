@@ -963,8 +963,19 @@ trunc(const std::chrono::duration<Rep, Period>& d)
     return To{detail::trunc(std::chrono::duration_cast<To>(d).count())};
 }
 
-// VS Update 2 provides floor, ceil, round, abs in chrono.
-#if (defined(_MSC_FULL_VER) && _MSC_FULL_VER < 190023918) || __cplusplus <= 201402
+#ifndef HAS_CHRONO_ROUNDING
+#  if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023918
+#    define HAS_CHRONO_ROUNDING 1
+#  elif defined(__cpp_lib_chrono) && __cplusplus > 201402 && __cpp_lib_chrono >= 201510
+#    define HAS_CHRONO_ROUNDING 1
+#  elif defined(_LIBCPP_VERSION) && __cplusplus > 201402 && _LIBCPP_VERSION >= 3800
+#    define HAS_CHRONO_ROUNDING 1
+#  else
+#    define HAS_CHRONO_ROUNDING 0
+#  endif
+#endif  // HAS_CHRONO_ROUNDING
+
+#if HAS_CHRONO_ROUNDING == 0
 
 // round down
 template <class To, class Rep, class Period>
@@ -1061,14 +1072,14 @@ ceil(const std::chrono::time_point<Clock, FromDuration>& tp)
     return time_point<Clock, To>{ceil<To>(tp.time_since_epoch())};
 }
 
-#else  // (defined(_MSC_FULL_VER) && _MSC_FULL_VER < 190023918) || __cplusplus <= 201402
+#else  // HAS_CHRONO_ROUNDING == 1
 
 using std::chrono::floor;
 using std::chrono::ceil;
 using std::chrono::round;
 using std::chrono::abs;
 
-#endif  // (defined(_MSC_FULL_VER) && _MSC_FULL_VER < 190023918) || __cplusplus <= 201402
+#endif  // HAS_CHRONO_ROUNDING
 
 // trunc towards zero
 template <class To, class Clock, class FromDuration>
