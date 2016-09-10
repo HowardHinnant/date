@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-08-24<br/>
+2016-09-09<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -240,7 +240,7 @@ std::cout &lt;&lt; t &lt;&lt; '\n';  // 2016-05-14 18:33:24 EDT
 </pre></blockquote>
 
 <p>
-The entire <code>strftime</code> / <code>time_put</code> formatting capability is
+The entire <code>time_get</code> / <code>time_put</code> formatting capability is
 also at your fingertips (and at any precision):
 </p>
 
@@ -554,7 +554,7 @@ called <code>utc_time</code>.
 </p>
 
 <p>
-Full formatting and parsing facilities are available with <code>strftime</code>-like
+Full formatting and parsing facilities are available with <code>time_put</code>-like
 formatting strings.
 </p>
 
@@ -2265,6 +2265,11 @@ The <code>format</code> string follows the rules as specified for <code>std::tim
 with the following exceptions:
 </p>
 <ul>
+<li><p>
+If <code>%F</code> appears in the <code>format</code> string it is interpreted as
+<code>%Y-%m-%d</code>.
+</p></li>
+
 <li><p>
 If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string
 and the argument <code>tp</code> has precision finer than seconds, then the
