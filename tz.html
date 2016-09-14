@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-09-09<br/>
+2016-09-13<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -1997,11 +1997,11 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
 format(const std::locale&amp; loc, std::basic_string&lt;class CharT, class Traits&gt; format,
-       local_time&lt;Duration&gt; tp);
+       const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(std::basic_string&lt;class CharT, class Traits&gt; format, local_time&lt;Duration&gt; tp);
+format(std::basic_string&lt;class CharT, class Traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
@@ -2015,21 +2015,21 @@ format(std::basic_string&lt;class CharT, class Traits&gt; format, const zoned_ti
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
 format(const std::locale&amp; loc, std::basic_string&lt;class CharT, class Traits&gt; format,
-       sys_time&lt;Duration&gt; tp);
+       const sys_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(std::basic_string&lt;class CharT, class Traits&gt; format, sys_time&lt;Duration&gt; tp);
+format(std::basic_string&lt;class CharT, class Traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
 
 // const CharT* formats
 
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
-format(const std::locale&amp; loc, const CharT* format, local_time&lt;Duration&gt; tp);
+format(const std::locale&amp; loc, const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
-format(const CharT* format, local_time&lt;Duration&gt; tp);
+format(const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
@@ -2041,11 +2041,11 @@ format(const CharT* format, const zoned_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
-format(const std::locale&amp; loc, const CharT* format, sys_time&lt;Duration&gt; tp);
+format(const std::locale&amp; loc, const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
-format(const CharT* format, sys_time&lt;Duration&gt; tp);
+format(const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
