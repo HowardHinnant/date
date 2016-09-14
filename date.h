@@ -231,6 +231,7 @@ class day
     unsigned char d_;
 
 public:
+    day() = default;
     explicit CONSTCD11 day(unsigned d) NOEXCEPT;
 
     CONSTCD14 day& operator++()    NOEXCEPT;
@@ -268,6 +269,7 @@ class month
     unsigned char m_;
 
 public:
+    month() = default;
     explicit CONSTCD11 month(unsigned m) NOEXCEPT;
 
     CONSTCD14 month& operator++()    NOEXCEPT;
@@ -305,6 +307,7 @@ class year
     short y_;
 
 public:
+    year() = default;
     explicit CONSTCD11 year(int y) NOEXCEPT;
 
     CONSTCD14 year& operator++()    NOEXCEPT;
@@ -346,6 +349,7 @@ class weekday
 {
     unsigned char wd_;
 public:
+    weekday() = default;
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
     explicit weekday(int) = delete;
     CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
@@ -431,6 +435,7 @@ class year_month
     date::month m_;
 
 public:
+    year_month() = default;
     CONSTCD11 year_month(const date::year& y, const date::month& m) NOEXCEPT;
 
     CONSTCD11 date::year  year()  const NOEXCEPT;
@@ -472,6 +477,7 @@ class month_day
     date::day   d_;
 
 public:
+    month_day() = default;
     CONSTCD11 month_day(const date::month& m, const date::day& d) NOEXCEPT;
 
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -573,6 +579,7 @@ class year_month_day
     date::day   d_;
 
 public:
+    year_month_day() = default;
     CONSTCD11 year_month_day(const date::year& y, const date::month& m,
                              const date::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
@@ -692,6 +699,7 @@ class year_month_weekday
     date::weekday_indexed wdi_;
 
 public:
+    year_month_weekday() = default;
     CONSTCD11 year_month_weekday(const date::year& y, const date::month& m,
                                    const date::weekday_indexed& wdi) NOEXCEPT;
     CONSTCD14 year_month_weekday(const sys_days& dp) NOEXCEPT;
