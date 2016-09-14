@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-08-24<br/>
+2016-09-13<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -1841,6 +1841,7 @@ class day
 {
     unsigned char d_;  // exposition only
 public:
+    day() = default;
     explicit constexpr day(unsigned d) noexcept;
 
     day&amp; operator++() noexcept;
@@ -2146,6 +2147,7 @@ class month
 {
     unsigned char m_;  // exposition only
 public:
+    month() = default;
     explicit constexpr month(unsigned m) noexcept;
 
     month&amp; operator++() noexcept;
@@ -2479,6 +2481,7 @@ class year
 {
     short y_;  // exposition only
 public:
+    year() = default;
     explicit constexpr year(int y) noexcept;
 
     year&amp; operator++() noexcept;
@@ -2821,6 +2824,7 @@ class weekday
 {
     unsigned char wd_;  // exposition only
 public:
+    weekday() = default;
     explicit constexpr weekday(unsigned wd) noexcept;
     constexpr weekday(const sys_days&amp; dp) noexcept;
     constexpr explicit weekday(const local_days&amp; dp) noexcept;
@@ -3436,6 +3440,7 @@ class month_day
     date::day   d_;  // exposition only
 
 public:
+    month_day() = default;
     constexpr month_day(const date::month&amp; m, const date::day&amp; d) noexcept;
 
     constexpr date::month month() const noexcept;
@@ -4021,6 +4026,7 @@ class year_month
     date::month m_;  // exposition only
 
 public:
+    year_month() = default;
     constexpr year_month(const date::year&amp; y, const date::month&amp; m) noexcept;
 
     constexpr date::year year() const noexcept;
@@ -4334,6 +4340,7 @@ class year_month_day
     date::day   d_;  // exposition only
 
 public:
+    year_month_day() = default;
     constexpr year_month_day(const date::year&amp; y, const date::month&amp; m, const date::day&amp; d) noexcept;
     constexpr year_month_day(const year_month_day_last&amp; ymdl) noexcept;
     constexpr year_month_day(const sys_days&amp; dp) noexcept;
@@ -5122,6 +5129,7 @@ class year_month_weekday
     date::weekday_indexed wdi_;  // exposition only
 
 public:
+    year_month_weekday() = default;
     constexpr year_month_weekday(const date::year&amp; y, const date::month&amp; m,
                                  const date::weekday_indexed&amp; wdi) noexcept;
     constexpr year_month_weekday(const sys_days&amp; dp) noexcept;
