@@ -3953,7 +3953,7 @@ namespace detail
 template <class CharT, class Traits, class Duration>
 std::basic_string<CharT, Traits>
 format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       local_time<Duration> tp, const std::string* abbrev = nullptr,
+       const local_time<Duration>& tp, const std::string* abbrev = nullptr,
        const std::chrono::seconds* offset_sec = nullptr)
 {
     // Handle these specially
@@ -4062,7 +4062,7 @@ template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
 format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       local_time<Duration> tp)
+       const local_time<Duration>& tp)
 {
     return detail::format(loc, std::move(fmt), tp);
 }
@@ -4070,7 +4070,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, local_time<Duration> tp)
+format(std::basic_string<CharT, Traits> fmt, const local_time<Duration>& tp)
 {
     return detail::format(std::locale{}, std::move(fmt), tp);
 }
@@ -4079,7 +4079,7 @@ template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
 format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       sys_time<Duration> tp)
+       const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
@@ -4090,7 +4090,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, sys_time<Duration> tp)
+format(std::basic_string<CharT, Traits> fmt, const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
@@ -4103,7 +4103,7 @@ format(std::basic_string<CharT, Traits> fmt, sys_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, local_time<Duration> tp)
+format(const std::locale& loc, const CharT* fmt, const local_time<Duration>& tp)
 {
     return detail::format(loc,  std::basic_string<CharT>(fmt), tp);
 }
@@ -4111,7 +4111,7 @@ format(const std::locale& loc, const CharT* fmt, local_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* fmt, local_time<Duration> tp)
+format(const CharT* fmt, const local_time<Duration>& tp)
 {
     return detail::format(std::locale{}, std::basic_string<CharT>(fmt), tp);
 }
@@ -4119,7 +4119,7 @@ format(const CharT* fmt, local_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, sys_time<Duration> tp)
+format(const std::locale& loc, const CharT* fmt, const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
@@ -4131,7 +4131,7 @@ format(const std::locale& loc, const CharT* fmt, sys_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* fmt, sys_time<Duration> tp)
+format(const CharT* fmt, const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
