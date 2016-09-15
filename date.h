@@ -2769,7 +2769,7 @@ year_month_weekday::ok() const NOEXCEPT
         return false;
     if (wdi_.index() <= 4)
         return true;
-    auto d2 = wdi_.weekday() - date::weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
+    auto d2 = wdi_.weekday() - date::weekday(static_cast<sys_days>(y_/m_/1)) + days((wdi_.index()-1)*7 + 1);
     return static_cast<unsigned>(d2.count()) <= static_cast<unsigned>((y_/m_/last).day());
 }
 
