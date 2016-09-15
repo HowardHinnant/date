@@ -27,9 +27,17 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 #include "tz.h"
+#else
+#include "date.h"
+#include <vector>
+#endif
 
 namespace date
+{
+
+namespace detail
 {
 
 enum class tz {utc, local, standard};
@@ -187,7 +195,7 @@ inline bool operator> (const std::string& x, const Rule& y) {return   y < x;}
 inline bool operator<=(const std::string& x, const Rule& y) {return !(y < x);}
 inline bool operator>=(const std::string& x, const Rule& y) {return !(x < y);}
 
-struct time_zone::zonelet
+struct zonelet
 {
     enum tag {has_rule, has_save, is_empty};
 
@@ -226,6 +234,12 @@ struct time_zone::zonelet
     zonelet& operator=(const zonelet&) = delete;
 };
 
+}  // namespace detail
+
 }  // namespace date
+
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#include "tz.h"
+#endif
 
 #endif  // TZ_PRIVATE_H

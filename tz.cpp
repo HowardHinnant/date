@@ -202,6 +202,8 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
+using namespace detail;
+
 static std::string get_install()
 {
 #ifdef _WIN32
@@ -784,7 +786,7 @@ parse_signed_time(std::istream& in)
 
 // MonthDayTime
 
-MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
+detail::MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     : zone_(timezone)
 {
     using namespace date;
@@ -797,14 +799,14 @@ MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     s_ = hms.seconds();
 }
 
-MonthDayTime::MonthDayTime(const date::month_day& md, tz timezone)
+detail::MonthDayTime::MonthDayTime(const date::month_day& md, tz timezone)
     : zone_(timezone)
 {
     u = md;
 }
 
 date::day
-MonthDayTime::day() const
+detail::MonthDayTime::day() const
 {
     switch (type_)
     {
@@ -820,7 +822,7 @@ MonthDayTime::day() const
 }
 
 date::month
-MonthDayTime::month() const
+detail::MonthDayTime::month() const
 {
     switch (type_)
     {
@@ -836,7 +838,7 @@ MonthDayTime::month() const
 }
 
 int
-MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
+detail::MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
                       std::chrono::seconds offset, std::chrono::minutes prev_save) const
 {
     if (zone_ != x.zone_)
@@ -878,7 +880,7 @@ MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
 }
 
 sys_seconds
-MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
+detail::MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
                      std::chrono::seconds save) const
 {
     using namespace date;
@@ -891,29 +893,29 @@ MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
     return until_utc;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const date::month_day& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const date::month_day& x)
 {
     month_day_ = x;
     return *this;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const date::month_weekday_last& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const date::month_weekday_last& x)
 {
     month_weekday_last_ = x;
     return *this;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const pair& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const pair& x)
 {
     month_day_weekday_ = x;
     return *this;
 }
 
 date::sys_days
-MonthDayTime::to_sys_days(date::year y) const
+detail::MonthDayTime::to_sys_days(date::year y) const
 {
     using namespace std::chrono;
     using namespace date;
@@ -940,14 +942,14 @@ MonthDayTime::to_sys_days(date::year y) const
 }
 
 sys_seconds
-MonthDayTime::to_time_point(date::year y) const
+detail::MonthDayTime::to_time_point(date::year y) const
 {
     // Add seconds first to promote to largest rep early to prevent overflow
     return to_sys_days(y) + s_ + h_ + m_;
 }
 
 void
-MonthDayTime::canonicalize(date::year y)
+detail::MonthDayTime::canonicalize(date::year y)
 {
     using namespace std::chrono;
     using namespace date;
@@ -986,7 +988,7 @@ MonthDayTime::canonicalize(date::year y)
 }
 
 std::istream&
-operator>>(std::istream& is, MonthDayTime& x)
+detail::operator>>(std::istream& is, MonthDayTime& x)
 {
     using namespace date;
     using namespace std::chrono;
@@ -1078,7 +1080,7 @@ operator>>(std::istream& is, MonthDayTime& x)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const MonthDayTime& x)
+detail::operator<<(std::ostream& os, const MonthDayTime& x)
 {
     switch (x.type_)
     {
@@ -1118,7 +1120,7 @@ operator<<(std::ostream& os, const MonthDayTime& x)
 
 // Rule
 
-Rule::Rule(const std::string& s)
+detail::Rule::Rule(const std::string& s)
 {
     try
     {
@@ -1182,7 +1184,7 @@ Rule::Rule(const std::string& s)
     }
 }
 
-Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
+detail::Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
     : name_(r.name_)
     , starting_year_(starting_year)
     , ending_year_(ending_year)
@@ -1193,7 +1195,7 @@ Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
 }
 
 bool
-operator==(const Rule& x, const Rule& y)
+detail::operator==(const Rule& x, const Rule& y)
 {
     if (std::tie(x.name_, x.save_, x.starting_year_, x.ending_year_) ==
         std::tie(y.name_, y.save_, y.starting_year_, y.ending_year_))
@@ -1202,7 +1204,7 @@ operator==(const Rule& x, const Rule& y)
 }
 
 bool
-operator<(const Rule& x, const Rule& y)
+detail::operator<(const Rule& x, const Rule& y)
 {
     using namespace std::chrono;
     auto const xm = x.month();
@@ -1217,55 +1219,55 @@ operator<(const Rule& x, const Rule& y)
 }
 
 bool
-operator==(const Rule& x, const date::year& y)
+detail::operator==(const Rule& x, const date::year& y)
 {
     return x.starting_year_ <= y && y <= x.ending_year_;
 }
 
 bool
-operator<(const Rule& x, const date::year& y)
+detail::operator<(const Rule& x, const date::year& y)
 {
     return x.ending_year_ < y;
 }
 
 bool
-operator==(const date::year& x, const Rule& y)
+detail::operator==(const date::year& x, const Rule& y)
 {
     return y.starting_year_ <= x && x <= y.ending_year_;
 }
 
 bool
-operator<(const date::year& x, const Rule& y)
+detail::operator<(const date::year& x, const Rule& y)
 {
     return x < y.starting_year_;
 }
 
 bool
-operator==(const Rule& x, const std::string& y)
+detail::operator==(const Rule& x, const std::string& y)
 {
     return x.name() == y;
 }
 
 bool
-operator<(const Rule& x, const std::string& y)
+detail::operator<(const Rule& x, const std::string& y)
 {
     return x.name() < y;
 }
 
 bool
-operator==(const std::string& x, const Rule& y)
+detail::operator==(const std::string& x, const Rule& y)
 {
     return y.name() == x;
 }
 
 bool
-operator<(const std::string& x, const Rule& y)
+detail::operator<(const std::string& x, const Rule& y)
 {
     return x < y.name();
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Rule& r)
+detail::operator<<(std::ostream& os, const Rule& r)
 {
     using namespace date;
     using namespace std::chrono;
@@ -1284,13 +1286,13 @@ operator<<(std::ostream& os, const Rule& r)
 }
 
 date::day
-Rule::day() const
+detail::Rule::day() const
 {
     return starting_at_.day();
 }
 
 date::month
-Rule::month() const
+detail::Rule::month() const
 {
     return starting_at_.month();
 }
@@ -1309,7 +1311,7 @@ struct find_rule_by_name
 };
 
 bool
-Rule::overlaps(const Rule& x, const Rule& y)
+detail::Rule::overlaps(const Rule& x, const Rule& y)
 {
     // assume x.starting_year_ <= y.starting_year_;
     if (!(x.starting_year_ <= y.starting_year_))
@@ -1324,7 +1326,7 @@ Rule::overlaps(const Rule& x, const Rule& y)
 }
 
 void
-Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t& e)
+detail::Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t& e)
 {
     using namespace date;
     using difference_type = std::vector<Rule>::iterator::difference_type;
@@ -1393,7 +1395,7 @@ Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t&
 }
 
 void
-Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
+detail::Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
 {
     using difference_type = std::vector<Rule>::iterator::difference_type;
     auto j = i;
@@ -1417,7 +1419,7 @@ Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
 }
 
 void
-Rule::split_overlaps(std::vector<Rule>& rules)
+detail::Rule::split_overlaps(std::vector<Rule>& rules)
 {
     using difference_type = std::vector<Rule>::iterator::difference_type;
     for (std::size_t i = 0; i < rules.size();)
@@ -1456,7 +1458,7 @@ Rule::split_overlaps(std::vector<Rule>& rules)
 
 // time_zone
 
-time_zone::zonelet::~zonelet()
+detail::zonelet::~zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     using minutes = std::chrono::minutes;
@@ -1468,14 +1470,14 @@ time_zone::zonelet::~zonelet()
 #endif
 }
 
-time_zone::zonelet::zonelet()
+detail::zonelet::zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     ::new(&u.rule_) std::string();
 #endif
 }
 
-time_zone::zonelet::zonelet(const zonelet& i)
+detail::zonelet::zonelet(const zonelet& i)
     : gmtoff_(i.gmtoff_)
     , tag_(i.tag_)
     , format_(i.format_)
@@ -2108,7 +2110,7 @@ operator<<(std::ostream& os, const time_zone& z)
             os << ' ';
         os << make_time(s.gmtoff_) << "   ";
         os.width(15);
-        if (s.tag_ != time_zone::zonelet::has_save)
+        if (s.tag_ != zonelet::has_save)
             os << s.u.rule_;
         else
         {
