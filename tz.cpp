@@ -926,7 +926,7 @@ MonthDayTime::to_sys_days(date::year y) const
     case lteq:
         {
             auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = weekday(x);
+            auto const wd1 = weekday(static_cast<sys_days>(x));
             auto const wd0 = u.month_day_weekday_.weekday_;
             return sys_days(x) - (wd1-wd0);
         }
@@ -935,7 +935,7 @@ MonthDayTime::to_sys_days(date::year y) const
     }
     auto const x = y/u.month_day_weekday_.month_day_;
     auto const wd1 = u.month_day_weekday_.weekday_;
-    auto const wd0 = weekday(x);
+    auto const wd0 = weekday(static_cast<sys_days>(x));
     return sys_days(x) + (wd1-wd0);
 }
 
@@ -965,7 +965,7 @@ MonthDayTime::canonicalize(date::year y)
     case lteq:
         {
             auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = weekday(x);
+            auto const wd1 = weekday(static_cast<sys_days>(x));
             auto const wd0 = u.month_day_weekday_.weekday_;
             auto const ymd = year_month_day(sys_days(x) - (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
@@ -976,7 +976,7 @@ MonthDayTime::canonicalize(date::year y)
         {
             auto const x = y/u.month_day_weekday_.month_day_;
             auto const wd1 = u.month_day_weekday_.weekday_;
-            auto const wd0 = weekday(x);
+            auto const wd0 = weekday(static_cast<sys_days>(x));
             auto const ymd = year_month_day(sys_days(x) + (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
             type_ = month_day;
