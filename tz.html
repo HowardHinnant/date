@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-09-13<br/>
+2016-09-14<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -709,7 +709,7 @@ convert(const std::string&amp; input)
     using namespace date;
     istringstream stream{input};
     sys_time&lt;milliseconds&gt; t;
-    parse(stream, "%a %b %d %T %z %Y", t);
+    stream >> parse("%a %b %d %T %z %Y", t);
     if (stream.fail())
         throw runtime_error("failed to parse " + input);
     return format("%FT%TZ", t);
@@ -2320,6 +2320,13 @@ or <code>local_time</code>, one could make a list of potential <code>time_zone</
 Given a UTC offset, one might even narrow that list down further.
 </p>
 </blockquote>
+<p>Furthermore, for every signature
+<code>parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, Args...)</code> there exists
+an input manipulator <code>parse(Args...)</code> that can be used like this:
+</p>
+<pre>
+istream >> parse("%F %T", tp);
+</pre>
 </blockquote>
 
 <a name="utc_clock"></a><h3><code>utc_clock</code></h3>
