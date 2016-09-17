@@ -267,8 +267,6 @@ struct time_subsec_put {
     return os;
   }
 };
-#undef POW10
-#undef CEIL_LOG10
 
 } // namespace detail
 } // namespace date
