@@ -25,3 +25,26 @@ This is actually several separate C++11/C++14 libraries:
 There has been a recent change in the library design.  If you are trying to migrate from the previous design, rename `day_point` to `sys_days` everywhere, and that ought to bring the number of errors down to a small roar.
 
 `"date.h"` and `"tz.h"` are now proposed for standardization here:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0355r0.html
+
+--
+
+Continuous integration status:
+
+[![Linux Build Status](https://img.shields.io/travis/HowardHinnant/date/master.svg?style=flat-square&label=Linux%20%26%20OS%20X)](http://travis-ci.org/HowardHinnant/date) | Platform | Configuration | Test
+------------------------------ | --- | --- | -----------------
+GCC 4.8                        | x64 | -O3 | tz compilation
+GCC 6.2                        | x64 | -O3 | tz compilation
+Clang 3.8 (with libstdc++-6.2) | x64 | -O3 | all
+XCode 7.3                      | x64 | -O3 | all
+
+
+[![Windows Build status](https://img.shields.io/appveyor/ci/HowardHinnant/date/master.svg?style=flat-square&label=Windows)](https://ci.appveyor.com/project/HowardHinnant/date/branch/master) | Platform | Configuration | Test
+------- | --- | ------- | ----------------
+VS 2013 | x32 | Debug   | tz compilation
+VS 2013 | x32 | Release | tz compilation
+VS 2013 | x64 | Debug   | tz compilation
+VS 2013 | x64 | Release | tz compilation
+VS 2015 | x32 | Debug   | tz compilation
+VS 2015 | x32 | Release | tz compilation
+VS 2015 | x64 | Debug   | tz compilation
+VS 2015 | x64 | Release | tz compilation
