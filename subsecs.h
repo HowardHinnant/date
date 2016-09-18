@@ -206,136 +206,176 @@ public:
   }
 };
 
+template <class Period>
+struct period_traits {
+  static CONSTDATA std::uintmax_t NUM=Period::num;
+  static CONSTDATA std::uintmax_t DEN=Period::den;
 
-template <class SrcPeriod>
-struct time_subsec_put {
+  // Heuristic: denominator also carry the required precision
+  static CONSTDATA std::uintmax_t max_val=
+      POW10(CEIL_LOG10(Period::den))
+  ;
 
-private:
-  // one extra level of indirection to deal with has/has-not subsecs
-  template <bool has_subsecs,class Period=SrcPeriod> struct delegate;
+  // the 'width' occupied by the digits.
+  static CONSTDATA unsigned precision=CEIL_LOG10(max_val);
 
-  // this specialization will be chosen when the Period has subseconds
-  template <class Period> struct delegate<true, Period> {
-    template <typename Rep> using dur_type=std::chrono::duration<Rep, Period>;
-    template <class Clock, typename Rep> using tp_type=
-        std::chrono::time_point<Clock, dur_type<Rep>>;
-
-    // Heuristic: denominator also carry the required precision
-    static CONSTDATA std::uintmax_t max_val=
-        POW10(CEIL_LOG10(Period::den))
-    ;
-
-    // the 'width' occupied by the digits.
-    static CONSTDATA unsigned precision=CEIL_LOG10(max_val);
-
-    // This is the space needed to output the subseconds value in full precision,
-    // including the decimal dot.
-    static CONSTDATA unsigned space_req=precision+1;
+  // This is the space needed to output the subseconds value in full precision,
+  // including the decimal dot.
+  static CONSTDATA unsigned space_req=precision+1;
 
 
-    // precomputed scale factor to be applied to received counts
-    static CONSTDATA long double scale_factor=
-      1.0L*max_val*Period::num/Period::den
-    ;
-
-    // Because we are supposed to deal with **sub**-seconds, anything that goes
-    // above max_val is discarded (we only keep the lesser-significant digits)
-    template <class Clock, typename Rep>
-    static Rep condition_value(tp_type<Clock, Rep> tp) {
-      // obtain the subseconds here: must use auto to adjust for odd ratios (likw 355/113)
-      auto subsecs=tp-floor<std::chrono::seconds>(tp);
-      std::uintmax_t scaled=static_cast<std::uintmax_t>(scale_factor*subsecs.count());
-      return static_cast<Rep>(scaled % max_val);
+  // Because we are supposed to deal with **sub**-seconds, anything that goes
+  // above max_val is discarded (we only keep the lesser-significant digits)
+  template <typename Rep, class SrcPeriod>
+  static Rep condition_value(std::chrono::duration<Rep, SrcPeriod> duration) {
+    long double realSecs;
+    if(std::abs(SrcPeriod::num)>std::abs(SrcPeriod::den)) {
+      realSecs=(static_cast<long double>(SrcPeriod::num)/SrcPeriod::den)*duration.count();
     }
+    else {
+      realSecs=static_cast<long double>(SrcPeriod::num*duration.count())/SrcPeriod::den;
+    }
+    realSecs=std::abs(realSecs-std::trunc(realSecs));
+    // at this point realSecs contains the fractional part of the seconds as a floating point
+    std::uintmax_t scaled=static_cast<std::uintmax_t>(realSecs*max_val);
+    return static_cast<Rep>(scaled % max_val);
+  }
 
-    // for periods that do have subseconds
-    template <typename Clock, typename Rep, typename CharT, typename CharTraits>
+  // A more relaxed condition than the (num < den)
+  // Any already reduced rational fraction with den>1 will
+  // cause decimals (if it didn't, then it would be an integer)
+  static CONSTDATA bool admits_subsecs= (Period::den!=1);
+};
+
+
+// deals only with the insertion in strings from a std::chrono::timepoint
+template <class Period>
+struct time_subsec_insert
+{
+private:
+  using traits=period_traits<Period>;
+
+  template <typename R> using d_type=std::chrono::duration<R, Period>;
+
+  template <class C, typename R>
+    using tp_type=std::chrono::time_point<C, d_type<R>>;
+
+  template <bool flag, typename>
+  struct delegate;
+
+  template <typename P> struct delegate<true, P>
+  {
+    template <
+      class Clock, typename Rep,
+      typename CharT, typename CharTraits
+    >
     static void insert(
       std::basic_string<CharT, CharTraits>& dest,
       std::size_t& inspos,
-      tp_type<Clock, Rep> tp,
+      tp_type<Clock, Rep> value,
       const std::locale& loc
     )
     {
+      auto subsecsDuration=value-floor<std::chrono::seconds>(value);
       // obtain the conditioned subseconds here
-      Rep subsecs=condition_value(tp);
+      Rep subsecs=traits::condition_value(subsecsDuration);
       // make room for the content in the destination
-      dest.insert(inspos, space_req, ' ');
+      dest.insert(inspos, traits::space_req, ' ');
       // insert the decimal dot
       CharT dotChar=std::use_facet<std::numpunct<CharT>>(loc).decimal_point();
       dest[inspos]=dotChar;
       inspos++;
       // prepare the decimals formatter
-      decimals_fmt<precision, Rep> formatter;
+      decimals_fmt<traits::precision, Rep> formatter;
       // render the value
       formatter.put(dest, inspos, subsecs);
     }
+  };
 
-    // In ostream
-    // Periods with subseconds
-    template <typename Clock, typename Rep, typename CharT, typename CharTraits>
+  template <typename P> struct delegate<false, P> {
+
+    template <
+      class Clock, typename Rep,
+      typename CharT, typename CharTraits
+    >
+    static void insert(
+      std::basic_string<CharT, CharTraits>& dest,
+      std::size_t& inspos,
+      tp_type<Clock, Rep> value,
+      const std::locale& loc
+    ) { // does nothing
+    }
+  };
+public:
+  static CONSTDATA bool admits_subsecs=traits::admits_subsecs;
+
+  template <class Clock,typename Rep,typename CharT, typename CharTraits>
+  static void insert(
+      std::basic_string<CharT, CharTraits>& dest,
+      std::size_t& inspos,
+      std::chrono::time_point<Clock, std::chrono::duration<Rep,Period>> tp,
+      const std::locale& loc
+  ) {
+    delegate<admits_subsecs, Period>::insert(dest, inspos, tp, loc);
+  }
+};
+
+// deals only with the append in ostream from a std::chrono::duration
+template <class Period>
+struct time_subsec_put
+{
+private:
+  using traits=period_traits<Period>;
+
+  template <typename R> using d_type=std::chrono::duration<R, Period>;
+
+  template <bool flag, typename>
+  struct delegate;
+
+  template <typename P> struct delegate<true, P>
+  {
+    template <typename Rep, typename CharT, typename CharTraits>
     static std::basic_ostream<CharT>& put(
-        std::basic_ostream<CharT, CharTraits>& os,
-        tp_type<Clock, Rep> tp
+      std::basic_ostream<CharT, CharTraits>& os,
+      d_type<Rep> value
     )
     {
       // obtain the conditioned subseconds here
-      Rep subsecs=condition_value(tp);
+      // FIXME Here!!!
+      Rep subsecs=traits::condition_value(value);
       // insert the decimal dot
       os << std::use_facet<std::numpunct<CharT>>(os.getloc()).decimal_point();
       // prepare the formatter
-      decimals_fmt<precision, Rep> formatter;
+      decimals_fmt<traits::precision, Rep> formatter;
       // echo the value
       formatter.put(os, subsecs);
       return os;
     }
   };
 
-  // this specialization will be chosen when the Period does not have subseconds
-  template <class Period> struct delegate<false, Period> {
-    template <typename Rep> using dur_type=std::chrono::duration<Rep, Period>;
-    template <class Clock, typename Rep> using tp_type=
-        std::chrono::time_point<Clock, dur_type<Rep>>;
-    template <class Clock, typename Rep,typename CharT, typename CharTraits>
-    static void insert(
-        std::basic_string<CharT, CharTraits>& dest,
-        std::size_t& inspos,
-        tp_type<Clock, Rep> tp,
-        const std::locale& loc
-    ) { // do nothing, no subsecs
-    }
-    template <class Clock, typename Rep, typename CharT, typename CharTraits>
+  template <typename P> struct delegate<false, P> {
+    template <typename Rep, typename CharT, typename CharTraits>
     static std::basic_ostream<CharT>& put(
-        std::basic_ostream<CharT,CharTraits>& os,
-        tp_type<Clock, Rep> tp
-    ) {// do nothing, no subsecs
+      std::basic_ostream<CharT, CharTraits>& os,
+      d_type<Rep> value
+    )
+    { // does nothing
       return os;
     }
   };
 public:
-  // A more relaxed condition than the (num < den)
-  // Any already reduced rational fraction with den>1 will
-  // cause decimals (if it didn't, then it would be an integer)
-  static CONSTDATA bool admits_subsecs= (SrcPeriod::den!=1);
+  static CONSTDATA bool admits_subsecs=traits::admits_subsecs;
 
-  // delegating the methods based on the admits/doesn't admit subseconds
-  template <class Clock, typename Rep,typename CharT, typename CharTraits>
-  static void insert(
-      std::basic_string<CharT, CharTraits>& dest,
-      std::size_t& inspos,
-      std::chrono::time_point<Clock, std::chrono::duration<Rep,SrcPeriod>> tp,
-      const std::locale& loc
-  ) {
-    delegate<admits_subsecs, SrcPeriod>::insert(dest, inspos, tp, loc);
-  }
-  template <class Clock, typename Rep, typename CharT, typename CharTraits>
+  // appending to ostreams
+  template <typename Rep,typename CharT, typename CharTraits>
   static std::basic_ostream<CharT>& put(
       std::basic_ostream<CharT,CharTraits>& os,
-      std::chrono::time_point<Clock, std::chrono::duration<Rep,SrcPeriod>> tp
+      std::chrono::duration<Rep, Period> value
   ) {
-    return delegate<admits_subsecs, SrcPeriod>::put(os, tp);
+    return delegate<admits_subsecs, Period>::put(os, value);
   }
 };
+
 #undef POW10
 #undef CEIL_LOG10
 

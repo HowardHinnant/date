@@ -3775,11 +3775,12 @@ public:
         os.width(2);
         os << std::abs(t.m_.count()) << ':';
         os.width(2);
-        os << std::abs(t.s_.count())
-           << use_facet<numpunct<char>>(os.getloc()).decimal_point();
-        os.imbue(locale{});
+        os << std::abs(t.s_.count());
+//      No need to echo the decimal separator any more, the time_subsec_put will do it alright
+//           << use_facet<numpunct<char>>(os.getloc()).decimal_point();
+//        os.imbue(locale{});
 
-        time_subsec_put<Period>::put(os, t.sub_s_.count());
+        time_subsec_put<Period>::put(os, t.sub_s_);
 
 //#if __cplusplus >= 201402
 //        CONSTDATA auto cl10 = ceil_log10(Period::den);
@@ -3995,7 +3996,7 @@ direct_stream(std::basic_ostream<CharT, Traits>& os, std::basic_string<CharT, Tr
 //            if (command && !modified && ratio_less<typename Duration::period,
 //                                                   ratio<1>>::value)
             { // the block can stay as a nest for this local type alias
-                using subsecput_type = time_subsec_put<typename Duration::period>;
+                using subsecput_type = time_subsec_insert<typename Duration::period>;
                 if(command && !modified && subsecput_type::admits_subsecs) {
                   // skip over the T or S
                   ++i;
