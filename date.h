@@ -2771,7 +2771,7 @@ year_month_weekday::ok() const NOEXCEPT
         return false;
     if (wdi_.index() <= 4)
         return true;
-    auto d2 = wdi_.weekday() - date::weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
+    auto d2 = wdi_.weekday() - date::weekday(static_cast<sys_days>(y_/m_/1)) + days((wdi_.index()-1)*7 + 1);
     return static_cast<unsigned>(d2.count()) <= static_cast<unsigned>((y_/m_/last).day());
 }
 
@@ -3779,8 +3779,7 @@ public:
            << use_facet<numpunct<char>>(os.getloc()).decimal_point();
         os.imbue(locale{});
 
-        time_subsec_put<Period> subs_put;
-        subs_put.put(os, t.sub_s_.count());
+        time_subsec_put<Period>::put(os, t.sub_s_.count());
 
 //#if __cplusplus >= 201402
 //        CONSTDATA auto cl10 = ceil_log10(Period::den);
@@ -3958,7 +3957,7 @@ namespace detail
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
-format(std::basic_ostream<CharT, Traits>& os, std::basic_string<CharT, Traits> fmt,
+direct_stream(std::basic_ostream<CharT, Traits>& os, std::basic_string<CharT, Traits> fmt,
        const local_time<Duration>& tp, const std::string* abbrev = nullptr,
        const std::chrono::seconds* offset_sec = nullptr)
 {
@@ -3991,17 +3990,16 @@ format(std::basic_ostream<CharT, Traits>& os, std::basic_string<CharT, Traits> f
             break;
         case 'S':
         case 'T':
-            if (command && !modified && ratio_less<typename Duration::period,
-                                                   ratio<1>>::value)
-            {
+            // Wh... Aaahh, I see - you assume any ratio over second will
+            // not offer decimal places. Not true, think of ratios like 5/3
+//            if (command && !modified && ratio_less<typename Duration::period,
+//                                                   ratio<1>>::value)
+            { // the block can stay as a nest for this local type alias
                 using subsecput_type = time_subsec_put<typename Duration::period>;
-                if(subsecput_type::admits_subsecs) {
+                if(command && !modified && subsecput_type::admits_subsecs) {
                   // skip over the T or S
                   ++i;
-                  Duration subsecs=tp - floor<seconds>(tp);
-                  subsecput_type subsecs_put;
-                  // will reposition `i` as well
-                  subsecs_put.insert(fmt, i, subsecs, loc);
+                  subsecput_type::insert(fmt, i, tp, loc);
                 }
             }
             command = false;
@@ -4074,7 +4072,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
 {
   std::basic_ostringstream<CharT, Traits> os;
   os.imbue(loc);
-  format(os, fmt, tp, abbrev, offset_sec);
+  direct_stream(os, fmt, tp, abbrev, offset_sec);
   return os.str();
 }
 
@@ -4168,23 +4166,23 @@ format(const CharT* fmt, const sys_time<Duration>& tp)
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_ostream<CharT, Traits>&
-format(std::basic_ostream<CharT, Traits>& os,
+direct_stream(std::basic_ostream<CharT, Traits>& os,
        std::basic_string<CharT, Traits> fmt,
        const local_time<Duration>& tp)
 {
-    return detail::format(os, std::move(fmt), tp);
+    return detail::direct_stream(os, std::move(fmt), tp);
 }
 
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_ostream<CharT, Traits>&
-format(std::basic_ostream<CharT, Traits>& os,
+direct_stream(std::basic_ostream<CharT, Traits>& os,
        std::basic_string<CharT, Traits> fmt, const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(os, std::move(fmt),
+    return detail::direct_stream(os, std::move(fmt),
                           local_time<Duration>{tp.time_since_epoch()}, &abbrev, &offset);
 }
 
@@ -4194,21 +4192,21 @@ format(std::basic_ostream<CharT, Traits>& os,
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_ostream<CharT, Traits>&
-format(std::basic_ostream<CharT, Traits>& os,
+direct_stream(std::basic_ostream<CharT, Traits>& os,
        const CharT* fmt, const local_time<Duration>& tp)
 {
-    return detail::format(os, std::basic_string<CharT>(fmt), tp);
+    return detail::direct_stream(os, std::basic_string<CharT>(fmt), tp);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_ostream<CharT, Traits>&
-format(std::basic_ostream<CharT, Traits>& os,
+direct_stream(std::basic_ostream<CharT, Traits>& os,
        const CharT* fmt, const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(os, std::basic_string<CharT>(fmt),
+    return detail::direct_stream(os, std::basic_string<CharT>(fmt),
                           local_time<Duration>{tp.time_since_epoch()},
                           &abbrev, &offset);
 }
