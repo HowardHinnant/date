@@ -12,7 +12,8 @@ This is actually several separate C++11/C++14 libraries:
 
 2. `"tz.h"` / `"tz.cpp"`  are a timezone library built on top of the `"date.h"` library.  This timezone library is a complete parser of the IANA timezone database.  It provides for an easy way to access all of the data in this database, using the types from `"date.h"` and `<chrono>`.  The IANA database also includes data on leap seconds, and this library provides utilities to compute with that information as well.  See http://howardhinnant.github.io/date/tz.html for more details.
 
-    There will be a talk on this library at [Cppcon 2016](https://cppcon2016.sched.org/event/7nLc/welcome-to-the-time-zone).
+    There was a talk on this library at
+    [Cppcon 2016](https://cppcon2016.sched.org/event/7nLc/welcome-to-the-time-zone). The slides are [here](http://schd.ws/hosted_files/cppcon2016/0f/Welcome%20To%20The%20Time%20Zone%20-%20Howard%20Hinnant%20-%20CppCon%202016.pdf).
 
 3.  `"chrono_io.h"` is a header-only library for streaming out chrono durations.  See http://howardhinnant.github.io/date/chrono_io.html for more details.
 
