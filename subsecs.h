@@ -99,7 +99,7 @@ private:
   // specialization above is preferred.
   template <std::uintmax_t v, std::uintmax_t b>
   struct floor_log_tag<false, v, b> {
-    static CONSTDATA unsigned value=1;
+    static CONSTDATA unsigned value=0; // needs to be zero, we'll be adding 1 because it has_reminder
     static CONSTDATA bool     has_reminder=1;
   };
 
