@@ -69,32 +69,62 @@ CONSTCD14 To floor(const std::chrono::duration<Rep, Period>& d);
 
 namespace detail {
 
+
+// The algorithm for ceil_log using div/mod:
+// - repeatedly divide the value by base, until the result is
+//    less than base and greater than zero. The number of divisions
+//    is floor_ceil.
+//  - if at any division step above there is a reminder, then
+//    ceil_log is floor_log+1. If no reminder at any step, then
+//    floor_log=ceil_log(=log)
+// The internal floor_log_tag does the divisions recursively and stores
+//  the floor_log as the value + the information on whether or not
+//  a reminder has been detected.
 template <std::uintmax_t val, std::uintmax_t base>
 struct ceil_log_struct {
 private:
-  // need one level of indirection to arrest infinite recursion upon
-  // checking '(value<b)' stop condition
+  // first (bool) arg will be true if val >= base (another division step is possible)
+  // false otherwise.
   template <bool, std::uintmax_t v, std::uintmax_t b=10>
-  struct nl_len_tag;
+  struct floor_log_tag;
 
-  // recursion will stop when the (val < b), the literal length will be 1
-  template <std::uintmax_t v, std::uintmax_t b>
-  struct nl_len_tag<false, v, b> {
-    static CONSTDATA unsigned value=1;
+  // recursion will also stop when val==1 (floor_ceil==0) with no reminder
+  template <std::uintmax_t b>
+  struct floor_log_tag<false, 1, b> {
+    static CONSTDATA unsigned value=0;
+    static CONSTDATA bool     has_reminder=0;
   };
 
-  // if val>=b, call numliteral_len with val/b and add one to the returned value
+  // Recursion will stop when (1 < val < b). For val==1, the more specific
+  // specialization above is preferred.
   template <std::uintmax_t v, std::uintmax_t b>
-  struct nl_len_tag<true, v, b> {
-    static CONSTDATA unsigned value=ceil_log_struct<v/b, b>::value + 1;
+  struct floor_log_tag<false, v, b> {
+    static CONSTDATA unsigned value=1;
+    static CONSTDATA bool     has_reminder=1;
+  };
+
+
+  // if val>=b (first arg to true),
+  // recursively call yourself with the v/b.
+  // Record your reminder existence or any reminder existence on the way down
+  template <std::uintmax_t v, std::uintmax_t b>
+  struct floor_log_tag<true, v, b> {
+    using recurse_step = floor_log_tag< (v/b>=b), v/b, b>;
+    static CONSTDATA unsigned value=recurse_step::value+1;
+    static CONSTDATA bool     has_reminder=( v % b ) || recurse_step::has_reminder;
   };
 
   using sfinae_guard_type=typename std::enable_if<
-      (base>1) // don't accept base of 0 or 1, they don't make sense
+        (base>1) // don't accept base of 0 or 1, they don't make sense
+    &&  (val>0)  // don't accept a zero for the argument of log
   >::type;
+
+  using floor_log= floor_log_tag<(val>=base), val, base>;
 public:
   static CONSTDATA unsigned value=
-      nl_len_tag<(val>base), val, base>::value;
+      floor_log::value
+    + static_cast<std::uintmax_t>(floor_log::has_reminder)
+  ;
 
 };
 
@@ -116,14 +146,14 @@ public:
 template <std::uintmax_t base>
 struct pow_struct<1, base>
 {
-  static CONSTDATA long long value=base;
+  static CONSTDATA std::uintmax_t value=base;
 };
 
 
 template <std::uintmax_t base>
 struct pow_struct<0,base>
 {
-  static CONSTDATA long long value=1;
+  static CONSTDATA std::uintmax_t value=1;
 };
 
 #define POW10(width) (pow_struct<(width), 10>::value)
@@ -141,7 +171,7 @@ struct pow_struct<0,base>
 template <unsigned width, typename T=std::uintmax_t>
 struct decimals_fmt {
 private:
-  // allow floating point representation as well, they go OK after sign elimination
+  // allow floating point representation as well, they are OK after sign elimination
   using type=typename std::enable_if<std::is_arithmetic<T>::value, T>::type;
 
   // the maximum unsigned value representable on 'width' digits
@@ -223,7 +253,6 @@ struct period_traits {
   // including the decimal dot.
   static CONSTDATA unsigned space_req=precision+1;
 
-
   // Because we are supposed to deal with **sub**-seconds, anything that goes
   // above max_val is discarded (we only keep the lesser-significant digits)
   template <typename Rep, class SrcPeriod>
@@ -237,7 +266,7 @@ struct period_traits {
     }
     realSecs=std::abs(realSecs-std::trunc(realSecs));
     // at this point realSecs contains the fractional part of the seconds as a floating point
-    std::uintmax_t scaled=static_cast<std::uintmax_t>(realSecs*max_val);
+    std::uintmax_t scaled=static_cast<std::uintmax_t>(std::round(realSecs*max_val));
     return static_cast<Rep>(scaled % max_val);
   }
 
@@ -341,7 +370,6 @@ private:
     )
     {
       // obtain the conditioned subseconds here
-      // FIXME Here!!!
       Rep subsecs=traits::condition_value(value);
       // insert the decimal dot
       os << std::use_facet<std::numpunct<CharT>>(os.getloc()).decimal_point();
@@ -376,8 +404,8 @@ public:
   }
 };
 
-#undef POW10
-#undef CEIL_LOG10
+//#undef POW10
+//#undef CEIL_LOG10
 
 } // namespace detail
 } // namespace date
