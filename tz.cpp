@@ -2723,12 +2723,12 @@ static
 std::string
 get_version(const std::string& path)
 {
-    std::ifstream infile(path + "Makefile");
+    std::ifstream infile(path + "NEWS");
     std::string version;
     while (infile)
     {
         infile >> version;
-        if (version == "VERSION=")
+        if (version == "Release")
         {
             infile >> version;
             return version;
