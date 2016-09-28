@@ -1,5 +1,13 @@
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+<hr/>
+IMPORTANT UPDATE:
 
+Recently IANA changed how they reported the database version.  If you have `AUTO_DOWNLOAD` enabled in the tz library, you must update to include this commit:
+
+https://github.com/HowardHinnant/date/commit/19c83e47ed411a45e0b5a45d772c47c6ee23ac3f
+
+Without this update your tz lib will download a new copy of the database everytime you start your program.
+<hr/>
 _**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/lb6FHxHyQ1V9eCLm)**_
 
 This is actually several separate C++11/C++14 libraries:
