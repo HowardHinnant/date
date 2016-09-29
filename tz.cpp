@@ -2,6 +2,7 @@
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
+// Copyright (c) 2016 Alexander Kormanovsky
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +26,56 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
+#ifdef _WIN32
+// Windows.h will be included directly and indirectly (e.g. by curl).
+// We need to define these macros to prevent Windows.h bringing in
+// more than we need and do it eearly so Windows.h doesn't get included
+// without these macros having been defined.
+// min/max macrosinterfere with the C++ versions.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+// We don't need all that Windows has to offer.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif  // _WIN32
+
+// None of this happens with the MS SDK (at least VS14 which I tested), but:
+// Compiling with mingw, we get "error: 'KF_FLAG_DEFAULT' was not declared in this scope."
+// and error: 'SHGetKnownFolderPath' was not declared in this scope.".
+// It seems when using mingw NTDDI_VERSION is undefined and that
+// causes KNOWN_FOLDER_FLAG and the KF_ flags to not get defined.
+// So we must define NTDDI_VERSION to get those flags on mingw.
+// The docs say though here:
+// https://msdn.microsoft.com/en-nz/library/windows/desktop/aa383745(v=vs.85).aspx
+// that "If you define NTDDI_VERSION, you must also define _WIN32_WINNT."
+// So we declare we require Vista or greater.
+#ifdef __MINGW32__
+
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION 0x06000000
+#define _WIN32_WINNT _WIN32_WINNT_VISTA
+#elif NTDDI_VERSION < 0x06000000
+#warning "If this fails to compile NTDDI_VERSION may be to low. See comments above."
+#endif
+// But once we define the values above we then get this linker error:
+// "tz.cpp:(.rdata$.refptr.FOLDERID_Downloads[.refptr.FOLDERID_Downloads]+0x0): "
+//     "undefined reference to `FOLDERID_Downloads'"
+// which #include <initguid.h> cures see:
+// https://support.microsoft.com/en-us/kb/130869
+#include <initguid.h>
+// But with <initguid.h> included, the error moves on to:
+// error: 'FOLDERID_Downloads' was not declared in this scope
+// Which #include <knownfolders.h> cures.
+#include <knownfolders.h>
+
+#endif // __MINGW32__
+
+#include <Windows.h>
+#endif // _WIN32
+
 #include "tz_private.h"
+#include "ios.h"
 
 #include <algorithm>
 #include <cctype>
@@ -36,54 +86,118 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <vector>
 #include <sys/stat.h>
-#if HAS_REMOTE_API
-#include <curl/curl.h>
-#endif
+
 #ifdef _WIN32
 #include <locale>
 #include <codecvt>
-#endif
-
-#if TIMEZONE_MAPPING
-// Timezone mapping maps native (e.g. Windows) timezone names to the "Standard" names
-// used by this library.
-// The mapping process parses a CSV file of mapping data where each line is of the format:
-// "other","territory","type"<newline>
-// e.g. "GMT Standard Time", "001", "Europe/London"
-// and <newline>
-// Windows typically uses CRLF, Linux/Unix/Mac OS use LF, and old Mac's use CR.
-// On Linux/Mac, no mapping file is required as that is the native format already.
-// C++11 should work but C++14 is preferred even there too
-// because the date library in general works better with C++14.
-#include <iomanip>
-#endif
+#endif // _WIN32
 
 // unistd.h is used on some platforms as part of the the means to get
 // the current time zone. On Win32 Windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
-// Prevent windows defining min/max macros that will interfere with C++ versions.
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-// We don't need everything Windows.h has to offer.
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#include <wordexp.h>
-#endif
+#  include <io.h> // _unlink etc.
+#  include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
+#  if HAS_REMOTE_API
+#    include <direct.h> // _mkdir
+#    include <Shellapi.h> // ShFileOperation etc.
+#  endif  // HAS_REMOTE_API
+#else   // !WIN32
+#  include <unistd.h>
+#  include <wordexp.h>
+#  if !USE_SHELL_API
+#    include <sys/stat.h>
+#    include <sys/fcntl.h>
+#    include <dirent.h>
+#    include <cstring>
+#    include <sys/wait.h>
+#    include <sys/types.h>
+#  endif //!USE_SHELL_API
+#endif  // !WIN32
 
 #if TZ_LITERAL_INIT
 #include "tz_data.h"
 #endif
+
+#if HAS_REMOTE_API
+// Note curl includes windows.h so we must include curl AFTER definitions of things
+// that effect windows.h such as NOMINMAX.
+#include <curl/curl.h>
+#endif
+
+#ifdef _WIN32
+static CONSTDATA char folder_delimiter = '\\';
+
+namespace
+{
+    struct task_mem_deleter
+    {
+        void operator()(wchar_t buf[])
+        {
+            if (buf != nullptr)
+                CoTaskMemFree(buf);
+        }
+    };
+    using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
+}
+
+// We might need to know certain locations even if not using the remote API,
+// so keep these routines out of that block for now.
+static
+std::string
+get_known_folder(const GUID& folderid)
+{
+    std::string folder;
+    PWSTR pfolder = nullptr;
+    HRESULT hr = SHGetKnownFolderPath(folderid, KF_FLAG_DEFAULT, NULL, &pfolder);
+    if (SUCCEEDED(hr))
+    {
+        co_task_mem_ptr folder_ptr(pfolder);
+        folder = std::string(folder_ptr.get(), folder_ptr.get() + wcslen(folder_ptr.get()));
+    }
+    return folder;
+}
+
+// Usually something like "c:\Program Files".
+static
+std::string
+get_program_folder()
+{
+    return get_known_folder(FOLDERID_ProgramFiles);
+}
+
+// Usually something like "c:\Users\username\Downloads".
+static
+std::string
+get_download_folder()
+{
+    return get_known_folder(FOLDERID_Downloads);
+}
+
+#else // !_WIN32
+
+static CONSTDATA char folder_delimiter = '/';
+
+static
+std::string
+expand_path(std::string path)
+{
+#if TARGET_OS_IPHONE
+    return date::iOSUtils::get_tzdata_path();
+#else
+    ::wordexp_t w{};
+    ::wordexp(path.c_str(), &w, 0);
+    assert(w.we_wordc == 1);
+    path = w.we_wordv[0];
+    ::wordfree(&w);
+    return path;
+#endif
+}
+
+#endif  // !_WIN32
 
 namespace date
 {
@@ -91,25 +205,41 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
-#if _WIN32 // TODO: sensible default for all platforms.
-static const std::string install{ "c:\\tzdata" };
-#else  // !_WIN32
+using namespace detail;
+
+static std::string get_install()
+{
+#ifdef _WIN32
+    std::string install = get_download_folder();
+    install += folder_delimiter;
+    install += "tzdata";
+#else
+    std::string install = expand_path("~/Downloads/tzdata");
+#endif
+    return install;
+}
+
+#ifndef INSTALL
+
+static const std::string install = get_install();
+
+#else   // INSTALL
+
+#define STRINGIZEIMP(x) #x
+#define STRINGIZE(x) STRINGIZEIMP(x)
+
+static const std::string install = STRINGIZE(INSTALL) +
+                                   std::string(1, folder_delimiter) + "tzdata";
+
+#endif  // INSTALL
 
 static
 std::string
-expand_path(std::string path)
+get_download_gz_file(const std::string& version)
 {
-    ::wordexp_t w{};
-    ::wordexp(path.c_str(), &w, 0);
-    assert(w.we_wordc == 1);
-    path = w.we_wordv[0];
-    ::wordfree(&w);
-    return path;
+    auto file = install + version + ".tar.gz";
+    return file;
 }
-
-static const std::string install = expand_path("~/Downloads/tzdata");
-
-#endif  // !_WIN32
 
 static const std::vector<std::string> files =
 {
@@ -137,27 +267,294 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
-// Until filesystem arrives.
-static CONSTDATA char folder_delimiter =
-#ifdef _WIN32
-'\\';
-#else
-'/';
-#endif
+#ifdef TIMEZONE_MAPPING
 
-static bool file_exists(const std::string& filename)
+namespace // Put types in an anonymous name space.
 {
-#ifdef _WIN32
-    return ::_access(filename.c_str(), 0) == 0;
-#else
-    return ::access(filename.c_str(), F_OK) == 0;
-#endif
+
+// A simple type to manage RAII for key handles and to
+// implement the trivial registry interface we need.
+// Not intended to be general-purpose.
+class reg_key
+{
+private:
+    // Note there is no value documented to be an invalid handle value.
+    // Not NULL nor INVALID_HANDLE_VALUE. We must rely on is_open.
+    HKEY m_key = nullptr;
+    bool m_is_open = false;
+public:
+    ~reg_key()
+    {
+        close();
+    }
+
+    reg_key() = default;
+    reg_key(const reg_key&) = delete;
+    reg_key& operator=(const reg_key&) = delete;
+
+    HKEY handle()
+    {
+        return m_key;
+    }
+
+    bool is_open() const
+    {
+        return m_is_open;
+    }
+
+    LONG open(const wchar_t* key_name)
+    {
+        LONG result;
+        result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key_name, 0, KEY_READ, &m_key);
+        if (result == ERROR_SUCCESS)
+            m_is_open = true;
+        return result;
+    }
+
+    LONG close()
+    {
+        if (m_is_open)
+        {
+            auto result = RegCloseKey(m_key);
+            assert(result == ERROR_SUCCESS);
+            if (result == ERROR_SUCCESS)
+            {
+                m_is_open = false;
+                m_key = nullptr;
+            }
+            return result;
+        }
+        return ERROR_SUCCESS;
+    }
+
+    // WARNING: this function is not a general-purpose function.
+    // It has a hard-coded value size limit that should be sufficient for our use cases.
+    bool get_string(const wchar_t* key_name, std::string& value, std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>& converter)
+    {
+        value.clear();
+        wchar_t value_buffer[256];
+        // in/out parameter. Documentation say that size is a count of bytes not chars.
+        DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
+        DWORD tzi_type = REG_SZ;
+        if (RegQueryValueExW(handle(), key_name, nullptr, &tzi_type,
+            reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS)
+        {
+            // Function does not guarantee to null terminate.
+            value_buffer[size/sizeof(value_buffer[0])] = L'\0';
+            value = converter.to_bytes(value_buffer);
+            return true;
+        }
+        return false;
+    }
+
+    bool get_binary(const wchar_t* key_name, void* value, int value_size)
+    {
+        DWORD size = value_size;
+        DWORD type = REG_BINARY;
+        if (RegQueryValueExW(handle(), key_name, nullptr, &type,
+            reinterpret_cast<LPBYTE>(value), &size) == ERROR_SUCCESS
+            && (int) size == value_size)
+            return true;
+        return false;
+    }
+};
+
+} // anonymous namespace
+
+static
+std::string
+get_download_mapping_file(const std::string& version)
+{
+    auto file = install + version + "windowsZones.xml";
+    return file;
 }
 
-#ifdef _WIN32
-// Win32 support requires calling OS functions.
-// This routine maps OS error codes to readable text strngs.
-static std::string get_win32_message(DWORD error_code)
+// Parse this XML file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// The parsing method is designed to be simple and quick. It is not overly
+// forgiving of change but it should diagnose basic format issues.
+// See timezone_mapping structure for more info.
+static
+std::vector<detail::timezone_mapping>
+load_timezone_mappings_from_xml_file(const std::string& input_path)
+{
+    std::size_t line_num = 0;
+    std::vector<detail::timezone_mapping> mappings;
+    std::string line;
+
+    std::ifstream is(input_path);
+    if (!is.is_open())
+    {
+        // We don't emit file exceptions because that's an implementation detail.
+        std::string msg = "Error opening time zone mapping file \"";
+        msg += input_path;
+        msg += "\".";
+        throw std::runtime_error(msg);
+    }
+
+    auto error = [&input_path, &line_num](const char* info)
+    {
+        std::string msg = "Error loading time zone mapping file \"";
+        msg += input_path;
+        msg += "\" at line ";
+        msg += std::to_string(line_num);
+        msg += ": ";
+        msg += info;
+        throw std::runtime_error(msg);
+    };
+    // [optional space]a="b"
+    auto read_attribute = [&line_num, &line, &error]
+                          (const char* name, std::string& value, std::size_t startPos)
+                          ->std::size_t
+    {
+        value.clear();
+        // Skip leading space before attribute name.
+        std::size_t spos = line.find_first_not_of(' ', startPos);
+        if (spos == std::string::npos)
+            spos = startPos;
+        // Assume everything up to next = is the attribute name
+        // and that an = will always delimit that.
+        std::size_t epos = line.find('=', spos);
+        if (epos == std::string::npos)
+            error("Expected \'=\' right after attribute name.");
+        std::size_t name_len = epos - spos;
+        // Expect the name we find matches the name we expect.
+        if (line.compare(spos, name_len, name) != 0)
+        {
+            std::string msg;
+            msg = "Expected attribute name \'";
+            msg += name;
+            msg += "\' around position ";
+            msg += std::to_string(spos);
+            msg += " but found something else.";
+            error(msg.c_str());
+        }
+        ++epos; // Skip the '=' that is after the attribute name.
+        spos = epos;
+        if (spos < line.length() && line[spos] == '\"')
+            ++spos; // Skip the quote that is before the attribute value.
+        else
+        {
+            std::string msg = "Expected '\"' to begin value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        epos = line.find('\"', spos);
+        if (epos == std::string::npos)
+        {
+            std::string msg = "Expected '\"' to end value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        // Extract everything in between the quotes. Note no escaping is done.
+        std::size_t value_len = epos - spos;
+        value.assign(line, spos, value_len);
+        ++epos; // Skip the quote that is after the attribute value;
+        return epos;
+    };
+
+    // Quick but not overly forgiving XML mapping file processing.
+    bool mapTimezonesOpenTagFound = false;
+    bool mapTimezonesCloseTagFound = false;
+    bool mapZoneOpenTagFound = false;
+    bool mapTZoneCloseTagFound = false;
+    std::size_t mapZonePos = std::string::npos;
+    std::size_t mapTimezonesPos = std::string::npos;
+    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+    CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
+    CONSTDATA std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) /
+                                                 sizeof(mapZoneOpeningTag[0]) - 1;
+    while (!mapTimezonesOpenTagFound)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+        {
+            // If there is no mapTimezones tag is it an error?
+            // Perhaps if there are no mapZone mappings it might be ok for
+            // its parent mapTimezones element to be missing?
+            // We treat this as an error though on the assumption that if there
+            // really are no mappings we should still get a mapTimezones parent
+            // element but no mapZone elements inside. Assuming we must
+            // find something will hopefully at least catch more drastic formatting
+            // changes or errors than if we don't do this and assume nothing found.
+            error("Expected a mapTimezones opening tag.");
+        }
+        mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
+        mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
+    }
+
+    // NOTE: We could extract the version info that follows the opening
+    // mapTimezones tag and compare that to the version of other data we have.
+    // I would have expected them to be kept in synch but testing has shown
+    // it is typically does not match anyway. So what's the point?
+    while (!mapTimezonesCloseTagFound)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+            error("Expected a mapTimezones closing tag.");
+        if (line.empty())
+            continue;
+        mapZonePos = line.find(mapZoneOpeningTag);
+        if (mapZonePos != std::string::npos)
+        {
+            mapZonePos += mapZoneOpeningTagLen;
+            detail::timezone_mapping zm{};
+            std::size_t pos = read_attribute("other", zm.other, mapZonePos);
+            pos = read_attribute("territory", zm.territory, pos);
+            read_attribute("type", zm.type, pos);
+            mappings.push_back(std::move(zm));
+
+            continue;
+        }
+        mapTimezonesPos = line.find("</mapTimezones>");
+        mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
+        if (!mapTimezonesCloseTagFound)
+        {
+            std::size_t commentPos = line.find("<!--");
+            if (commentPos == std::string::npos)
+                error("Unexpected mapping record found. A xml mapZone or comment "
+                      "attribute or mapTimezones closing tag was expected.");
+        }
+    }
+
+    is.close();
+    return mappings;
+}
+
+static
+void
+sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
+{
+    std::sort(mappings.begin(), mappings.end(),
+        [](const date::detail::timezone_mapping& lhs,
+           const date::detail::timezone_mapping& rhs)->bool
+    {
+        auto other_result = lhs.other.compare(rhs.other);
+        if (other_result < 0)
+            return true;
+        else if (other_result == 0)
+        {
+            auto territory_result = lhs.territory.compare(rhs.territory);
+            if (territory_result < 0)
+                return true;
+            else if (territory_result == 9)
+            {
+                if (lhs.type < rhs.type)
+                    return true;
+            }
+        }
+        return false;
+    });
+}
+
+// This routine maps Win32 OS error codes to readable text strngs.
+static
+std::string
+get_win32_message(DWORD error_code)
 {
     struct free_message {
         void operator()(char buf[]) {
@@ -184,104 +581,15 @@ static std::string get_win32_message(DWORD error_code)
     assert(message_buffer.get() != nullptr);
     return std::string(message_buffer.get());
 }
-#endif  // _WIN32
-
-#if TIMEZONE_MAPPING
-
-namespace // Put types in an anonymous name space.
-{
-    // A simple type to manage RAII for key handles and to
-    // implement the trivial registry interface we need.
-    // Not intended to be general-purpose.
-    class reg_key
-    {
-    private:
-        // Note there is no value documented to be an invalid handle value.
-        // Not NULL nor INVALID_HANDLE_VALUE. We must rely on is_open.
-        HKEY m_key = nullptr;
-        bool m_is_open = false;
-    public:
-        HKEY handle()
-        {
-            return m_key;
-        }
-        bool is_open() const
-        {
-            return m_is_open;
-        }
-        LONG open(const wchar_t* key_name)
-        {
-            LONG result;
-            result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key_name, 0, KEY_READ, &m_key);
-            if (result == ERROR_SUCCESS)
-                m_is_open = true;
-            return result;
-        }
-        LONG close()
-        {
-            if (m_is_open)
-            {
-                auto result = RegCloseKey(m_key);
-                assert(result == ERROR_SUCCESS);
-                if (result == ERROR_SUCCESS)
-                {
-                    m_is_open = false;
-                    m_key = nullptr;
-                }
-                return result;
-            }
-            return ERROR_SUCCESS;
-        }
-
-        // WARNING: this function has a hard-coded value size limit.
-        // It is not a general-purpose function.
-        // It should be sufficient for our use cases.
-        // The function could be made workable for any size string
-        // but we don't need the complexity of implementing that
-        // for our meagre purposes right now.
-        bool get_string(const wchar_t* key_name, std::string& value)
-        {
-            value.clear();
-            wchar_t value_buffer[256];
-            // in/out parameter. Documentation say that size is a count of bytes not chars.
-            DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
-            DWORD tzi_type = REG_SZ;
-            if (RegQueryValueExW(handle(), key_name, nullptr, &tzi_type,
-                reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS)
-            {
-                // Function does not guarantee to null terminate.
-                value_buffer[size/sizeof(value_buffer[0])] = L'\0';
-                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-                value = converter.to_bytes(value_buffer);
-                return true;
-            }
-            return false;
-        }
-
-        bool get_binary(const wchar_t* key_name, void* value, int value_size)
-        {
-            DWORD size = value_size;
-            DWORD type = REG_BINARY;
-            if (RegQueryValueExW(handle(), key_name, nullptr, &type,
-                reinterpret_cast<LPBYTE>(value), &size) == ERROR_SUCCESS
-                && (int) size == value_size)
-                return true;
-            return false;
-        }
-
-        ~reg_key()
-        {
-            close();
-        }
-    };
-} // anonymous namespace
 
 // This function returns an exhaustive list of time zone information
 // from the Windows registry.
 // The routine tries to load as many time zone entries as possible despite errors.
 // We don't want to fail to load the whole database just because one record can't be read.
 
-static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
+static
+void
+get_windows_timezone_info(std::vector<detail::timezone_info>& tz_list)
 {
     tz_list.clear();
     LONG result;
@@ -300,6 +608,7 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
     DWORD size;
     wchar_t zone_key_name[256];
     std::wstring value;
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
     // Iterate through the list of keys of the parent time zones key to get
     // each key that identifies each individual timezone.
@@ -316,7 +625,6 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
             + get_win32_message(status));
         if (status == ERROR_NO_MORE_ITEMS)
             break;
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         tz.timezone_id = converter.to_bytes(zone_key_name);
 
         full_zone_key_name = zones_key_name;
@@ -331,13 +639,13 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
         if (zone_key.open(full_zone_key_name.c_str()) != ERROR_SUCCESS)
             continue;
 
-        if (!zone_key.get_string(L"Std", tz.standard_name))
+        if (!zone_key.get_string(L"Std", tz.standard_name, converter))
             continue;
 
 #if 0
         // TBD these fields are not required yet.
         // They might be useful for test cases though.
-        if (!zone_key.get_string("Display", tz.display_name))
+        if (!zone_key.get_string("Display", tz.display_name, converter))
             continue;
 
         if (!zone_key.get_binary("TZI", &tz.tzi, sizeof(TZI)))
@@ -357,8 +665,9 @@ static void get_windows_timezone_info(std::vector<detail::timezone_info>& tz_lis
 // under the windows registry key Time Zones.
 // To be clear, standard_name does NOT represent a windows timezone id
 // or an IANA tzid
-static const detail::timezone_info* find_native_timezone_by_standard_name(
-    const std::string& standard_name)
+static
+const detail::timezone_info*
+find_native_timezone_by_standard_name(const std::string& standard_name)
 {
     // TODO! we can improve on linear search.
     const auto& native_zones = get_tzdb().native_zones;
@@ -371,119 +680,8 @@ static const detail::timezone_info* find_native_timezone_by_standard_name(
     return nullptr;
 }
 
-// Read CSV file of "other","territory","type".
-// See timezone_mapping structure for more info.
-// This function should be kept in sync with the code that writes this file.
-static std::vector<detail::timezone_mapping>
-load_timezone_mappings_from_csv_file(const std::string& input_path)
-{
-    size_t line = 0;
-    std::vector<detail::timezone_mapping> mappings;
-    std::ifstream is(input_path,
-#if _WIN32
-        std::ios_base::in // open in text mode on Win32, so getline will eat '\n' and '\r\n'
-#else
-        std::ios_base::in | std::ios_base::binary
-#endif
-    );
-    if (!is.is_open())
-    {
-        // We don't emit file exceptions because that's an implementation detail.
-        std::string msg = "Error opening time zone mapping file \"";
-        msg += input_path;
-        msg += "\".";
-        throw std::runtime_error(msg);
-    }
-
-    std::istringstream sis;
-    auto error = [&](const char* info)
-    {
-        std::string msg = "Error reading zone mapping file \"";
-        msg += input_path;
-        msg += "\" at line ";
-        msg += std::to_string(line);
-        msg += ": ";
-        msg += info;
-        throw std::runtime_error(msg);
-    };
-    auto read_field_quote = [&]()
-    {
-        char field_delim;
-        sis.read(&field_delim, 1);
-        auto read_count = sis.gcount();
-        if (sis.gcount() != 1 || field_delim != '"')
-            error("field '\"' expected.");        
-    };
-    auto read_field_delim = [&]()
-    {
-        char field_delim;
-        sis.read(&field_delim, 1);
-        if (sis.gcount() != 1 || field_delim != ',')
-            error("delimiter ',' expected.");
-    };
-    std::string copyright;
-    bool blank = false;
-    for (;;)
-    {
-        std::getline(is, copyright);
-        ++line; // Make sure our line number is in sync with however many copyright lines we have.
-        if (is.eof())
-            break;
-        if (copyright.empty())
-        {
-            --line;
-            blank = true;
-            break;
-        }
-    }
-    const int min_copyright_lines = 3;
-    if (!blank || line < min_copyright_lines)
-    {
-        std::string msg = "Expected at least ";
-        msg += std::to_string(min_copyright_lines);
-        msg += " lines of copyright notice followed by a blank line.";
-        error(msg.c_str());
-    }
-    ++line;
-
-    std::string linebuf;
-    for (;;)
-    {
-        detail::timezone_mapping zm{};
-        std::getline(is, linebuf);
-        // Stop on error or first blank line.
-        // linebuf.size() is the length read but it excludes the length of any line delimiter actually read (e.g. LF/CRLF).
-        // If linebuf.size() is 0 it *might* not mean nothing was read (error) or eof, it could just
-        // indicate only a line delimiter was read. Use is.eof() to distinquish end of file from a blank line.
-        if (linebuf.empty()) // on eof linebuf will be empty.
-        {
-            if (is.eof())
-                break;
-            error("Formatting error. Blank lines not allowed.");
-        }
-        sis.clear();
-        sis.str(linebuf);
-
-        read_field_quote();
-        std::getline(sis, zm.other, '\"');
-        read_field_delim();
-
-        read_field_quote();
-        std::getline(sis, zm.territory, '\"');
-        read_field_delim();
-
-        read_field_quote();
-        std::getline(sis, zm.type, '\"');
-        if ((size_t)sis.tellg() != linebuf.length()) // Excess characters? We should have processed all in the line buffer.
-            error("Formatting error.");
-        ++line;
-        mappings.push_back(std::move(zm));
-    }
-    is.close();
-    return mappings;
-}
-
-static bool
+static
+bool
 native_to_standard_timezone_name(const std::string& native_tz_name,
                                  std::string& standard_tz_name)
 {
@@ -506,6 +704,7 @@ native_to_standard_timezone_name(const std::string& native_tz_name,
     }
     return false;
 }
+
 #endif  // TIMEZONE_MAPPING
 
 // Parsing helpers
@@ -590,7 +789,7 @@ parse_signed_time(std::istream& in)
 
 // MonthDayTime
 
-MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
+detail::MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     : zone_(timezone)
 {
     using namespace date;
@@ -603,14 +802,14 @@ MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     s_ = hms.seconds();
 }
 
-MonthDayTime::MonthDayTime(const date::month_day& md, tz timezone)
+detail::MonthDayTime::MonthDayTime(const date::month_day& md, tz timezone)
     : zone_(timezone)
 {
     u = md;
 }
 
 date::day
-MonthDayTime::day() const
+detail::MonthDayTime::day() const
 {
     switch (type_)
     {
@@ -626,7 +825,7 @@ MonthDayTime::day() const
 }
 
 date::month
-MonthDayTime::month() const
+detail::MonthDayTime::month() const
 {
     switch (type_)
     {
@@ -642,7 +841,7 @@ MonthDayTime::month() const
 }
 
 int
-MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
+detail::MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
                       std::chrono::seconds offset, std::chrono::minutes prev_save) const
 {
     if (zone_ != x.zone_)
@@ -684,7 +883,7 @@ MonthDayTime::compare(date::year y, const MonthDayTime& x, date::year yx,
 }
 
 sys_seconds
-MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
+detail::MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
                      std::chrono::seconds save) const
 {
     using namespace date;
@@ -697,29 +896,29 @@ MonthDayTime::to_sys(date::year y, std::chrono::seconds offset,
     return until_utc;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const date::month_day& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const date::month_day& x)
 {
     month_day_ = x;
     return *this;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const date::month_weekday_last& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const date::month_weekday_last& x)
 {
     month_weekday_last_ = x;
     return *this;
 }
 
-MonthDayTime::U&
-MonthDayTime::U::operator=(const pair& x)
+detail::MonthDayTime::U&
+detail::MonthDayTime::U::operator=(const pair& x)
 {
     month_day_weekday_ = x;
     return *this;
 }
 
 date::sys_days
-MonthDayTime::to_sys_days(date::year y) const
+detail::MonthDayTime::to_sys_days(date::year y) const
 {
     using namespace std::chrono;
     using namespace date;
@@ -732,7 +931,7 @@ MonthDayTime::to_sys_days(date::year y) const
     case lteq:
         {
             auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = weekday(x);
+            auto const wd1 = weekday(static_cast<sys_days>(x));
             auto const wd0 = u.month_day_weekday_.weekday_;
             return sys_days(x) - (wd1-wd0);
         }
@@ -741,19 +940,19 @@ MonthDayTime::to_sys_days(date::year y) const
     }
     auto const x = y/u.month_day_weekday_.month_day_;
     auto const wd1 = u.month_day_weekday_.weekday_;
-    auto const wd0 = weekday(x);
+    auto const wd0 = weekday(static_cast<sys_days>(x));
     return sys_days(x) + (wd1-wd0);
 }
 
 sys_seconds
-MonthDayTime::to_time_point(date::year y) const
+detail::MonthDayTime::to_time_point(date::year y) const
 {
     // Add seconds first to promote to largest rep early to prevent overflow
     return to_sys_days(y) + s_ + h_ + m_;
 }
 
 void
-MonthDayTime::canonicalize(date::year y)
+detail::MonthDayTime::canonicalize(date::year y)
 {
     using namespace std::chrono;
     using namespace date;
@@ -771,7 +970,7 @@ MonthDayTime::canonicalize(date::year y)
     case lteq:
         {
             auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = weekday(x);
+            auto const wd1 = weekday(static_cast<sys_days>(x));
             auto const wd0 = u.month_day_weekday_.weekday_;
             auto const ymd = year_month_day(sys_days(x) - (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
@@ -782,7 +981,7 @@ MonthDayTime::canonicalize(date::year y)
         {
             auto const x = y/u.month_day_weekday_.month_day_;
             auto const wd1 = u.month_day_weekday_.weekday_;
-            auto const wd0 = weekday(x);
+            auto const wd0 = weekday(static_cast<sys_days>(x));
             auto const ymd = year_month_day(sys_days(x) + (wd1-wd0));
             u.month_day_ = ymd.month()/ymd.day();
             type_ = month_day;
@@ -792,7 +991,7 @@ MonthDayTime::canonicalize(date::year y)
 }
 
 std::istream&
-operator>>(std::istream& is, MonthDayTime& x)
+detail::operator>>(std::istream& is, MonthDayTime& x)
 {
     using namespace date;
     using namespace std::chrono;
@@ -884,7 +1083,7 @@ operator>>(std::istream& is, MonthDayTime& x)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const MonthDayTime& x)
+detail::operator<<(std::ostream& os, const MonthDayTime& x)
 {
     switch (x.type_)
     {
@@ -924,7 +1123,7 @@ operator<<(std::ostream& os, const MonthDayTime& x)
 
 // Rule
 
-Rule::Rule(const std::string& s)
+detail::Rule::Rule(const std::string& s)
 {
     try
     {
@@ -988,7 +1187,7 @@ Rule::Rule(const std::string& s)
     }
 }
 
-Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
+detail::Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
     : name_(r.name_)
     , starting_year_(starting_year)
     , ending_year_(ending_year)
@@ -999,7 +1198,7 @@ Rule::Rule(const Rule& r, date::year starting_year, date::year ending_year)
 }
 
 bool
-operator==(const Rule& x, const Rule& y)
+detail::operator==(const Rule& x, const Rule& y)
 {
     if (std::tie(x.name_, x.save_, x.starting_year_, x.ending_year_) ==
         std::tie(y.name_, y.save_, y.starting_year_, y.ending_year_))
@@ -1008,7 +1207,7 @@ operator==(const Rule& x, const Rule& y)
 }
 
 bool
-operator<(const Rule& x, const Rule& y)
+detail::operator<(const Rule& x, const Rule& y)
 {
     using namespace std::chrono;
     auto const xm = x.month();
@@ -1023,55 +1222,55 @@ operator<(const Rule& x, const Rule& y)
 }
 
 bool
-operator==(const Rule& x, const date::year& y)
+detail::operator==(const Rule& x, const date::year& y)
 {
     return x.starting_year_ <= y && y <= x.ending_year_;
 }
 
 bool
-operator<(const Rule& x, const date::year& y)
+detail::operator<(const Rule& x, const date::year& y)
 {
     return x.ending_year_ < y;
 }
 
 bool
-operator==(const date::year& x, const Rule& y)
+detail::operator==(const date::year& x, const Rule& y)
 {
     return y.starting_year_ <= x && x <= y.ending_year_;
 }
 
 bool
-operator<(const date::year& x, const Rule& y)
+detail::operator<(const date::year& x, const Rule& y)
 {
     return x < y.starting_year_;
 }
 
 bool
-operator==(const Rule& x, const std::string& y)
+detail::operator==(const Rule& x, const std::string& y)
 {
     return x.name() == y;
 }
 
 bool
-operator<(const Rule& x, const std::string& y)
+detail::operator<(const Rule& x, const std::string& y)
 {
     return x.name() < y;
 }
 
 bool
-operator==(const std::string& x, const Rule& y)
+detail::operator==(const std::string& x, const Rule& y)
 {
     return y.name() == x;
 }
 
 bool
-operator<(const std::string& x, const Rule& y)
+detail::operator<(const std::string& x, const Rule& y)
 {
     return x < y.name();
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Rule& r)
+detail::operator<<(std::ostream& os, const Rule& r)
 {
     using namespace date;
     using namespace std::chrono;
@@ -1090,13 +1289,13 @@ operator<<(std::ostream& os, const Rule& r)
 }
 
 date::day
-Rule::day() const
+detail::Rule::day() const
 {
     return starting_at_.day();
 }
 
 date::month
-Rule::month() const
+detail::Rule::month() const
 {
     return starting_at_.month();
 }
@@ -1115,7 +1314,7 @@ struct find_rule_by_name
 };
 
 bool
-Rule::overlaps(const Rule& x, const Rule& y)
+detail::Rule::overlaps(const Rule& x, const Rule& y)
 {
     // assume x.starting_year_ <= y.starting_year_;
     if (!(x.starting_year_ <= y.starting_year_))
@@ -1130,7 +1329,7 @@ Rule::overlaps(const Rule& x, const Rule& y)
 }
 
 void
-Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t& e)
+detail::Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t& e)
 {
     using namespace date;
     using difference_type = std::vector<Rule>::iterator::difference_type;
@@ -1199,7 +1398,7 @@ Rule::split(std::vector<Rule>& rules, std::size_t i, std::size_t k, std::size_t&
 }
 
 void
-Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
+detail::Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
 {
     using difference_type = std::vector<Rule>::iterator::difference_type;
     auto j = i;
@@ -1223,7 +1422,7 @@ Rule::split_overlaps(std::vector<Rule>& rules, std::size_t i, std::size_t& e)
 }
 
 void
-Rule::split_overlaps(std::vector<Rule>& rules)
+detail::Rule::split_overlaps(std::vector<Rule>& rules)
 {
     using difference_type = std::vector<Rule>::iterator::difference_type;
     for (std::size_t i = 0; i < rules.size();)
@@ -1262,7 +1461,7 @@ Rule::split_overlaps(std::vector<Rule>& rules)
 
 // time_zone
 
-time_zone::zonelet::~zonelet()
+detail::zonelet::~zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     using minutes = std::chrono::minutes;
@@ -1274,14 +1473,14 @@ time_zone::zonelet::~zonelet()
 #endif
 }
 
-time_zone::zonelet::zonelet()
+detail::zonelet::zonelet()
 {
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     ::new(&u.rule_) std::string();
 #endif
 }
 
-time_zone::zonelet::zonelet(const zonelet& i)
+detail::zonelet::zonelet(const zonelet& i)
     : gmtoff_(i.gmtoff_)
     , tag_(i.tag_)
     , format_(i.format_)
@@ -1914,7 +2113,7 @@ operator<<(std::ostream& os, const time_zone& z)
             os << ' ';
         os << make_time(s.gmtoff_) << "   ";
         os.width(15);
-        if (s.tag_ != time_zone::zonelet::has_save)
+        if (s.tag_ != zonelet::has_save)
             os << s.u.rule_;
         else
         {
@@ -1988,6 +2187,17 @@ operator<<(std::ostream& os, const leap& x)
     return os << x.date_ << "  +";
 }
 
+static
+bool
+file_exists(const std::string& filename)
+{
+#ifdef _WIN32
+    return ::_access(filename.c_str(), 0) == 0;
+#else
+    return ::access(filename.c_str(), F_OK) == 0;
+#endif
+}
+
 #if HAS_REMOTE_API
 
 // CURL tools
@@ -2008,41 +2218,83 @@ std::unique_ptr<CURL, decltype(curl_delete)>
 curl_init()
 {
     static const auto curl_is_now_initiailized = curl_global();
+    (void)curl_is_now_initiailized;
     return std::unique_ptr<CURL, decltype(curl_delete)>{::curl_easy_init(), curl_delete};
+}
+
+static
+bool
+download_to_string(const std::string& url, std::string& str)
+{
+    str.clear();
+    auto curl = curl_init();
+    if (!curl)
+        return false;
+    std::string version;
+    curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+    curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
+                                      void* userp) -> std::size_t
+    {
+        auto& str = *static_cast<std::string*>(userp);
+        auto realsize = size * nmemb;
+        str.append(contents, realsize);
+        return realsize;
+    };
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
+    auto res = curl_easy_perform(curl.get());
+    return (res == CURLE_OK);
+}
+
+namespace
+{
+    enum class download_file_options { binary, text };
+}
+
+static
+bool
+download_to_file(const std::string& url, const std::string& local_filename,
+                 download_file_options opts)
+{
+    auto curl = curl_init();
+    if (!curl)
+        return false;
+    curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+    curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
+                                      void* userp) -> std::size_t
+    {
+        auto& of = *static_cast<std::ofstream*>(userp);
+        auto realsize = size * nmemb;
+        of.write(contents, realsize);
+        return realsize;
+    };
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
+    decltype(curl_easy_perform(curl.get())) res;
+    {
+        std::ofstream of(local_filename,
+                         opts == download_file_options::binary ?
+                             std::ofstream::out | std::ofstream::binary :
+                             std::ofstream::out);
+        of.exceptions(std::ios::badbit);
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
+        res = curl_easy_perform(curl.get());
+    }
+    return res == CURLE_OK;
 }
 
 std::string
 remote_version()
 {
     std::string version;
-    auto curl = curl_init();
-    if (curl != nullptr)
+    std::string str;
+    if (download_to_string("http://www.iana.org/time-zones", str))
     {
-        curl_easy_setopt(curl.get(), CURLOPT_URL, "http://www.iana.org/time-zones");
-        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
-                                             std::size_t nmemb, void* userp);
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-            static_cast<curl_callback>(
-            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
-                -> std::size_t
-            {
-                auto& str = *static_cast<std::string*>(userp);
-                auto realsize = size * nmemb;
-                auto data = static_cast<const char*>(contents);
-                str.append(data, realsize);
-                return realsize;
-            }));
-        std::string str;
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
-        auto res = curl_easy_perform(curl.get());
-        if (res == CURLE_OK)
-        {
-            CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
-            CONSTDATA auto db_size = sizeof(db) - 1;
-            auto p = str.find(db, 0, db_size);
-            if (p != std::string::npos && p + (db_size + 5) <= str.size())
-                version = str.substr(p + db_size, 5);
-        }
+        CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
+        CONSTDATA auto db_size = sizeof(db) - 1;
+        auto p = str.find(db, 0, db_size);
+        const int ver_str_len = 5;
+        if (p != std::string::npos && p + (db_size + ver_str_len) <= str.size())
+            version = str.substr(p + db_size, ver_str_len);
     }
     return version;
 }
@@ -2051,67 +2303,435 @@ bool
 remote_download(const std::string& version)
 {
     assert(!version.empty());
-    auto curl = curl_init();
-    if (curl != nullptr)
+    auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version +
+               ".tar.gz";
+    bool result = download_to_file(url, get_download_gz_file(version),
+                                   download_file_options::binary);
+#ifdef TIMEZONE_MAPPING
+    if (result)
     {
-        auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" +
-                   version + ".tar.gz";
-        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
-        using curl_callback = std::size_t(*)(void* contents, std::size_t size,
-                                             std::size_t nmemb, void* userp);
-        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-            static_cast<curl_callback>(
-            [](void* contents, std::size_t size, std::size_t nmemb, void* userp)
-                -> std::size_t
-            {
-                auto& of = *static_cast<std::ofstream*>(userp);
-                auto realsize = size * nmemb;
-                auto data = static_cast<const char*>(contents);
-                of.write(data, realsize);
-                return realsize;
-            }));
-        auto tarfile = install + version + ".tar.gz";
-        decltype(curl_easy_perform(curl.get())) res;
+        auto mapping_file = get_download_mapping_file(version);
+        result = download_to_file("http://unicode.org/repos/cldr/trunk/common/"
+                                  "supplemental/windowsZones.xml",
+            mapping_file, download_file_options::text);
+    }
+#endif
+    return result;
+}
+
+// TODO! Using system() create a process and a console window.
+// This is useful to see what errors may occur but is slow and distracting.
+// Consider implementing this functionality more directly, such as
+// using _mkdir and CreateProcess etc.
+// But use the current means now as matches Unix implementations and while
+// in proof of concept / testing phase.
+// TODO! Use <filesystem> eventually.
+static
+bool
+remove_folder_and_subfolders(const std::string& folder)
+{
+#ifdef _WIN32
+#  if USE_SHELL_API
+    // Delete the folder contents by deleting the folder.
+    std::string cmd = "rd /s /q \"";
+    cmd += folder;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#  else  // !USE_SHELL_API
+    // Create a buffer containing the path to delete. It must be terminated
+    // by two nuls. Who designs these API's...
+    std::vector<char> from;
+    from.assign(folder.begin(), folder.end());
+    from.push_back('\0');
+    from.push_back('\0');
+    SHFILEOPSTRUCT fo{}; // Zero initialize.
+    fo.wFunc = FO_DELETE;
+    fo.pFrom = from.data();
+    fo.fFlags = FOF_NO_UI;
+    int ret = SHFileOperation(&fo);
+    if (ret == 0 && !fo.fAnyOperationsAborted)
+        return true;
+    return false;
+#  endif  // !USE_SHELL_API
+#else   // !WIN32
+#  if USE_SHELL_API
+    return std::system(("rm -R " + folder).c_str()) == EXIT_SUCCESS;
+#  else // !USE_SHELL_API
+    struct dir_deleter {
+        dir_deleter() {}
+        void operator()(DIR* d) const
         {
-            std::ofstream of(tarfile);
-            curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
-            res = curl_easy_perform(curl.get());
+            if (d != nullptr)
+            {
+                int result = closedir(d);
+                assert(result == 0);
+            }
         }
-        return res == CURLE_OK;
+    };
+    using closedir_ptr = std::unique_ptr<DIR, dir_deleter>;
+
+    std::string filename;
+    struct stat statbuf;
+    std::size_t folder_len = folder.length();
+    struct dirent* p = nullptr;
+
+    closedir_ptr d(opendir(folder.c_str()));
+    bool r = d.get() != nullptr;
+    while (r && (p=readdir(d.get())) != nullptr)
+    {
+        if (strcmp(p->d_name, ".") == 0 || strcmp(p->d_name, "..") == 0)
+           continue;
+
+        // + 2 for path delimiter and nul terminator.
+        std::size_t buf_len = folder_len + strlen(p->d_name) + 2;
+        filename.resize(buf_len);
+        std::size_t path_len = static_cast<std::size_t>(
+            snprintf(&filename[0], buf_len, "%s/%s", folder.c_str(), p->d_name));
+        assert(path_len == buf_len - 1);
+        filename.resize(path_len);
+
+        if (stat(filename.c_str(), &statbuf) == 0)
+            r = S_ISDIR(statbuf.st_mode)
+              ? remove_folder_and_subfolders(filename)
+              : unlink(filename.c_str()) == 0;
+    }
+    d.reset();
+
+    if (r)
+        r = rmdir(folder.c_str()) == 0;
+
+    return r;
+#  endif // !USE_SHELL_API
+#endif  // !WIN32
+}
+
+static
+bool
+make_directory(const std::string& folder)
+{
+#ifdef _WIN32
+#  if USE_SHELL_API
+    // Re-create the folder.
+    std::string cmd = "mkdir \"";
+    cmd += folder;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#  else  // !USE_SHELL_API
+    return _mkdir(folder.c_str()) == 0;
+#  endif // !USE_SHELL_API
+#else // !WIN32
+#  if USE_SHELL_API
+    return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
+#  else // !USE_SHELL_API
+    return mkdir(folder.c_str(), 0777) == 0;
+#  endif // !USE_SHELL_API
+#endif
+}
+
+static
+bool
+delete_file(const std::string& file)
+{
+#ifdef _WIN32
+#  if USE_SHELL_API
+    std::string cmd = "del \"";
+    cmd += file;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == 0;
+#  else  // !USE_SHELL_API
+    return _unlink(file.c_str()) == 0;
+#  endif // !USE_SHELL_API
+#else  // !WIN32
+#  if USE_SHELL_API
+    return std::system(("rm " + file).c_str()) == EXIT_SUCCESS;
+#  else // !USE_SHELL_API
+    return unlink(file.c_str()) == 0;
+#  endif // !USE_SHELL_API
+#endif // !WIN32
+}
+
+#ifdef TIMEZONE_MAPPING
+
+static
+bool
+move_file(const std::string& from, const std::string& to)
+{
+#ifdef _WIN32
+#  if USE_SHELL_API
+    std::string cmd = "move \"";
+    cmd += from;
+    cmd += "\" \"";
+    cmd += to;
+    cmd += '\"';
+    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+#  else  // !USE_SHELL_API
+    return !!::MoveFile(from.c_str(), to.c_str());
+#  endif // !USE_SHELL_API
+#else  // !WIN32
+#  if USE_SHELL_API
+    return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
+#  else
+    return rename(from, to) == 0);
+#  endif
+#endif // !WIN32
+}
+
+#endif  // TIMEZONE_MAPPING
+
+#ifdef _WIN32
+
+// Note folder can and usually does contain spaces.
+static
+std::string
+get_unzip_program()
+{
+    std::string path;
+
+    // 7-Zip appears to note its location in the registry.
+    // If that doesn't work, fall through and take a guess, but it will likely be wrong.
+    HKEY hKey = nullptr;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\7-Zip", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        char value_buffer[MAX_PATH + 1]; // fyi 260 at time of writing.
+        // in/out parameter. Documentation say that size is a count of bytes not chars.
+        DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
+        DWORD tzi_type = REG_SZ;
+        // Testing shows Path key value is "C:\Program Files\7-Zip\" i.e. always with trailing \.
+        bool got_value = (RegQueryValueExA(hKey, "Path", nullptr, &tzi_type,
+            reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS);
+        RegCloseKey(hKey); // Close now incase of throw later.
+        if (got_value)
+        {
+            // Function does not guarantee to null terminate.
+            value_buffer[size / sizeof(value_buffer[0])] = '\0';
+            path = value_buffer;
+            if (!path.empty())
+            {
+                path += "7z.exe";
+                return path;
+            }
+        }
+    }
+    path += get_program_folder();
+    path += folder_delimiter;
+    path += "7-Zip\\7z.exe";
+    return path;
+}
+
+#if !USE_SHELL_API
+static
+int
+run_program(const std::string& command)
+{
+    STARTUPINFO si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+
+    // Allegedly CreateProcess overwrites the command line. Ugh.
+    std::string mutable_command(command);
+    if (CreateProcess(nullptr, &mutable_command[0],
+        nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD exit_code;
+        bool got_exit_code = !!GetExitCodeProcess(pi.hProcess, &exit_code);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        // Not 100% sure about this still active thing is correct,
+        // but I'm going with it because I *think* WaitForSingleObject might
+        // return in some cases without INFINITE-ly waiting.
+        // But why/wouldn't GetExitCodeProcess return false in that case?
+        if (got_exit_code && exit_code != STILL_ACTIVE)
+            return static_cast<int>(exit_code);
+    }
+    return EXIT_FAILURE;
+}
+#endif // !USE_SHELL_API
+
+static
+std::string
+get_download_tar_file(const std::string& version)
+{
+    auto file = install;
+    file += folder_delimiter;
+    file += "tzdata";
+    file += version;
+    file += ".tar";
+    return file;
+}
+
+static
+bool
+extract_gz_file(const std::string& version, const std::string& gz_file,
+                const std::string& dest_folder)
+{
+    auto unzip_prog = get_unzip_program();
+    bool unzip_result = false;
+    // Use the unzip program to extract the tar file from the archive.
+
+    // Aim to create a string like:
+    // "C:\Program Files\7-Zip\7z.exe" x "C:\Users\SomeUser\Downloads\tzdata2016d.tar.gz"
+    //     -o"C:\Users\SomeUser\Downloads\tzdata"
+    std::string cmd;
+    cmd = '\"';
+    cmd += unzip_prog;
+    cmd += "\" x \"";
+    cmd += gz_file;
+    cmd += "\" -o\"";
+    cmd += dest_folder;
+    cmd += '\"';
+
+#if USE_SHELL_API
+    // When using shelling out with std::system() extra quotes are required around the
+    // whole command. It's weird but neccessary it seems, see:
+    // http://stackoverflow.com/q/27975969/576911
+
+    cmd = "\"" + cmd + "\"";
+    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+        unzip_result = true;
+#else  // !USE_SHELL_API
+    if (run_program(cmd) == EXIT_SUCCESS)
+        unzip_result = true;
+#endif // !USE_SHELL_API
+    if (unzip_result)
+        delete_file(gz_file);
+
+    // Use the unzip program extract the data from the tar file that was
+    // just extracted from the archive.
+    auto tar_file = get_download_tar_file(version);
+    cmd = '\"';
+    cmd += unzip_prog;
+    cmd += "\" x \"";
+    cmd += tar_file;
+    cmd += "\" -o\"";
+    cmd += install;
+    cmd += '\"';
+#if USE_SHELL_API
+    cmd = "\"" + cmd + "\"";
+    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+        unzip_result = true;
+#else  // !USE_SHELL_API
+    if (run_program(cmd) == EXIT_SUCCESS)
+        unzip_result = true;
+#endif // !USE_SHELL_API
+
+    if (unzip_result)
+        delete_file(tar_file);
+
+    return unzip_result;
+}
+
+#else  // !_WIN32
+
+#if !USE_SHELL_API
+static
+int
+run_program(const char* prog, const char*const args[])
+{
+    pid_t pid = fork();
+    if (pid == -1) // Child failed to start.
+        return EXIT_FAILURE;
+
+    if (pid != 0)
+    {
+        // We are in the parent. Child started. Wait for it.
+        pid_t ret;
+        int status;
+        while ((ret = waitpid(pid, &status, 0)) == -1)
+        {
+            if (errno != EINTR)
+                break;
+        }
+        if (ret != -1)
+        {
+            if (WIFEXITED(status))
+                return WEXITSTATUS(status);
+        }
+        printf("Child issues!\n");
+
+        return EXIT_FAILURE; // Not sure what status of child is.
+    }
+    else // We are in the child process. Start the program the parent wants to run.
+    {
+
+        if (execv(prog, const_cast<char**>(args)) == -1) // Does not return.
+        {
+            perror("unreachable 0\n");
+            _Exit(127);
+        }
+        printf("unreachable 2\n");
+    }
+    printf("unreachable 2\n");
+    // Unreachable.
+    assert(false);
+    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
+}
+#endif // !USE_SHELL_API
+
+static
+bool
+extract_gz_file(const std::string&, const std::string& gz_file, const std::string&)
+{
+#if USE_SHELL_API
+    bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS;
+#else  // !USE_SHELL_API
+    const char prog[] = {"/usr/bin/tar"};
+    const char*const args[] =
+    {
+        prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
+    };
+    bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
+#endif // !USE_SHELL_API
+    if (unzipped)
+    {
+        delete_file(gz_file);
+        return true;
     }
     return false;
 }
+
+#endif // !_WIN32
 
 bool
 remote_install(const std::string& version)
 {
     auto success = false;
     assert(!version.empty());
-    auto tarfile = install + version + ".tar.gz";
-    if (file_exists(tarfile))
+
+    auto gz_file = get_download_gz_file(version);
+    if (file_exists(gz_file))
     {
         if (file_exists(install))
-            std::system(("rm -R " + install).c_str());
-        if (std::system(("mkdir " + install + " && "
-                 "tar -xzf " + tarfile + " -C " + install).c_str()) == 0)
-            success = true;
-        std::system(("rm " + tarfile).c_str());
+            remove_folder_and_subfolders(install);
+        if (make_directory(install))
+        {
+            if (extract_gz_file(version, gz_file, install))
+                success = true;
+#ifdef TIMEZONE_MAPPING
+            auto mapping_file_source = get_download_mapping_file(version);
+            auto mapping_file_dest = install;
+            mapping_file_dest += folder_delimiter;
+            mapping_file_dest += "windowsZones.xml";
+            if (!move_file(mapping_file_source, mapping_file_dest))
+                success = false;
+#endif
+        }
     }
     return success;
 }
-
 #endif  // HAS_REMOTE_API
 
 static
 std::string
 get_version(const std::string& path)
 {
-    std::ifstream infile(path + "Makefile");
+    std::ifstream infile(path + "NEWS");
     std::string version;
     while (infile)
     {
         infile >> version;
-        if (version == "VERSION=")
+        if (version == "Release")
         {
             infile >> version;
             return version;
@@ -2187,7 +2807,17 @@ init_tzdb()
     {
         auto rv = remote_version();
         if (!rv.empty() && remote_download(rv))
-            remote_install(rv);
+        {
+            if (!remote_install(rv))
+            {
+                std::string msg = "Timezone database version \"";
+                msg += rv;
+                msg += "\" did not install correctly to \"";
+                msg += install;
+                msg += "\"";
+                throw std::runtime_error(msg);
+            }
+        }
         if (!file_exists(install))
         {
             std::string msg = "Timezone database not found at \"";
@@ -2234,11 +2864,12 @@ init_tzdb()
     }
 	load_tzdb(db, lines);
 
-#if TIMEZONE_MAPPING
-    std::string mapping_file = path + "TimeZoneMappings.csv";
-    db.mappings = load_timezone_mappings_from_csv_file(mapping_file);
+#ifdef TIMEZONE_MAPPING
+    std::string mapping_file = path + "windowsZones.xml";
+    db.mappings = load_timezone_mappings_from_xml_file(mapping_file);
+    sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
-#endif
+#endif // TIMEZONE_MAPPING
 
     return db;
 }
@@ -2329,25 +2960,6 @@ locate_zone(const std::string& tz_name)
     }
     return &*zi;
 }
-
-#ifdef TZ_TEST
-#ifdef _WIN32
-const time_zone*
-locate_native_zone(const std::string& native_tz_name)
-{
-    std::string standard_tz_name;
-    if (!native_to_standard_timezone_name(native_tz_name, standard_tz_name))
-    {
-        std::string msg;
-        msg = "locate_native_zone() failed: A mapping from the Windows Time Zone id \"";
-        msg += native_tz_name;
-        msg += "\" was not found in the time zone mapping database.";
-        throw std::runtime_error(msg);
-    }
-    return locate_zone(standard_tz_name);
-}
-#endif
-#endif
 
 std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db)
@@ -2440,7 +3052,7 @@ operator<<(std::ostream& os, const local_info& r)
 const time_zone*
 current_zone()
 {
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
     TIME_ZONE_INFORMATION tzi{};
     DWORD tz_result = ::GetTimeZoneInformation(&tzi);
     if (tz_result == TIME_ZONE_ID_INVALID)
@@ -2470,31 +3082,24 @@ current_zone()
         throw std::runtime_error(msg);
     }
     return date::locate_zone(standard_tzid);
-#else
-    // Currently Win32 requires mapping for this function to work.
+#else  // !TIMEZONE_MAPPING
+    // Currently Win32 requires iana <--> windows tz name mappings
+    // for this function to work.
+    // TODO! we should really support TIMEZONE_MAPPINGS=0 on Windows,
+    // And in this mode we should read the current iana timezone from a file.
+    // This would allow the TZ library do be used by apps that don't care
+    // about Windows standard names just iana names.
+    // This would allow the xml dependency to be dropped and none of
+    // the name mapping functions would be needed.
     throw std::runtime_error("current_zone not implemented.");
-#endif
+#endif // !TIMEZONE_MAPPING
 }
 
-#else // ! WIN32
+#else // !WIN32
 
 const time_zone*
 current_zone()
 {
-    // On some versions of some linux distro's (e.g. Ubuntu),
-    // the current timezone might be in the first line of
-    // the /etc/timezone file. So we check that.
-#if __linux
-    std::ifstream timezone_file("/etc/timezone");
-    if (timezone_file.is_open())
-    {
-        std::string line;
-        std::getline(timezone_file, line);
-        if (!line.empty())
-            return locate_zone(line);
-        // Fall through to try other means.
-    }
-#endif
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
     // containing time zone details or a symlink to such a file.
@@ -2510,26 +3115,76 @@ current_zone()
     // "../usr/share/zoneinfo/America/Los_Angeles".
     struct stat sb;
     CONSTDATA auto timezone = "/etc/localtime";
-    if (lstat(timezone, &sb) == -1 || sb.st_size == 0)
-        throw std::runtime_error("Could not get lstat on /etc/localtime");
-    std::string result(sb.st_size, '\0');
-    while (true)
+    if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
+        std::string result(sb.st_size, '\0');
         auto sz = readlink(timezone, &result.front(), result.size());
         if (sz == -1)
             throw std::runtime_error("readlink failure");
-        auto tmp = result.size();
         result.resize(sz);
-        if (sz <= tmp)
-            break;
+        const char zonepath[] = "/usr/share/zoneinfo/";
+        const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const std::size_t pos = result.find(zonepath);
+        if (pos != result.npos)
+            result.erase(0, zonepath_len+pos);
+        return locate_zone(result);
     }
-    const char zonepath[] = "/usr/share/zoneinfo/";
-    const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-    const size_t pos = result.find(zonepath);
-    if (pos != result.npos)
-        result.erase(0, zonepath_len+pos);
-    return locate_zone(result);
+    {
+    // On some versions of some linux distro's (e.g. Ubuntu),
+    // the current timezone might be in the first line of
+    // the /etc/timezone file.
+        std::ifstream timezone_file("/etc/timezone");
+        if (timezone_file.is_open())
+        {
+            std::string result;
+            std::getline(timezone_file, result);
+            if (!result.empty())
+                return locate_zone(result);
+        }
+        // Fall through to try other means.
+    }
+    {
+    // On some versions of some linux distro's (e.g. Red Hat),
+    // the current timezone might be in the first line of
+    // the /etc/sysconfig/clock file as:
+    // ZONE="US/Eastern"
+        std::ifstream timezone_file("/etc/sysconfig/clock");
+        std::string result;
+        while (timezone_file)
+        {
+            std::getline(timezone_file, result);
+            auto p = result.find("ZONE=\"");
+            if (p != std::string::npos)
+            {
+                result.erase(p, p+6);
+                result.erase(result.rfind('"'));
+                return locate_zone(result);
+            }
+        }
+        // Fall through to try other means.
+    }
+    throw std::runtime_error("Could not get current timezone");
 }
-#endif
+
+#endif // !WIN32
+
+#if defined(TZ_TEST) && defined(TIMEZONE_MAPPING)
+
+const time_zone*
+locate_native_zone(const std::string& native_tz_name)
+{
+    std::string standard_tz_name;
+    if (!native_to_standard_timezone_name(native_tz_name, standard_tz_name))
+    {
+        std::string msg;
+        msg = "locate_native_zone() failed: A mapping from the native/Windows Time Zone id \"";
+        msg += native_tz_name;
+        msg += "\" was not found in the time zone mapping database.";
+        throw std::runtime_error(msg);
+    }
+    return locate_zone(standard_tz_name);
+}
+
+#endif  // TZ_TEST && TIMEZONE_MAPPING
 
 }  // namespace date

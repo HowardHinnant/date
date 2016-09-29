@@ -29,29 +29,25 @@
 
 // Get more recent database at http://www.iana.org/time-zones
 
-// Questions:
-// 1.  Reload database.
-// 4.  Is the utc to sys renaming complete?  Was it done correctly?
-
-/*
-The notion of "current timezone" is something the operating system is expected
-to "just know". How it knows this is system specific. It's often a value
-set by the user at OS intallation time and recorded by the OS somewhere.
-On Linux and Mac systems the current timezone name is obtained by looking at
-the name or contents of a particular file on disk.
-On Windows the current timzeone name comes from the registry.
-In either method, there is no guarantee that the "native" current timezone name obtained
-will match any of the "Standard" names in this library's "database".
-On Linux, the names usually do seem to match so mapping functions to map from
-native to "Standard" are typically not required.
-On Windows, the names are never "Standard" so mapping is always required.
-Technically any OS may use the mapping process but currently only Windows does use it.
-*/
+// The notion of "current timezone" is something the operating system is expected to "just
+// know". How it knows this is system specific. It's often a value set by the user at OS
+// intallation time and recorded by the OS somewhere. On Linux and Mac systems the current
+// timezone name is obtained by looking at the name or contents of a particular file on
+// disk. On Windows the current timzeone name comes from the registry. In either method,
+// there is no guarantee that the "native" current timezone name obtained will match any
+// of the "Standard" names in this library's "database". On Linux, the names usually do
+// seem to match so mapping functions to map from native to "Standard" are typically not
+// required. On Windows, the names are never "Standard" so mapping is always required.
+// Technically any OS may use the mapping process but currently only Windows does use it.
 
 #ifdef _WIN32
-#ifndef TIMEZONE_MAPPING
-#define TIMEZONE_MAPPING 1
-#endif
+#  ifndef TIMEZONE_MAPPING
+#    define TIMEZONE_MAPPING 1
+#  endif
+#else
+#  ifdef TIMEZONE_MAPPING
+#    error "Timezone mapping is not required or not implemented for this platform."
+#  endif
 #endif
 
 #ifndef LAZY_INIT
@@ -63,10 +59,10 @@ Technically any OS may use the mapping process but currently only Windows does u
 #endif
 
 #ifndef HAS_REMOTE_API
-#  ifndef _MSC_VER
-#    define HAS_REMOTE_API 1
-#  else
+#  ifdef _WIN32
 #    define HAS_REMOTE_API 0
+#  else
+#    define HAS_REMOTE_API 1
 #  endif
 #endif
 
@@ -77,29 +73,32 @@ Technically any OS may use the mapping process but currently only Windows does u
 static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
               "AUTO_DOWNLOAD can not be turned on without HAS_REMOTE_API");
 
+#ifndef USE_SHELL_API
+#  define USE_SHELL_API 0
+#endif
+
 #include "date.h"
+
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#include "tz_private.h"
+#endif
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cstdint>
 #include <istream>
 #include <locale>
+#if LAZY_INIT
+#  include <memory>
+#  include <mutex>
+#endif
 #include <ostream>
-#include <ratio>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <mutex>
-#include <memory>
-#if LAZY_INIT
-#  include <memory>
-#  include <mutex>
-#endif
-#include <time.h>
 
 namespace date
 {
@@ -206,7 +205,7 @@ ambiguous_local_time::make_msg(local_time<Duration> tp,
     return os.str();
 }
 
-class Rule;
+namespace detail { class Rule; }
 
 struct sys_info
 {
@@ -284,6 +283,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration1>& t);
 
 private:
+    template <class D> friend class zoned_time;
 
     static_assert(std::is_convertible<std::chrono::seconds, Duration>::value,
                   "zoned_time must have a precision of seconds or finer");
@@ -307,13 +307,16 @@ operator!=(const zoned_time<Duration1>& x, const zoned_time<Duration2>& y)
     return !(x == y);
 }
 
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+namespace detail { struct zonelet; }
+#endif
+
 class time_zone
 {
 private:
-    struct zonelet;
 
     std::string          name_;
-    std::vector<zonelet> zonelets_;
+    std::vector<detail::zonelet> zonelets_;
 #if LAZY_INIT
     std::unique_ptr<std::once_flag> adjusted_;
 #endif
@@ -351,7 +354,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
     void add(const std::string& s);
-    void adjust_infos(const std::vector<Rule>& rules);
+    void adjust_infos(const std::vector<detail::Rule>& rules);
 
 private:
     sys_info   get_info_impl(sys_seconds tp) const;
@@ -465,7 +468,7 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose z, std::false_type) const
     }
     else if (i.result == local_info::ambiguous)
     {
-        if (z == choose::earliest)
+        if (z == choose::latest)
             return sys_time<Duration>{tp.time_since_epoch()} - i.second.offset;
     }
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
@@ -634,7 +637,7 @@ operator>=(const sys_time<Duration>& x, const leap& y)
     return !(x < y);
 }
 
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
 
 namespace detail
 {
@@ -685,12 +688,12 @@ struct timezone_info
 
 struct TZ_DB
 {
-    std::string            version;
-    std::vector<time_zone> zones;
-    std::vector<link>      links;
-    std::vector<leap>      leaps;
-    std::vector<Rule>      rules;
-#if TIMEZONE_MAPPING
+    std::string               version;
+    std::vector<time_zone>    zones;
+    std::vector<link>         links;
+    std::vector<leap>         leaps;
+    std::vector<detail::Rule> rules;
+#ifdef TIMEZONE_MAPPING
     // TODO! These need some protection.
     std::vector<detail::timezone_mapping> mappings;
     std::vector<detail::timezone_info> native_zones;
@@ -708,7 +711,7 @@ struct TZ_DB
         links(std::move(src.links)),
         leaps(std::move(src.leaps)),
         rules(std::move(src.rules))
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
         ,
         mappings(std::move(src.mappings)),
         native_zones(std::move(src.native_zones))
@@ -722,7 +725,7 @@ struct TZ_DB
         links = std::move(src.links);
         leaps = std::move(src.leaps);
         rules = std::move(src.rules);
-#if TIMEZONE_MAPPING
+#ifdef TIMEZONE_MAPPING
         mappings = std::move(src.mappings);
         native_zones = std::move(src.native_zones);
 #endif
@@ -746,10 +749,10 @@ bool        remote_install(const std::string& version);
 
 const time_zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST
-#ifdef _WIN32
+#  if _WIN32
 const time_zone* locate_native_zone(const std::string& native_tz_name);
-#endif
-#endif
+#  endif // _WIN32
+#endif // TZ_TEST
 const time_zone* current_zone();
 
 // zoned_time
@@ -1137,7 +1140,7 @@ public:
     using time_point                = std::chrono::time_point<tai_clock>;
     static const bool is_steady     = true;
 
-    static time_point now() noexcept;
+    static time_point now() NOEXCEPT;
 
     template <class Duration>
         static
@@ -1163,7 +1166,7 @@ tai_clock::utc_to_tai(utc_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return tai_time<duration>{t.time_since_epoch()} + 
-            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + seconds{10});
+            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
 }
 
 template <class Duration>
@@ -1173,7 +1176,7 @@ tai_clock::tai_to_utc(tai_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} - 
-            (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1} + seconds{10});
+            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
 }
 
 template <class Duration>
@@ -1194,7 +1197,7 @@ to_tai_time(utc_time<Duration> t)
 
 inline
 tai_clock::time_point
-tai_clock::now() noexcept
+tai_clock::now() NOEXCEPT
 {
     using namespace std::chrono;
     return to_tai_time(utc_clock::now());
@@ -1207,7 +1210,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto tp = sys_time<duration>{t.time_since_epoch()} -
-                (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1});
+                (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1});
     return os << tp;
 }
 
@@ -1222,7 +1225,7 @@ public:
     using time_point                = std::chrono::time_point<gps_clock>;
     static const bool is_steady     = true;
 
-    static time_point now() noexcept;
+    static time_point now() NOEXCEPT;
 
     template <class Duration>
         static
@@ -1248,7 +1251,7 @@ gps_clock::utc_to_gps(utc_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + seconds{9});
+            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
 }
 
 template <class Duration>
@@ -1258,7 +1261,7 @@ gps_clock::gps_to_utc(gps_time<Duration> t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} +
-            (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1} + seconds{9});
+            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
 }
 
 template <class Duration>
@@ -1279,7 +1282,7 @@ to_gps_time(utc_time<Duration> t)
 
 inline
 gps_clock::time_point
-gps_clock::now() noexcept
+gps_clock::now() NOEXCEPT
 {
     using namespace std::chrono;
     return to_gps_time(utc_clock::now());
@@ -1292,7 +1295,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto tp = sys_time<duration>{t.time_since_epoch()} +
-                (sys_days{1980_y/jan/sun[1]} - sys_days{1970_y/jan/1});
+                (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1});
     return os << tp;
 }
 
@@ -1346,165 +1349,25 @@ to_gps_time(tai_time<Duration> t)
 
 // format
 
-namespace detail
-{
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
-       local_time<Duration> tp, const time_zone* zone = nullptr)
-{
-    // Handle these specially
-    // %S  append fractional seconds if tp has precision finer than seconds
-    // %T  append fractional seconds if tp has precision finer than seconds
-    // %z  replace with offset from zone on +/-hhmm format
-    // %Ez, %Oz replace with offset from zone on +/-hh:mm format
-    // %Z  replace with abbreviation from zone
-
-    using namespace std;
-    using namespace std::chrono;
-    auto command = false;
-    auto modified = false;
-    for (std::size_t i = 0; i < format.size(); ++i)
-    {
-        switch (format[i])
-        {
-        case '%':
-            command = true;
-            modified = false;
-            break;
-        case 'O':
-        case 'E':
-            modified = true;
-            break;
-        case 'S':
-        case 'T':
-            if (command && !modified && ratio_less<typename Duration::period, ratio<1>>::value)
-            {
-                basic_ostringstream<CharT, Traits> os;
-                os.imbue(loc);
-                os << make_time(tp - floor<seconds>(tp));
-                auto s = os.str();
-                s.erase(0, 8);
-                format.insert(i+1, s);
-                i += s.size() - 1;
-            }
-            command = false;
-            modified = false;
-            break;
-        case 'z':
-            if (command)
-            {
-                if (zone == nullptr)
-                    throw std::runtime_error("Can not format local_time with %z");
-                else
-                {
-                    auto info = zone->get_info(tp).first;
-                    auto offset = duration_cast<minutes>(info.offset);
-                    basic_ostringstream<CharT, Traits> os;
-                    if (offset >= minutes{0})
-                        os << '+';
-                    os << make_time(offset);
-                    auto s = os.str();
-                    if (!modified)
-                        s.erase(s.find(':'), 1);
-                    format.replace(i - 1 - modified, 2 + modified, s);
-                    i += s.size() - 1;
-                }
-            }
-            command = false;
-            modified = false;
-            break;
-        case 'Z':
-            if (command && !modified)
-            {
-                if (zone == nullptr)
-                    throw std::runtime_error("Can not format local_time with %z");
-                else
-                {
-                    auto info = zone->get_info(tp).first;
-                    format.replace(i, 2, std::basic_string<CharT, Traits>
-                                            (info.abbrev.begin(), info.abbrev.end()));
-                    i += info.abbrev.size() - 1;
-                }
-            }
-            command = false;
-            modified = false;
-            break;
-        default:
-            command = false;
-            modified = false;
-            break;
-        }
-    }
-    auto& f = use_facet<time_put<CharT>>(loc);
-    basic_ostringstream<CharT, Traits> os;
-    auto tt = system_clock::to_time_t(sys_time<Duration>{tp.time_since_epoch()});
-    std::tm tm{};
-#ifndef _MSC_VER
-    gmtime_r(&tt, &tm);
-#else
-    gmtime_s(&tm, &tt);
-#endif
-    f.put(os, os, os.fill(), &tm, format.data(), format.data() + format.size());
-    return os.str();
-}
-
-}  // namespace detail
-
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
-       local_time<Duration> tp)
-{
-    return detail::format(loc, std::move(format), tp);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, local_time<Duration> tp)
-{
-    return detail::format(std::locale{}, std::move(format), tp);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
+format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
        const zoned_time<Duration>& tp)
 {
-    return detail::format(loc, std::move(format), tp.get_local_time(),
-                          tp.get_time_zone());
+    auto const info = tp.get_info();
+    return detail::format(loc, std::move(fmt), tp.get_local_time(),
+                          &info.abbrev, &info.offset);
 }
 
 template <class CharT, class Traits, class Duration>
 inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, const zoned_time<Duration>& tp)
+format(std::basic_string<CharT, Traits> fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(std::locale{}, std::move(format), tp.get_local_time(),
-                          tp.get_time_zone());
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> format,
-       sys_time<Duration> tp)
-{
-    return detail::format(loc, std::move(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> format, sys_time<Duration> tp)
-{
-    return detail::format(std::locale{}, std::move(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
+    auto const info = tp.get_info();
+    return detail::format(std::locale{}, std::move(fmt), tp.get_local_time(),
+                          &info.abbrev, &info.offset);
 }
 
 // const CharT* formats
@@ -1512,427 +1375,21 @@ format(std::basic_string<CharT, Traits> format, sys_time<Duration> tp)
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, local_time<Duration> tp)
+format(const std::locale& loc, const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(loc,  std::basic_string<CharT>(format), tp);
+    auto const info = tp.get_info();
+    return detail::format(loc, std::basic_string<CharT>(fmt), tp.get_local_time(),
+                          &info.abbrev, &info.offset);
 }
 
 template <class CharT, class Duration>
 inline
 std::basic_string<CharT>
-format(const CharT* format, local_time<Duration> tp)
+format(const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    return detail::format(std::locale{}, std::basic_string<CharT>(format), tp);
-}
-
-template <class CharT, class Duration>
-inline
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, const zoned_time<Duration>& tp)
-{
-    return detail::format(loc, std::basic_string<CharT>(format), tp.get_local_time(),
-                          tp.get_time_zone());
-}
-
-template <class CharT, class Duration>
-inline
-std::basic_string<CharT>
-format(const CharT* format, const zoned_time<Duration>& tp)
-{
-    return detail::format(std::locale{}, std::basic_string<CharT>(format),
-                          tp.get_local_time(), tp.get_time_zone());
-}
-
-template <class CharT, class Duration>
-inline
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* format, sys_time<Duration> tp)
-{
-    return detail::format(loc, std::basic_string<CharT>(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
-}
-
-template <class CharT, class Duration>
-inline
-std::basic_string<CharT>
-format(const CharT* format, sys_time<Duration> tp)
-{
-    return detail::format(std::locale{}, std::basic_string<CharT>(format),
-                       local_time<Duration>{tp.time_since_epoch()}, locate_zone("UTC"));
-}
-
-// parse
-
-namespace detail
-{
-
-template <class CharT, class Traits, class Duration>
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
-{
-    using namespace std;
-    using namespace std::chrono;
-    typename basic_istream<CharT, Traits>::sentry ok{is};
-    if (ok)
-    {
-        auto& f = use_facet<time_get<CharT>>(is.getloc());
-        ios_base::iostate err = ios_base::goodbit;
-        std::tm tm{};
-        Duration subseconds{};
-        std::basic_string<CharT, Traits> temp_abbrev;
-        minutes temp_offset{};
-
-        auto b = format.data();
-        auto i = b;
-        auto e = b + format.size();
-        auto command = false;
-        auto modified = false;
-        for (; i < e; ++i)
-        {
-            switch (*i)
-            {
-            case '%':
-                command = true;
-                modified = false;
-                break;
-            case 'O':
-            case 'E':
-                modified = true;
-                break;
-            case 'T':
-            case 'S':
-                if (command && !modified)
-                {
-                    f.get(is, 0, is, err, &tm, b, i-1);
-                    b = i+1;
-                    if (*i == 'T')
-                    {
-                        const CharT hm[] = {'%', 'H', ':', '%', 'M', ':'};
-                        f.get(is, 0, is, err, &tm, hm, hm+6);
-                    }
-                    if (ratio_less<typename Duration::period, ratio<1>>::value)
-                    {
-                        double s;
-                        is >> s;
-                        if (!is.fail())
-                            subseconds = round<Duration>(duration<double>{s});
-                        else
-                            err |= ios_base::failbit;
-                    }
-                    else
-                    {
-                        const CharT hm[] = {'%', 'S'};
-                        f.get(is, 0, is, err, &tm, hm, hm+2);
-                    }
-                }
-                command = false;
-                modified = false;
-                break;
-            case 'z':
-                if (command)
-                {
-                    f.get(is, 0, is, err, &tm, b, i-1-modified);
-                    b = i+1;
-                    if ((err & ios_base::failbit) == 0)
-                    {
-                        CharT sign{};
-                        is >> sign;
-                        if (!is.fail() && (sign == '+' || sign == '-'))
-                        {
-                            char h1, h0, m1, m0;
-                            char colon = '\0';
-                            h1 = static_cast<char>(is.get());
-                            h0 = static_cast<char>(is.get());
-                            if (modified)
-                                colon = static_cast<char>(is.get());
-                            m1 = static_cast<char>(is.get());
-                            m0 = static_cast<char>(is.get());
-                            if (!is.fail() && std::isdigit(h1) && std::isdigit(h0)
-                                           && std::isdigit(m1) && std::isdigit(m0)
-                                           && (!modified || colon == ':'))
-                            {
-                                temp_offset = 10*hours{h1 - '0'} + hours{h0 - '0'} +
-                                              10*minutes{m1 - '0'} + minutes{m0 - '0'};
-                                if (sign == '-')
-                                    temp_offset = -temp_offset;
-                            }
-                            else
-                                err |= ios_base::failbit;
-                        }
-                        else
-                            err |= ios_base::failbit;
-                    }
-                }
-                command = false;
-                modified = false;
-                break;
-            case 'Z':
-                if (command && !modified)
-                {
-                    f.get(is, 0, is, err, &tm, b, i-1);
-                    b = i+1;
-                    if ((err & ios_base::failbit) == 0)
-                    {
-                        is >> temp_abbrev;
-                        if (is.fail())
-                            err |= ios_base::failbit;
-                    }
-                }
-                command = false;
-                modified = false;
-                break;
-            default:
-                command = false;
-                modified = false;
-                break;
-            }
-        }
-        if ((err & ios_base::failbit) == 0)
-        {
-            if (b < e)
-                f.get(is, 0, is, err, &tm, b, e);
-            if ((err & ios_base::failbit) == 0)
-            {
-#if _WIN32
-                auto tt = _mkgmtime(&tm);
-#else
-                auto tt = timegm(&tm);
-#endif
-                tp = floor<Duration>(system_clock::from_time_t(tt) + subseconds);
-                abbrev = std::move(temp_abbrev);
-                offset = temp_offset;
-            }
-        }
-        is.setstate(err);
-    }
-}
-
-}  // namespace detail
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp)
-{
-    std::basic_string<CharT, Traits> abbrev;
-    std::chrono::minutes offset{};
-    detail::parse(is, format, tp, abbrev, offset);
-    if (!is.fail())
-        tp = floor<Duration>(tp - offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev)
-{
-    std::chrono::minutes offset{};
-    detail::parse(is, format, tp, abbrev, offset);
-    if (!is.fail())
-        tp = floor<Duration>(tp - offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp,
-      std::chrono::minutes& offset)
-{
-    std::basic_string<CharT, Traits> abbrev;
-    detail::parse(is, format, tp, abbrev, offset);
-    if (!is.fail())
-        tp = floor<Duration>(tp - offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
-{
-    detail::parse(is, format, tp, abbrev, offset);
-    if (!is.fail())
-        tp = floor<Duration>(tp - offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, sys_time<Duration>& tp,
-      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
-{
-    detail::parse(is, format, tp, abbrev, offset);
-    if (!is.fail())
-        tp = floor<Duration>(tp - offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, local_time<Duration>& tp)
-{
-    sys_time<Duration> st;
-    std::basic_string<CharT, Traits> abbrev;
-    std::chrono::minutes offset{};
-    detail::parse(is, format, st, abbrev, offset);
-    if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, local_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev)
-{
-    sys_time<Duration> st;
-    std::chrono::minutes offset{};
-    detail::parse(is, format, st, abbrev, offset);
-    if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, local_time<Duration>& tp,
-      std::chrono::minutes& offset)
-{
-    sys_time<Duration> st;
-    std::basic_string<CharT, Traits> abbrev;
-    detail::parse(is, format, st, abbrev, offset);
-    if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, local_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
-{
-    sys_time<Duration> st;
-    detail::parse(is, format, st, abbrev, offset);
-    if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is,
-      const std::basic_string<CharT, Traits>& format, local_time<Duration>& tp,
-      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
-{
-    sys_time<Duration> st;
-    detail::parse(is, format, st, abbrev, offset);
-    if (!is.fail())
-        tp = local_time<Duration>{st.time_since_epoch()};
-}
-
-// const CharT* formats
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format, sys_time<Duration>& tp)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format, sys_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format, sys_time<Duration>& tp,
-      std::chrono::minutes& offset)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format, sys_time<Duration>& tp,
-      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev, offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format, sys_time<Duration>& tp,
-      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev, offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
-      local_time<Duration>& tp)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
-      local_time<Duration>& tp, std::basic_string<CharT, Traits>& abbrev)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
-      local_time<Duration>& tp, std::chrono::minutes& offset)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
-      local_time<Duration>& tp, std::basic_string<CharT, Traits>& abbrev,
-      std::chrono::minutes& offset)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev, offset);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-void
-parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
-      local_time<Duration>& tp, std::chrono::minutes& offset,
-      std::basic_string<CharT, Traits>& abbrev)
-{
-    parse(is, std::basic_string<CharT, Traits>(format), tp, abbrev, offset);
+    auto const info = tp.get_info();
+    return detail::format(std::locale{}, std::basic_string<CharT>(fmt),
+                          tp.get_local_time(), &info.abbrev, &info.offset);
 }
 
 }  // namespace date

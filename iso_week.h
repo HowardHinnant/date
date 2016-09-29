@@ -25,6 +25,8 @@
 
 #include "date.h"
 
+#include <climits>
+
 namespace iso_week
 {
 

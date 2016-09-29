@@ -11,7 +11,6 @@ test_info(const date::time_zone* zone, const date::sys_info& info)
     auto mid = begin + (end - begin) /2;
     using sys_microseconds = sys_time<microseconds>;
     using zoned_microseconds = zoned_time<microseconds>;
-    using local_microseconds = local_time<microseconds>;
     zoned_microseconds local{zone};
 
     if (begin > sys_days{jan/1/1700})
