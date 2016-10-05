@@ -1,0 +1,42 @@
+version: 2.x.{build}
+pull_requests:
+  do_not_increment_build_number: true
+
+branches:
+  except:
+    - gh_pages
+
+skip_tags: true
+
+image:
+  - Visual Studio 2013
+  - Visual Studio 2015
+
+configuration:
+  - Debug
+  - Release
+
+platform:
+  - x64
+  - Win32
+
+init:
+  - cmd: git config --global core.autocrlf true
+
+# We only build the tz test program, the actual tests are not
+# supported / integrated yet.
+build_script:
+  - cmd: >-
+      if "%platform%"=="x64" if "%VS140COMNTOOLS%"=="" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x64
+
+      if "%platform%"=="Win32" if "%VS140COMNTOOLS%"=="" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+
+      if "%platform%"=="x64" if NOT "%VS140COMNTOOLS%"=="" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+
+      if "%platform%"=="Win32" if NOT "%VS140COMNTOOLS%"=="" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+
+      if "%configuration%"=="Release" cl tz.cpp test/tz_test/validate.cpp /EHsc /W3 /WX /I. /D "NDEBUG" /O2 /link "shell32.lib" "ole32.lib" "advapi32.lib" 2>&1
+
+      if "%configuration%"=="Debug" cl tz.cpp test/tz_test/validate.cpp /EHsc /W3 /WX /I. /MDd /D "_DEBUG" /link "shell32.lib" "ole32.lib" "advapi32.lib" 2>&1
+
+

@@ -1,0 +1,53 @@
+sudo: required
+
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.8 main'
+    packages:
+      # This is the minimum GCC compiler version needed to compile the tz test
+      - g++-4.8
+      # This is the minimum GCC compiler version needed to compile and run the
+      # full test suite with clang using libstdc++
+      - g++-6
+      - clang-3.8
+      - libcurl4-openssl-dev
+
+matrix:
+  include:
+    - dist: trusty
+      os: linux
+      compiler: gcc
+      env: COMPILER=g++-4.8 CXX_LANG=c++11 OPTIONS=-O3 TEST_ALL=0
+    - dist: trusty
+      os: linux
+      compiler: gcc
+      # The test suite does not compile with gcc 6 because of a brace
+      # initialization bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67631
+      env: COMPILER=g++-6 CXX_LANG=c++14 OPTIONS=-O3 TEST_ALL=0
+    - dist: trusty
+      os: linux
+      compiler: clang
+      env: COMPILER=clang++-3.8 CXX_LANG=c++14 OPTIONS=-O3 TEST_ALL=1
+    - os: osx
+      osx_image: xcode7.3
+      # This will use a clang version similar to 3.8
+      compiler: clang
+      env: COMPILER=clang++ CXX_LANG=c++14 OPTIONS=-O3 TEST_ALL=1
+
+branches:
+  except:
+    - gh_pages
+
+script:
+  # We are either just compiling the tz test program or are running
+  # the full test suite (only clang can do so currently).
+  - $COMPILER -v
+  - if [[ "$TEST_ALL" -eq "0" ]] ; then $COMPILER -std=$CXX_LANG -Wall -I. tz.cpp test/tz_test/validate.cpp -lcurl ; fi
+  - if [[ "$TEST_ALL" -eq "1" ]] ; then cd test && CXX=$COMPILER ./testit                                          ; fi
+
+
+
