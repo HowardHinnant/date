@@ -1016,17 +1016,6 @@ public:
     static CONSTDATA bool is_steady = true;
 
     static time_point now() NOEXCEPT;
-
-    template <class Duration>
-        static
-        std::chrono::time_point<utc_clock,
-            typename std::common_type<Duration, std::chrono::seconds>::type>
-        sys_to_utc(sys_time<Duration> t);
-
-    template <class Duration>
-        static
-        sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        utc_to_sys(std::chrono::time_point<utc_clock, Duration> t);
 };
 
 template <class Duration>
@@ -1034,33 +1023,27 @@ template <class Duration>
 
 using utc_seconds = utc_time<std::chrono::seconds>;
 
+template <class Duration>
 inline
-utc_clock::time_point
-utc_clock::now() NOEXCEPT
-{
-    using namespace std::chrono;
-    return sys_to_utc(system_clock::now());
-}
-
-template <class Duration>
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-utc_clock::sys_to_utc(sys_time<Duration> t)
+to_utc_time(sys_time<Duration> st)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto const& leaps = get_tzdb().leaps;
-    auto const lt = std::upper_bound(leaps.begin(), leaps.end(), t);
-    return utc_time<duration>{t.time_since_epoch() + seconds{lt-leaps.begin()}};
+    auto const lt = std::upper_bound(leaps.begin(), leaps.end(), st);
+    return utc_time<duration>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
 }
 
 template <class Duration>
+inline
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-utc_clock::utc_to_sys(utc_time<Duration> t)
+to_sys_time(utc_time<Duration> ut)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto const& leaps = get_tzdb().leaps;
-    auto tp = sys_time<duration>{t.time_since_epoch()};
+    auto tp = sys_time<duration>{ut.time_since_epoch()};
     if (tp >= leaps.front())
     {
         auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
@@ -1076,20 +1059,12 @@ utc_clock::utc_to_sys(utc_time<Duration> t)
     return tp;
 }
 
-template <class Duration>
 inline
-sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_sys_time(utc_time<Duration> ut)
+utc_clock::time_point
+utc_clock::now() NOEXCEPT
 {
-    return utc_clock::utc_to_sys(ut);
-}
-
-template <class Duration>
-inline
-utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_utc_time(sys_time<Duration> st)
-{
-    return utc_clock::sys_to_utc(st);
+    using namespace std::chrono;
+    return to_utc_time(system_clock::now());
 }
 
 template <class CharT, class Traits, class Duration>
@@ -1132,17 +1107,6 @@ public:
     static const bool is_steady     = true;
 
     static time_point now() NOEXCEPT;
-
-    template <class Duration>
-        static
-        std::chrono::time_point<tai_clock,
-            typename std::common_type<Duration, std::chrono::seconds>::type>
-        utc_to_tai(utc_time<Duration> t);
-
-    template <class Duration>
-        static
-        utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        tai_to_utc(std::chrono::time_point<tai_clock, Duration> t);
 };
 
 template <class Duration>
@@ -1151,18 +1115,9 @@ template <class Duration>
 using tai_seconds = tai_time<std::chrono::seconds>;
 
 template <class Duration>
-tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-tai_clock::utc_to_tai(utc_time<Duration> t)
-{
-    using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return tai_time<duration>{t.time_since_epoch()} + 
-            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
-}
-
-template <class Duration>
+inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-tai_clock::tai_to_utc(tai_time<Duration> t)
+to_utc_time(tai_time<Duration> t)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1172,18 +1127,13 @@ tai_clock::tai_to_utc(tai_time<Duration> t)
 
 template <class Duration>
 inline
-utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_utc_time(tai_time<Duration> t)
-{
-    return tai_clock::tai_to_utc(t);
-}
-
-template <class Duration>
-inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_tai_time(utc_time<Duration> t)
 {
-    return tai_clock::utc_to_tai(t);
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return tai_time<duration>{t.time_since_epoch()} + 
+            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
 }
 
 inline
@@ -1217,17 +1167,6 @@ public:
     static const bool is_steady     = true;
 
     static time_point now() NOEXCEPT;
-
-    template <class Duration>
-        static
-        std::chrono::time_point<gps_clock,
-            typename std::common_type<Duration, std::chrono::seconds>::type>
-        utc_to_gps(utc_time<Duration> t);
-
-    template <class Duration>
-        static
-        utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        gps_to_utc(std::chrono::time_point<gps_clock, Duration> t);
 };
 
 template <class Duration>
@@ -1236,18 +1175,9 @@ template <class Duration>
 using gps_seconds = gps_time<std::chrono::seconds>;
 
 template <class Duration>
-gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-gps_clock::utc_to_gps(utc_time<Duration> t)
-{
-    using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
-}
-
-template <class Duration>
+inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-gps_clock::gps_to_utc(gps_time<Duration> t)
+to_utc_time(gps_time<Duration> t)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1257,18 +1187,13 @@ gps_clock::gps_to_utc(gps_time<Duration> t)
 
 template <class Duration>
 inline
-utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_utc_time(gps_time<Duration> t)
-{
-    return gps_clock::gps_to_utc(t);
-}
-
-template <class Duration>
-inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_gps_time(utc_time<Duration> t)
 {
-    return gps_clock::utc_to_gps(t);
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return gps_time<duration>{t.time_since_epoch()} -
+            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
 }
 
 inline
