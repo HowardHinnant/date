@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-09-14<br/>
+2016-10-08<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2342,16 +2342,6 @@ public:
     static constexpr bool is_steady = true;
 
     static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-        static
-        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        sys_to_utc(sys_time&lt;Duration&gt; t);
-
-    template &lt;class Duration&gt;
-        static
-        sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        utc_to_sys(utc_time&lt;Duration&gt; u);
 };
 
 template &lt;class Duration&gt;
@@ -2375,15 +2365,29 @@ static utc_clock::time_point utc_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>sys_to_utc(system_clock::now())</code>.
+<i>Returns:</i> <code>to_utc_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-static
+sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_sys_time(utc_time&lt;Duration&gt; u)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_time</code> <code>t</code>, such that
+<code>to_utc_time(t) == u</code> if such a mapping exists.  Otherwise <code>u</code>
+represents a <code>time_point</code> during a leap second insertion and the last
+representable value of <code>sys_time</code> prior to the insertion of the leap
+second is returned.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
 utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-utc_clock::sys_to_utc(sys_time&lt;Duration&gt; t);
+to_utc_time(sys_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
@@ -2397,84 +2401,27 @@ second insertion), then the conversion counts that leap second as inserted.
 
 <pre>
 template &lt;class Duration&gt;
-static
-sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-utc_clock::utc_to_sys(utc_time&lt;Duration&gt; u);
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_utc_time(tai_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>sys_time</code> <code>t</code>, such that
-<code>utc_clock::sys_to_utc(t) == u</code>.
+<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
+<code>to_tai_time(u) == t</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(sys_time&lt;Duration&gt; t)
+to_utc_time(gps_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>utc_clock::sys_to_utc(t)</code>.
+<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
+<code>to_gps_time(u) == t</code>.
 </p>
 </blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_sys_time(utc_time&lt;Duration&gt; u)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>utc_clock::utc_to_sys(u)</code>.
-</p>
-</blockquote>
-
-<p>
-[<i>Example:</i>
-</p>
-
-<blockquote><pre>
-#include "tz.h"
-#include &lt;iostream&gt;
-
-int
-main()
-{
-    using namespace date;
-    using namespace std::chrono_literals;
-    auto t0 = sys_days{1972_y/jul/1} - 1ms;
-    auto u0 = to_utc_time(t0);
-    auto t1 = to_sys_time(u0);
-    std::cout &lt;&lt; t0 &lt;&lt; ":\n";
-    std::cout &lt;&lt; (u0.time_since_epoch() - t0.time_since_epoch()).count() &lt;&lt; "ms\n";
-    std::cout &lt;&lt; (t1 - t0).count() &lt;&lt; "ms\n\n";
-
-    t0 += 1ms;
-    u0 = to_utc_time(t0);
-    t1 = to_sys_time(u0);
-    std::cout &lt;&lt; t0 &lt;&lt; ":\n";
-    std::cout &lt;&lt; (u0.time_since_epoch() - t0.time_since_epoch()).count() &lt;&lt; "ms\n";
-    std::cout &lt;&lt; (t1 - t0).count() &lt;&lt; "ms\n";
-}
-</pre>
-<p>
-Output:
-</p>
-<pre>
-1972-06-30 23:59:59.999:
-0ms
-0ms
-
-1972-07-01 00:00:00.000:
-1000ms
-0ms
-</pre>
-</blockquote>
-
-<p>
-<i>&mdash; end example</i>]
-</p>
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
@@ -2507,16 +2454,6 @@ public:
     static constexpr bool is_steady = true;
 
     static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-        static
-        tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        utc_to_tai(utc_time&lt;Duration&gt; t);
-
-    template &lt;class Duration&gt;
-        static
-        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        tai_to_utc(tai_time&lt;Duration&gt; u);
 };
 
 template &lt;class Duration&gt;
@@ -2544,38 +2481,23 @@ static tai_clock::time_point tai_clock::now() noexcept;
 
 <pre>
 template &lt;class Duration&gt;
-static
-tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-tai_clock::utc_to_tai(utc_time&lt;Duration&gt; t);
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_sys_time(tai_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>tai_time</code> which represents time as measured by
-TAI at the same instant as the time <code>t</code> in UTC.
+<i>Equivalent to:</i> <code>return to_sys_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-static
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-tai_clock::tai_to_utc(tai_time&lt;Duration&gt; t);
+tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_tai_time(sys_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
-<code>tai_clock::utc_to_tai(u) == t</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(tai_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>tai_clock::tai_to_utc(t)</code>.
+<i>Equivalent to:</i> <code>return to_tai_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
@@ -2586,7 +2508,19 @@ to_tai_time(utc_time&lt;Duration&gt; u)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>tai_clock::utc_to_tai(u)</code>.
+<i>Returns:</i> A <code>tai_time</code> which represents time as measured by
+TAI at the same instant as the time <code>t</code> in UTC.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_tai_time(gps_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Equivalent to:</i> <code>return to_tai_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
@@ -2619,16 +2553,6 @@ public:
     static constexpr bool is_steady = true;
 
     static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-        static
-        gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        utc_to_gps(utc_time&lt;Duration&gt; t);
-
-    template &lt;class Duration&gt;
-        static
-        utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-        gps_to_utc(gps_time&lt;Duration&gt; u);
 };
 
 template &lt;class Duration&gt;
@@ -2655,38 +2579,23 @@ static gps_clock::time_point gps_clock::now() noexcept;
 
 <pre>
 template &lt;class Duration&gt;
-static
-gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-gps_clock::utc_to_gps(utc_time&lt;Duration&gt; t);
+sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_sys_time(gps_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>gps_time</code> which represents time as measured by
-GPS at the same instant as the time <code>t</code> in UTC.
+<i>Equivalent to:</i> <code>return to_sys_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-static
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-gps_clock::gps_to_utc(gps_time&lt;Duration&gt; t);
+gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_gps_time(sys_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
-<code>gps_clock::utc_to_gps(u) == t</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(gps_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>gps_clock::gps_to_utc(t)</code>.
+<i>Equivalent to:</i> <code>return to_gps_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
@@ -2697,7 +2606,19 @@ to_gps_time(utc_time&lt;Duration&gt; u)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>gps_clock::utc_to_gps(u)</code>.
+<i>Returns:</i> A <code>gps_time</code> which represents time as measured by
+GPS at the same instant as the time <code>t</code> in UTC.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
+to_gps_time(tai_time&lt;Duration&gt; t)
+</pre>
+<blockquote>
+<p>
+<i>Equivalent to:</i> <code>return to_gps_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
@@ -2712,74 +2633,6 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
-</p>
-</blockquote>
-
-<p><b>Convenience converters</b></p>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_sys_time(tai_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_sys_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_sys_time(gps_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_sys_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_tai_time(sys_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_tai_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_tai_time(gps_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_tai_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_gps_time(sys_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_gps_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_gps_time(tai_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>to_gps_time(to_utc_time(t))</code>.
 </p>
 </blockquote>
 
