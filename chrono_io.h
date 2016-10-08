@@ -381,34 +381,34 @@ msl(std::exa) noexcept
     return msl(CharT{'E'});
 }
 
-template <class CharT, class Rep, class Period>
+template <class CharT, class Period>
 constexpr
 auto
-get_units(const std::chrono::duration<Rep, Period>&)
+get_units(Period p)
 {
-    return msl<CharT>(Period{}) + string_literal<CharT, 2>{"s"};
+    return msl<CharT>(p) + string_literal<CharT, 2>{"s"};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 constexpr
 auto
-get_units(const std::chrono::duration<Rep, std::ratio<1>>&)
+get_units(std::ratio<1>)
 {
     return string_literal<CharT, 2>{"s"};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 constexpr
 auto
-get_units(const std::chrono::duration<Rep, std::ratio<60>>&)
+get_units(std::ratio<60>)
 {
     return string_literal<CharT, 4>{"min"};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 constexpr
 auto
-get_units(const std::chrono::duration<Rep, std::ratio<3600>>&)
+get_units(std::ratio<3600>)
 {
     return string_literal<CharT, 2>{"h"};
 }
@@ -620,30 +620,30 @@ msl(std::exa) noexcept
     return {'E'};
 }
 
-template <class CharT, class Rep, class Period>
+template <class CharT, class Period>
 std::basic_string<CharT>
-get_units(const std::chrono::duration<Rep, Period>&)
+get_units(Period p)
 {
-    return msl<CharT>(Period{}) + CharT{'s'};
+    return msl<CharT>(p) + CharT{'s'};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 std::basic_string<CharT>
-get_units(const std::chrono::duration<Rep, std::ratio<1>>&)
+get_units(std::ratio<1>)
 {
     return {'s'};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 std::basic_string<CharT>
-get_units(const std::chrono::duration<Rep, std::ratio<60>>&)
+get_units(std::ratio<60>)
 {
     return {'m', 'i', 'n'};
 }
 
-template <class CharT, class Rep>
+template <class CharT>
 std::basic_string<CharT>
-get_units(const std::chrono::duration<Rep, std::ratio<3600>>&)
+get_units(std::ratio<3600>)
 {
     return {'h'};
 }
@@ -660,7 +660,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os,
 {
     using namespace std::chrono;
     return os << d.count()
-              << detail::get_units<CharT>(duration<Rep, typename Period::type>{});
+              << detail::get_units<CharT>(typename Period::type{});
 }
 
 }  // namespace date
