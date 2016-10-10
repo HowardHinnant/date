@@ -1013,7 +1013,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point<utc_clock>;
-    static CONSTDATA bool is_steady = true;
+    static CONSTDATA bool is_steady = false;
 
     static time_point now() NOEXCEPT;
 };
@@ -1104,7 +1104,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point<tai_clock>;
-    static const bool is_steady     = true;
+    static const bool is_steady     = false;
 
     static time_point now() NOEXCEPT;
 };
@@ -1121,7 +1121,7 @@ to_utc_time(tai_time<Duration> t)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
-    return utc_time<duration>{t.time_since_epoch()} - 
+    return utc_time<duration>{t.time_since_epoch()} -
             (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
 }
 
@@ -1132,8 +1132,16 @@ to_tai_time(utc_time<Duration> t)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
-    return tai_time<duration>{t.time_since_epoch()} + 
+    return tai_time<duration>{t.time_since_epoch()} +
             (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(sys_time<Duration> t)
+{
+    return to_tai_time(to_utc_time(t));
 }
 
 inline
@@ -1141,7 +1149,7 @@ tai_clock::time_point
 tai_clock::now() NOEXCEPT
 {
     using namespace std::chrono;
-    return to_tai_time(utc_clock::now());
+    return to_tai_time(system_clock::now());
 }
 
 template <class CharT, class Traits, class Duration>
@@ -1164,7 +1172,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point<gps_clock>;
-    static const bool is_steady     = true;
+    static const bool is_steady     = false;
 
     static time_point now() NOEXCEPT;
 };
@@ -1196,12 +1204,20 @@ to_gps_time(utc_time<Duration> t)
             (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
 }
 
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(sys_time<Duration> t)
+{
+    return to_gps_time(to_utc_time(t));
+}
+
 inline
 gps_clock::time_point
 gps_clock::now() NOEXCEPT
 {
     using namespace std::chrono;
-    return to_gps_time(utc_clock::now());
+    return to_gps_time(system_clock::now());
 }
 
 template <class CharT, class Traits, class Duration>
@@ -1234,25 +1250,12 @@ to_sys_time(gps_time<Duration> t)
 template <class Duration>
 inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_tai_time(sys_time<Duration> t)
-{
-    return to_tai_time(to_utc_time(t));
-}
-
-template <class Duration>
-inline
-tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_tai_time(gps_time<Duration> t)
 {
-    return to_tai_time(to_utc_time(t));
-}
-
-template <class Duration>
-inline
-gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_gps_time(sys_time<Duration> t)
-{
-    return to_gps_time(to_utc_time(t));
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return tai_time<duration>{t.time_since_epoch()} +
+            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1958}/jan/1} + seconds{19});
 }
 
 template <class Duration>
@@ -1260,7 +1263,10 @@ inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_gps_time(tai_time<Duration> t)
 {
-    return to_gps_time(to_utc_time(t));
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    return gps_time<duration>{t.time_since_epoch()} -
+            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1958}/jan/1} + seconds{19});
 }
 
 // format
