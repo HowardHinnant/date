@@ -2339,7 +2339,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
-    static constexpr bool is_steady = true;
+    static constexpr bool is_steady = false;
 
     static time_point now() noexcept;
 };
@@ -2406,8 +2406,10 @@ to_utc_time(tai_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
-<code>to_tai_time(u) == t</code>.
+<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
+</p>
+<p>
+<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -2418,8 +2420,10 @@ to_utc_time(gps_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>utc_time</code> <code>u</code>, such that
-<code>to_gps_time(u) == t</code>.
+<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
+</p>
+<p>
+<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -2451,7 +2455,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point&lt;tai_clock&gt;;
-    static constexpr bool is_steady = true;
+    static constexpr bool is_steady = false;
 
     static time_point now() noexcept;
 };
@@ -2475,7 +2479,7 @@ static tai_clock::time_point tai_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>to_tai_time(utc_clock::now())</code>.
+<i>Returns:</i> <code>to_tai_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
@@ -2508,8 +2512,10 @@ to_tai_time(utc_time&lt;Duration&gt; u)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>tai_time</code> which represents time as measured by
-TAI at the same instant as the time <code>t</code> in UTC.
+<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
+</p>
+<p>
+<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -2520,7 +2526,10 @@ to_tai_time(gps_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Equivalent to:</i> <code>return to_tai_time(to_utc_time(t))</code>.
+<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 694656019s</code>
+</p>
+<p>
+<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
 </p>
 </blockquote>
 
@@ -2531,7 +2540,14 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T".
+<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
+</p>
+<blockquote><pre>
+auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} -
+              (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1});
+</pre></blockquote>
+<p>
+And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2550,7 +2566,7 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = std::chrono::time_point&lt;gps_clock&gt;;
-    static constexpr bool is_steady = true;
+    static constexpr bool is_steady = false;
 
     static time_point now() noexcept;
 };
@@ -2564,7 +2580,7 @@ using gps_seconds = gps_time&lt;std::chrono::seconds&gt;;
 <p>
 <code>gps_time</code> counts physical seconds continuously like <code>utc_itme</code>,
 but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
-is 1980-01-06 and was equivalent to UTC at that time.  If falls ahead of UTC
+is 1980-01-06 and was equivalent to UTC at that time.  If drifts ahead of UTC
 with each inserted leap second.  It is always exactly 19s behind TAI.
 </p>
 
@@ -2573,7 +2589,7 @@ static gps_clock::time_point gps_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>to_gps_time(utc_clock::now())</code>.
+<i>Returns:</i> <code>to_gps_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
@@ -2606,8 +2622,10 @@ to_gps_time(utc_time&lt;Duration&gt; u)
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>gps_time</code> which represents time as measured by
-GPS at the same instant as the time <code>t</code> in UTC.
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
+</p>
+<p>
+<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -2618,7 +2636,10 @@ to_gps_time(tai_time&lt;Duration&gt; t)
 </pre>
 <blockquote>
 <p>
-<i>Equivalent to:</i> <code>return to_gps_time(to_utc_time(t))</code>.
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 694656019s</code>
+</p>
+<p>
+<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
 </p>
 </blockquote>
 
@@ -2629,7 +2650,14 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T".
+<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
+</p>
+<blockquote><pre>
+auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} +
+              (sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1});
+</pre></blockquote>
+<p>
+And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
