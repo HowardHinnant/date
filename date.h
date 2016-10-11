@@ -4365,16 +4365,16 @@ parse(std::basic_istream<CharT, Traits>& is,
 template <class Duration, class CharT, class Traits = std::char_traits<CharT>>
 struct parse_local_manip
 {
-    const std::basic_string<CharT, Traits>& format_;
-    local_time<Duration>&                   tp_;
-    std::basic_string<CharT, Traits>*       abbrev_;
-    std::chrono::minutes*                   offset_;
+    const std::basic_string<CharT, Traits> format_;
+    local_time<Duration>&                  tp_;
+    std::basic_string<CharT, Traits>*      abbrev_;
+    std::chrono::minutes*                  offset_;
 
 public:
-    parse_local_manip(const std::basic_string<CharT, Traits>& format,
+    parse_local_manip(std::basic_string<CharT, Traits> format,
                       local_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
                       std::chrono::minutes* offset = nullptr)
-        : format_(format)
+        : format_(std::move(format))
         , tp_(tp)
         , abbrev_(abbrev)
         , offset_(offset)
@@ -4394,16 +4394,16 @@ operator>>(std::basic_istream<CharT, Traits>& is,
 template <class Duration, class CharT, class Traits = std::char_traits<CharT>>
 struct parse_sys_manip
 {
-    const std::basic_string<CharT, Traits>& format_;
-    sys_time<Duration>&                     tp_;
-    std::basic_string<CharT, Traits>*       abbrev_;
-    std::chrono::minutes*                   offset_;
+    const std::basic_string<CharT, Traits> format_;
+    sys_time<Duration>&                    tp_;
+    std::basic_string<CharT, Traits>*      abbrev_;
+    std::chrono::minutes*                  offset_;
 
 public:
-    parse_sys_manip(const std::basic_string<CharT, Traits>& format,
+    parse_sys_manip(std::basic_string<CharT, Traits> format,
                     sys_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
                     std::chrono::minutes* offset = nullptr)
-        : format_(format)
+        : format_(std::move(format))
         , tp_(tp)
         , abbrev_(abbrev)
         , offset_(offset)
