@@ -637,30 +637,30 @@ template &lt;class Duration&gt;
     to_utc_time(sys_time&lt;Duration&gt; t);
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(tai_time&lt;Duration&gt; t);
+    to_utc_time(tai_time&lt;Duration&gt; t) noexcept;
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(gps_time&lt;Duration&gt; t);
+    to_utc_time(gps_time&lt;Duration&gt; t) noexcept;
 
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
     to_tai_time(sys_time&lt;Duration&gt; t);
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(utc_time&lt;Duration&gt; t);
+    to_tai_time(utc_time&lt;Duration&gt; t) noexcept;
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(gps_time&lt;Duration&gt; t);
+    to_tai_time(gps_time&lt;Duration&gt; t) noexcept;
 
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
     to_gps_time(sys_time&lt;Duration&gt; t);
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(utc_time&lt;Duration&gt; t);
+    to_gps_time(utc_time&lt;Duration&gt; t) noexcept;
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(tai_time&lt;Duration&gt; t);
+    to_gps_time(tai_time&lt;Duration&gt; t) noexcept;
 
 template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1639,7 +1639,7 @@ assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(tai_time&lt;Duration&gt; t);
+to_utc_time(tai_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1653,7 +1653,7 @@ to_utc_time(tai_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(gps_time&lt;Duration&gt; t);
+to_utc_time(gps_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1759,7 +1759,7 @@ to_tai_time(sys_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(utc_time&lt;Duration&gt; t);
+to_tai_time(utc_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1773,7 +1773,7 @@ to_tai_time(utc_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(gps_time&lt;Duration&gt; t);
+to_tai_time(gps_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1858,7 +1858,7 @@ to_gps_time(sys_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(utc_time&lt;Duration&gt; t);
+to_gps_time(utc_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1872,7 +1872,7 @@ to_gps_time(utc_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(tai_time&lt;Duration&gt; t);
+to_gps_time(tai_time&lt;Duration&gt; t) noexcept;
 </pre>
 <blockquote>
 <p>
