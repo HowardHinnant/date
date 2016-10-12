@@ -1117,7 +1117,7 @@ using tai_seconds = tai_time<std::chrono::seconds>;
 template <class Duration>
 inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_utc_time(tai_time<Duration> t)
+to_utc_time(tai_time<Duration> t) NOEXCEPT
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1128,7 +1128,7 @@ to_utc_time(tai_time<Duration> t)
 template <class Duration>
 inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_tai_time(utc_time<Duration> t)
+to_tai_time(utc_time<Duration> t) NOEXCEPT
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1185,7 +1185,7 @@ using gps_seconds = gps_time<std::chrono::seconds>;
 template <class Duration>
 inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_utc_time(gps_time<Duration> t)
+to_utc_time(gps_time<Duration> t) NOEXCEPT
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1250,7 +1250,7 @@ to_sys_time(gps_time<Duration> t)
 template <class Duration>
 inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_tai_time(gps_time<Duration> t)
+to_tai_time(gps_time<Duration> t) NOEXCEPT
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
@@ -1261,7 +1261,7 @@ to_tai_time(gps_time<Duration> t)
 template <class Duration>
 inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-to_gps_time(tai_time<Duration> t)
+to_gps_time(tai_time<Duration> t) NOEXCEPT
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
