@@ -31,7 +31,7 @@
 Document number: D0355R1<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-10-09<br/>
+2016-10-12<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -104,7 +104,7 @@ create a Coptic calendar (which knows nothing about the Gregorian calendar),
 which will convert to and from the Gregorian calendar.  This is done by
 establishing a clear and simple communication channel between calendar systems
 and the <code>&lt;chrono&gt;</code> library (specifically a
-<code>system_clock::time_point</code> with a a precision of days). 
+<code>system_clock::time_point</code> with a precision of days). 
 </p>
 
 <p>
@@ -585,9 +585,9 @@ namespace chrono {
 // ...
 
 // duration stream insertion
-template &lt;class CharT, class Traits, class Rep, class Period&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os,
+template &lt;class charT, class traits, class Rep, class Period&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os,
                const duration&lt;Rep, Period&gt;&amp; d);
 
 // ...
@@ -662,21 +662,21 @@ template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
     to_gps_time(tai_time&lt;Duration&gt; t);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
-template &lt;class CharT, class Traits&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const sys_days&amp; dp);
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const utc_time&lt;Duration&gt;&amp; t);
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const tai_time&lt;Duration&gt;&amp; t);
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const gps_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_days&amp; dp);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const utc_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const tai_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const gps_time&lt;Duration&gt;&amp; t);
 
 struct local_t {};
 template &lt;class Duration&gt;
@@ -684,9 +684,9 @@ template &lt;class Duration&gt;
 using local_seconds  = local_time&lt;seconds&gt;;
 using local_days     = local_time&lt;days&gt;;
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_ostream&lt;CharT, Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const local_time&lt;Duration&gt;&amp; tp);
 
 // civil calendar
 
@@ -706,9 +706,9 @@ constexpr day  operator+(const days&amp; x, const day&amp;  y) noexcept;
 constexpr day  operator-(const day&amp;  x, const days&amp; y) noexcept;
 constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const day&amp; d);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const day&amp; d);
 
 class month;
 
@@ -724,9 +724,9 @@ constexpr month  operator+(const months&amp; x,  const month&amp; y) noexcept;
 constexpr month  operator-(const month&amp;  x, const months&amp; y) noexcept;
 constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month&amp; m);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month&amp; m);
 
 class year;
 
@@ -742,9 +742,9 @@ constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
 constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
 constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year&amp; y);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year&amp; y);
 
 class weekday;
 
@@ -756,27 +756,27 @@ constexpr weekday operator+(const days&amp;    x, const weekday&amp; y) noexcept
 constexpr weekday operator-(const weekday&amp; x, const days&amp;    y) noexcept;
 constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday&amp; wd);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday&amp; wd);
 
 class weekday_indexed;
 
 constexpr bool operator==(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_indexed&amp; wdi);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 
 class weekday_last;
 
 constexpr bool operator==(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday_last&amp; wdl);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday_last&amp; wdl);
 
 class month_day;
 
@@ -787,9 +787,9 @@ constexpr bool operator&gt; (const month_day&amp; x, const month_day&amp; y) noe
 constexpr bool operator&lt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day&amp; md);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day&amp; md);
 
 class month_day_last;
 
@@ -800,27 +800,27 @@ constexpr bool operator&gt; (const month_day_last&amp; x, const month_day_last&a
 constexpr bool operator&lt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day_last&amp; mdl);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day_last&amp; mdl);
 
 class month_weekday;
 
 constexpr bool operator==(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday&amp; mwd);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_weekday&amp; mwd);
 
 class month_weekday_last;
 
 constexpr bool operator==(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 
 class year_month;
 
@@ -839,9 +839,9 @@ constexpr year_month operator+(const year_month&amp; ym, const years&amp; dy) no
 constexpr year_month operator+(const years&amp; dy, const year_month&amp; ym) noexcept;
 constexpr year_month operator-(const year_month&amp; ym, const years&amp; dy) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month&amp; ym);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month&amp; ym);
 
 class year_month_day;
 
@@ -859,9 +859,9 @@ constexpr year_month_day operator+(const years&amp; dy, const year_month_day&amp
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const months&amp; dm) noexcept;
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&amp; dy) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day&amp; ymd);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day&amp; ymd);
 
 class year_month_day_last;
 
@@ -879,9 +879,9 @@ constexpr year_month_day_last operator+(const years&amp; dy, const year_month_da
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const months&amp; dm) noexcept;
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const years&amp; dy) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 
 class year_month_weekday;
 
@@ -895,9 +895,9 @@ constexpr year_month_weekday operator+(const years&amp; dy, const year_month_wee
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const months&amp; dm) noexcept;
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const years&amp; dy) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
 
 class year_month_weekday_last;
 
@@ -911,9 +911,9 @@ constexpr year_month_weekday_last operator+(const years&amp; dy, const year_mont
 constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; ymwdl, const months&amp; dm) noexcept;
 constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; ymwdl, const years&amp; dy) noexcept;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 
 // civil calendar conventional syntax operators
 constexpr year_month operator/(const year&amp; y, const month&amp; m) noexcept;
@@ -965,21 +965,21 @@ time_of_day&lt;minutes&gt;
 time_of_day&lt;seconds&gt;
 time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;hours&gt;&amp; t);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;hours&gt;&amp; t);
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
 
-template&lt;class CharT, class Traits&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
 
-template&lt;class CharT, class Traits, class Rep, class Period&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
+template&lt;class charT, class traits, class Rep, class Period&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
 
 template &lt;class Rep, class Period&gt;
     constexpr time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
@@ -1043,8 +1043,8 @@ template &lt;class Duration1, class Duration2&gt;
     operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
 
 template &lt;class Duration&gt;
-    basic_ostream&lt;class CharT, class Traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
 // make_zoned
 
@@ -1094,158 +1094,158 @@ template &lt;class Duration&gt;
 
 // format
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
            const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(basic_string&lt;class CharT, class Traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(basic_string&lt;class charT, class traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
            const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(basic_string&lt;class CharT, class Traits&gt; format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(basic_string&lt;class charT, class traits&gt; format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
            const sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-    basic_string&lt;class CharT, class Traits&gt;
-    format(basic_string&lt;class CharT, class Traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+    basic_string&lt;class charT, class traits&gt;
+    format(basic_string&lt;class charT, class traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
 
-// const CharT* formats
+// const charT* formats
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const locale&amp; loc, const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const locale&amp; loc, const charT* format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const charT* format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const locale&amp; loc, const CharT* format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const locale&amp; loc, const charT* format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const CharT* format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const charT* format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const locale&amp; loc, const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const locale&amp; loc, const charT* format, const sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-    basic_string&lt;class CharT&gt;
-    format(const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+    basic_string&lt;class charT&gt;
+    format(const charT* format, const sys_time&lt;Duration&gt;&amp; tp);
 
 // parse
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
           minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-          minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+          minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
           minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-          minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+          minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-// const CharT* formats
+// const charT* formats
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
     <i>unspecified</i>
-    parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp);
+    parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
     <i>unspecified</i>
-    parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
+    parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
           minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+    parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-          minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+          minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
     <i>unspecified</i>
-    parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp);
+    parse(const charT* format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
     <i>unspecified</i>
-    parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
+    parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
           minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-          basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+    parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+          basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
     <i>unspecified</i>
-    parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-          minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+    parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+          minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
 // leap second support
 
@@ -1321,9 +1321,9 @@ Add new section [time.duration.io] after 20.17.5.9 duration algorithms [time.dur
 <h3>20.17.5.10 duration stream insertion [time.duration.io]</h3>
 
 <pre>
-template &lt;class CharT, class Traits, class Rep, class Period&gt;
-basic_ostream&lt;CharT, Traits&gt;&amp;
-operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os,
+template &lt;class charT, class traits, class Rep, class Period&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os,
            const duration&lt;Rep, Period&gt;&amp; d);
 </pre>
 
@@ -1332,12 +1332,12 @@ operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os,
 <i>Effects:</i> Equivalent to:
 </p>
 <blockquote><pre>
-os &lt;&lt; d.count() &lt;&lt; get_units&lt;CharT&gt;(typename Period::type{});
+os &lt;&lt; d.count() &lt;&lt; get_units&lt;charT&gt;(typename Period::type{});
 </pre>
 <p>
-Where <code>get_units&lt;CharT&gt;(typename Period::type{})</code> is an
+Where <code>get_units&lt;charT&gt;(typename Period::type{})</code> is an
 exposition-only function which returns a null-terminated string of
-<code>CharT</code> which depends on <code>Period::type</code> as follows
+<code>charT</code> which depends on <code>Period::type</code> as follows
 (let <code>period</code> be the type <code>Period::type</code>):
 </p>
 
@@ -1368,7 +1368,7 @@ exposition-only function which returns a null-terminated string of
 <p>
 In the list above the use of <code>num</code> and <code>den</code> refer to the
 static data members of <code>period</code> which are converted to arrays of
-<code>CharT</code> using a decimal conversion with no leading zeroes.
+<code>charT</code> using a decimal conversion with no leading zeroes.
 </p>
 
 </blockquote>
@@ -1665,9 +1665,9 @@ to_utc_time(gps_time&lt;Duration&gt; t);
 </blockquote>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_ostream&lt;CharT, Traits&gt;&amp;
-operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const utc_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const utc_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -1785,9 +1785,9 @@ to_tai_time(gps_time&lt;Duration&gt; t);
 </blockquote>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_ostream&lt;CharT, Traits&gt;&amp;
-operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const tai_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const tai_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -1884,9 +1884,9 @@ to_gps_time(tai_time&lt;Duration&gt; t);
 </blockquote>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_ostream&lt;CharT, Traits&gt;&amp;
-operator&lt;&lt;(basic_ostream&lt;CharT, Traits&gt;&amp; os, const gps_time&lt;Duration&gt;&amp; t);
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const gps_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -8054,58 +8054,58 @@ make_zoned(const string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 <h4>20.17.10.7 Formatting [time.timezone.format]</h4>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
        const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(basic_string&lt;class CharT, class Traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(basic_string&lt;class charT, class traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
        const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(basic_string&lt;class CharT, class Traits&gt; format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(basic_string&lt;class charT, class traits&gt; format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(const locale&amp; loc, basic_string&lt;class CharT, class Traits&gt; format,
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(const locale&amp; loc, basic_string&lt;class charT, class traits&gt; format,
        const sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-basic_string&lt;class CharT, class Traits&gt;
-format(basic_string&lt;class CharT, class Traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+basic_string&lt;class charT, class traits&gt;
+format(basic_string&lt;class charT, class traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
 
-// const CharT* formats
+// const charT* formats
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const locale&amp; loc, const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const locale&amp; loc, const charT* format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const CharT* format, const local_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const charT* format, const local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const locale&amp; loc, const CharT* format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const locale&amp; loc, const charT* format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const CharT* format, const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const charT* format, const zoned_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const locale&amp; loc, const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const locale&amp; loc, const charT* format, const sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Duration&gt;
-basic_string&lt;class CharT&gt;
-format(const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class Duration&gt;
+basic_string&lt;class charT&gt;
+format(const charT* format, const sys_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
@@ -8201,103 +8201,103 @@ or one can pass in both in either order.
 </p>
 
 <pre>
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
       minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
-      minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+      minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
       minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
-      minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const basic_string&lt;charT, traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+      minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-// const CharT* formats
+// const charT* formats
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
 <i>unspecified</i>
-parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp);
+parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
 <i>unspecified</i>
-parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
+parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
       minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-      minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const charT* format, sys_time&lt;Duration&gt;&amp; tp,
+      minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
 <i>unspecified</i>
-parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp);
+parse(const charT* format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev);
 
-template &lt;class Duration, class CharT&gt;
+template &lt;class Duration, class charT&gt;
 <i>unspecified</i>
-parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
+parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
       minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-      basic_string&lt;CharT, Traits&gt;&amp; abbrev, minutes&amp; offset);
+parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+      basic_string&lt;charT, traits&gt;&amp; abbrev, minutes&amp; offset);
 
-template &lt;class Duration, class CharT, class Traits&gt;
+template &lt;class Duration, class charT, class traits&gt;
 <i>unspecified</i>
-parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
-      minutes&amp; offset, basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+parse(const charT* format, local_time&lt;Duration&gt;&amp; tp,
+      minutes&amp; offset, basic_string&lt;charT, traits&gt;&amp; abbrev);
 </pre>
 <blockquote>
 <p>
