@@ -31,7 +31,7 @@
 Document number: D0355R1<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-10-12<br/>
+2016-10-15<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -67,6 +67,7 @@ instead of by value.</li>
 <li>Add duration stream insertion.</li>
 <li>Introduce tai_clock.</li>
 <li>Introduce gps_clock.</li>
+<li>Removed <code>noexcept</code> from <code>make_time</code>.</li>
 </ul>
 
 <a name="Introduction"></a><h2>Introduction</h2>
@@ -423,12 +424,12 @@ cout &lt;&lt; zt &lt;&lt; '\n';                                            // 20
 <p>
 The <i>only</i> change to the code is the use of <code>local_days</code> in
 place of <code>sys_days</code>.  <code>local_days</code> is also a
-<code>std::chrono::time_point</code> but it has no <code>clock::now()</code>
-functionality.  This <code>time_point</code> is called <code>local_time</code>. 
-A <code>local_time</code> can refer to <i>any</i> time zone.  In the above
-example when we pair "Asia/Tokyo" with the <code>local_time</code>, the
-result becomes a <code>zoned_time</code> with the local time specified by the
-<code>local_time</code>.
+<code>std::chrono::time_point</code> but its "clock type" <code>local_t</code>
+has no <code>now()</code> function.  This <code>time_point</code> is called
+<code>local_time</code>. A <code>local_time</code> can refer to <i>any</i> time
+zone.  In the above example when we pair "Asia/Tokyo" with the
+<code>local_time</code>, the result becomes a <code>zoned_time</code> with the
+local time specified by the <code>local_time</code>.
 </p>
 
 <p>
@@ -624,43 +625,43 @@ using gps_seconds  = gps_time&lt;seconds&gt;;
 
 template &lt;class Duration&gt;
     sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(utc_time&lt;Duration&gt; t);
+    to_sys_time(const utc_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(tai_time&lt;Duration&gt; t);
+    to_sys_time(const tai_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(gps_time&lt;Duration&gt; t);
+    to_sys_time(const gps_time&lt;Duration&gt;&amp; t);
 
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(sys_time&lt;Duration&gt; t);
+    to_utc_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(tai_time&lt;Duration&gt; t) noexcept;
+    to_utc_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(gps_time&lt;Duration&gt; t) noexcept;
+    to_utc_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(sys_time&lt;Duration&gt; t);
+    to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(utc_time&lt;Duration&gt; t) noexcept;
+    to_tai_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(gps_time&lt;Duration&gt; t) noexcept;
+    to_tai_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(sys_time&lt;Duration&gt; t);
+    to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(utc_time&lt;Duration&gt; t) noexcept;
+    to_gps_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(tai_time&lt;Duration&gt; t) noexcept;
+    to_gps_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 
 template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -960,10 +961,10 @@ constexpr year_month_weekday_last operator/(const month_weekday_last&amp; mwdl, 
 // time_of_day
 enum {am = 1, pm};
 template &lt;class Duration&gt; class time_of_day;
-time_of_day&lt;hours&gt;
-time_of_day&lt;minutes&gt;
-time_of_day&lt;seconds&gt;
-time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
+template &lt;&gt; class time_of_day&lt;hours&gt;;
+template &lt;&gt; class time_of_day&lt;minutes&gt;;
+template &lt;&gt; class time_of_day&lt;seconds&gt;;
+template &lt;class Rep, class Period&gt; class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;;
 
 template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
@@ -983,26 +984,28 @@ template&lt;class charT, class traits, class Rep, class Period&gt;
 
 template &lt;class Rep, class Period&gt;
     constexpr time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
-    make_time(duration&lt;Rep, Period&gt; d) noexcept;
+    make_time(const duration&lt;Rep, Period&gt;&amp; d);
 
-constexpr time_of_day&lt;hours&gt;   make_time(hours h, unsigned md) noexcept;
-constexpr time_of_day&lt;minutes&gt; make_time(hours h, minutes m, unsigned md) noexcept;
-constexpr time_of_day&lt;seconds&gt; make_time(hours h, minutes m, seconds s, unsigned md) noexcept;
+constexpr time_of_day&lt;hours&gt;   make_time(const hours&amp; h, unsigned md);
+constexpr time_of_day&lt;minutes&gt; make_time(const hours&amp; h, const minutes&amp; m, unsigned md);
+constexpr time_of_day&lt;seconds&gt; make_time(const hours&amp; h, const minutes&amp; m,
+                                         const seconds&amp; s, unsigned md);
 
 template &lt;class Rep, class Period&gt;
     constexpr time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
-    make_time(hours h, minutes m, seconds s, duration&lt;Rep, Period&gt; sub_s, unsigned md) noexcept;
+    make_time(const hours&amp; h, const minutes&amp; m, const seconds&amp; s,
+              const duration&lt;Rep, Period&gt;&amp; sub_s, unsigned md);
 
 // time zone database
 
-struct TZ_DB;
-const TZ_DB&amp; get_tzdb();
+struct tzdb;
+const tzdb&amp; get_tzdb();
 const time_zone* locate_zone(const string&amp; tz_name);
 const time_zone* current_zone();
 
 // Remote time zone database -- Needs discussion
 
-const TZ_DB&amp; reload_tzdb();
+const tzdb&amp;  reload_tzdb();
 string       remote_version();
 bool         remote_download(const string&amp; version);
 bool         remote_install(const string&amp; version);
@@ -1012,23 +1015,25 @@ class nonexistent_local_time;
 class ambiguous_local_time;
 
 struct sys_info;
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const sys_info&amp; si);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const sys_info&amp; si);
 
 struct local_info;
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const local_info&amp; li);
+template&lt;class charT, class traits&gt;
+    basic_ostream&lt;class charT, class traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const local_info&amp; li);
 
 enum class choose {earliest, latest};
 class time_zone;
 
-bool operator==(const time_zone&amp; x, const time_zone&amp; y);
-bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator==(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator!=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 
-bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y);
-bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y);
-bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
-bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y);
-
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_zone&amp; z);
+bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 
 template &lt;class Duration&gt; class zoned_time;
 
@@ -1050,23 +1055,23 @@ template &lt;class Duration&gt;
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    make_zoned(sys_time&lt;Duration&gt; tp);
+    make_zoned(const sys_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp);
+    make_zoned(const time_zone* zone, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    make_zoned(const string&amp; name, local_time&lt;Duration&gt; tp);
+    make_zoned(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp, choose c);
+    make_zoned(const time_zone* zone, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    make_zoned(const string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+    make_zoned(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
 template &lt;class Duration&gt;
     zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
@@ -1371,11 +1376,27 @@ static data members of <code>period</code> which are converted to arrays of
 <code>charT</code> using a decimal conversion with no leading zeroes.
 </p>
 
+<p>
+For streams with <code>charT</code> which has a representation of 8 bits
+<code>&micro;s</code> should be encoded as UTF-8.  Otherwise UTF-16 or UTF-32
+is encouraged.  The implementation may substitute other encodings, including
+<code>us</code>.
+</p>
+
 </blockquote>
 <p>
 <i>Returns:</i> <code>os</code>.
 </p>
 </blockquote>
+
+<blockquote class = note><p>
+Modify 20.17.7 [time.clock]:
+</p></blockquote>
+
+<p>
+1 The types defined in this subclause shall satisfy the TrivialClock requirements (20.17.3)
+<ins>unless otherwise sepcified</ins>.
+</p>
 
 <blockquote class = note><p>
 Modify 20.17.7.1 [time.clock.system]:
@@ -1410,7 +1431,7 @@ Append new paragraphs after 20.17.7.1 [time.clock.system]/p4:
 <pre>
 template &lt;class Duration&gt;
 sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(utc_time&lt;Duration&gt; u);
+to_sys_time(const utc_time&lt;Duration&gt;&amp; u);
 </pre>
 <blockquote>
 <p>
@@ -1478,7 +1499,7 @@ Output:
 <pre>
 template &lt;class Duration&gt;
 sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(tai_time&lt;Duration&gt; u);
+to_sys_time(const tai_time&lt;Duration&gt;&amp; u);
 </pre>
 <blockquote>
 <p>
@@ -1489,7 +1510,7 @@ to_sys_time(tai_time&lt;Duration&gt; u);
 <pre>
 template &lt;class Duration&gt;
 sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(gps_time&lt;Duration&gt; u);
+to_sys_time(const gps_time&lt;Duration&gt;&amp; u);
 </pre>
 <blockquote>
 <p>
@@ -1500,9 +1521,9 @@ to_sys_time(gps_time&lt;Duration&gt; u);
 </blockquote>
 
 <pre>
-template &lt;class Duration&gt;
-ostream&amp;
-operator&lt;&lt;(ostream&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
 </pre>
 
 <blockquote>
@@ -1535,7 +1556,9 @@ cout &lt;&lt; sys_seconds{946'684'800s} &lt;&lt; '\n';   // 2000-01-01 00:00:00
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const sys_days&amp; dp);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_days&amp; dp);
 </pre>
 
 <blockquote>
@@ -1565,9 +1588,9 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = chrono::time_point&lt;utc_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
+    static time_point now();
 };
 </pre>
 
@@ -1591,20 +1614,27 @@ to_utc_time(sys_seconds{sys_days{2000y/jan/1}}).time_since_epoch() is 946'684'82
 &mdash;<i>end example</i>]
 </p>
 
+<p>
+<code>utc_clock</code> is not a <code>TrivialClock</code> unless the implementation
+can guarantee that <code>utc_clock::now()</code> does not propagate an exception.
+[<i>Note:</i> <code>noexcept(to_utc_time(system_clock::now()))</code> is
+<code>false</code>. &mdash; <i>end note</i>]
+</p>
+
 <pre>
-static utc_clock::time_point utc_clock::now() noexcept;
+static utc_clock::time_point utc_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The best measure available.  This may be approximated with
-<code>to_utc_time(system_clock::now())</code>.
+<i>Returns:</i> The implementations should supply the best measure available.
+This may be approximated with <code>to_utc_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(sys_time&lt;Duration&gt; t);
+to_utc_time(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -1639,7 +1669,7 @@ assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(tai_time&lt;Duration&gt; t) noexcept;
+to_utc_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1653,7 +1683,7 @@ to_utc_time(tai_time&lt;Duration&gt; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(gps_time&lt;Duration&gt; t) noexcept;
+to_utc_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1720,9 +1750,9 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = chrono::time_point&lt;tai_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
+    static time_point now();
 };
 </pre>
 
@@ -1735,20 +1765,27 @@ example by 2000-01-01 there had been 22 leap seconds inserted so 2000-01-01 00:0
 is equivalent to 2000-01-01 00:00:32 TAI (22s plus the initial 10s offset).
 </p>
 
+<p>
+<code>tai_clock</code> is not a <code>TrivialClock</code> unless the implementation
+can guarantee that <code>tai_clock::now()</code> does not propagate an exception.
+[<i>Note:</i> <code>noexcept(to_tai_time(system_clock::now()))</code> is
+<code>false</code>. &mdash; <i>end note</i>]
+</p>
+
 <pre>
-static tai_clock::time_point tai_clock::now() noexcept;
+static tai_clock::time_point tai_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The best measure available.  This may be approximated with
-<code>to_tai_time(system_clock::now())</code>.
+<i>Returns:</i> The implementations should supply the best measure available.  This may
+be approximated with <code>to_tai_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(sys_time&lt;Duration&gt; t);
+to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -1759,7 +1796,7 @@ to_tai_time(sys_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(utc_time&lt;Duration&gt; t) noexcept;
+to_tai_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1773,7 +1810,7 @@ to_tai_time(utc_time&lt;Duration&gt; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(gps_time&lt;Duration&gt; t) noexcept;
+to_tai_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1791,18 +1828,13 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const tai_time&lt;D
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
+<i>Effects:</i> Equivalent to:
 </p>
 <blockquote><pre>
 auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} -
               (sys_days{1970y/jan/1} - sys_days{1958y/jan/1});
+return os &lt;&lt; tp;
 </pre></blockquote>
-<p>
-And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
-</p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
 </blockquote>
 
 <blockquote class = note><p>
@@ -1819,9 +1851,9 @@ public:
     using rep                       = duration::rep;
     using period                    = duration::period;
     using time_point                = chrono::time_point&lt;gps_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
+    static time_point now();
 };
 </pre>
 
@@ -1834,20 +1866,27 @@ the 10s offset between 1958 and 1970 and the additional 9 leap seconds inserted 
 1970 and 1980.
 </p>
 
+<p>
+<code>gps_clock</code> is not a <code>TrivialClock</code> unless the implementation
+can guarantee that <code>gps_clock::now()</code> does not propagate an exception.
+[<i>Note:</i> <code>noexcept(to_gps_time(system_clock::now()))</code> is
+<code>false</code>. &mdash; <i>end note</i>]
+</p>
+
 <pre>
-static gps_clock::time_point gps_clock::now() noexcept;
+static gps_clock::time_point gps_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The best measure available.  This may be approximated with
-<code>to_gps_time(system_clock::now())</code>.
+<i>Returns:</i> The implementations should supply the best measure available.  This may
+be approximated with <code>to_gps_time(system_clock::now())</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(sys_time&lt;Duration&gt; t);
+to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -1858,7 +1897,7 @@ to_gps_time(sys_time&lt;Duration&gt; t);
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(utc_time&lt;Duration&gt; t) noexcept;
+to_gps_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1872,7 +1911,7 @@ to_gps_time(utc_time&lt;Duration&gt; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(tai_time&lt;Duration&gt; t) noexcept;
+to_gps_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -1890,18 +1929,13 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const gps_time&lt;D
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
+<i>Effects:</i>  Equivalent to:
 </p>
 <blockquote><pre>
 auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} +
               (sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1});
+return os &lt;&lt; tp;
 </pre></blockquote>
-<p>
-And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
-</p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
 </blockquote>
 
 <blockquote class = note><p>
@@ -1926,7 +1960,9 @@ The following stream insertion operators exist for <code>local_time&lt;Duration&
 </p>
 
 <pre>
-template &lt;class Duration&gt; ostream&amp; operator&lt;&lt;(ostream&amp; os, const local_time&lt;Duration&gt;&amp; lt);
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const local_time&lt;Duration&gt;&amp; lt);
 </pre>
 
 <blockquote>
@@ -1957,7 +1993,7 @@ to <code>sys_days</code> and <code>local_days</code>.
 
 <p>
 The struct <code>last_spec</code> is used in conjunction with other calendar types to 
-indicate the last in a sequence.  For example, depending on context, it can represent 
+specify the last in a sequence.  For example, depending on context, it can represent 
 the last day of a month, or the last day of the week of a month.
 </p>
 
@@ -2018,7 +2054,9 @@ constexpr day  operator+(const days&amp; x, const day&amp;  y) noexcept;
 constexpr day  operator-(const day&amp;  x, const days&amp; y) noexcept;
 constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const day&amp; d);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 </pre>
 
 <p>
@@ -2239,7 +2277,9 @@ constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const day&amp; d);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 </pre>
 
 <blockquote>
@@ -2309,7 +2349,9 @@ constexpr month  operator+(const months&amp; x,  const month&amp; y) noexcept;
 constexpr month  operator-(const month&amp;  x, const months&amp; y) noexcept;
 constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month&amp; m);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month&amp; m);
 </pre>
 
 <p>
@@ -2505,8 +2547,9 @@ arithmetic. [<i>Note:</i> For example <code>month{0}</code> becomes <code>month{
 and <code>month{13}</code> becomes <code>month{1}</code>. &mdash; <i>end note</i>]
 </p>
 <p>
-<i>Complexity:</i> O(1) with respect to the value of <code>y</code>.  That is, repeated
-increments or decrements is not a valid implementation.
+<i>Complexity:</i> O(1) with respect to the value of <code>y</code>.
+[<i>Note:</i> Repeated
+increments or decrements is not a valid implementation. &mdash; <i>end note</i>]
 </p>
 <p>
 <i>Example:</i> <code>feb + months{11} == jan</code>.
@@ -2555,7 +2598,9 @@ constexpr months operator-(const month&amp;  x, const month&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month&amp; m);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month&amp; m);
 </pre>
 
 <blockquote>
@@ -2619,7 +2664,9 @@ constexpr year  operator+(const years&amp; x, const year&amp;  y) noexcept;
 constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
 constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year&amp; y);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year&amp; y);
 </pre>
 
 <p>
@@ -2871,13 +2918,15 @@ constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year&amp; y);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year&amp; y);
 </pre>
 
 <blockquote>
 <p>
 <i>Effects:</i> Inserts a signed decimal integral text representation of <code>y</code>
-into <code>os</code>. If the year is less than four decimal digits, pads the year with
+into <code>os</code>. If the year is in the range [-999, 999], prefixes the year with
 <code>'0'</code> to four digits.  If the year is negative, prefixes with <code>'-'</code>.
 </p>
 <p>
@@ -2899,14 +2948,14 @@ constexpr year operator "" y(unsigned long long y) noexcept;
 
 <p>
 <code>weekday</code> represents a day of the week in the civil calendar.  It
-normally holds values in the range 0 to 6, corresponding to Sunday thru
+normally holds values in the range 0 to 6, corresponding to Sunday through
 Saturday. However it may hold non-negative values outside this range.  It can be
 constructed with any <code>unsigned</code> value, which will be subsequently
 truncated to fit into <code>weekday</code>'s unspecified internal storage. 
 <code>weekday</code> is equality comparable. <code>weekday</code> is not
 less-than comparable because there is no universal consensus on which day is the
 first day of the week.  This design chooses the encoding of 0 to 6 to represent
-Sunday thru Saturday only because this is consistent with existing C and C++
+Sunday through Saturday only because this is consistent with existing C and C++
 practice.  However  <code>weekday</code>'s comparison and arithmetic operations
 treat the days of the week as a circular range, with no beginning and no end.  
 One can stream out a <code>weekday</code>. <code>weekday</code> has explicit
@@ -2959,7 +3008,9 @@ constexpr weekday operator+(const days&amp;    x, const weekday&amp; y) noexcept
 constexpr weekday operator-(const weekday&amp; x, const days&amp;    y) noexcept;
 constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday&amp; wd);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday&amp; wd);
 </pre>
 
 <p>
@@ -2991,7 +3042,7 @@ the week in <code>wd_</code>.
 </p>
 <p>
 <i>Example:</i> If <code>dp</code> represents 1970-01-01, the constructed
-<code>weekday</code> shall represent Thursday by storing 4 in <code>wd_</code>.
+<code>weekday</code> represents Thursday by storing 4 in <code>wd_</code>.
 </p>
 </blockquote>
 
@@ -3167,8 +3218,9 @@ arithmetic. [<i>Note:</i> For example <code>weekday{7}</code> becomes
 <code>weekday{0}</code>. &mdash; <i>end note</i>]
 </p>
 <p>
-<i>Complexity:</i> O(1) with respect to the value of <code>y</code>.  That is, repeated
-increments or decrements is not a valid implementation.
+<i>Complexity:</i> O(1) with respect to the value of <code>y</code>.
+[<i>Note:</i> Repeated
+increments or decrements is not a valid implementation. &mdash; <i>end note</i>]
 </p>
 <p>
 <i>Example:</i> <code>mon + days{6} == sun</code>.
@@ -3217,7 +3269,9 @@ constexpr days operator-(const weekday&amp;  x, const weekday&amp;  y) noexcept;
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday&amp; wd);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday&amp; wd);
 </pre>
 
 <blockquote>
@@ -3270,7 +3324,9 @@ public:
 constexpr bool operator==(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday_indexed&amp; wdi);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 </pre>
 
 <p>
@@ -3341,17 +3397,18 @@ constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&am
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday_indexed&amp; wdi);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; wdi.weekday() &lt;&lt; '[' &lt;&lt; wdi.index() &lt;&lt; ']'</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; wdi.weekday() &lt;&lt; '[' &lt;&lt; wdi.index() &lt;&lt; ']';
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.7 Class <code>weekday_last</code> [time.calendar.weekday_last]</h4>
@@ -3389,7 +3446,9 @@ public:
 constexpr bool operator==(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday_last&amp; wdl);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_last&amp; wdl);
 </pre>
 
 <p>
@@ -3450,17 +3509,18 @@ constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) 
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const weekday_last&amp; wdl);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_last&amp; wdl);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; wdi.weekday() &lt;&lt; "[last]"</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; wdi.weekday() &lt;&lt; "[last]";
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.8 Class <code>month_day</code> [time.calendar.month_day]</h4>
@@ -3494,7 +3554,9 @@ constexpr bool operator&gt; (const month_day&amp; x, const month_day&amp; y) noe
 constexpr bool operator&lt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_day&amp; md);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day&amp; md);
 </pre>
 
 <p>
@@ -3610,17 +3672,18 @@ constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noe
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_day&amp; md);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day&amp; md);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; md.month() &lt;&lt; '/' &lt;&lt; md.day()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; md.month() &lt;&lt; '/' &lt;&lt; md.day();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.9 Class <code>month_day_last</code> [time.calendar.month_day_last]</h4>
@@ -3663,7 +3726,9 @@ constexpr bool operator&gt; (const month_day_last&amp; x, const month_day_last&a
 constexpr bool operator&lt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_day_last&amp; mdl);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day_last&amp; mdl);
 </pre>
 
 <p>
@@ -3764,17 +3829,18 @@ constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&a
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_day_last&amp; mdl);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day_last&amp; mdl);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; mdl.month() &lt;&lt; "/last"</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; mdl.month() &lt;&lt; "/last";
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.10 Class <code>month_weekday</code> [time.calendar.month_weekday]</h4>
@@ -3801,7 +3867,9 @@ public:
 constexpr bool operator==(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_weekday&amp; mwd);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday&amp; mwd);
 </pre>
 
 <p>
@@ -3872,17 +3940,18 @@ constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_weekday&amp; mwd);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday&amp; mwd);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; mwd.month() &lt;&lt; '/' &lt;&lt; mwd.weekday_indexed()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; mwd.month() &lt;&lt; '/' &lt;&lt; mwd.weekday_indexed();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.11 Class <code>month_weekday_last</code> [time.calendar.month_weekday_last]</h4>
@@ -3911,7 +3980,9 @@ public:
 constexpr bool operator==(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_weekday_last&amp; mwdl);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 </pre>
 
 <p>
@@ -3983,17 +4054,18 @@ constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_l
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const month_weekday_last&amp; mwdl);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; mwdl.month() &lt;&lt; '/' &lt;&lt; mwdl.weekday_last()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; mwdl.month() &lt;&lt; '/' &lt;&lt; mwdl.weekday_last();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.12 Class <code>year_month</code> [time.calendar.year_month]</h4>
@@ -4042,7 +4114,9 @@ constexpr year_month operator+(const year_month&amp; ym, const years&amp; dy) no
 constexpr year_month operator+(const years&amp; dy, const year_month&amp; ym) noexcept;
 constexpr year_month operator-(const year_month&amp; ym, const years&amp; dy) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month&amp; ym);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month&amp; ym);
 </pre>
 
 <p>
@@ -4282,17 +4356,18 @@ constexpr year_month operator-(const year_month& ym, const years& dy) noexcept;
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month&amp; ym);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month&amp; ym);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; ym.year() &lt;&lt; '/' &lt;&lt; ym.month()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; ym.year() &lt;&lt; '/' &lt;&lt; ym.month();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.13 Class <code>year_month_day</code> [time.calendar.year_month_day]</h4>
@@ -4350,7 +4425,9 @@ constexpr year_month_day operator+(const years&amp; dy, const year_month_day&amp
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const months&amp; dm) noexcept;
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&amp; dy) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_day&amp; ymd);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day&amp; ymd);
 </pre>
 
 <p>
@@ -4529,13 +4606,11 @@ constexpr explicit year_month_day::operator local_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
-</p>
+<blockquote><pre>
+return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
+</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -4628,7 +4703,7 @@ constexpr year_month_day operator+(const year_month_day&amp; ymd, const months&a
 </p>
 <p>
 <i>Remarks:</i> If <code>ymd.day()</code> is in the range <code>[1d, 28d]</code>,
-the resultant <code>year_month_day</code> is guaranteed to return <code>true</code> from
+the resultant <code>year_month_day</code> shall return <code>true</code> from
 <code>ok()</code>.
 </p>
 </blockquote>
@@ -4663,8 +4738,8 @@ constexpr year_month_day operator+(const year_month_day&amp; ymd, const years&am
 </p>
 <p>
 <i>Remarks:</i> If <code>ymd.month()</code> is <code>feb</code> and <code>ymd.day()</code>
-is not in the range <code>[1d, 28d]</code>, the resultant <code>year_month_day</code> is
-not guaranteed to return <code>true</code> from <code>ok()</code>.
+is not in the range <code>[1d, 28d]</code>, the resultant <code>year_month_day</code> may
+return <code>false</code> from <code>ok()</code>.
 </p>
 </blockquote>
 
@@ -4689,7 +4764,9 @@ constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&am
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_day&amp; ymd);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day&amp; ymd);
 </pre>
 
 <blockquote>
@@ -4756,7 +4833,9 @@ constexpr year_month_day_last operator+(const years&amp; dy, const year_month_da
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const months&amp; dm) noexcept;
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const years&amp; dy) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_day_last&amp; ymdl);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 </pre>
 
 <p>
@@ -4893,13 +4972,11 @@ constexpr explicit year_month_day_last::operator local_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
-</p>
+<blockquote><pre>
+return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
+</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -4986,7 +5063,7 @@ constexpr year_month_day_last operator+(const year_month_day_last&amp; ymdl, con
 <i>Returns:</i> <code>(ymdl.year() / ymdl.month() + dm) / last</code>.
 </p>
 <p>
-<i>Postconditions:</i> The resultant <code>year_month_day_last</code> will return
+<i>Postconditions:</i> The resultant <code>year_month_day_last</code> returns
 <code>true</code> from <code>ok()</code>.
 </p>
 <p>
@@ -5045,17 +5122,18 @@ constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, con
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_day_last&amp; ymdl);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; ymdl.year() &lt;&lt; '/' &lt;&lt; ymdl.month_day_last()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; ymdl.year() &lt;&lt; '/' &lt;&lt; ymdl.month_day_last();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.15 Class <code>year_month_weekday</code> [time.calendar.year_month_weekday]</h4>
@@ -5111,7 +5189,9 @@ constexpr year_month_weekday operator+(const years&amp; dy, const year_month_wee
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const months&amp; dm) noexcept;
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const years&amp; dy) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_weekday&amp; ymwdi);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
 </pre>
 
 <p>
@@ -5288,13 +5368,11 @@ constexpr explicit year_month_weekday::operator local_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
-</p>
+<blockquote><pre>
+return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
+</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -5341,7 +5419,7 @@ constexpr year_month_weekday operator+(const year_month_weekday&amp; ymwd, const
 <i>Returns:</i> <code>(ymwd.year() / ymwd.month() + dm) / ymwd.weekday_indexed()</code>.
 </p>
 <p>
-<i>Postconditions:</i> The resultant <code>year_month_weekday</code> will return
+<i>Postconditions:</i> The resultant <code>year_month_weekday</code> returns
 <code>true</code> from <code>ok()</code>.
 </p>
 <p>
@@ -5400,17 +5478,18 @@ constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_weekday&amp; ymwd);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday&amp; ymwd);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; ymwdi.year() &lt;&lt; '/' &lt;&lt; ymwdi.month() &lt;&lt; '/' &lt;&lt; ymwdi.weekday_indexed()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; ymwdi.year() &lt;&lt; '/' &lt;&lt; ymwdi.month() &lt;&lt; '/' &lt;&lt; ymwdi.weekday_indexed();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.16 Class <code>year_month_weekday_last</code> [time.calendar.year_month_weekday_last]</h4>
@@ -5485,7 +5564,9 @@ constexpr
 year_month_weekday_last
 operator-(const year_month_weekday_last&amp; ymwdl, const years&amp; dy) noexcept;
 
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_weekday_last&amp; ymwdl);
+template &lt;class charT, class traits&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 </pre>
 
 <p>
@@ -5622,13 +5703,11 @@ constexpr explicit year_month_weekday_last::operator local_days() const noexcept
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
-</p>
+<blockquote><pre>
+return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
+</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -5673,7 +5752,7 @@ constexpr year_month_weekday_last operator+(const year_month_weekday_last&amp; y
 <i>Returns:</i> <code>(ymwdl.year() / ymwdl.month() + dm) / ymwdl.weekday_last()</code>.
 </p>
 <p>
-<i>Postconditions:</i> The resultant <code>year_month_weekday_last</code> will return
+<i>Postconditions:</i> The resultant <code>year_month_weekday_last</code> returns
 <code>true</code> from <code>ok()</code>.
 </p>
 <p>
@@ -5732,17 +5811,18 @@ constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; y
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const year_month_weekday_last&amp; ymwdl);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Inserts
-<code>os &lt;&lt; ymwdl.year() &lt;&lt; '/' &lt;&lt; ymwdl.month() &lt;&lt; '/' &lt;&lt; ymwdl.weekday_last()</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> <code>os</code>.
-</p>
+<blockquote><pre>
+return os &lt;&lt; ymwdl.year() &lt;&lt; '/' &lt;&lt; ymwdl.month() &lt;&lt; '/' &lt;&lt; ymwdl.weekday_last();
+</pre></blockquote>
 </blockquote>
 
 <h4>20.17.8.17 civil calendar conventional syntax operators [time.calendar.operators]</h4>
@@ -5782,8 +5862,8 @@ month_day md2 = 4d/apr;
 </pre></blockquote>
 
 <p>
-Everything not intended as above is caught as a compile-time error, with the notable
-exception of an expression that consists of nothing but <code>int</code>, which of course
+Everything not intended as above is ill-formed, with the notable
+exception of an expression that consists of nothing but <code>int</code>, which
 has type <code>int</code>.
 </p>
 
@@ -5793,12 +5873,6 @@ auto b = 2015y/4/4;      // b == year_month_day{year(2015), month(4), day(4)}
 auto c = 2015y/4d/apr;   // error: invalid operands to binary expression ('chrono::year' and 'chrono::day')
 auto d = 2015/apr/4;     // error: invalid operands to binary expression ('int' and 'const chrono::month')
 </pre></blockquote>
-
-<p>
-The last example may be clear to a human reader.  But the compiler doesn't know if
-<code>2015</code> refers to a <code>year</code> or a <code>day</code>.  Instead of
-guessing, the compiler flags it as an error.
-</p>
 
 <p><b><code>year_month</code>:</b></p>
 
@@ -6164,7 +6238,7 @@ There are 4 specializations of <code>time_of_day</code> to handle four precision
 
 <li>
 <pre>
-time_of_day&lt;hours&gt;
+tempalte &lt;&gt; class time_of_day&lt;hours&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours since midnight.
@@ -6173,7 +6247,7 @@ This specialization handles hours since midnight.
 
 <li>
 <pre>
-time_of_day&lt;minutes&gt;
+tempalte &lt;&gt; class time_of_day&lt;minutes&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours:minutes since midnight.
@@ -6182,7 +6256,7 @@ This specialization handles hours:minutes since midnight.
 
 <li>
 <pre>
-time_of_day&lt;seconds&gt;
+tempalte &lt;&gt; class time_of_day&lt;seconds&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours:minutes:seconds since midnight.
@@ -6191,10 +6265,11 @@ This specialization handles hours:minutes:seconds since midnight.
 
 <li>
 <pre>
-time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
+tempalte &lt;class Rep, class Period&gt; class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
 </pre>
 <blockquote><p>
-This specialization is restricted to <code>Period</code>s that are shorter than 1
+This specialization is restricted to <code>Rep</code> types that are integral, and
+<code>Period</code>s that are shorter than 1
 second.  Typical uses are with milliseconds, microseconds and nanoseconds.  This
 specialization handles hours:minute:seconds.fractional_seconds since midnight.
 </p></blockquote>
@@ -6209,7 +6284,8 @@ Each specialization of <code>time_of_day</code> is a literal class type.</br>
 </p>
 
 <pre>
-time_of_day&lt;hours&gt;
+tempalte &lt;&gt;
+class time_of_day&lt;hours&gt;
 {
 public:
     using precision = hours;
@@ -6223,8 +6299,8 @@ public:
     constexpr explicit operator  precision()   const noexcept;
     constexpr          precision to_duration() const noexcept;
 
-    void make24() noexcept;
-    void make12() noexcept;
+    constexpr void make24() noexcept;
+    constexpr void make12() noexcept;
 };
 </pre>
 
@@ -6304,7 +6380,7 @@ constexpr precision to_duration() const noexcept;
 </blockquote>
 
 <pre>
-void time_of_day&lt;hours&gt;::make24() noexcept;
+constexpr void time_of_day&lt;hours&gt;::make24() noexcept;
 </pre>
 
 <blockquote>
@@ -6315,7 +6391,7 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-void time_of_day&lt;hours&gt;::make12() noexcept;
+constexpr void time_of_day&lt;hours&gt;::make12() noexcept;
 </pre>
 
 <blockquote>
@@ -6326,7 +6402,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_of_day&lt;hours&gt;&amp; t);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;hours&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6353,7 +6431,8 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-time_of_day&lt;minutes&gt;
+tempalte &lt;&gt;
+class time_of_day&lt;minutes&gt;
 {
 public:
     using precision = minutes;
@@ -6485,7 +6564,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6512,7 +6593,8 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-time_of_day&lt;seconds&gt;
+tempalte &lt;&gt;
+class time_of_day&lt;seconds&gt;
 {
 public:
     using precision = seconds;
@@ -6659,7 +6741,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6686,7 +6770,8 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
+tempalte &lt;class Rep, class Period&gt;
+class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
 {
 public:
     using precision = duration&lt;Rep, Period&gt;;
@@ -6855,7 +6940,9 @@ Otherwise, no effects.
 </blockquote>
 
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
 </pre>
 
 <blockquote>
@@ -6894,7 +6981,7 @@ the helper function.
 template &lt;class Rep, class Period&gt;
 constexpr
 time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
-make_time(duration&lt;Rep, Period&gt; d) noexcept;
+make_time(const duration&lt;Rep, Period&gt;&amp; d);
 </pre>
 
 <blockquote>
@@ -6906,7 +6993,7 @@ make_time(duration&lt;Rep, Period&gt; d) noexcept;
 <pre>
 constexpr
 time_of_day&lt;hours&gt;
-make_time(hours h, unsigned md) noexcept;
+make_time(const hours&amp; h, unsigned md);
 </pre>
 
 <blockquote>
@@ -6918,7 +7005,7 @@ make_time(hours h, unsigned md) noexcept;
 <pre>
 constexpr
 time_of_day&lt;minutes&gt;
-make_time(hours h, minutes m, unsigned md) noexcept;
+make_time(const hours&amp; h, const minutes&amp; m, unsigned md);
 </pre>
 
 <blockquote>
@@ -6930,8 +7017,8 @@ make_time(hours h, minutes m, unsigned md) noexcept;
 <pre>
 constexpr
 time_of_day&lt;seconds&gt;
-make_time(hours h, minutes m, seconds s,
-          unsigned md) noexcept;
+make_time(const hours&amp; h, const minutes&amp; m, const seconds&amp; s,
+          unsigned md);
 </pre>
 
 <blockquote>
@@ -6941,15 +7028,18 @@ make_time(hours h, minutes m, seconds s,
 </blockquote>
 
 <pre>
-template &lt;class Rep, class Period,
-          class = enable_if_t&lt;ratio_less&lt;Period, ratio&lt;1&gt;&gt;::value&gt;&gt;
+template &lt;class Rep, class Period&gt;
 constexpr
 time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
-make_time(hours h, minutes m, seconds s,
-          duration&lt;Rep, Period&gt; sub_s, unsigned md) noexcept
+make_time(const hours&amp; h, const minutes&amp; m, const seconds&amp; s,
+          const duration&lt;Rep, Period&gt;&amp; sub_s, unsigned md)
 </pre>
 
 <blockquote>
+<p>
+<i>Remarks:</i>  This function shall not participate in overload resolution unless 
+<code>ratio_less&lt;Period, ratio&lt;1&gt;&gt;::value</code> is <code>true</code>.
+</p>
 <p>
 <i>Returns:</i> <code>time_of_day&lt;duration&lt;Rep, Period&gt;&gt;(h, m, s, sub_s, md)</code>.
 </p>
@@ -6977,7 +7067,7 @@ functions access it.
 </p>
 
 <pre>
-struct TZ_DB
+struct tzdb
 {
     string            version;
     vector&lt;time_zone&gt; zones;
@@ -6987,14 +7077,14 @@ struct TZ_DB
 </pre>
 
 <p>
-The <cod>TZ_DB</code> database is a singleton.  And access to it is
+The <cod>tzdb</code> database is a singleton.  And access to it is
 <i>read-only</i>, except for <code>reload_tzdb()</code> which re-initializes it.
 Each <code>vector</code> is sorted to enable fast lookup.  You can iterate over
 and inspect this database.
 </p>
 
 <pre>
-const TZ_DB&amp; get_tzdb();
+const tzdb&amp; get_tzdb();
 </pre>
 <blockquote>
 <p>
@@ -7010,7 +7100,7 @@ one time.
 </p>
 <p>
 <i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
-be returned to a valid <code>TZ_DB</code>.
+be returned to a valid <code>tzdb</code>.
 </p>
 </blockquote>
 
@@ -7063,7 +7153,7 @@ other sections depend upon this subsection.
 </p></blockquote>
 
 <pre>
-const TZ_DB&amp; reload_tzdb();
+const tzdb&amp; reload_tzdb();
 </pre>
 <blockquote>
 <p>
@@ -7072,7 +7162,7 @@ const TZ_DB&amp; reload_tzdb();
 <a href="http://www.iana.org/time-zones">IANA website</a> is unavailable, or if the
 latest version is already installed, there are no effects.  Otherwise, a new version
 is available.  It is downloaded and installed, and then the program re-initializes
-the <code>TZ_DB</code> singleton from the new disk files.
+the <code>tzdb</code> singleton from the new disk files.
 </p>
 <p>
 <i>Returns:</i> A <code>const</code> reference to the database.
@@ -7087,7 +7177,7 @@ to safely use this function.  If this function re-initializes the database, all 
 </p>
 <p>
 <i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
-be returned to a valid <code>TZ_DB</code>.
+be returned to a valid <code>tzdb</code>.
 </p>
 </blockquote>
 
@@ -7314,7 +7404,9 @@ map abbreviations back to a <code>time_zone</code> and UTC offset.
 A <code>sys_info</code> can be streamed out in an unspecified format:
 </p>
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const sys_info&amp; r);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_info&amp; r);
 </pre>
 </blockquote>
 
@@ -7350,7 +7442,9 @@ out with the <code>sys_info</code> that starts just before the
 A <code>local_info</code> can be streamed out in an unspecified format:
 </p>
 <pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const local_info&amp; r);
+template &lt;class charT, class traits&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const local_info&amp; r);
 </pre>
 
 <h4>20.17.10.4 Class <code>time_zone</code> [time.timezone.time_zone]</h4>
@@ -7368,7 +7462,7 @@ public:
     time_zone(const time_zone&amp;) = delete;
     time_zone&amp; operator=(const time_zone&amp;) = delete;
 
-    const string&amp; name() const;
+    const string&amp; name() const noexcept;
 
     template &lt;class Duration&gt; sys_info   get_info(sys_time&lt;Duration&gt; st)   const;
     template &lt;class Duration&gt; local_info get_info(local_time&lt;Duration&gt; tp) const;
@@ -7386,17 +7480,15 @@ public:
         to_local(sys_time&lt;Duration&gt; tp) const;
 };
 
-bool operator==(const time_zone&amp; x, const time_zone&amp; y);
-bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
-bool operator&lt; (const time_zone&amp; x, const time_zone&amp; y);
-bool operator&gt; (const time_zone&amp; x, const time_zone&amp; y);
-bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
-bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y);
-
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_zone&amp; z)
+bool operator==(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator!=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&lt; (const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&gt; (const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
+bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <pre>
-const string&amp; time_zone::name() const;
+const string&amp; time_zone::name() const noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7483,7 +7575,7 @@ time_zone::to_local(sys_time&lt;Duration&gt; tp) const;
 </blockquote>
 
 <pre>
-bool operator==(const time_zone&amp; x, const time_zone&amp; y);
+bool operator==(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7492,7 +7584,7 @@ bool operator==(const time_zone&amp; x, const time_zone&amp; y);
 </blockquote>
 
 <pre>
-bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator!=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7501,7 +7593,7 @@ bool operator!=(const time_zone&amp; x, const time_zone&amp; y);
 </blockquote>
 
 <pre>
-bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7510,7 +7602,7 @@ bool operator&lt;(const time_zone&amp; x, const time_zone&amp; y);
 </blockquote>
 
 <pre>
-bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7519,7 +7611,7 @@ bool operator&gt;(const time_zone&amp; x, const time_zone&amp; y);
 </blockquote>
 
 <pre>
-bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -7528,20 +7620,11 @@ bool operator&lt;=(const time_zone&amp; x, const time_zone&amp; y);
 </blockquote>
 
 <pre>
-bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y);
+bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
 <i>Returns:</i> <code>!(x &lt; y)</code>.
-</p>
-</blockquote>
-
-<pre>
-ostream&amp; operator&lt;&lt;(ostream&amp; os, const time_zone&amp; z)
-</pre>
-<blockquote>
-<p>
-Produces an unspecified output representing the <code>time_zone</code>.
 </p>
 </blockquote>
 
@@ -7566,17 +7649,17 @@ public:
     zoned_time(const zoned_time&amp;) = default;
     zoned_time&amp; operator=(const zoned_time&amp;) = default;
 
-             zoned_time(sys_time&lt;Duration&gt; st);
+             zoned_time(const sys_time&lt;Duration&gt;&amp; st);
     explicit zoned_time(const time_zone* z);
     explicit zoned_time(const string&amp; name);
 
     template &lt;class Duration2&gt;
         zoned_time(const zoned_time&lt;Duration2&gt;&amp; zt) noexcept;
 
-    zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp);
-    zoned_time(const string&amp; name, local_time&lt;Duration&gt; tp);
-    zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp, choose c);
-    zoned_time(const string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+    zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp);
+    zoned_time(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp);
+    zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp, choose c);
+    zoned_time(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
     zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; zt);
     zoned_time(const string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt);
@@ -7586,8 +7669,8 @@ public:
     zoned_time(const time_zone* z, const sys_time&lt;Duration&gt;&amp; st);
     zoned_time(const string&amp; name, const sys_time&lt;Duration&gt;&amp; st);
 
-    zoned_time&amp; operator=(sys_time&lt;Duration&gt; st);
-    zoned_time&amp; operator=(local_time&lt;Duration&gt; ut);
+    zoned_time&amp; operator=(const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time&amp; operator=(const local_time&lt;Duration&gt;&amp; ut);
 
              operator sys_time&lt;Duration&gt;()   const;
     explicit operator local_time&lt;Duration&gt;() const;
@@ -7628,7 +7711,7 @@ members.
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(sys_time&lt;Duration&gt; st);
+zoned_time&lt;Duration&gt;::zoned_time(const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
@@ -7681,7 +7764,7 @@ template &lt;class Duration2&gt;
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp);
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
@@ -7697,7 +7780,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duratio
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, local_time&lt;Duration&gt; tp);
+zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
@@ -7706,7 +7789,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, local_time&lt;Dur
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp, choose c);
+zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp, choose c);
 </pre>
 <blockquote>
 <p>
@@ -7720,7 +7803,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duratio
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 </pre>
 <blockquote>
 <p>
@@ -7803,7 +7886,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const string&amp; name, const sys_time&lt
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(sys_time&lt;Duration&gt; st);
+zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
@@ -7816,7 +7899,7 @@ no effect on the return value of <code>get_time_zone()</code>.
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(local_time&lt;Duration&gt; lt);
+zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(const local_time&lt;Duration&gt;&amp; lt);
 </pre>
 <blockquote>
 <p>
@@ -7905,9 +7988,9 @@ operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duratio
 </blockquote>
 
 <pre>
-template <class Duration>
-ostream&
-operator<<(ostream& os, const zoned_time<Duration>& t)
+template &lt;class charT, class traits, class Duration&gt;
+basic_ostream&lt;charT, traits&gt;&
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;& os, const zoned_time&lt;Duration&gt;&amp; t)
 </pre>
 <blockquote>
 <p>
@@ -7932,7 +8015,7 @@ case the correct return type is
 <pre>
 template &lt;class Duration&gt;
 zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-make_zoned(sys_time&lt;Duration&gt; tp)
+make_zoned(const sys_time&lt;Duration&gt;&amp; tp)
 </pre>
 <blockquote>
 <p>
@@ -7944,7 +8027,7 @@ make_zoned(sys_time&lt;Duration&gt; tp)
 <pre>
 template &lt;class Duration&gt;
 zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp)
+make_zoned(const time_zone* zone, const local_time&lt;Duration&gt;&amp; tp)
 </pre>
 <blockquote>
 <p>
@@ -7955,7 +8038,7 @@ make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp)
 <pre>
 template &lt;class Duration&gt;
 zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-make_zoned(const string&amp; name, local_time&lt;Duration&gt; tp)
+make_zoned(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp)
 </pre>
 <blockquote>
 <p>
@@ -7966,7 +8049,7 @@ make_zoned(const string&amp; name, local_time&lt;Duration&gt; tp)
 <pre>
 template &lt;class Duration&gt;
 zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp, choose c)
+make_zoned(const time_zone* zone, const local_time&lt;Duration&gt;&amp; tp, choose c)
 </pre>
 <blockquote>
 <p>
@@ -7977,7 +8060,7 @@ make_zoned(const time_zone* zone, local_time&lt;Duration&gt; tp, choose c)
 <pre>
 template &lt;class Duration&gt;
 zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-make_zoned(const string&amp; name, local_time&lt;Duration&gt; tp, choose c)
+make_zoned(const string&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c)
 </pre>
 <blockquote>
 <p>
@@ -8459,7 +8542,8 @@ work of these people, this software would have no data to parse.
 I would also like to thank Jiangang Zhuang and Bjarne Stroustrup for invaluable
 feedback for the timezone portion of this library, which ended up also
 influencing the date.h library.  Thanks also to Jonathan Wakely for agreeing to
-present this paper in Oulu for me.
+present this paper in Oulu for me.  Thank you Daniel Kr&uuml;gler for the
+incredibly thorough review.
 </p>
 <p>
 And I would also especially like to thank contributors to this library:  gmcode,
