@@ -2977,33 +2977,6 @@ operator<<(std::ostream& os, const TZ_DB& db)
 
 // -----------------------
 
-std::ostream&
-operator<<(std::ostream& os, const sys_info& r)
-{
-    os << r.begin << '\n';
-    os << r.end << '\n';
-    os << make_time(r.offset) << "\n";
-    os << make_time(r.save) << "\n";
-    os << r.abbrev << '\n';
-    return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const local_info& r)
-{
-    if (r.result == local_info::nonexistent)
-        os << "nonexistent between\n";
-    else if (r.result == local_info::ambiguous)
-        os << "ambiguous between\n";
-    os << r.first;
-    if (r.result != local_info::unique)
-    {
-        os << "and\n";
-        os << r.second;
-    }
-    return os;
-}
-
 #ifdef _WIN32
 
 const time_zone*

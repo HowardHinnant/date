@@ -3873,7 +3873,7 @@ template <class Rep, class Period,
 CONSTCD11
 inline
 time_of_day<std::chrono::duration<Rep, Period>>
-make_time(std::chrono::duration<Rep, Period> d) NOEXCEPT
+make_time(const std::chrono::duration<Rep, Period>& d)
 {
     return time_of_day<std::chrono::duration<Rep, Period>>(d);
 }
@@ -3881,7 +3881,7 @@ make_time(std::chrono::duration<Rep, Period> d) NOEXCEPT
 CONSTCD11
 inline
 time_of_day<std::chrono::hours>
-make_time(std::chrono::hours h, unsigned md) NOEXCEPT
+make_time(const std::chrono::hours& h, unsigned md)
 {
     return time_of_day<std::chrono::hours>(h, md);
 }
@@ -3889,7 +3889,8 @@ make_time(std::chrono::hours h, unsigned md) NOEXCEPT
 CONSTCD11
 inline
 time_of_day<std::chrono::minutes>
-make_time(std::chrono::hours h, std::chrono::minutes m, unsigned md) NOEXCEPT
+make_time(const std::chrono::hours& h, const std::chrono::minutes& m,
+          unsigned md)
 {
     return time_of_day<std::chrono::minutes>(h, m, md);
 }
@@ -3897,8 +3898,8 @@ make_time(std::chrono::hours h, std::chrono::minutes m, unsigned md) NOEXCEPT
 CONSTCD11
 inline
 time_of_day<std::chrono::seconds>
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          unsigned md) NOEXCEPT
+make_time(const std::chrono::hours& h, const std::chrono::minutes& m,
+          const std::chrono::seconds& s, unsigned md)
 {
     return time_of_day<std::chrono::seconds>(h, m, s, md);
 }
@@ -3909,8 +3910,9 @@ template <class Rep, class Period,
 CONSTCD11
 inline
 time_of_day<std::chrono::duration<Rep, Period>>
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          std::chrono::duration<Rep, Period> sub_s, unsigned md) NOEXCEPT
+make_time(const std::chrono::hours& h, const std::chrono::minutes& m,
+          const std::chrono::seconds& s, const std::chrono::duration<Rep, Period>& sub_s,
+          unsigned md)
 {
     return time_of_day<std::chrono::duration<Rep, Period>>(h, m, s, sub_s, md);
 }
