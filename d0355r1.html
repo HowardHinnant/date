@@ -42,6 +42,7 @@ Document number: D0355R1<br/>
 <li><a href="#Revision">Revision History</a></li>
 <li><a href="#Introduction">Introduction</a></li>
 <li><a href="#Description">Description</a></li>
+<li><a href="#Issues">Issues</a></li>
 <li><a href="#Wording">Proposed Wording</a></li>
 <li><a href="#Acknowledgements">Acknowledgements</a></li>
 <li><a href="#References">References</a></li>
@@ -568,6 +569,72 @@ please see:
 <blockquote>
 <a href="http://howardhinnant.github.io/date/iso_week.html">http://howardhinnant.github.io/date/iso_week.html</a>
 </blockquote>
+
+<a name="Issues"></a><h2>Issues</h2>
+
+<p>
+This is a collection of issues that could be changed one way or the other with this
+proposal.
+</p>
+
+<ol>
+<li>
+<p>
+Can the database be updated by the program while the program is running?
+</p>
+<p>
+This is probably the most important issue to be decided.  This decision, one way or
+the other, leads (or doesn't) to many other decisions.  If the database can be updated
+while the program is running:
+</p>
+<ol type="a">
+<li>Is the cleint responsible for thread safety issues? This proposal says yes.</li>
+<li>What is the format of the database?  This proposal says it is the text format
+of the IANA database.</li>
+<li>Can the database be updated to the latest version at a remote server on application
+startup?  This proposal says yes.  This means Egypt-like time-zone changes (3 days
+notice) can be handled seamlessly.</li>
+</ol>
+<p>
+Not allowing the database to be dynamically updated is by far the simpler solution.
+This proposal shows you what dynamic updating could look like.  It is far easier to
+remove this feature from a proposal than to add it.  This proposal is designed in such
+a way that it is trivial to remove this functionality.
+</p>
+</li>
+
+<li>
+<p>
+Currently this library passes <code>time_zone</code>s around with
+<code>const time_zone*</code>.  Each <code>time_zone</code> is a non-copyable singleton
+in the application (much like a <code>type_info</code>).  Passing them around by pointers
+allows syntax such as:
+</p>
+<blockquote><pre>
+auto tz = current_zone();
+cout &lt;&lt; tz-&gt;name() &lt;&lt; '\n';
+</pre></blockquote>
+<p>
+But source functions such as <code>current_zone</code> and <code>locate_zone</code>
+<i>never</i> return <code>nullptr</code>.  So it has been suggested that the library
+traffic in <code>const time_zone&amp;</code> instead.  This would change the above
+code snippet to:
+</p>
+<blockquote><pre>
+auto&amp; tz = current_zone();
+cout &lt;&lt; tz.name() &lt;&lt; '\n';
+</pre></blockquote>
+<p>
+Either solution is workable.  And whichever we choose, the client can get the other
+with <code>*current_zone()</code> or <code>&amp;current_zone()</code>.  And whichever
+we choose, we <i>will</i> make the library API self-consistent so that things like
+the following work no matter what with this syntax:
+</p>
+<blockquote><pre>
+cout &lt;&lt; make_zoned(current_zone(), system_clock::now()) &lt;&lt; '\n';
+</pre></blockquote>
+</li>
+</ol>
 
 <a name="Wording"></a><h2>Proposed Wording</h2>
 
