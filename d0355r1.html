@@ -606,9 +606,9 @@ a way that it is trivial to remove this functionality.
 <li>
 <p>
 Currently this library passes <code>time_zone</code>s around with
-<code>const time_zone*</code>.  Each <code>time_zone</code> is a non-copyable singleton
-in the application (much like a <code>type_info</code>).  Passing them around by pointers
-allows syntax such as:
+<code>const time_zone*</code>.  Each <code>time_zone</code> is a non-copyable
+<code>const</code> singleton in the application (much like a
+<code>type_info</code>).  Passing them around by pointers allows syntax such as:
 </p>
 <blockquote><pre>
 auto tz = current_zone();
@@ -633,6 +633,13 @@ the following work no matter what with this syntax:
 <blockquote><pre>
 cout &lt;&lt; make_zoned(current_zone(), system_clock::now()) &lt;&lt; '\n';
 </pre></blockquote>
+<p>
+We simply need to decide if the default style guide for passing <code>time_zone</code>s
+around is <code>const time_zone*</code> or <code>const time_zone&amp;</code>.  And yes,
+it is ok for a client to have a <code>const time_zone*</code> which equals
+<code>nullptr</code>.  And no, the library never provides a <code>const time_zone*</code>
+which is equal to <code>nullptr</code>.
+</p>
 </li>
 </ol>
 
