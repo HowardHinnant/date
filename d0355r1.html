@@ -31,7 +31,7 @@
 Document number: D0355R1<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-10-15<br/>
+2016-10-16<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -2023,7 +2023,7 @@ The family of time points denoted by <code>local_time&lt;Duration&gt;</code> are
 based on the <i>pseudo clock</i> <code>local_t</code>.  <code>local_t</code> has
 no member <code>now()</code> and thus does not meet the clock requirements. 
 Nevertheless <code>local_time&lt;Duration&gt;</code> serves the vital role of
-representing time local with respect to a not-yet-specified time zone.  Aside
+representing local time with respect to a not-yet-specified time zone.  Aside
 from being able to get the current time, the complete <code>time_point</code>
 algebra is available for <code>local_time&lt;Duration&gt;</code> (just as for
 <code>sys_time&lt;Duration&gt;</code>).
@@ -2451,7 +2451,7 @@ constexpr month&amp; month::operator++() noexcept;
 
 <blockquote>
 <p>
-<i>Effects:</i> If <code>m_ != 12</code>, <code>++m_</code>.  Otherwise sets
+<i>Effects:</i> If <code>m_ &lt; 12</code>, <code>++m_</code>.  Otherwise sets
 <code>m_</code> to 1.
 </p>
 <p>
@@ -2479,7 +2479,7 @@ constexpr month&amp; month::operator--() noexcept;
 
 <blockquote>
 <p>
-<i>Effects:</i> If <code>m_ != 1</code>, <code>--m_</code>.  Otherwise sets
+<i>Effects:</i> If <code>m_ &gt; 1</code>, <code>--m_</code>.  Otherwise sets
 <code>m_</code> to 12.
 </p>
 <p>
