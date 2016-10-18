@@ -4006,6 +4006,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
                 {
                     auto offset = duration_cast<minutes>(*offset_sec);
                     basic_ostringstream<CharT, Traits> os;
+                    os.imbue(loc);
                     if (offset >= minutes{0})
                         os << '+';
                     os << make_time(offset);
@@ -4042,6 +4043,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
     }
     auto& f = use_facet<time_put<CharT>>(loc);
     basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
     auto ld = floor<days>(tp);
     auto ymd = year_month_day{ld};
     auto hms = make_time(floor<seconds>(tp - ld));
