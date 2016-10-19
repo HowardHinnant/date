@@ -2492,6 +2492,9 @@ public:
     year&amp; operator+=(const years&amp; y) noexcept;
     year&amp; operator-=(const years&amp; y) noexcept;
 
+    constexpr year operator-() const noexcept;
+    constexpr year operator+() const noexcept;
+
     constexpr bool is_leap() const noexcept;
 
     constexpr explicit operator int() const noexcept;
@@ -2629,6 +2632,26 @@ year&amp; year::operator-=(const years&amp; y) noexcept;
 <p>
 <i>Effects:</i> <code>*this = *this - y</code>.
 </p>
+<p>
+<i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constepxr year year::operator-() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>year{-y_}</code>.
+</p>
+</blockquote>
+
+<pre>
+constepxr year year::operator+() const noexcept;
+</pre>
+
+<blockquote>
 <p>
 <i>Returns:</i> <code>*this</code>.
 </p>
