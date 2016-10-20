@@ -8,7 +8,7 @@ https://github.com/HowardHinnant/date/commit/19c83e47ed411a45e0b5a45d772c47c6ee2
 
 Without this update your tz lib will download a new copy of the database everytime you start your program.
 <hr/>
-_**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/FyeHIhAg2dniVu0W)**_
+_**[Try it out on wandbox!](http://melpon.org/wandbox/permlink/PodYB3AwdYNFKbMv)**_
 
 This is actually several separate C++11/C++14 libraries:
 
