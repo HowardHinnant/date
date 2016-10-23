@@ -70,7 +70,7 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
               "AUTO_DOWNLOAD can not be turned on without HAS_REMOTE_API");
 
 #ifndef USE_SHELL_API
-#  define USE_SHELL_API 0
+#  define USE_SHELL_API 1
 #endif
 
 #include "date.h"
