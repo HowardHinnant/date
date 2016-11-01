@@ -218,7 +218,12 @@ static std::string get_install()
 
 #ifndef INSTALL
 
-static const std::string install = get_install();
+static std::string install = get_install();
+
+void set_install(std::string install_folder)
+{
+   install = install_folder;
+}
 
 #else   // INSTALL
 

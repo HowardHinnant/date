@@ -763,6 +763,10 @@ bool        remote_download(const std::string& version);
 bool        remote_install(const std::string& version);
 #endif
 
+#ifndef INSTALL
+void set_install(std::string install_folder);
+#endif
+
 const time_zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST
 #  if _WIN32
