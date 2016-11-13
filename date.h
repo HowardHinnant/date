@@ -4019,7 +4019,7 @@ format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
                     if (!modified)
                         s.erase(s.find(':'), 1);
                     fmt.replace(i - 1 - modified, 2 + modified, s);
-                    i += s.size() - 1;
+                    i += 3;
                 }
             }
             command = false;
