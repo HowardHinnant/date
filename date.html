@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-09-13<br/>
+2016-11-24<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -1573,45 +1573,13 @@ and predictable.
 <tr><td>&nbsp;</td><td><a href="#_40"><code>constexpr year_month_weekday_last operator/(const month_weekday_last&amp; mwdl, int  y) noexcept;</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td><code>time_of_day</code><br/> factory functions</td><td>&nbsp;</td></tr>
+<tr><td><code>time_of_day</code><br/> factory function</td><td>&nbsp;</td></tr>
 <tr><td>&nbsp;</td><td><a href="#_41">
 <pre>
 template &lt;class Rep, class Period&gt;
 constexpr
 time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;
 make_time(std::chrono::duration&lt;Rep, Period&gt; d) noexcept;
-</pre></a></td></tr>
-
-<tr><td>&nbsp;</td><td><a href="#_42">
-<pre>
-constexpr
-time_of_day&lt;std::chrono::hours&gt;
-make_time(std::chrono::hours h, unsigned md) noexcept;
-</pre></a></td></tr>
-
-<tr><td>&nbsp;</td><td><a href="#_43">
-<pre>
-constexpr
-time_of_day&lt;std::chrono::minutes&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, unsigned md) noexcept;
-</pre></a></td></tr>
-
-<tr><td>&nbsp;</td><td><a href="#_44">
-<pre>
-constexpr
-time_of_day&lt;std::chrono::seconds&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          unsigned md) noexcept;
-</pre></a></td></tr>
-
-<tr><td>&nbsp;</td><td><a href="#_45">
-<pre>
-template &lt;class Rep, class Period,
-          class = std::enable_if_t&lt;std::ratio_less&lt;Period, std::ratio&lt;1&gt;&gt;::value&gt;&gt;
-constexpr
-time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          std::chrono::duration&lt;Rep, Period&gt; sub_s, unsigned md) noexcept
 </pre></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
@@ -6332,8 +6300,8 @@ This specialization handles hours:minutes:seconds since midnight.
 time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;
 </pre>
 <blockquote><p>
-This specialization is restricted to <code>Period</code>s that are shorter than 1
-second.  Typical uses are with milliseconds, microseconds and nanoseconds.  This
+This specialization is restricted to <code>Period</code>s that fractions of a second
+to represent.  Typical uses are with milliseconds, microseconds and nanoseconds.  This
 specialization handles hours:minute:seconds.fractional_seconds since midnight.
 </p></blockquote>
 </li>
@@ -6359,7 +6327,6 @@ public:
     using precision = std::chrono::hours;
 
     constexpr explicit time_of_day(std::chrono::hours since_midnight) noexcept;
-    constexpr time_of_day(std::chrono::hours h, unsigned md) noexcept;
 
     constexpr std::chrono::hours hours() const noexcept;
     constexpr unsigned mode() const noexcept;
@@ -6384,24 +6351,6 @@ corresponding to <code>since_midnight</code> hours after 00:00:00.
 <p>
 <i>Postconditions:</i> <code>hours()</code> returns the integral number of hours
 <code>since_midnight</code> is after 00:00:00.  <code>mode()</code> returns <code>0</code>.
-</p>
-</blockquote>
-
-<pre>
-constexpr time_of_day&lt;std::chrono::hours&gt;::time_of_day(std::chrono::hours h, unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Preconditions:</i> <code>md == am</code> or <code>md == pm</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs an object of type <code>time_of_day</code> in 12-hour format
-corresponding to <code>h</code> hours after 00:00:00.
-</p>
-<p>
-<i>Postconditions:</i> <code>hours()</code> returns <code>h</code>, and <code>mode()</code>
-returns <code>md</code>.
 </p>
 </blockquote>
 
@@ -6505,8 +6454,6 @@ public:
     using precision = std::chrono::minutes;
 
     constexpr explicit time_of_day(std::chrono::minutes since_midnight) noexcept;
-    constexpr time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                          unsigned md) noexcept;
 
     constexpr std::chrono::hours   hours() const noexcept;
     constexpr std::chrono::minutes minutes() const noexcept;
@@ -6534,25 +6481,6 @@ corresponding to <code>since_midnight</code> minutes after 00:00:00.
 <code>since_midnight</code> is after 00:00:00.  <code>minutes()</code> returns the
 integral number of minutes <code>since_midnight</code> is after (00:00:00 +
 <code>hours()</code>). <code>mode()</code> returns <code>0</code>.
-</p>
-</blockquote>
-
-<pre>
-constexpr time_of_day&lt;std::chrono::minutes&gt;::time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                                                               unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Preconditions:</i> <code>md == am</code> or <code>md == pm</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs an object of type <code>time_of_day</code> in 12-hour format
-corresponding to <code>h</code> hours and <code>m</code> minutes after 00:00:00.
-</p>
-<p>
-<i>Postconditions:</i> <code>hours()</code> returns <code>h</code>, <code>minutes()</code>
-returns <code>m</code>, and <code>mode()</code> returns <code>md</code>.
 </p>
 </blockquote>
 
@@ -6666,8 +6594,6 @@ public:
     using precision = std::chrono::seconds;
 
     constexpr explicit time_of_day(std::chrono::seconds since_midnight) noexcept;
-    constexpr time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                          std::chrono::seconds s, unsigned md) noexcept;
 
     constexpr std::chrono::hours   hours() const noexcept;
     constexpr std::chrono::minutes minutes() const noexcept;
@@ -6698,27 +6624,6 @@ integral number of minutes <code>since_midnight</code> is after (00:00:00 +
 <code>hours()</code>). <code>seconds()</code> returns the integral number of seconds
 <code>since_midnight</code> is after (00:00:00 + <code>hours()</code> +
 <code>minutes()</code>). <code>mode()</code> returns <code>0</code>.
-</p>
-</blockquote>
-
-<pre>
-constexpr time_of_day&lt;std::chrono::seconds&gt;::time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                                                               std::chrono::seconds s, unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Preconditions:</i> <code>md == am</code> or <code>md == pm</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs an object of type <code>time_of_day</code> in 12-hour format
-corresponding to <code>h</code> hours, <code>m</code> minutes, and <code>s</code> seconds
-after 00:00:00.
-</p>
-<p>
-<i>Postconditions:</i> <code>hours()</code> returns <code>h</code>. <code>minutes()</code>
-returns <code>m</code>.  <code>seconds()</code> returns <code>s</code>. 
-<code>mode()</code> returns <code>md</code>.
 </p>
 </blockquote>
 
@@ -6839,11 +6744,9 @@ that no leading zero is output for hours less than 10.
 time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;
 {
 public:
-    using precision = std::chrono::duration&lt;Rep, Period&gt;;
+    using precision = <i>The decimal-based duration used to format</i>
 
-    constexpr explicit time_of_day(precision since_midnight) noexcept;
-    constexpr time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                          std::chrono::seconds s, precision sub_s, unsigned md) noexcept;
+    constexpr explicit time_of_day(std::chrono::duration&lt;Rep, Period&gt; since_midnight) noexcept;
 
     constexpr std::chrono::hours   hours() const noexcept;
     constexpr std::chrono::minutes minutes() const noexcept;
@@ -6864,7 +6767,8 @@ This specialization shall not exist unless <code>Period &lt; 1s</code>.
 </p>
 
 <pre>
-constexpr explicit time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;::time_of_day(precision since_midnight) noexcept;
+constexpr explicit 
+time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;::time_of_day(std::chrono::duration&lt;Rep, Period&gt; since_midnight) noexcept;
 </pre>
 
 <blockquote>
@@ -6882,29 +6786,6 @@ integral number of minutes <code>since_midnight</code> is after (00:00:00 +
 fractional precision seconds <code>since_midnight</code> is after (00:00:00 +
 <code>hours()</code> + <code>minutes()</code> + <code>seconds</code>). <code>mode()</code>
 returns <code>0</code>.
-</p>
-</blockquote>
-
-<pre>
-constexpr time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;::time_of_day(std::chrono::hours h, std::chrono::minutes m,
-                                                                       std::chrono::seconds s, precision sub_s,
-                                                                       unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Preconditions:</i> <code>md == am</code> or <code>md == pm</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs an object of type <code>time_of_day</code> in 12-hour format
-corresponding to <code>h</code> hours, <code>m</code> minutes, and <code>s + sub_s</code>
-seconds after 00:00:00.
-</p>
-<p>
-<i>Postconditions:</i> <code>hours()</code> returns <code>h</code>. <code>minutes()</code>
-returns <code>m</code>.  <code>seconds()</code> returns <code>s</code>.
-<code>subseconds()</code> returns <code>sub_s</code>. <code>mode()</code> returns
-<code>md</code>.
 </p>
 </blockquote>
 
@@ -7050,58 +6931,6 @@ make_time(std::chrono::duration&lt;Rep, Period&gt; d) noexcept;
 <blockquote>
 <p>
 <i>Returns:</i> <code>time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;(d)</code>.
-</p>
-</blockquote>
-
-<a name="_42"></a><pre>
-constexpr
-time_of_day&lt;std::chrono::hours&gt;
-make_time(std::chrono::hours h, unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Returns:</i> <code>time_of_day&lt;std::chrono::hours&gt;(h, md)</code>.
-</p>
-</blockquote>
-
-<a name="_43"></a><pre>
-constexpr
-time_of_day&lt;std::chrono::minutes&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Returns:</i> <code>time_of_day&lt;std::chrono::minutes&gt;(h, m, md)</code>.
-</p>
-</blockquote>
-
-<a name="_44"></a><pre>
-constexpr
-time_of_day&lt;std::chrono::seconds&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          unsigned md) noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Returns:</i> <code>time_of_day&lt;std::chrono::seconds&gt;(h, m, s, md)</code>.
-</p>
-</blockquote>
-
-<a name="_45"></a><pre>
-template &lt;class Rep, class Period,
-          class = std::enable_if_t&lt;std::ratio_less&lt;Period, std::ratio&lt;1&gt;&gt;::value&gt;&gt;
-constexpr
-time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;
-make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-          std::chrono::duration&lt;Rep, Period&gt; sub_s, unsigned md) noexcept
-</pre>
-
-<blockquote>
-<p>
-<i>Returns:</i> <code>time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;(h, m, s, sub_s, md)</code>.
 </p>
 </blockquote>
 
