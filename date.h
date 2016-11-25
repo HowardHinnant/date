@@ -4,6 +4,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2016 Adrian Colomitchi
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -3383,6 +3384,130 @@ enum {am = 1, pm};
 namespace detail
 {
 
+// width<n>::value is the number of fractional decimal digits in 1/n
+// width<0>::value and width<1>::value are defined to be 0
+// If 1/n takes more than 18 fractional decimal digits,
+//   the result is truncated to 19.
+// Example:  width<2>::value    ==  1
+// Example:  width<3>::value    == 19
+// Example:  width<4>::value    ==  2
+// Example:  width<10>::value   ==  1
+// Example:  width<1000>::value ==  3
+template <std::uint64_t n, std::uint64_t d = 10, unsigned w = 0,
+          bool should_continue = !(n < 2) && d != 0 && w < 19>
+struct width
+{
+    static CONSTDATA unsigned value = 1 + width<n, d%n*10, w+1>::value;
+};
+
+template <std::uint64_t n, std::uint64_t d, unsigned w>
+struct width<n, d, w, false>
+{
+    static CONSTDATA unsigned value = 0;
+};
+
+template <unsigned exp>
+struct static_pow10
+{
+private:
+    static CONSTDATA std::uint64_t h = static_pow10<exp/2>::value;
+public:
+    static CONSTDATA std::uint64_t value = h * h * (exp % 2 ? 10 : 1);
+};
+
+template <>
+struct static_pow10<0>
+{
+    static CONSTDATA std::uint64_t value = 1;
+};
+
+template <unsigned w, bool in_range = w < 19>
+struct make_precision
+{
+    using type = std::chrono::duration<std::int64_t,
+                                       std::ratio<1, static_pow10<w>::value>>;
+    static CONSTDATA unsigned width = w;
+};
+
+template <unsigned w>
+struct make_precision<w, false>
+{
+    using type = std::chrono::microseconds;
+    static CONSTDATA unsigned width = 6;
+};
+
+template <class Duration, unsigned w = width<Duration::period::den>::value>
+class decimal_format_seconds
+{
+public:
+    using precision = typename make_precision<w>::type;
+    static auto CONSTDATA width = make_precision<w>::width;
+
+private:
+    std::chrono::seconds s_;
+    precision            sub_s_;
+
+public:
+    CONSTCD11 explicit decimal_format_seconds(const Duration& d) NOEXCEPT
+        : s_(std::chrono::duration_cast<std::chrono::seconds>(d))
+        , sub_s_(std::chrono::duration_cast<precision>(d - s_))
+        {}
+
+    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
+    CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
+    CONSTCD11 precision subseconds() const NOEXCEPT {return sub_s_;}
+
+    CONSTCD14 precision to_duration() const NOEXCEPT
+    {
+        return s_ + sub_s_;
+    }
+
+    template <class CharT, class Traits>
+    friend
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
+    {
+        date::detail::save_stream<CharT, Traits> _(os);
+        os.fill('0');
+        os.flags(std::ios::dec | std::ios::right);
+        os.width(2);
+        os << x.s_.count() <<
+              std::use_facet<std::numpunct<char>>(os.getloc()).decimal_point();
+        os.width(width);
+        os << x.sub_s_.count();
+        return os;
+    }
+};
+
+template <class Duration>
+class decimal_format_seconds<Duration, 0>
+{
+    static CONSTDATA unsigned w = 0;
+public:
+    using precision = std::chrono::seconds;
+private:
+
+    std::chrono::seconds s_;
+
+public:
+    CONSTCD11 explicit decimal_format_seconds(const precision& s) NOEXCEPT
+        : s_(s)
+        {}
+
+    template <class CharT, class Traits>
+    friend
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
+    {
+        date::detail::save_stream<CharT, Traits> _(os);
+        os.fill('0');
+        os.flags(std::ios::dec | std::ios::right);
+        os.width(2);
+        os << x.s_.count();
+        return os;
+    }
+};
+
 enum class classify
 {
     not_valid,
@@ -3392,57 +3517,34 @@ enum class classify
     subsecond
 };
 
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-
 template <class Duration>
 struct classify_duration
 {
     static CONSTDATA classify value =
-        Duration{1} >= days{1}                 ? classify::not_valid :
-        Duration{1} >= std::chrono::hours{1}   ? classify::hour :
-        Duration{1} >= std::chrono::minutes{1} ? classify::minute :
-        Duration{1} >= std::chrono::seconds{1} ? classify::second :
-                                                 classify::subsecond;
-};
-
-#else
-
-template <class Duration>
-struct classify_duration
-{
-    static CONSTDATA classify value =
-        std::ratio_greater_equal<
-            typename Duration::period,
-            days::period >::value
-                ? classify::not_valid :
-        std::ratio_greater_equal<
-            typename Duration::period,
-            std::chrono::hours::period>::value
+        std::is_convertible<Duration, std::chrono::hours>::value
                 ? classify::hour :
-        std::ratio_greater_equal<
-            typename Duration::period,
-            std::chrono::minutes::period>::value
+        std::is_convertible<Duration, std::chrono::minutes>::value
                 ? classify::minute :
-        std::ratio_greater_equal<
-            typename Duration::period,
-            std::chrono::seconds::period>::value
+        std::is_convertible<Duration, std::chrono::seconds>::value
                 ? classify::second :
+        std::chrono::treat_as_floating_point<typename Duration::rep>::value
+                ? classify::not_valid :
                 classify::subsecond;
 };
-
-#endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
 class time_of_day_base
 {
 protected:
     std::chrono::hours   h_;
     unsigned char mode_;
+    bool          neg_;
 
     enum {is24hr};
 
     CONSTCD11 time_of_day_base(std::chrono::hours h, unsigned m) NOEXCEPT
-        : h_(h)
+        : h_(abs(h))
         , mode_(static_cast<decltype(mode_)>(m))
+        , neg_(h < std::chrono::hours{0})
         {}
 
     CONSTCD14 void make24() NOEXCEPT;
@@ -3528,7 +3630,10 @@ public:
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr();
+        auto p = to24hr();
+        if (neg_)
+            p = -p;
+        return p;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
@@ -3546,6 +3651,8 @@ public:
     {
         using namespace std;
         detail::save_stream<CharT, Traits> _(os);
+        if (t.neg_)
+            os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
@@ -3580,7 +3687,7 @@ public:
 
    CONSTCD11 explicit time_of_day_storage(std::chrono::minutes since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
-        , m_(since_midnight - h_)
+        , m_(abs(since_midnight) - h_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
@@ -3595,7 +3702,10 @@ public:
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr() + m_;
+        auto p = to24hr() + m_;
+        if (neg_)
+            p = -p;
+        return p;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
@@ -3613,15 +3723,15 @@ public:
     {
         using namespace std;
         detail::save_stream<CharT, Traits> _(os);
-        if (static_cast<precision>(t) < std::chrono::hours{0})
+        if (t.neg_)
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << std::abs(t.h_.count()) << ':';
+        os << t.h_.count() << ':';
         os.width(2);
-        os << std::abs(t.m_.count());
+        os << t.m_.count();
         switch (t.mode_)
         {
         case am:
@@ -3649,8 +3759,8 @@ public:
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::seconds since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
-        , m_(std::chrono::duration_cast<std::chrono::minutes>(since_midnight - h_))
-        , s_(since_midnight - h_ - m_)
+        , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
+        , s_(abs(since_midnight) - h_ - m_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
@@ -3668,7 +3778,10 @@ public:
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr() + s_ + m_;
+        auto p = to24hr() + s_ + m_;
+        if (neg_)
+            p = -p;
+        return p;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
@@ -3686,17 +3799,17 @@ public:
     {
         using namespace std;
         detail::save_stream<CharT, Traits> _(os);
-        if (static_cast<precision>(t) < std::chrono::hours{0})
+        if (t.neg_)
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << std::abs(t.h_.count()) << ':';
+        os << t.h_.count() << ':';
         os.width(2);
-        os << std::abs(t.m_.count()) << ':';
+        os << t.m_.count() << ':';
         os.width(2);
-        os << std::abs(t.s_.count());
+        os << t.s_.count();
         switch (t.mode_)
         {
         case am:
@@ -3715,21 +3828,21 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
     : private detail::time_of_day_base
 {
 public:
-    using precision = std::chrono::duration<Rep, Period>;
+    using Duration = std::chrono::duration<Rep, Period>;
+    using dfs = decimal_format_seconds<Duration>;
+    using precision = typename dfs::precision;
 
 private:
     using base = detail::time_of_day_base;
 
     std::chrono::minutes m_;
-    std::chrono::seconds s_;
-    precision            sub_s_;
+    dfs                  s_;
 
 public:
-    CONSTCD11 explicit time_of_day_storage(precision since_midnight) NOEXCEPT
+    CONSTCD11 explicit time_of_day_storage(Duration since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
-        , m_(std::chrono::duration_cast<std::chrono::minutes>(since_midnight - h_))
-        , s_(std::chrono::duration_cast<std::chrono::seconds>(since_midnight - h_ - m_))
-        , sub_s_(since_midnight - h_ - m_ - s_)
+        , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
+        , s_(abs(since_midnight) - h_ - m_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
@@ -3737,20 +3850,22 @@ public:
                                            unsigned md) NOEXCEPT
         : base(h, md)
         , m_(m)
-        , s_(s)
-        , sub_s_(sub_s)
+        , s_(s + sub_s)
         {}
 
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
     CONSTCD11 std::chrono::minutes minutes() const NOEXCEPT {return m_;}
-    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
-    CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
-    CONSTCD11 precision subseconds() const NOEXCEPT {return sub_s_;}
+    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_.seconds();}
+    CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_.seconds();}
+    CONSTCD11 precision subseconds() const NOEXCEPT {return s_.subseconds();}
     CONSTCD11 unsigned mode() const NOEXCEPT {return mode_;}
 
     CONSTCD14 explicit operator precision() const NOEXCEPT
     {
-        return to24hr() + s_ + sub_s_ + m_;
+        auto p = to24hr() + s_.to_duration() + m_;
+        if (neg_)
+            p = -p;
+        return p;
     }
 
     CONSTCD14 precision to_duration() const NOEXCEPT
@@ -3768,33 +3883,15 @@ public:
     {
         using namespace std;
         detail::save_stream<CharT, Traits> _(os);
-        if (static_cast<precision>(t) < std::chrono::hours{0})
+        if (t.neg_)
             os << '-';
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         if (t.mode_ != am && t.mode_ != pm)
             os.width(2);
-        os << std::abs(t.h_.count()) << ':';
+        os << t.h_.count() << ':';
         os.width(2);
-        os << std::abs(t.m_.count()) << ':';
-        os.width(2);
-        os << std::abs(t.s_.count())
-           << use_facet<numpunct<char>>(os.getloc()).decimal_point();
-        os.imbue(locale{});
-#if __cplusplus >= 201402
-        CONSTDATA auto cl10 = ceil_log10(Period::den);
-        using scale = std::ratio_multiply<Period, std::ratio<pow10(cl10)>>;
-        os.width(cl10);
-        os << std::abs(t.sub_s_.count()) * scale::num / scale::den;
-#else  // __cplusplus >= 201402
-        // inefficient sub-optimal run-time mess, but gets the job done
-        const unsigned long long cl10 =
-            static_cast<unsigned long long>(std::ceil(log10(Period::den)));
-        const auto p10 = std::pow(10., cl10);
-        os.width(cl10);
-        os << static_cast<unsigned long long>(std::abs(t.sub_s_.count())
-                                              * Period::num * p10 / Period::den);
-#endif  // __cplusplus >= 201402
+        os << t.m_.count() << ':' << t.s_;
         switch (t.mode_)
         {
         case am:
@@ -3806,50 +3903,6 @@ public:
         }
         return os;
     }
-
-private:
-#if __cplusplus >= 201402
-    CONSTCD11 static int ceil_log10(unsigned long long i) NOEXCEPT
-    {
-        --i;
-        int n = 0;
-        if (i >= 10000000000000000) {i /= 10000000000000000; n += 16;}
-        if (i >= 100000000) {i /= 100000000; n += 8;}
-        if (i >= 10000) {i /= 10000; n += 4;}
-        if (i >= 100) {i /= 100; n += 2;}
-        if (i >= 10) {i /= 10; n += 1;}
-        if (i >= 1) {i /= 10; n += 1;}
-        return n;
-    }
-
-    CONSTCD11 static unsigned long long pow10(unsigned y) NOEXCEPT
-    {
-        CONSTDATA unsigned long long p10[] =
-        {
-            1ull,
-            10ull,
-            100ull,
-            1000ull,
-            10000ull,
-            100000ull,
-            1000000ull,
-            10000000ull,
-            100000000ull,
-            1000000000ull,
-            10000000000ull,
-            100000000000ull,
-            1000000000000ull,
-            10000000000000ull,
-            100000000000000ull,
-            1000000000000000ull,
-            10000000000000000ull,
-            100000000000000000ull,
-            1000000000000000000ull,
-            10000000000000000000ull
-        };
-        return p10[y];
-    }
-#endif  // __cplusplus >= 201402
 };
 
 }  // namespace detail
@@ -3866,7 +3919,8 @@ public:
 #else
     // MS cl compiler workaround.
     template <class ...Args>
-    explicit time_of_day(Args&& ...args)
+    CONSTCD11
+    explicit time_of_day(Args&& ...args) NOEXCEPT
         : base(std::forward<Args>(args)...)
         {}
 #endif
