@@ -36,8 +36,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
-#include <istream>
 #include <ios>
+#include <istream>
+#include <iterator>
 #include <limits>
 #include <locale>
 #include <ostream>
@@ -3541,10 +3542,10 @@ protected:
 
     enum {is24hr};
 
-    CONSTCD11 time_of_day_base(std::chrono::hours h, unsigned m) NOEXCEPT
+    CONSTCD11 time_of_day_base(std::chrono::hours h, bool neg, unsigned m) NOEXCEPT
         : h_(abs(h))
         , mode_(static_cast<decltype(mode_)>(m))
-        , neg_(h < std::chrono::hours{0})
+        , neg_(neg)
         {}
 
     CONSTCD14 void make24() NOEXCEPT;
@@ -3618,11 +3619,11 @@ public:
     using precision = std::chrono::hours;
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours since_midnight) NOEXCEPT
-        : base(since_midnight, is24hr)
+        : base(since_midnight, since_midnight < std::chrono::hours{0}, is24hr)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, unsigned md) NOEXCEPT
-        : base(h, md)
+        : base(h, h < std::chrono::hours{0}, md)
         {}
 
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
@@ -3686,13 +3687,14 @@ public:
    using precision = std::chrono::minutes;
 
    CONSTCD11 explicit time_of_day_storage(std::chrono::minutes since_midnight) NOEXCEPT
-        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
+        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
+               since_midnight < std::chrono::minutes{0}, is24hr)
         , m_(abs(since_midnight) - h_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
                                            unsigned md) NOEXCEPT
-        : base(h, md)
+        : base(h, false, md)
         , m_(m)
         {}
 
@@ -3758,14 +3760,15 @@ public:
     using precision = std::chrono::seconds;
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::seconds since_midnight) NOEXCEPT
-        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
+        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
+               since_midnight < std::chrono::seconds{0}, is24hr)
         , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
         , s_(abs(since_midnight) - h_ - m_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
                                            std::chrono::seconds s, unsigned md) NOEXCEPT
-        : base(h, md)
+        : base(h, false, md)
         , m_(m)
         , s_(s)
         {}
@@ -3829,7 +3832,8 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 {
 public:
     using Duration = std::chrono::duration<Rep, Period>;
-    using dfs = decimal_format_seconds<Duration>;
+    using dfs = decimal_format_seconds<typename std::common_type<Duration,
+                    std::chrono::minutes>::type>;
     using precision = typename dfs::precision;
 
 private:
@@ -3840,7 +3844,8 @@ private:
 
 public:
     CONSTCD11 explicit time_of_day_storage(Duration since_midnight) NOEXCEPT
-        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight), is24hr)
+        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
+               since_midnight < Duration{0}, is24hr)
         , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
         , s_(abs(since_midnight) - h_ - m_)
         {}
@@ -3848,7 +3853,7 @@ public:
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
                                            std::chrono::seconds s, precision sub_s,
                                            unsigned md) NOEXCEPT
-        : base(h, md)
+        : base(h, false, md)
         , m_(m)
         , s_(s + sub_s)
         {}
@@ -4006,202 +4011,890 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut
     return os << sys_time<Duration>{ut.time_since_epoch()};
 }
 
-// format
-
-namespace detail
-{
+// to_stream
 
 template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       const local_time<Duration>& tp, const std::string* abbrev = nullptr,
-       const std::chrono::seconds* offset_sec = nullptr)
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const local_time<Duration>& tp, const std::string* abbrev = nullptr,
+          const std::chrono::seconds* offset_sec = nullptr)
 {
-    // Handle these specially
-    // %S  append fractional seconds if tp has precision finer than seconds
-    // %T  append fractional seconds if tp has precision finer than seconds
-    // %z  replace with offset from zone on +/-hhmm format
-    // %Ez, %Oz replace with offset from zone on +/-hh:mm format
-    // %Z  replace with abbreviation from zone
-
     using namespace std;
     using namespace std::chrono;
+    tm tm;
+    auto& facet = use_facet<time_put<CharT>>(os.getloc());
     auto command = false;
-    auto modified = false;
-    for (std::size_t i = 0; i < fmt.size(); ++i)
+    CharT modified = CharT{};
+    for (; *fmt; ++fmt)
     {
-        switch (fmt[i])
+        if (!command && modified != CharT{})
+            throw std::logic_error("loop invariant broken: !command && modified");
+        else if (modified != CharT{} && modified != CharT{'E'} && modified != CharT{'O'})
+            throw std::logic_error(std::string("bad value for modified: ") + char(modified));
+        switch (*fmt)
         {
-        case '%':
-            command = true;
-            modified = false;
+        case 'a':
+        case 'A':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(
+                                     weekday{floor<days>(tp)}));
+                    const CharT f[] = {'%', *fmt};
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
             break;
-        case 'O':
-        case 'E':
-            modified = true;
+        case 'b':
+        case 'B':
+        case 'h':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    tm.tm_mon = static_cast<int>(static_cast<unsigned>(
+                                    year_month_day{floor<days>(tp)}.month())) - 1;
+                    const CharT f[] = {'%', *fmt};
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'c':
+        case 'x':
+        case 'X':
+            if (command)
+            {
+                if (modified == CharT{'O'})
+                    os << CharT{'%'} << modified << *fmt;
+                else
+                {
+                    tm = std::tm{};
+                    auto ld = floor<days>(tp);
+                    auto ymd = year_month_day{ld};
+                    auto hms = make_time(floor<seconds>(tp - ld));
+                    tm.tm_sec = static_cast<int>(hms.seconds().count());
+                    tm.tm_min = static_cast<int>(hms.minutes().count());
+                    tm.tm_hour = static_cast<int>(hms.hours().count());
+                    tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                    tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
+                    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+                    CharT f[3] = {'%'};
+                    auto fe = begin(f) + 1;
+                    if (modified == CharT{'E'})
+                        *fe++ = modified;
+                    *fe++ = *fmt;
+                    facet.put(os, os, os.fill(), &tm, begin(f), fe);
+                }
+                command = false;
+                modified = CharT{};
+            }
+            else
+                os << *fmt;
+            break;
+        case 'C':
+            if (command)
+            {
+                auto y = static_cast<int>(year_month_day{floor<days>(tp)}.year());
+                if (modified == CharT{'E'})
+                {
+                    tm.tm_year = y - 1900;
+                    CharT f[3] = {'%', 'E', 'C'};
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else if (modified == CharT{})
+                {
+                    detail::save_stream<CharT, Traits> _(os);
+                    os.fill('0');
+                    os.flags(std::ios::dec | std::ios::right);
+                    os.width(2);
+                    os << y/100;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                }
+                command = false;
+                modified = CharT{};
+            }
+            else
+                os << *fmt;
+            break;
+        case 'd':
+        case 'e':
+            if (command)
+            {
+                auto d = static_cast<int>(static_cast<unsigned>(
+                             year_month_day{floor<days>(tp)}.day()));
+                if (modified == CharT{'O'})
+                {
+                    tm.tm_mday = d;
+                    CharT f[3] = {'%', 'O', *fmt};
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else if (modified == CharT{})
+                {
+                    detail::save_stream<CharT, Traits> _(os);
+                    if (*fmt == CharT{'d'})
+                        os.fill('0');
+                    os.flags(std::ios::dec | std::ios::right);
+                    os.width(2);
+                    os << d;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                }
+                command = false;
+                modified = CharT{};
+            }
+            else
+                os << *fmt;
+            break;
+        case 'D':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto ymd = year_month_day{floor<days>(tp)};
+                    detail::save_stream<CharT, Traits> _(os);
+                    os.fill('0');
+                    os.flags(std::ios::dec | std::ios::right);
+                    os.width(2);
+                    os << static_cast<unsigned>(ymd.month()) << CharT{'/'};
+                    os.width(2);
+                    os << static_cast<unsigned>(ymd.day()) << CharT{'/'};
+                    os.width(2);
+                    os << static_cast<int>(ymd.year()) % 100;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'F':
+            if (command)
+            {
+                if (modified == CharT{})
+                    os << floor<days>(tp);
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'g':
+        case 'G':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto ld = floor<days>(tp);
+                    auto y = year_month_day{ld + days{3}}.year();
+                    auto start = local_days{(y - years{1})/date::dec/thu[last]} + (mon-thu);
+                    if (ld < start)
+                        --y;
+                    if (*fmt == CharT{'G'})
+                        os << y;
+                    else
+                    {
+                        detail::save_stream<CharT, Traits> _(os);
+                        os.fill('0');
+                        os.flags(std::ios::dec | std::ios::right);
+                        os.width(2);
+                        os << static_cast<int>(y) % 100;
+                    }
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'H':
+        case 'I':
+            if (command)
+            {
+                auto hms = make_time(floor<hours>(tp - floor<days>(tp)));
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_hour = static_cast<int>(hms.hours().count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    if (*fmt == CharT{'I'})
+                        hms.make12();
+                    if (hms.hours() < hours{10})
+                        os << CharT{'0'};
+                    os << hms.hours().count();
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'j':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto ld = floor<days>(tp);
+                    auto y = year_month_day{ld}.year();
+                    auto doy = ld - local_days{y/jan/1} + days{1};
+                    detail::save_stream<CharT, Traits> _(os);
+                    os.fill('0');
+                    os.flags(std::ios::dec | std::ios::right);
+                    os.width(3);
+                    os << doy.count();
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'm':
+            if (command)
+            {
+                auto m = static_cast<unsigned>(year_month_day{floor<days>(tp)}.month());
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_mon = static_cast<int>(m-1);
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    if (m < 10)
+                        os << CharT{'0'};
+                    os << m;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'M':
+            if (command)
+            {
+                auto hms = make_time(floor<minutes>(tp - floor<days>(tp)));
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_min = static_cast<int>(hms.minutes().count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    if (hms.minutes() < minutes{10})
+                        os << CharT{'0'};
+                    os << hms.minutes().count();
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'n':
+            if (command)
+            {
+                if (modified == CharT{})
+                    os << CharT{'\n'};
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'p':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto h = floor<hours>(tp - floor<days>(tp));
+                    const CharT f[] = {'%', *fmt};
+                    tm.tm_hour = static_cast<int>(h.count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'r':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto hms = make_time(floor<seconds>(tp - floor<days>(tp)));
+                    const CharT f[] = {'%', *fmt};
+                    tm.tm_hour = static_cast<int>(hms.hours().count());
+                    tm.tm_min = static_cast<int>(hms.minutes().count());
+                    tm.tm_sec = static_cast<int>(hms.seconds().count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'R':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    auto hms = make_time(floor<minutes>(tp - floor<days>(tp)));
+                    if (hms.hours() < hours{10})
+                        os << CharT{'0'};
+                    os << hms.hours().count() << CharT{':'};
+                    if (hms.minutes() < minutes{10})
+                        os << CharT{'0'};
+                    os << hms.minutes().count();
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
             break;
         case 'S':
-        case 'T':
-            if (command && !modified && ratio_less<typename Duration::period,
-                                                   ratio<1>>::value)
+            if (command)
             {
-                basic_ostringstream<CharT, Traits> os;
-                os.imbue(loc);
-                os << make_time(tp - floor<seconds>(tp));
-                auto s = os.str();
-                s.erase(0, 8);
-                fmt.insert(i+1, s);
-                i += s.size() - 1;
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    auto hms = make_time(floor<seconds>(tp - floor<days>(tp)));
+                    tm.tm_sec = static_cast<int>(hms.seconds().count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    auto fs = (tp - floor<days>(tp)) % minutes{1};
+                    os << detail::decimal_format_seconds<decltype(fs)>(fs);
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
             }
-            command = false;
-            modified = false;
+            else
+                os << *fmt;
+            break;
+        case 't':
+            if (command)
+            {
+                if (modified == CharT{})
+                    os << CharT{'\t'};
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'T':
+            if (command)
+            {
+                if (modified == CharT{})
+                    os << make_time(tp - floor<days>(tp));
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'u':
+            if (command)
+            {
+                auto wd = static_cast<unsigned>(weekday{floor<days>(tp)});
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_wday = static_cast<int>(wd);
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    os << (wd != 0 ? wd : 7u);
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'U':
+            if (command)
+            {
+                auto ld = floor<days>(tp);
+                auto ymd = year_month_day{ld};
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    auto st = local_days{sun[1]/jan/ymd.year()};
+                    if (ld < st)
+                        os << CharT{'0'} << CharT{'0'};
+                    else
+                    {
+                        auto wn = duration_cast<weeks>(ld - st).count() + 1;
+                        if (wn < 10)
+                            os << CharT{'0'};
+                        os << wn;
+                    }
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'V':
+            if (command)
+            {
+                auto ld = floor<days>(tp);
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    auto ymd = year_month_day{ld};
+                    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    auto y = year_month_day{ld + days{3}}.year();
+                    auto st = local_days{(y - years{1})/12/thu[last]} + (mon-thu);
+                    if (ld < st)
+                    {
+                        --y;
+                        st = local_days{(y - years{1})/12/thu[last]} + (mon-thu);
+                    }
+                    auto wn = duration_cast<weeks>(ld - st).count() + 1;
+                    if (wn < 10)
+                        os << CharT{'0'};
+                    os << wn;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'w':
+            if (command)
+            {
+                auto wd = static_cast<unsigned>(weekday{floor<days>(tp)});
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_wday = static_cast<int>(wd);
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    os << wd;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'W':
+            if (command)
+            {
+                auto ld = floor<days>(tp);
+                auto ymd = year_month_day{ld};
+                if (modified == CharT{'O'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    auto st = local_days{mon[1]/jan/ymd.year()};
+                    if (ld < st)
+                        os << CharT{'0'} << CharT{'0'};
+                    else
+                    {
+                        auto wn = duration_cast<weeks>(ld - st).count() + 1;
+                        if (wn < 10)
+                            os << CharT{'0'};
+                        os << wn;
+                    }
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'y':
+            if (command)
+            {
+                auto y = static_cast<int>(year_month_day{floor<days>(tp)}.year());
+                if (modified != CharT{})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_year = y - 1900;
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    y %= 100;
+                    if (y < 10)
+                        os << CharT{'0'};
+                    os << y;
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'Y':
+            if (command)
+            {
+                auto y = year_month_day{floor<days>(tp)}.year();
+                if (modified == CharT{'E'})
+                {
+                    const CharT f[] = {'%', modified, *fmt};
+                    tm.tm_year = static_cast<int>(y) - 1900;
+                    facet.put(os, os, os.fill(), &tm, begin(f), end(f));
+                    modified = CharT{};
+                }
+                else if (modified == CharT{})
+                {
+                    os << y;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
             break;
         case 'z':
             if (command)
             {
                 if (offset_sec == nullptr)
                     throw std::runtime_error("Can not format local_time with %z");
+                auto m = duration_cast<minutes>(*offset_sec);
+                auto neg = m < minutes{0};
+                m = abs(m);
+                auto h = duration_cast<hours>(m);
+                m -= h;
+                if (neg)
+                    os << CharT{'-'};
                 else
-                {
-                    auto offset = duration_cast<minutes>(*offset_sec);
-                    basic_ostringstream<CharT, Traits> os;
-                    os.imbue(loc);
-                    if (offset >= minutes{0})
-                        os << '+';
-                    os << make_time(offset);
-                    auto s = os.str();
-                    if (!modified)
-                        s.erase(s.find(':'), 1);
-                    fmt.replace(i - 1 - modified, 2 + modified, s);
-                    i += 3;
-                }
+                    os << CharT{'+'};
+                if (h < hours{10})
+                    os << CharT{'0'};
+                os << h.count();
+                if (modified != CharT{})
+                    os << CharT{':'};
+                if (m < minutes{10})
+                    os << CharT{'0'};
+                os << m.count();
+                command = false;
+                modified = CharT{};
             }
-            command = false;
-            modified = false;
+            else
+                os << *fmt;
             break;
         case 'Z':
-            if (command && !modified)
+            if (command)
             {
-                if (abbrev == nullptr)
-                    throw std::runtime_error("Can not format local_time with %Z");
+                if (modified == CharT{})
+                {
+                    if (abbrev == nullptr)
+                        throw std::runtime_error("Can not format local_time with %Z");
+                    for (auto c : *abbrev)
+                        os << CharT{c};
+                }
                 else
                 {
-                    fmt.replace(i - 1, 2,
-                        std::basic_string<CharT, Traits>(abbrev->begin(), abbrev->end()));
-                    i += abbrev->size() - 1;
+                    os << CharT{'%'} << modified << *fmt;
+                    modified = CharT{};
+                }
+                command = false;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'E':
+        case 'O':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    modified = *fmt;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << *fmt;
+                    command = false;
+                    modified = CharT{};
                 }
             }
-            command = false;
-            modified = false;
+            else
+                os << *fmt;
+            break;
+        case '%':
+            if (command)
+            {
+                if (modified == CharT{})
+                {
+                    os << CharT{'%'};
+                    command = false;
+                }
+                else
+                {
+                    os << CharT{'%'} << modified << CharT{'%'};
+                    command = false;
+                    modified = CharT{};
+                }
+            }
+            else
+                command = true;
             break;
         default:
-            command = false;
-            modified = false;
+            if (command)
+            {
+                os << CharT{'%'};
+                command = false;
+            }
+            if (modified != CharT{})
+            {
+                os << modified;
+                modified = CharT{};
+            }
+            os << *fmt;
             break;
         }
     }
-    auto& f = use_facet<time_put<CharT>>(loc);
-    basic_ostringstream<CharT, Traits> os;
-    os.imbue(loc);
-    auto ld = floor<days>(tp);
-    auto ymd = year_month_day{ld};
-    auto hms = make_time(floor<seconds>(tp - ld));
-    std::tm tm{};
-    tm.tm_sec = static_cast<int>(hms.seconds().count());
-    tm.tm_min = static_cast<int>(hms.minutes().count());
-    tm.tm_hour = static_cast<int>(hms.hours().count());
-    tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
-    tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
-    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
-    tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
-    f.put(os, os, os.fill(), &tm, fmt.data(), fmt.data() + fmt.size());
-    return os.str();
-}
-
-}  // namespace detail
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       const local_time<Duration>& tp)
-{
-    return detail::format(loc, std::move(fmt), tp);
+    if (command)
+        os << CharT{'%'};
+    if (modified != CharT{})
+        os << modified;
 }
 
 template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, const local_time<Duration>& tp)
-{
-    return detail::format(std::locale{}, std::move(fmt), tp);
-}
-
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       const sys_time<Duration>& tp)
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const sys_time<Duration>& tp)
 {
     const std::string abbrev("UTC");
     CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(loc, std::move(fmt),
-                          local_time<Duration>{tp.time_since_epoch()}, &abbrev, &offset);
+    to_stream(os, fmt, local_time<Duration>{tp.time_since_epoch()}, &abbrev, &offset);
 }
 
-template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, const sys_time<Duration>& tp)
-{
-    const std::string abbrev("UTC");
-    CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(std::locale{}, std::move(fmt),
-                          local_time<Duration>{tp.time_since_epoch()}, &abbrev, &offset);
-}
+// format
 
 // const CharT* formats
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const std::locale& loc, const CharT* fmt, const local_time<Duration>& tp)
 {
-    return detail::format(loc,  std::basic_string<CharT>(fmt), tp);
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const CharT* fmt, const local_time<Duration>& tp)
 {
-    return detail::format(std::locale{}, std::basic_string<CharT>(fmt), tp);
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const std::locale& loc, const CharT* fmt, const sys_time<Duration>& tp)
 {
-    const std::string abbrev("UTC");
-    CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(loc, std::basic_string<CharT>(fmt),
-                          local_time<Duration>{tp.time_since_epoch()},
-                          &abbrev, &offset);
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const CharT* fmt, const sys_time<Duration>& tp)
 {
-    const std::string abbrev("UTC");
-    CONSTDATA std::chrono::seconds offset{0};
-    return detail::format(std::locale{}, std::basic_string<CharT>(fmt),
-                          local_time<Duration>{tp.time_since_epoch()},
-                          &abbrev, &offset);
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, tp);
+    return os.str();
 }
+
+// basic_string formats
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const local_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::basic_string<CharT, Traits>& fmt, const local_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const sys_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::basic_string<CharT, Traits>& fmt, const sys_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
 
 // parse
 

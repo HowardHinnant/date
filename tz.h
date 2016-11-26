@@ -1298,46 +1298,55 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
 // format
 
 template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       const zoned_time<Duration>& tp)
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const zoned_time<Duration>& tp)
 {
     auto const info = tp.get_info();
-    return detail::format(loc, std::move(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
+}
+
+// basic_string formats
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const zoned_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
 }
 
 template <class CharT, class Traits, class Duration>
-inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, const zoned_time<Duration>& tp)
+format(const std::basic_string<CharT, Traits>& fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(std::locale{}, std::move(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
 }
 
 // const CharT* formats
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const std::locale& loc, const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(loc, std::basic_string<CharT>(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(std::locale{}, std::basic_string<CharT>(fmt),
-                          tp.get_local_time(), &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 }  // namespace date
