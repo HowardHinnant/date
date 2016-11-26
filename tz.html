@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-10-08<br/>
+2016-11-25<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -57,6 +57,7 @@
     <li><a href="#time_zone"><code>time_zone</code></a></li>
     <li><a href="#zoned_time"><code>zoned_time</code></a></li>
     <li><a href="#make_zoned"><code>make_zoned</code></a></li>
+    <li><a href="#to_stream"><code>to_stream</code></a></li>
     <li><a href="#format"><code>format</code></a></li>
     <li><a href="#parse"><code>parse</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
@@ -1991,35 +1992,75 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 
 </blockquote>
 
+<a name="to_stream"></a><h3><code>to_stream</code></h3>
+<blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const local_time&lt;Duration&gt;&amp; tp);
+</pre>
+<blockquote>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const sys_time&lt;Duration&gt;&amp; tp);
+</pre>
+<blockquote>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const zoned_time&lt;Duration&gt;&amp; tp);
+</pre>
+<blockquote>
+<p>
+These are lower-level functions with respect to <code>format</code>.  These functions
+will <i>format</i> directly to a <i>stream</i>.  If you use these you will not be able
+to align your formatted time stamp within a <code>width</code> respecting the stream's
+<code>adjustfield</code>.  But in forgoing that utility you may realize some performance
+gains over <code>format</code> as nothing in the implementation of <code>to_stream</code>
+creates temporary strings or streams to format into.
+</p>
+</blockquote>
+
+</blockquote>
+
 <a name="format"></a><h3><code>format</code></h3>
 <blockquote>
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(const std::locale&amp; loc, std::basic_string&lt;class CharT, class Traits&gt; format,
+format(const std::locale&amp; loc, const std::basic_string&lt;class CharT, class Traits&gt;&amp; format,
        const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(std::basic_string&lt;class CharT, class Traits&gt; format, const local_time&lt;Duration&gt;&amp; tp);
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const local_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(const std::locale&amp; loc, std::basic_string&lt;class CharT, class Traits&gt; format,
+format(const std::locale&amp; loc, const std::basic_string&lt;class CharT, class Traits&gt;&amp; format,
        const zoned_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(std::basic_string&lt;class CharT, class Traits&gt; format, const zoned_time&lt;Duration&gt;&amp; tp);
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const zoned_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(const std::locale&amp; loc, std::basic_string&lt;class CharT, class Traits&gt; format,
+format(const std::locale&amp; loc, const std::basic_string&lt;class CharT, class Traits&gt;&amp; format,
        const sys_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
-format(std::basic_string&lt;class CharT, class Traits&gt; format, const sys_time&lt;Duration&gt;&amp; tp);
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const sys_time&lt;Duration&gt;&amp; tp);
 
 // const CharT* formats
 
@@ -2067,10 +2108,12 @@ The <code>format</code> string follows the rules as specified for
 <ul>
 <li><p>
 If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string
-and the argument <code>tp</code> has precision finer than seconds, then seconds
+and the argument <code>tp</code> has precision that can not be exactly represented
+with seconds, then seconds
 are formatted as a decimal floating point number with a fixed format and a
-precision matching that of the precision of <code>tp</code>.  The character for
-the decimal point is localized according to the <code>locale</code>.
+precision matching that of the precision of <code>tp</code> (or to a microseconds precision
+if the conversion to floating point decimal seconds can not be made within 18 digits).
+The character for the decimal point is localized according to the <code>locale</code>.
 </p></li>
 
 <li><p>
