@@ -3437,7 +3437,10 @@ struct make_precision<w, false>
     static CONSTDATA unsigned width = 6;
 };
 
-template <class Duration, unsigned w = width<Duration::period::den>::value>
+template <class Duration,
+          unsigned w = width<std::common_type<
+                                 Duration,
+                                 std::chrono::seconds>::type::period::den>::value>
 class decimal_format_seconds
 {
 public:
@@ -4475,7 +4478,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             if (command)
             {
                 if (modified == CharT{})
-                    os << make_time(tp - floor<days>(tp));
+                {
+                    using CT = typename common_type<seconds, Duration>::type;
+                    os << time_of_day<CT>{tp - floor<days>(tp)};
+                }
                 else
                 {
                     os << CharT{'%'} << modified << *fmt;
