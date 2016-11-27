@@ -4676,7 +4676,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 }
                 else if (modified == CharT{})
                 {
-                    y %= 100;
+                    y = std::abs(y) % 100;
                     if (y < 10)
                         os << CharT{'0'};
                     os << y;
