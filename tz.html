@@ -2510,7 +2510,7 @@ using tai_seconds = tai_time&lt;std::chrono::seconds&gt;;
 </pre>
 
 <p>
-<code>tai_time</code> counts physical seconds continuously like <code>utc_itme</code>,
+<code>tai_time</code> counts physical seconds continuously like <code>utc_time</code>,
 but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
 is 1958-01-01 and is offset ahead of <code>utc_time</code> by 10s in 1970-01-01.
 With each leap second, the offset from <code>utc_time</code> grows by another
@@ -2621,7 +2621,7 @@ using gps_seconds = gps_time&lt;std::chrono::seconds&gt;;
 </pre>
 
 <p>
-<code>gps_time</code> counts physical seconds continuously like <code>utc_itme</code>,
+<code>gps_time</code> counts physical seconds continuously like <code>utc_time</code>,
 but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
 is 1980-01-06 and was equivalent to UTC at that time.  If drifts ahead of UTC
 with each inserted leap second.  It is always exactly 19s behind TAI.
