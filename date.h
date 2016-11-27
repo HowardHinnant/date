@@ -4128,8 +4128,17 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     detail::save_stream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
-                    os.width(2);
-                    os << y/100;
+                    if (y >= 0)
+                    {
+                        os.width(2);
+                        os << y/100;
+                    }
+                    else
+                    {
+                        os << CharT{'-'};
+                        os.width(2);
+                        os << -(y-99)/100;
+                    }
                 }
                 else
                 {

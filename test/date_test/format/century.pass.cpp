@@ -40,31 +40,86 @@ main()
     using namespace date;
     using namespace std::chrono;
     std::ostringstream os;
-    os << format("%F %T", sys_days{jan/1/year::min()});
-    assert(os.str() == "-32768-01-01 00:00:00");
-    os.str("");
-    os << format("%F %T", sys_days{dec/last/year::max()});
-    assert(os.str() == "32767-12-31 00:00:00");
-    os.str("");
-    os << format("%F %T", sys_days{dec/last/year::max()} + hours{23} + minutes{59} +
-                                                  seconds{59} + microseconds{999999});
-    assert(os.str() == "32767-12-31 23:59:59.999999");
-    os.str("");
+    os << format("%C", sys_days{jun/1/20001});
+    assert(os.str() == "200");
 
-    os << format("%Y-%m-%d %H:%M:%S", sys_days{jan/1/year::min()});
-    assert(os.str() == "-32768-01-01 00:00:00");
     os.str("");
-    os << format("%Y-%m-%d %H:%M:%S", sys_days{dec/last/year::max()});
-    assert(os.str() == "32767-12-31 00:00:00");
-    os.str("");
-    os << format("%Y-%m-%d %H:%M:%S", sys_days{dec/last/year::max()} + hours{23} +
-                                        minutes{59} + seconds{59} + microseconds{999999});
-    assert(os.str() == "32767-12-31 23:59:59.999999");
-    os.str("");
+    os << format("%C", sys_days{jun/1/20000});
+    assert(os.str() == "200");
 
-    os << format("%F %T", sys_days{jan/1/year::min()} + microfortnights{1});
-    assert(os.str() == "-32768-01-01 00:00:01.2096");
     os.str("");
-    os << format("%F %T", sys_days{dec/last/year::max()} + microfortnights{1});
-    assert(os.str() == "32767-12-31 00:00:01.2096");
+    os << format("%C", sys_days{jun/1/19999});
+    assert(os.str() == "199");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/2001});
+    assert(os.str() == "20");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/2000});
+    assert(os.str() == "20");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/1999});
+    assert(os.str() == "19");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/101});
+    assert(os.str() == "01");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/100});
+    assert(os.str() == "01");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/99});
+    assert(os.str() == "00");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/1});
+    assert(os.str() == "00");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/0});
+    assert(os.str() == "00");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-1});
+    assert(os.str() == "-01");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-99});
+    assert(os.str() == "-01");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-100});
+    assert(os.str() == "-01");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-101});
+    assert(os.str() == "-02");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-1999});
+    assert(os.str() == "-20");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-2000});
+    assert(os.str() == "-20");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-2001});
+    assert(os.str() == "-21");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-19999});
+    assert(os.str() == "-200");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-20000});
+    assert(os.str() == "-200");
+
+    os.str("");
+    os << format("%C", sys_days{jun/1/-20001});
+    assert(os.str() == "-201");
 }
