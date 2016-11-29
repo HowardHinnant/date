@@ -54,6 +54,10 @@
 #  define LAZY_INIT 1
 #endif
 
+#ifndef TZ_LITERAL_INIT
+#	define TZ_LITERAL_INIT 0
+#endif
+
 #ifndef HAS_REMOTE_API
 #  ifdef _WIN32
 #    define HAS_REMOTE_API 0
@@ -686,6 +690,10 @@ struct timezone_mapping
         : other(other), territory(territory), type(type)
     {
     }
+	timezone_mapping(const std::string & other, const std::string & territory, const std::string & type)
+		: other(other), territory(territory), type(type)
+	{
+	}
     timezone_mapping() = default;
     std::string other;
     std::string territory;
@@ -756,6 +764,7 @@ operator<<(std::ostream& os, const TZ_DB& db);
 
 const TZ_DB& get_tzdb();
 const TZ_DB& reload_tzdb();
+
 
 #if HAS_REMOTE_API
 std::string remote_version();

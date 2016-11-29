@@ -118,6 +118,9 @@
 #  endif //!USE_SHELL_API
 #endif  // !WIN32
 
+#if TZ_LITERAL_INIT
+#include "tz_data.h"
+#endif
 
 #if HAS_REMOTE_API
 // Note curl includes windows.h so we must include curl AFTER definitions of things
@@ -2737,15 +2740,67 @@ get_version(const std::string& path)
     throw std::runtime_error("Unable to get Timezone database version from " + path);
 }
 
+template<class _Lines_t>
+void
+load_tzdb(TZ_DB & db, const _Lines_t & lines)
+{
+	bool continue_zone = false;
+	for(auto && line : lines)
+	if (std::distance(std::begin(line), std::end(line)) != 0 && line[0] != '#')
+	{
+		std::istringstream in(line);
+		std::string word;
+		in >> word;
+		if (word == "Rule")
+		{
+			db.rules.push_back(Rule(line));
+			continue_zone = false;
+		}
+		else if (word == "Link")
+		{
+			db.links.push_back(link(line));
+			continue_zone = false;
+		}
+		else if (word == "Leap")
+		{
+			db.leaps.push_back(leap(line, detail::undocumented{}));
+			continue_zone = false;
+		}
+		else if (word == "Zone")
+		{
+			db.zones.push_back(time_zone(line, detail::undocumented{}));
+			continue_zone = true;
+		}
+		else if (line[0] == '\t' && continue_zone)
+		{
+			db.zones.back().add(line);
+		}
+		else
+		{
+			std::cerr << line << '\n';
+		}
+	}
+	std::sort(db.rules.begin(), db.rules.end());
+	Rule::split_overlaps(db.rules);
+	std::sort(db.zones.begin(), db.zones.end());
+#if !LAZY_INIT
+	for (auto& z : db.zones)
+		z.adjust_infos(db.rules);
+#endif
+	db.zones.shrink_to_fit();
+	std::sort(db.links.begin(), db.links.end());
+	db.links.shrink_to_fit();
+	std::sort(db.leaps.begin(), db.leaps.end());
+	db.leaps.shrink_to_fit();
+}
+
 static
 TZ_DB
 init_tzdb()
 {
     using namespace date;
     const std::string path = install + folder_delimiter;
-    std::string line;
-    bool continue_zone = false;
-    TZ_DB db;
+	TZ_DB db;
 
 #if AUTO_DOWNLOAD
     if (!file_exists(install))
@@ -2796,60 +2851,18 @@ init_tzdb()
     db.version = get_version(path);
 #endif  // !AUTO_DOWNLOAD
 
+	std::vector<std::string> lines;
     for (const auto& filename : files)
     {
         std::ifstream infile(path + filename);
         while (infile)
         {
+			std::string line;
             std::getline(infile, line);
-            if (!line.empty() && line[0] != '#')
-            {
-                std::istringstream in(line);
-                std::string word;
-                in >> word;
-                if (word == "Rule")
-                {
-                    db.rules.push_back(Rule(line));
-                    continue_zone = false;
-                }
-                else if (word == "Link")
-                {
-                    db.links.push_back(link(line));
-                    continue_zone = false;
-                }
-                else if (word == "Leap")
-                {
-                    db.leaps.push_back(leap(line, detail::undocumented{}));
-                    continue_zone = false;
-                }
-                else if (word == "Zone")
-                {
-                    db.zones.push_back(time_zone(line, detail::undocumented{}));
-                    continue_zone = true;
-                }
-                else if (line[0] == '\t' && continue_zone)
-                {
-                    db.zones.back().add(line);
-                }
-                else
-                {
-                    std::cerr << line << '\n';
-                }
-            }
+			lines.push_back(std::move(line));
         }
     }
-    std::sort(db.rules.begin(), db.rules.end());
-    Rule::split_overlaps(db.rules);
-    std::sort(db.zones.begin(), db.zones.end());
-#if !LAZY_INIT
-    for (auto& z : db.zones)
-        z.adjust_infos(db.rules);
-#endif
-    db.zones.shrink_to_fit();
-    std::sort(db.links.begin(), db.links.end());
-    db.links.shrink_to_fit();
-    std::sort(db.leaps.begin(), db.leaps.end());
-    db.leaps.shrink_to_fit();
+	load_tzdb(db, lines);
 
 #ifdef TIMEZONE_MAPPING
     std::string mapping_file = path + "windowsZones.xml";
@@ -2861,6 +2874,23 @@ init_tzdb()
     return db;
 }
 
+template<class _Lines_t, class _Mappings_t>
+TZ_DB
+init_tzdb(const _Lines_t & lines, const _Mappings_t & mappings)
+{
+	using namespace std;
+	using namespace detail;
+	assert(std::distance(std::begin(lines), std::end(lines)) > 0);
+	TZ_DB db;
+	load_tzdb(db, lines);
+#if TIMEZONE_MAPPING
+	for (auto && mapping_row : mappings)
+		db.mappings.push_back(timezone_mapping{ get<0>(mapping_row), get<1>(mapping_row), get<2>(mapping_row) });
+	get_windows_timezone_info(db.native_zones);
+#endif
+	return db;
+}
+
 static
 TZ_DB&
 access_tzdb()
@@ -2869,23 +2899,36 @@ access_tzdb()
     return tz_db;
 }
 
+#if !TZ_LITERAL_INIT
 const TZ_DB&
 reload_tzdb()
 {
 #if AUTO_DOWNLOAD
-    auto const& v = access_tzdb().version;
-    if (!v.empty() && v == remote_version())
-        return access_tzdb();
+	auto const& v = access_tzdb().version;
+	if (!v.empty() && v == remote_version())
+		return access_tzdb();
 #endif
-    return access_tzdb() = init_tzdb();
+	return access_tzdb() = init_tzdb();
 }
-
 const TZ_DB&
 get_tzdb()
 {
     static const TZ_DB& ref = access_tzdb() = init_tzdb();
     return ref;
 }
+#else
+const TZ_DB&
+reload_tzdb()
+{
+	return access_tzdb() = init_tzdb(tz_data::timezones, tz_data::mappings);
+}
+const TZ_DB&
+get_tzdb()
+{
+	static const TZ_DB& ref = access_tzdb() = init_tzdb(tz_data::timezones, tz_data::mappings);
+	return ref;
+}
+#endif
 
 const time_zone*
 locate_zone(const std::string& tz_name)
