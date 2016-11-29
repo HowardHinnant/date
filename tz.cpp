@@ -2673,12 +2673,19 @@ extract_gz_file(const std::string&, const std::string& gz_file, const std::strin
 #if USE_SHELL_API
     bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS;
 #else  // !USE_SHELL_API
-    const char prog[] = {"/usr/bin/tar"};
-    const char*const args[] =
+    std::vector<std::string> tar_paths = { "/usr/bin/tar", "/bin/tar" };
+    bool unzipped = false;
+    for ( const auto& tar_path : tar_paths )
     {
-        prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
-    };
-    bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
+        const char* prog = tar_path.c_str();
+        const char*const args[] =
+        {
+            prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
+        };
+
+        unzipped = (run_program(prog, args) == EXIT_SUCCESS);
+        if ( unzipped ) break;
+    }
 #endif // !USE_SHELL_API
     if (unzipped)
     {
