@@ -3,6 +3,7 @@
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
 // Copyright (c) 2016 Alexander Kormanovsky
+// Copyright (c) 2016 Jiangang Zhuang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -125,8 +126,19 @@
 #include <curl/curl.h>
 #endif
 
+static
+char
+get_folder_delimiter()
+{
 #ifdef _WIN32
-static CONSTDATA char folder_delimiter = '\\';
+  static CONSTDATA char folder_delimiter = '\\';
+#else
+  static CONSTDATA char folder_delimiter = '/';
+#endif
+
+  return folder_delimiter;
+}
+#ifdef _WIN32
 
 namespace
 {
@@ -176,7 +188,6 @@ get_download_folder()
 
 #else // !_WIN32
 
-static CONSTDATA char folder_delimiter = '/';
 
 static
 std::string
@@ -204,45 +215,39 @@ namespace date
 
 using namespace detail;
 
-static std::string get_install()
+static
+std::string
+get_install()
 {
-#ifdef _WIN32
-    std::string install = get_download_folder();
-    install += folder_delimiter;
-    install += "tzdata";
-#else
-    std::string install = expand_path("~/Downloads/tzdata");
-#endif
-    return install;
-}
-
+  static const std::string install 
 #ifndef INSTALL
 
-static const std::string install = get_install();
+#ifdef _WIN32
+    = get_download_folder() + get_folder_delimiter() + "tzdata";
+#else
+    = expand_path("~/Downloads/tzdata");
+#endif
 
 #else   // INSTALL
 
 #define STRINGIZEIMP(x) #x
 #define STRINGIZE(x) STRINGIZEIMP(x)
 
-static const std::string install = STRINGIZE(INSTALL) +
-                                   std::string(1, folder_delimiter) + "tzdata";
+    = STRINGIZE(INSTALL) + std::string(1, get_folder_delimiter()) + "tzdata";
 
 #endif  // INSTALL
+
+    return install;
+}
+
 
 static
 std::string
 get_download_gz_file(const std::string& version)
 {
-    auto file = install + version + ".tar.gz";
+    auto file = get_install() + version + ".tar.gz";
     return file;
 }
-
-static const std::vector<std::string> files =
-{
-    "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
-    "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
-};
 
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
@@ -362,7 +367,7 @@ static
 std::string
 get_download_mapping_file(const std::string& version)
 {
-    auto file = install + version + "windowsZones.xml";
+    auto file = get_install() + version + "windowsZones.xml";
     return file;
 }
 
@@ -2510,7 +2515,7 @@ get_unzip_program()
         }
     }
     path += get_program_folder();
-    path += folder_delimiter;
+    path += get_folder_delimiter();
     path += "7-Zip\\7z.exe";
     return path;
 }
@@ -2549,8 +2554,8 @@ static
 std::string
 get_download_tar_file(const std::string& version)
 {
-    auto file = install;
-    file += folder_delimiter;
+    auto file = get_install();
+    file += get_folder_delimiter();
     file += "tzdata";
     file += version;
     file += ".tar";
@@ -2601,7 +2606,7 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd += "\" x \"";
     cmd += tar_file;
     cmd += "\" -o\"";
-    cmd += install;
+    cmd += get_install();
     cmd += '\"';
 #if USE_SHELL_API
     cmd = "\"" + cmd + "\"";
@@ -2671,12 +2676,12 @@ bool
 extract_gz_file(const std::string&, const std::string& gz_file, const std::string&)
 {
 #if USE_SHELL_API
-    bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + install).c_str()) == EXIT_SUCCESS;
+    bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + get_install()).c_str()) == EXIT_SUCCESS;
 #else  // !USE_SHELL_API
     const char prog[] = {"/usr/bin/tar"};
     const char*const args[] =
     {
-        prog, "-xzf", gz_file.c_str(), "-C", install.c_str(), nullptr
+        prog, "-xzf", gz_file.c_str(), "-C", get_install().c_str(), nullptr
     };
     bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
 #endif // !USE_SHELL_API
@@ -2696,6 +2701,7 @@ remote_install(const std::string& version)
     auto success = false;
     assert(!version.empty());
 
+    std::string install = get_install();
     auto gz_file = get_download_gz_file(version);
     if (file_exists(gz_file))
     {
@@ -2708,7 +2714,7 @@ remote_install(const std::string& version)
 #ifdef TIMEZONE_MAPPING
             auto mapping_file_source = get_download_mapping_file(version);
             auto mapping_file_dest = install;
-            mapping_file_dest += folder_delimiter;
+            mapping_file_dest += get_folder_delimiter();
             mapping_file_dest += "windowsZones.xml";
             if (!move_file(mapping_file_source, mapping_file_dest))
                 success = false;
@@ -2742,7 +2748,8 @@ TZ_DB
 init_tzdb()
 {
     using namespace date;
-    const std::string path = install + folder_delimiter;
+    const std::string install = get_install();
+    const std::string path = install + get_folder_delimiter();
     std::string line;
     bool continue_zone = false;
     TZ_DB db;
@@ -2795,6 +2802,12 @@ init_tzdb()
     }
     db.version = get_version(path);
 #endif  // !AUTO_DOWNLOAD
+
+    static const std::vector<std::string> files =
+    {
+      "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
+      "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
+    };
 
     for (const auto& filename : files)
     {
