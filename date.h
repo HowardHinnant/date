@@ -3395,7 +3395,7 @@ namespace detail
 // Example:  width<10>::value   ==  1
 // Example:  width<1000>::value ==  3
 template <std::uint64_t n, std::uint64_t d = 10, unsigned w = 0,
-          bool should_continue = !(n < 2) && d != 0 && w < 19>
+          bool should_continue = !(n < 2) && d != 0 && (w < 19)>
 struct width
 {
     static CONSTDATA unsigned value = 1 + width<n, d%n*10, w+1>::value;
@@ -3422,7 +3422,7 @@ struct static_pow10<0>
     static CONSTDATA std::uint64_t value = 1;
 };
 
-template <unsigned w, bool in_range = w < 19>
+template <unsigned w, bool in_range = (w < 19)>
 struct make_precision
 {
     using type = std::chrono::duration<std::int64_t,
