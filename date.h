@@ -28,6 +28,7 @@
 // been invented (that woud involve another several millennia of evolution).
 // We did not mean to shout.
 
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #if !(__cplusplus >= 201402)
