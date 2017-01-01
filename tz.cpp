@@ -2726,15 +2726,25 @@ static
 std::string
 get_version(const std::string& path)
 {
-    std::ifstream infile(path + "NEWS");
     std::string version;
-    while (infile)
+    std::ifstream infile(path + "version");
+    if (infile.is_open())
     {
         infile >> version;
-        if (version == "Release")
+        if (!infile.fail())
+            return version;
+    }
+    else
+    {
+        infile.open(path + "NEWS");
+        while (infile)
         {
             infile >> version;
-            return version;
+            if (version == "Release")
+            {
+                infile >> version;
+                return version;
+            }
         }
     }
     throw std::runtime_error("Unable to get Timezone database version from " + path);
