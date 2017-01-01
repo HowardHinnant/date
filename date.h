@@ -74,7 +74,7 @@ namespace date
 #  define NOEXCEPT noexcept
 #else
 // C++11
-#  define CONSTDATA constexpr
+#  define CONSTDATA constexpr const
 #  define CONSTCD11 constexpr
 #  define CONSTCD14
 #  define NOEXCEPT noexcept
