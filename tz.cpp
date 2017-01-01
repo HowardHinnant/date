@@ -724,7 +724,7 @@ static
 unsigned
 parse_dow(std::istream& in)
 {
-    const char*const dow_names[] =
+    CONSTDATA char*const dow_names[] =
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     auto s = parse3(in);
     auto dow = std::find(std::begin(dow_names), std::end(dow_names), s) - dow_names;
@@ -737,7 +737,7 @@ static
 unsigned
 parse_month(std::istream& in)
 {
-    const char*const month_names[] =
+    CONSTDATA char*const month_names[] =
         {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     auto s = parse3(in);
@@ -2800,7 +2800,7 @@ init_tzdb()
     db.version = get_version(path);
 #endif  // !AUTO_DOWNLOAD
 
-    CONSTDATA const char* files[] =
+    CONSTDATA char*const files[] =
     {
         "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
         "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
