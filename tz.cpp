@@ -247,6 +247,22 @@ get_download_gz_file(const std::string& version)
     return file;
 }
 
+static
+const std::string&
+get_windows_zones_install()
+{
+    static const std::string install
+#ifndef WINDOWSZONES_INSTALL
+    = get_install();
+#else
+#  define STRINGIZEIMP(x) #x
+#  define STRINGIZE(x) STRINGIZEIMP(x)
+    = STRINGIZE(WINDOWSZONES_INSTALL);
+#endif
+    std::cout << install << std::endl;
+    return install;
+}
+
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
@@ -2711,7 +2727,7 @@ remote_install(const std::string& version)
                 success = true;
 #ifdef TIMEZONE_MAPPING
             auto mapping_file_source = get_download_mapping_file(version);
-            auto mapping_file_dest = install;
+            auto mapping_file_dest = get_windows_zones_install();
             mapping_file_dest += folder_delimiter;
             mapping_file_dest += "windowsZones.xml";
             if (!move_file(mapping_file_source, mapping_file_dest))
@@ -2873,7 +2889,7 @@ init_tzdb()
     db.leaps.shrink_to_fit();
 
 #ifdef TIMEZONE_MAPPING
-    std::string mapping_file = path + "windowsZones.xml";
+    std::string mapping_file = get_windows_zones_install() + folder_delimiter + "windowsZones.xml";
     db.mappings = load_timezone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
     get_windows_timezone_info(db.native_zones);
