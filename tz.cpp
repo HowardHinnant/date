@@ -228,6 +228,7 @@ get_install()
 #  else
     = expand_path("~/Downloads/tzdata");
 #  endif
+}
 
 void set_install(std::string install_folder)
 {
