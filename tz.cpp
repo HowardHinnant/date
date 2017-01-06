@@ -228,12 +228,6 @@ get_install()
 #  else
     = expand_path("~/Downloads/tzdata");
 #  endif
-}
-
-void set_install(std::string install_folder)
-{
-    install = install_folder;
-}
 
 #else   // INSTALL
 
@@ -245,6 +239,11 @@ void set_install(std::string install_folder)
 #endif  // INSTALL
 
     return install;
+}
+
+void set_install(std::string install_folder)
+{
+    install = install_folder;
 }
 
 static
