@@ -42,6 +42,12 @@ namespace detail
 
 enum class tz {utc, local, standard};
 
+//forward declare to avoid warnings in gcc 6.2
+class MonthDayTime;
+std::istream& operator>>(std::istream& is, MonthDayTime& x);
+std::ostream& operator<<(std::ostream& os, const MonthDayTime& x);
+
+
 class MonthDayTime
 {
 private:
@@ -122,6 +128,20 @@ public:
 // onward, including the specified time. When the specified time is
 // local, it uses the save_ from the chronologically previous Rule, or if
 // there is none, 0.
+
+//forward declare to avoid warnings in gcc 6.2
+class Rule;
+bool operator==(const Rule& x, const Rule& y);
+bool operator<(const Rule& x, const Rule& y);
+bool operator==(const Rule& x, const date::year& y);
+bool operator<(const Rule& x, const date::year& y);
+bool operator==(const date::year& x, const Rule& y);
+bool operator<(const date::year& x, const Rule& y);
+bool operator==(const Rule& x, const std::string& y);
+bool operator<(const Rule& x, const std::string& y);
+bool operator==(const std::string& x, const Rule& y);
+bool operator<(const std::string& x, const Rule& y);
+std::ostream& operator<<(std::ostream& os, const Rule& r);
 
 class Rule
 {

@@ -343,7 +343,7 @@ public:
     year_lastweek_weekday& operator-=(const years& y) NOEXCEPT;
 
     CONSTCD11 iso_week::year    year()    const NOEXCEPT;
-    CONSTCD11 iso_week::weeknum weeknum() const NOEXCEPT;
+    CONSTCD14 iso_week::weeknum weeknum() const NOEXCEPT;
     CONSTCD11 iso_week::weekday weekday() const NOEXCEPT;
 
     CONSTCD14 operator sys_days() const NOEXCEPT;
@@ -1299,7 +1299,7 @@ year_lastweek_weekday::operator-=(const years& y) NOEXCEPT
 
 CONSTCD11 inline year year_lastweek_weekday::year() const NOEXCEPT {return y_;}
 
-CONSTCD11
+CONSTCD14
 inline
 weeknum
 year_lastweek_weekday::weeknum() const NOEXCEPT

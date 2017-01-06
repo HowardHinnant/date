@@ -4,6 +4,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Jiangang Zhuang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -95,6 +96,16 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#ifdef _WIN32
+#  ifdef DATE_BUILD_DLL
+#    define DATE_API __declspec(dllexport)
+#  else
+#    define DATE_API __declspec(dllimport)
+#  endif
+#else
+#  define DATE_API
+#endif
 
 namespace date
 {
@@ -351,7 +362,7 @@ public:
     time_zone& operator=(time_zone&& src);
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 
-    explicit time_zone(const std::string& s, detail::undocumented);
+    DATE_API explicit time_zone(const std::string& s, detail::undocumented);
 
     const std::string& name() const NOEXCEPT;
 
@@ -372,15 +383,15 @@ public:
 
     friend bool operator==(const time_zone& x, const time_zone& y) NOEXCEPT;
     friend bool operator< (const time_zone& x, const time_zone& y) NOEXCEPT;
-    friend std::ostream& operator<<(std::ostream& os, const time_zone& z);
+    friend DATE_API std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
-    void add(const std::string& s);
-    void adjust_infos(const std::vector<detail::Rule>& rules);
+    DATE_API void add(const std::string& s);
+    DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
 
 private:
-    sys_info   get_info_impl(sys_seconds tp) const;
-    local_info get_info_impl(local_seconds tp) const;
-    sys_info   get_info_impl(sys_seconds tp, int timezone) const;
+    DATE_API sys_info   get_info_impl(sys_seconds tp) const;
+    DATE_API local_info get_info_impl(local_seconds tp) const;
+    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
 
     void parse_info(std::istream& in);
 
@@ -525,7 +536,7 @@ private:
     std::string name_;
     std::string target_;
 public:
-    explicit link(const std::string& s);
+    DATE_API explicit link(const std::string& s);
 
     const std::string& name() const {return name_;}
     const std::string& target() const {return target_;}
@@ -533,7 +544,7 @@ public:
     friend bool operator==(const link& x, const link& y) {return x.name_ == y.name_;}
     friend bool operator< (const link& x, const link& y) {return x.name_ < y.name_;}
 
-    friend std::ostream& operator<<(std::ostream& os, const link& x);
+    friend DATE_API std::ostream& operator<<(std::ostream& os, const link& x);
 };
 
 inline bool operator!=(const link& x, const link& y) {return !(x == y);}
@@ -547,7 +558,7 @@ private:
     sys_seconds date_;
 
 public:
-    explicit leap(const std::string& s, detail::undocumented);
+    DATE_API explicit leap(const std::string& s, detail::undocumented);
 
     sys_seconds date() const {return date_;}
 
@@ -578,7 +589,7 @@ public:
         return x < y.date_;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const leap& x);
+    friend DATE_API std::ostream& operator<<(std::ostream& os, const leap& x);
 };
 
 inline bool operator!=(const leap& x, const leap& y) {return !(x == y);}
@@ -751,29 +762,29 @@ struct TZ_DB
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 };
 
-std::ostream&
+DATE_API std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db);
 
-const TZ_DB& get_tzdb();
-const TZ_DB& reload_tzdb();
+DATE_API const TZ_DB& get_tzdb();
+DATE_API const TZ_DB& reload_tzdb();
 
 #if HAS_REMOTE_API
-std::string remote_version();
-bool        remote_download(const std::string& version);
-bool        remote_install(const std::string& version);
+DATE_API std::string remote_version();
+DATE_API bool        remote_download(const std::string& version);
+DATE_API bool        remote_install(const std::string& version);
 #endif
 
 #ifndef INSTALL
 void set_install(std::string install_folder);
 #endif
 
-const time_zone* locate_zone(const std::string& tz_name);
+DATE_API const time_zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST
 #  if _WIN32
-const time_zone* locate_native_zone(const std::string& native_tz_name);
+DATE_API const time_zone* locate_native_zone(const std::string& native_tz_name);
 #  endif // _WIN32
 #endif // TZ_TEST
-const time_zone* current_zone();
+DATE_API const time_zone* current_zone();
 
 // zoned_time
 
@@ -1302,46 +1313,55 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
 // format
 
 template <class CharT, class Traits, class Duration>
-inline
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, std::basic_string<CharT, Traits> fmt,
-       const zoned_time<Duration>& tp)
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const zoned_time<Duration>& tp)
 {
     auto const info = tp.get_info();
-    return detail::format(loc, std::move(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
+}
+
+// basic_string formats
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const zoned_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
 }
 
 template <class CharT, class Traits, class Duration>
-inline
 std::basic_string<CharT, Traits>
-format(std::basic_string<CharT, Traits> fmt, const zoned_time<Duration>& tp)
+format(const std::basic_string<CharT, Traits>& fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(std::locale{}, std::move(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
 }
 
 // const CharT* formats
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const std::locale& loc, const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(loc, std::basic_string<CharT>(fmt), tp.get_local_time(),
-                          &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 template <class CharT, class Duration>
-inline
 std::basic_string<CharT>
 format(const CharT* fmt, const zoned_time<Duration>& tp)
 {
-    auto const info = tp.get_info();
-    return detail::format(std::locale{}, std::basic_string<CharT>(fmt),
-                          tp.get_local_time(), &info.abbrev, &info.offset);
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, tp);
+    return os.str();
 }
 
 }  // namespace date
