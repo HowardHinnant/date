@@ -767,6 +767,7 @@ operator<<(std::ostream& os, const TZ_DB& db);
 
 DATE_API const TZ_DB& get_tzdb();
 DATE_API const TZ_DB& reload_tzdb();
+DATE_API void         set_install(const std::string& install);
 
 #if HAS_REMOTE_API
 DATE_API std::string remote_version();

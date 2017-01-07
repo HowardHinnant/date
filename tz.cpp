@@ -215,10 +215,10 @@ namespace date
 using namespace detail;
 
 static
-const std::string&
-get_install()
+std::string&
+access_install()
 {
-    static const std::string install 
+    static std::string install 
 #ifndef INSTALL
 
 #  ifdef _WIN32
@@ -237,6 +237,20 @@ get_install()
 #endif  // INSTALL
 
     return install;
+}
+
+void
+set_install(const std::string& s)
+{
+    access_install() = s;
+}
+
+static
+const std::string&
+get_install()
+{
+    static const std::string& ref = access_install();
+    return ref;
 }
 
 static
