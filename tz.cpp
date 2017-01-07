@@ -214,13 +214,9 @@ namespace date
 
 using namespace detail;
 
-static
-const std::string&
-get_install()
-{
-    static const std::string install 
-#ifndef INSTALL
+static std::string install
 
+#ifndef INSTALL
 #  ifdef _WIN32
     = get_download_folder() + folder_delimiter + "tzdata";
 #  else
@@ -232,11 +228,20 @@ get_install()
 #  define STRINGIZEIMP(x) #x
 #  define STRINGIZE(x) STRINGIZEIMP(x)
 
-    = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
+       = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
 
 #endif  // INSTALL
 
+static
+const std::string&
+get_install()
+{
     return install;
+}
+
+void set_install(std::string install_folder)
+{
+    install = install_folder;
 }
 
 static

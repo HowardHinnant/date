@@ -774,6 +774,10 @@ DATE_API bool        remote_download(const std::string& version);
 DATE_API bool        remote_install(const std::string& version);
 #endif
 
+#ifndef INSTALL
+void set_install(std::string install_folder);
+#endif
+
 DATE_API const time_zone* locate_zone(const std::string& tz_name);
 #ifdef TZ_TEST
 #  if _WIN32
