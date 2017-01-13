@@ -3,7 +3,7 @@
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
 // Copyright (c) 2016 Alexander Kormanovsky
-// Copyright (c) 2016 Jiangang Zhuang
+// Copyright (c) 2016, 2017 Jiangang Zhuang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -3094,14 +3094,20 @@ current_zone()
     // The path may also take a relative form:
     // "../usr/share/zoneinfo/America/Los_Angeles".
     struct stat sb;
-    CONSTDATA auto timezone = "/etc/localtime";
+    const char* timezone = "/etc/localtime";
     if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        std::string result(sb.st_size, '\0');
-        auto sz = readlink(timezone, &result.front(), result.size());
-        if (sz == -1)
-            throw std::runtime_error("readlink failure");
-        result.resize(sz);
+        std::string result;
+        do
+        {
+            result.resize(sb.st_size, '\0');
+            auto sz = readlink(timezone, &result.front(), result.size());
+            if (sz == -1)
+                throw std::runtime_error("readlink failure");
+            timezone = result.c_str();
+        }
+        while (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0);
+
         const char zonepath[] = "/usr/share/zoneinfo/";
         const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
         const std::size_t pos = result.find(zonepath);
