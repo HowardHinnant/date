@@ -3,7 +3,7 @@
 // Copyright (c) 2015, 2016 Howard Hinnant
 // Copyright (c) 2015 Ville Voutilainen
 // Copyright (c) 2016 Alexander Kormanovsky
-// Copyright (c) 2016 Jiangang Zhuang
+// Copyright (c) 2016, 2017 Jiangang Zhuang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -110,6 +110,8 @@
 #else   // !WIN32
 #  include <unistd.h>
 #  include <wordexp.h>
+#  include <limits.h>
+#  include <string.h>
 #  if !USE_SHELL_API
 #    include <sys/stat.h>
 #    include <sys/fcntl.h>
@@ -3097,11 +3099,19 @@ current_zone()
     CONSTDATA auto timezone = "/etc/localtime";
     if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        std::string result(sb.st_size, '\0');
-        auto sz = readlink(timezone, &result.front(), result.size());
-        if (sz == -1)
-            throw std::runtime_error("readlink failure");
-        result.resize(sz);
+        std::string result;
+        char rp[PATH_MAX];
+        if (realpath(timezone, rp))
+            result = std::string(rp);
+        else
+        {
+            std::ostringstream os;
+            char message[128];
+            strerror_r(errno, message, 128);
+            os << "realpath failure: errno = " << errno << "; " << message;
+            throw std::runtime_error(os.str());
+        }
+
         const char zonepath[] = "/usr/share/zoneinfo/";
         const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
         const std::size_t pos = result.find(zonepath);
