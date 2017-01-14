@@ -3538,6 +3538,32 @@ struct classify_duration
                 classify::subsecond;
 };
 
+template <class Rep, class Period>
+inline
+CONSTCD11
+typename std::enable_if
+         <
+            std::numeric_limits<Rep>::is_signed,
+            std::chrono::duration<Rep, Period>
+         >::type
+abs(std::chrono::duration<Rep, Period> d)
+{
+    return d >= d.zero() ? d : -d;
+}
+
+template <class Rep, class Period>
+inline
+CONSTCD11
+typename std::enable_if
+         <
+            !std::numeric_limits<Rep>::is_signed,
+            std::chrono::duration<Rep, Period>
+         >::type
+abs(std::chrono::duration<Rep, Period> d)
+{
+    return d;
+}
+
 class time_of_day_base
 {
 protected:
@@ -3548,7 +3574,7 @@ protected:
     enum {is24hr};
 
     CONSTCD11 time_of_day_base(std::chrono::hours h, bool neg, unsigned m) NOEXCEPT
-        : h_(abs(h))
+        : h_(detail::abs(h))
         , mode_(static_cast<decltype(mode_)>(m))
         , neg_(neg)
         {}
@@ -3694,7 +3720,7 @@ public:
    CONSTCD11 explicit time_of_day_storage(std::chrono::minutes since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
                since_midnight < std::chrono::minutes{0}, is24hr)
-        , m_(abs(since_midnight) - h_)
+        , m_(detail::abs(since_midnight) - h_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
@@ -3767,8 +3793,8 @@ public:
     CONSTCD11 explicit time_of_day_storage(std::chrono::seconds since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
                since_midnight < std::chrono::seconds{0}, is24hr)
-        , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
-        , s_(abs(since_midnight) - h_ - m_)
+        , m_(std::chrono::duration_cast<std::chrono::minutes>(detail::abs(since_midnight) - h_))
+        , s_(detail::abs(since_midnight) - h_ - m_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
@@ -3851,8 +3877,8 @@ public:
     CONSTCD11 explicit time_of_day_storage(Duration since_midnight) NOEXCEPT
         : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
                since_midnight < Duration{0}, is24hr)
-        , m_(std::chrono::duration_cast<std::chrono::minutes>(abs(since_midnight) - h_))
-        , s_(abs(since_midnight) - h_ - m_)
+        , m_(std::chrono::duration_cast<std::chrono::minutes>(detail::abs(since_midnight) - h_))
+        , s_(detail::abs(since_midnight) - h_ - m_)
         {}
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours h, std::chrono::minutes m,
