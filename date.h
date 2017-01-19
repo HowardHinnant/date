@@ -57,15 +57,22 @@ namespace date
 // Configuration |
 //---------------+
 
-// MSVC's constexpr support is still a WIP, even in VS2015.
-// Fall back to a lesser mode to support it.
-// TODO: Remove this or retest later once MSVC's constexpr improves.
-#if defined(_MSC_VER) && _MSC_VER <= 1900 && ! defined(__clang__)
-// MS cl compiler pre VS2017
+#if defined(_MSC_VER) && !defined(__clang__)
+// MSVC
+#if _MSC_VER < 1910
+// before VS2017
 #  define CONSTDATA const
 #  define CONSTCD11
 #  define CONSTCD14
 #  define NOEXCEPT _NOEXCEPT
+#else
+// VS2017 and later 
+#  define CONSTDATA constexpr const
+#  define CONSTCD11 constexpr
+#  define CONSTCD14 constexpr
+#  define NOEXCEPT noexcept
+#endif
+
 #elif __cplusplus >= 201402
 // C++14
 #  define CONSTDATA constexpr const
