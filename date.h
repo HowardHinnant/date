@@ -4782,7 +4782,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (abbrev == nullptr)
                         throw std::runtime_error("Can not format local_time with %Z");
                     for (auto c : *abbrev)
-                        os << CharT{c};
+                        os << CharT(c);
                 }
                 else
                 {
