@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-11-25<br/>
+2017-01-28<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -1996,6 +1996,15 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 <blockquote>
 
 <pre>
+template &lt;class CharT, class Traits, , class Rep, class Period&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const std::chrono::duration&lt;Rep, Period&gt;& d);
+</pre>
+<blockquote>
+</blockquote>
+
+<pre>
 template &lt;class CharT, class Traits, class Duration&gt;
 void
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
@@ -2062,6 +2071,10 @@ template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
 format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const sys_time&lt;Duration&gt;&amp; tp);
 
+template &lt;class CharT, class Traits, class Rep, class Period&gt;
+std::basic_string&lt;CharT&gt;
+format(const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
+
 // const CharT* formats
 
 template &lt;class CharT, class Duration&gt;
@@ -2087,6 +2100,10 @@ format(const std::locale&amp; loc, const CharT* format, const sys_time&lt;Durati
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
 format(const CharT* format, const sys_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT, class Rep, class Period&gt;
+std::basic_string&lt;CharT&gt;
+format(const CharT* fmt, const std::chrono::duration&lt;Rep, Period&gt;&amp; d)
 </pre>
 <blockquote>
 <p>
@@ -2175,124 +2192,124 @@ For the overloads taking a <code>zoned_time</code> it is the value returned by
 <a name="parse"></a><h3><code>parse</code></h3>
 <blockquote>
 <p>
-One can parse in a <code>sys_time&lt;Duration&gt;</code> or a
-<code>local_time&lt;Duration&gt;</code>.  Optionally, one can also pass in a reference
+One can parse in a <code>sys_time&lt;Duration&gt;</code>,
+<code>local_time&lt;Duration&gt;</code>, or a <code>duration&lt;Rep, Period&gt;</code>.
+Optionally, one can also pass in a reference
 to a <code>std::string</code> in order to capture the time zone abbreviation, or one
 can pass in a reference to a <code>std::chrono::minutes</code> to capture a time zone
 UTC offset (formatted as <code>+0000</code>), or one can pass in both in either order.
 </p>
 
+<p>
+Each of the functions below return an unspecified <i>manipulator</i> which can be used
+to extract the desired information from a stream.
+</p>
+
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, sys_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is,
-      const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, local_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Rep, class Period, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format,
+      std::chrono::duration&lt;Rep, Period&gt;&amp; d);
 
 // const CharT* formats
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format, sys_time&lt;Duration&gt;&amp; tp);
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
-      std::chrono::minutes&amp; offset);
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, sys_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format,
-      local_time&lt;Duration&gt;&amp; tp);
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format,
-      local_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
-
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format,
-      local_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset);
-
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format,
-      local_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev,
-      std::chrono::minutes&amp; offset);
-
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* format,
-      local_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset,
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
       std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, local_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Rep, class Period, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, std::chrono::duration&lt;Rep, Period&gt;&amp; d);
 </pre>
 <blockquote>
 <p>
@@ -2363,13 +2380,6 @@ or <code>local_time</code>, one could make a list of potential <code>time_zone</
 Given a UTC offset, one might even narrow that list down further.
 </p>
 </blockquote>
-<p>Furthermore, for every signature
-<code>parse(std::basic_istream&lt;CharT, Traits&gt;&amp; is, Args...)</code> there exists
-an input manipulator <code>parse(Args...)</code> that can be used like this:
-</p>
-<pre>
-istream >> parse("%F %T", tp);
-</pre>
 </blockquote>
 
 <a name="utc_clock"></a><h3><code>utc_clock</code></h3>
