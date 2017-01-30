@@ -4,6 +4,7 @@
 // Copyright (c) 2015 Ville Voutilainen
 // Copyright (c) 2016 Alexander Kormanovsky
 // Copyright (c) 2016, 2017 Jiangang Zhuang
+// Copyright (c) 2017 Nicolas Veloz Savino
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -189,22 +190,25 @@ get_download_folder()
 
 #else // !_WIN32
 
+#  ifndef INSTALL
 
 static
 std::string
 expand_path(std::string path)
 {
-#if TARGET_OS_IPHONE
+#    if TARGET_OS_IPHONE
     return date::iOSUtils::get_tzdata_path();
-#else
+#    else
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
-#endif
+#    endif
 }
+
+#  endif  // !INSTALL
 
 #endif  // !_WIN32
 
