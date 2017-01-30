@@ -190,7 +190,7 @@ get_download_folder()
 #else // !_WIN32
 
 
-static
+//static
 std::string
 expand_path(std::string path)
 {
