@@ -3111,8 +3111,7 @@ current_zone()
         {
             std::ostringstream os;
             char message[128];
-            strerror_r(errno, message, 128);
-            os << "realpath failure: errno = " << errno << "; " << message;
+            os << "realpath failure: errno = " << errno << "; " << strerror_r(errno,message,128);
             throw std::runtime_error(os.str());
         }
 
