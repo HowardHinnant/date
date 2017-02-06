@@ -190,23 +190,25 @@ get_download_folder()
 
 #else // !_WIN32
 
-#ifndef INSTALL
+#  ifndef INSTALL
+
 static
 std::string
 expand_path(std::string path)
 {
-#if TARGET_OS_IPHONE
+#    if TARGET_OS_IPHONE
     return date::iOSUtils::get_tzdata_path();
-#else
+#    else
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
-#endif
+#    endif
 }
-#endif
+
+#  endif  // !INSTALL
 
 #endif  // !_WIN32
 
