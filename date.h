@@ -5128,7 +5128,7 @@ format(const std::basic_string<CharT, Traits>& fmt, const sys_time<Duration>& tp
 }
 
 template <class CharT, class Traits, class Rep, class Period>
-std::basic_string<CharT>
+std::basic_string<CharT, Traits>
 format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
        const std::chrono::duration<Rep, Period>& d)
 {
@@ -5139,7 +5139,7 @@ format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
 }
 
 template <class CharT, class Traits, class Rep, class Period>
-std::basic_string<CharT>
+std::basic_string<CharT, Traits>
 format(const std::basic_string<CharT, Traits>& fmt,
        const std::chrono::duration<Rep, Period>& d)
 {
