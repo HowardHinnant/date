@@ -3083,6 +3083,12 @@ current_zone()
 
 #else // !WIN32
 
+#ifdef __GNUC__
+// GCC complains about unused return from strerror_r
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+#endif
+
 const time_zone*
 current_zone()
 {
@@ -3159,6 +3165,10 @@ current_zone()
     }
     throw std::runtime_error("Could not get current timezone");
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #endif // !WIN32
 
