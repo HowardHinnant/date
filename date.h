@@ -4608,7 +4608,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     auto ld = floor<days>(tp);
                     auto y = year_month_day{ld + days{3}}.year();
-                    auto start = local_days{(y - years{1})/date::dec/thu[last]} + (mon-thu);
+                    auto start = local_days((y - years{1})/date::dec/thu[last]) + (mon-thu);
                     if (ld < start)
                         --y;
                     if (*fmt == CharT{'G'})
@@ -4639,7 +4639,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     auto ld = floor<days>(tp);
                     auto y = year_month_day{ld}.year();
-                    auto doy = ld - local_days{y/jan/1} + days{1};
+                    auto doy = ld - local_days(y/jan/1) + days{1};
                     detail::save_stream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
@@ -4739,7 +4739,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 }
                 else if (modified == CharT{})
                 {
-                    auto st = local_days{sun[1]/jan/ymd.year()};
+                    auto st = local_days(sun[1]/jan/ymd.year());
                     if (ld < st)
                         os << CharT{'0'} << CharT{'0'};
                     else
@@ -4777,11 +4777,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 else if (modified == CharT{})
                 {
                     auto y = year_month_day{ld + days{3}}.year();
-                    auto st = local_days{(y - years{1})/12/thu[last]} + (mon-thu);
+                    auto st = local_days((y - years{1})/12/thu[last]) + (mon-thu);
                     if (ld < st)
                     {
                         --y;
-                        st = local_days{(y - years{1})/12/thu[last]} + (mon-thu);
+                        st = local_days((y - years{1})/12/thu[last]) + (mon-thu);
                     }
                     auto wn = duration_cast<weeks>(ld - st).count() + 1;
                     if (wn < 10)
@@ -4839,7 +4839,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 }
                 else if (modified == CharT{})
                 {
-                    auto st = local_days{mon[1]/jan/ymd.year()};
+                    auto st = local_days(mon[1]/jan/ymd.year());
                     if (ld < st)
                         os << CharT{'0'} << CharT{'0'};
                     else
@@ -6482,7 +6482,7 @@ parse(std::basic_istream<CharT, Traits>& is,
             {
                 if (V == not_a_week_num || wd == not_a_weekday)
                     goto broken;
-                auto ymd = year_month_day{local_days{year{G-1}/dec/thu[last]} +
+                auto ymd = year_month_day{local_days(year{G-1}/dec/thu[last]) +
                                           (mon-thu) + weeks{V-1} +
                                           (weekday{static_cast<unsigned>(wd)}-mon)};
                 if (Y == not_a_year)
@@ -6505,7 +6505,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                     goto broken;
                 if (j != 0)
                 {
-                    auto ymd = year_month_day{local_days{year{Y}/1/1} + days{j-1}};
+                    auto ymd = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
                     if (m == 0)
                         m = static_cast<int>(static_cast<unsigned>(ymd.month()));
                     else if (month(m) != ymd.month())
@@ -6523,7 +6523,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                     if (U == 0)
                         sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
                     else
-                        sd = sys_days{year{Y}/jan/sun[1]} + weeks{U-1} + 
+                        sd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} + 
                              (weekday{static_cast<unsigned>(wd)} - sun);
                     year_month_day ymd = sd;
                     if (year{Y} != ymd.year())
@@ -6545,7 +6545,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                     if (W == 0)
                         sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
                     else
-                        sd = sys_days{year{Y}/jan/mon[1]} + weeks{W-1} + 
+                        sd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} + 
                              (weekday{static_cast<unsigned>(wd)} - mon);
                     year_month_day ymd = sd;
                     if (year{Y} != ymd.year())
@@ -6564,7 +6564,7 @@ parse(std::basic_istream<CharT, Traits>& is,
                     auto ymd = year{Y}/m/d;
                     if (!ymd.ok())
                         goto broken;
-                    auto ld = local_days{ymd};
+                    auto ld = local_days(ymd);
                     if (wd != not_a_weekday &&
                             weekday{static_cast<unsigned>(wd)} != weekday{ld})
                         goto broken;

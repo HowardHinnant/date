@@ -1162,7 +1162,7 @@ to_utc_time(const tai_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} -
-            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
+            (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1) + seconds{10});
 }
 
 template <class Duration>
@@ -1173,7 +1173,7 @@ to_tai_time(const utc_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return tai_time<duration>{t.time_since_epoch()} +
-            (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1} + seconds{10});
+            (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1) + seconds{10});
 }
 
 template <class Duration>
@@ -1199,7 +1199,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto tp = sys_time<duration>{t.time_since_epoch()} -
-                (sys_days{year{1970}/jan/1} - sys_days{year{1958}/jan/1});
+                (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1));
     return os << tp;
 }
 
@@ -1230,7 +1230,7 @@ to_utc_time(const gps_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} +
-            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
+            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1) + seconds{9});
 }
 
 template <class Duration>
@@ -1241,7 +1241,7 @@ to_gps_time(const utc_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1} + seconds{9});
+            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1) + seconds{9});
 }
 
 template <class Duration>
@@ -1267,7 +1267,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto tp = sys_time<duration>{t.time_since_epoch()} +
-                (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1970}/jan/1});
+                (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1));
     return os << tp;
 }
 
@@ -1295,7 +1295,7 @@ to_tai_time(const gps_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return tai_time<duration>{t.time_since_epoch()} +
-            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1958}/jan/1} + seconds{19});
+            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1958}/jan/1) + seconds{19});
 }
 
 template <class Duration>
@@ -1306,7 +1306,7 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days{year{1980}/jan/sun[1]} - sys_days{year{1958}/jan/1} + seconds{19});
+            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1958}/jan/1) + seconds{19});
 }
 
 // format
