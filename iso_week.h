@@ -1015,8 +1015,8 @@ weeknum
 year_lastweek::weeknum() const NOEXCEPT
 {
     const auto y = date::year{static_cast<int>(y_)};
-    const auto s0 = sys_days{(y-years{1})/12/date::thu[date::last]};
-    const auto s1 = sys_days{y/12/date::thu[date::last]};
+    const auto s0 = sys_days((y-years{1})/12/date::thu[date::last]);
+    const auto s1 = sys_days(y/12/date::thu[date::last]);
     return iso_week::weeknum(date::trunc<weeks>(s1-s0).count());
 }
 
@@ -1313,7 +1313,7 @@ CONSTCD14
 inline
 year_lastweek_weekday::operator sys_days() const NOEXCEPT
 {
-    return sys_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+    return sys_days(date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last])
          + (mon - thu) - (mon - wd_);
 }
 
@@ -1321,7 +1321,7 @@ CONSTCD14
 inline
 year_lastweek_weekday::operator local_days() const NOEXCEPT
 {
-    return local_days{date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last]}
+    return local_days(date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last])
          + (mon - thu) - (mon - wd_);
 }
 
@@ -1471,7 +1471,7 @@ CONSTCD14
 inline
 year_weeknum_weekday::operator sys_days() const NOEXCEPT
 {
-    return sys_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+    return sys_days(date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last])
          + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
 }
 
@@ -1479,7 +1479,7 @@ CONSTCD14
 inline
 year_weeknum_weekday::operator local_days() const NOEXCEPT
 {
-    return local_days{date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last]}
+    return local_days(date::year{static_cast<int>(y_)-1}/date::dec/date::thu[date::last])
          + (date::mon - date::thu) + weeks{static_cast<unsigned>(wn_)-1} + (wd_ - mon);
 }
 
@@ -1499,11 +1499,11 @@ year_weeknum_weekday::from_days(days d) NOEXCEPT
     const auto dp = sys_days{d};
     const auto wd = iso_week::weekday{dp};
     auto y = date::year_month_day{dp + days{3}}.year();
-    auto start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+    auto start = sys_days((y - date::years{1})/date::dec/date::thu[date::last]) + (mon-thu);
     if (dp < start)
     {
         --y;
-        start = sys_days{(y - date::years{1})/date::dec/date::thu[date::last]} + (mon-thu);
+        start = sys_days((y - date::years{1})/date::dec/date::thu[date::last]) + (mon-thu);
     }
     const auto wn = iso_week::weeknum(date::trunc<weeks>(dp - start).count() + 1);
     return {iso_week::year(static_cast<int>(y)), wn, wd};
