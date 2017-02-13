@@ -303,7 +303,6 @@ get_windows_zones_install()
 #  define STRINGIZE(x) STRINGIZEIMP(x)
     = STRINGIZE(WINDOWSZONES_INSTALL);
 #endif
-    std::cout << install << std::endl;
     return install;
 }
 
