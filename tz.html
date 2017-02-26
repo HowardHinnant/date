@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-02-25<br/>
+2017-02-26<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2082,6 +2082,18 @@ template &lt;class CharT, class Traits, class Duration&gt;
 std::basic_string&lt;class CharT, class Traits&gt;
 format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const utc_time&lt;Duration&gt;&amp; tp);
 
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_string&lt;class CharT, class Traits&gt;
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const tai_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_string&lt;class CharT, class Traits&gt;
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const gps_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT, class Traits&gt;
+std::basic_string&lt;class CharT, class Traits&gt;
+format(const std::basic_string&lt;class CharT, class Traits&gt;&amp; format, const year_month_day&amp; ymd);
+
 template &lt;class CharT, class Traits, class Rep, class Period&gt;
 std::basic_string&lt;CharT&gt;
 format(const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
@@ -2119,6 +2131,18 @@ format(const std::locale&amp; loc, const CharT* format, const utc_time&lt;Durati
 template &lt;class CharT, class Duration&gt;
 std::basic_string&lt;class CharT&gt;
 format(const CharT* format, const utc_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT, class Duration&gt;
+std::basic_string&lt;class CharT&gt;
+format(const CharT* format, const tai_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT, class Duration&gt;
+std::basic_string&lt;class CharT&gt;
+format(const CharT* format, const gps_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class CharT&gt;
+std::basic_string&lt;class CharT&gt;
+format(const CharT* format, const year_month_day&amp; ymd);
 
 template &lt;class CharT, class Rep, class Period&gt;
 std::basic_string&lt;CharT&gt;
@@ -2297,6 +2321,78 @@ template &lt;class Duration, class CharT, class Traits&gt;
 parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, utc_time&lt;Duration&gt;&amp; tp,
       std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, tai_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, tai_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, tai_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, tai_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, tai_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, gps_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, gps_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, gps_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, gps_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, gps_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, year_month_day&amp; ymd);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, year_month_day&amp; ymd,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, year_month_day&amp; ymd,
+      std::chrono::minutes&amp; offset);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, year_month_day&amp; ymd,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, year_month_day&amp; ymd,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
 template &lt;class Rep, class Period, class CharT, class Traits&gt;
 <i>unspecified istream manipulator</i>
 parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format,
@@ -2371,6 +2467,75 @@ parse(const CharT* format, utc_time&lt;Duration&gt;&amp; tp,
 template &lt;class Duration, class CharT, class Traits&gt;
 <i>unspecified istream manipulator</i>
 parse(const CharT* format, utc_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, tai_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, tai_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, tai_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, tai_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, tai_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, gps_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, gps_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class Duration, class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, gps_time&lt;Duration&gt;&amp; tp, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, gps_time&lt;Duration&gt;&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class Duration, class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, gps_time&lt;Duration&gt;&amp; tp,
+      std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, year_month_day&amp; ymd);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, year_month_day&amp; ymd,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
+
+template &lt;class CharT&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, year_month_day&amp; ymd, std::chrono::minutes&amp; offset);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, year_month_day&amp; ymd,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+
+template &lt;class CharT, class Traits&gt;
+<i>unspecified istream manipulator</i>
+parse(const CharT* format, year_month_day&amp; ymd,
       std::chrono::minutes&amp; offset, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
 
 template &lt;class Rep, class Period, class CharT&gt;
