@@ -56,6 +56,14 @@
 #include <sstream>
 #include <type_traits>
 
+using fortnights = std::chrono::duration<date::weeks::rep,
+                                         std::ratio_multiply<std::ratio<2>,
+                                                             date::weeks::period>>;
+
+using microfortnights = std::chrono::duration<std::int64_t,
+                                              std::ratio_multiply<fortnights::period,
+                                                                  std::micro>>;
+
 int
 main()
 {
@@ -63,9 +71,9 @@ main()
     using namespace std;
     using namespace std::chrono;
 
-    using tod = time_of_day<nanoseconds>;
+    using tod = time_of_day<typename common_type<hours, minutes, microfortnights>::type>;
 
-    static_assert(is_same<tod::precision, nanoseconds>{}, "");
+    static_assert(is_same<tod::precision::period, ratio<1, 10000>>{}, "");
 
     static_assert( is_trivially_destructible<tod>{}, "");
     static_assert( is_default_constructible<tod>{}, "");
@@ -74,25 +82,21 @@ main()
     static_assert( is_trivially_move_constructible<tod>{}, "");
     static_assert( is_trivially_move_assignable<tod>{}, "");
 
-    static_assert(is_nothrow_constructible<tod, nanoseconds>{}, "");
-    static_assert(!is_convertible<nanoseconds, tod>{}, "");
-    static_assert(is_nothrow_constructible<tod, hours, minutes, seconds, nanoseconds,
-                                                unsigned>{}, "");
+    static_assert(is_constructible<tod, microfortnights>{}, "");
+    static_assert(!is_convertible<microfortnights, tod>{}, "");
 
     static_assert(is_nothrow_constructible<tod::precision, tod>{}, "");
     static_assert(!is_convertible<tod, tod::precision>{}, "");
 
-    constexpr tod t1 = tod{hours{13} + minutes{7} + seconds{5} + nanoseconds{22}};
+    constexpr tod t1 = tod{hours{13} + minutes{7} + microfortnights{5}};
     static_assert(t1.hours() == hours{13}, "");
     static_assert(t1.minutes() == minutes{7}, "");
-    static_assert(t1.seconds() == seconds{5}, "");
-    static_assert(t1.subseconds() == nanoseconds{22}, "");
-    static_assert(t1.mode() == 0, "");
+    static_assert(t1.seconds() == seconds{6}, "");
+    static_assert(t1.subseconds() == tod::precision{480}, "");
 #if __cplusplus >= 201402
     static_assert(static_cast<tod::precision>(t1) == hours{13} + minutes{7}
-                                                     + seconds{5} + nanoseconds{22}, "");
-    static_assert(t1.to_duration() == hours{13} + minutes{7} + seconds{5}
-                                    + nanoseconds{22}, "");
+                                                     + microfortnights{5}, "");
+    static_assert(t1.to_duration() == hours{13} + minutes{7} + microfortnights{5}, "");
 #endif
 
     auto t2 = t1;
@@ -100,29 +104,16 @@ main()
     assert(t2.minutes() == t1.minutes());
     assert(t2.seconds() == t1.seconds());
     assert(t2.subseconds() == t1.subseconds());
-    assert(t2.mode() == t1.mode());
     assert(t2.to_duration() == t1.to_duration());
     ostringstream os;
     os << t2;
-    assert(os.str() == "13:07:05.000000022");
+    assert(os.str() == "13:07:06.0480");
     t2.make12();
     os.str("");
-    assert(t2.hours() == hours{1});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.subseconds() == nanoseconds{22});
-    assert(t2.mode() == pm);
-    assert(t2.to_duration() == t1.to_duration());
     os << t2;
-    assert(os.str() == "1:07:05.000000022pm");
+    assert(os.str() == "1:07:06.0480pm");
     t2.make24();
     os.str("");
-    assert(t2.hours() == hours{13});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.subseconds() == nanoseconds{22});
-    assert(t2.mode() == 0);
-    assert(t2.to_duration() == t1.to_duration());
     os << t2;
-    assert(os.str() == "13:07:05.000000022");
+    assert(os.str() == "13:07:06.0480");
 }

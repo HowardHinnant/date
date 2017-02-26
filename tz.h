@@ -1108,13 +1108,20 @@ utc_clock::now()
 }
 
 template <class CharT, class Traits, class Duration>
-std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const utc_time<Duration>& t)
 {
+    using namespace std;
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
+    using CT = typename common_type<Duration, seconds>::type;
+    const string abbrev("UTC");
+    CONSTDATA seconds offset{0};
     auto const& leaps = get_tzdb().leaps;
-    auto tp = sys_time<duration>{t.time_since_epoch()};
+    auto tp = sys_time<CT>{t.time_since_epoch()};
+    year_month_day ymd;
+    time_of_day<CT> time;
+    seconds ls{0};
     if (tp >= leaps.front())
     {
         auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
@@ -1122,17 +1129,205 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
         if (tp < lt[-1])
         {
             if (tp >= lt[-1].date() - seconds{1})
-            {
-                auto const dp = floor<days>(tp);
-                auto time = make_time(tp-dp);
-                time.seconds() += seconds{1};
-                return os << year_month_day(dp) << ' ' << time;
-            }
+                ls = seconds{1};
             else
                 tp += seconds{1};
         }
     }
-    return os << tp;
+    auto const sd = floor<days>(tp);
+    ymd = sd;
+    time = make_time(tp - sd);
+    time.seconds() += ls;
+    detail::fields<CT> fds{ymd, time};
+    detail::to_stream(os, fmt, fds, &abbrev, &offset);
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
+{
+    to_stream(os, "%F %T", t);
+    return os;
+}
+
+template <class CharT, class Duration>
+std::basic_string<CharT>
+format(const std::locale& loc, const CharT* fmt, const utc_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, tp);
+    return os.str();
+}
+
+template <class CharT, class Duration>
+std::basic_string<CharT>
+format(const CharT* fmt, const utc_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, tp);
+    return os.str();
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const utc_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
+template <class CharT, class Traits, class Duration>
+std::basic_string<CharT, Traits>
+format(const std::basic_string<CharT, Traits>& fmt, const utc_time<Duration>& tp)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), tp);
+    return os.str();
+}
+
+namespace detail
+{
+
+template <class Duration, class CharT, class Traits = std::char_traits<CharT>>
+struct parse_utc_manip
+{
+    const std::basic_string<CharT, Traits> format_;
+    utc_time<Duration>&                    tp_;
+    std::basic_string<CharT, Traits>*      abbrev_;
+    std::chrono::minutes*                  offset_;
+
+public:
+    parse_utc_manip(std::basic_string<CharT, Traits> format,
+                    utc_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+                    std::chrono::minutes* offset = nullptr)
+        : format_(std::move(format))
+        , tp_(tp)
+        , abbrev_(abbrev)
+        , offset_(offset)
+        {}
+
+};
+
+template <class Duration, class CharT, class Traits>
+std::basic_istream<CharT, Traits>&
+operator>>(std::basic_istream<CharT, Traits>& is,
+           const parse_utc_manip<Duration, CharT, Traits>& x)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = typename common_type<Duration, seconds>::type;
+    minutes offset{};
+    auto offptr = x.offset_ ? x.offset_ : &offset;
+    fields<CT> fds{};
+    parse(is, x.format_.c_str(), fds, x.abbrev_, offptr);
+    if (!fds.ymd.ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+    {
+        bool is_leap_second = fds.tod.seconds() == seconds{60};
+        if (is_leap_second)
+            fds.tod.seconds() -= seconds{1};
+        x.tp_ = to_utc_time(sys_days(fds.ymd) +
+                    duration_cast<Duration>(fds.tod.to_duration() - *offptr));
+        if (is_leap_second)
+            x.tp_ += seconds{1};
+    }
+    return is;
+}
+
+}  // namespace detail
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, utc_time<Duration>& tp)
+{
+    return {format, tp};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, utc_time<Duration>& tp,
+      std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, tp, &abbrev};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, utc_time<Duration>& tp,
+      std::chrono::minutes& offset)
+{
+    return {format, tp, nullptr, &offset};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, utc_time<Duration>& tp,
+      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
+{
+    return {format, tp, &abbrev, &offset};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, utc_time<Duration>& tp,
+      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, tp, &abbrev, &offset};
+}
+
+// const CharT* formats
+
+template <class Duration, class CharT>
+inline
+detail::parse_utc_manip<Duration, CharT>
+parse(const CharT* format, utc_time<Duration>& tp)
+{
+    return {format, tp};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const CharT* format, utc_time<Duration>& tp,
+      std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, tp, &abbrev};
+}
+
+template <class Duration, class CharT>
+inline
+detail::parse_utc_manip<Duration, CharT>
+parse(const CharT* format, utc_time<Duration>& tp, std::chrono::minutes& offset)
+{
+    return {format, tp, nullptr, &offset};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const CharT* format, utc_time<Duration>& tp,
+      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
+{
+    return {format, tp, &abbrev, &offset};
+}
+
+template <class Duration, class CharT, class Traits>
+inline
+detail::parse_utc_manip<Duration, CharT, Traits>
+parse(const CharT* format, utc_time<Duration>& tp,
+      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, tp, &abbrev, &offset};
 }
 
 // tai_clock

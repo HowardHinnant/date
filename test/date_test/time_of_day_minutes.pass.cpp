@@ -62,7 +62,7 @@ main()
     static_assert(is_same<tod::precision, minutes>{}, "");
 
     static_assert( is_trivially_destructible<tod>{}, "");
-    static_assert(!is_default_constructible<tod>{}, "");
+    static_assert( is_default_constructible<tod>{}, "");
     static_assert( is_trivially_copy_constructible<tod>{}, "");
     static_assert( is_trivially_copy_assignable<tod>{}, "");
     static_assert( is_trivially_move_constructible<tod>{}, "");
