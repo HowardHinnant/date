@@ -390,6 +390,14 @@ test_F()
         assert(!in.bad());
         assert(tp == 2016_y/12/13);
     }
+    {
+        std::istringstream in{"2016-12-13"};
+        year_month_day tp;
+        in >> parse("%F", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == 2016_y/12/13);
+    }
 }
 
 void
