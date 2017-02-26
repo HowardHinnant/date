@@ -6593,7 +6593,7 @@ parse(std::basic_istream<CharT, Traits>& is,
     detail::parse(is, format.c_str(), tp, &abbrev, &offset);
 }
 
-#endif
+#endif  // use in >> parse(format, x); instead
 
 // const CharT* formats
 
@@ -6801,7 +6801,188 @@ parse(std::basic_istream<CharT, Traits>& is, const CharT* format,
     detail::parse(is, format, tp, &abbrev, &offset);
 }
 
-#endif
+#endif  // use in >> parse(format, x); instead
+
+template <class CharT, class Traits>
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
+          const year_month_day& ymd)
+{
+    using CT = std::chrono::seconds;
+    detail::fields<CT> fds{ymd, time_of_day<CT>{}};
+    detail::to_stream(os, fmt, fds);
+}
+
+template <class CharT>
+std::basic_string<CharT>
+format(const std::locale& loc, const CharT* fmt, const year_month_day& ymd)
+{
+    std::basic_ostringstream<CharT> os;
+    os.imbue(loc);
+    to_stream(os, fmt, ymd);
+    return os.str();
+}
+
+template <class CharT>
+std::basic_string<CharT>
+format(const CharT* fmt, const year_month_day& ymd)
+{
+    std::basic_ostringstream<CharT> os;
+    to_stream(os, fmt, ymd);
+    return os.str();
+}
+
+template <class CharT, class Traits>
+std::basic_string<CharT, Traits>
+format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
+       const year_month_day& ymd)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    os.imbue(loc);
+    to_stream(os, fmt.c_str(), ymd);
+    return os.str();
+}
+
+template <class CharT, class Traits>
+std::basic_string<CharT, Traits>
+format(const std::basic_string<CharT, Traits>& fmt, const year_month_day& ymd)
+{
+    std::basic_ostringstream<CharT, Traits> os;
+    to_stream(os, fmt.c_str(), ymd);
+    return os.str();
+}
+
+namespace detail
+{
+
+template <class CharT, class Traits = std::char_traits<CharT>>
+struct parse_ymd_manip
+{
+    const std::basic_string<CharT, Traits> format_;
+    year_month_day&                        ymd_;
+    std::basic_string<CharT, Traits>*      abbrev_;
+    std::chrono::minutes*                  offset_;
+
+public:
+    parse_ymd_manip(std::basic_string<CharT, Traits> format,
+                      year_month_day& ymd, std::basic_string<CharT, Traits>* abbrev = nullptr,
+                      std::chrono::minutes* offset = nullptr)
+        : format_(std::move(format))
+        , ymd_(ymd)
+        , abbrev_(abbrev)
+        , offset_(offset)
+        {}
+
+};
+
+template <class CharT, class Traits>
+inline
+std::basic_istream<CharT, Traits>&
+operator>>(std::basic_istream<CharT, Traits>& is,
+           const parse_ymd_manip<CharT, Traits>& x)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    parse(is, x.format_.c_str(), fds, x.abbrev_, x.offset_);
+    if (!fds.ymd.ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        x.ymd_ = fds.ymd;
+    return is;
+}
+
+}  // namespace detail
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, year_month_day& ymd)
+{
+    return {format, ymd};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, year_month_day& ymd,
+      std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, ymd, &abbrev};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, year_month_day& ymd,
+      std::chrono::minutes& offset)
+{
+    return {format, ymd, nullptr, &offset};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, year_month_day& ymd,
+      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
+{
+    return {format, ymd, &abbrev, &offset};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const std::basic_string<CharT, Traits>& format, year_month_day& ymd,
+      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, ymd, &abbrev, &offset};
+}
+
+// const CharT* formats
+
+template <class CharT>
+inline
+detail::parse_ymd_manip<CharT>
+parse(const CharT* format, year_month_day& ymd)
+{
+    return {format, ymd};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const CharT* format, year_month_day& ymd,
+      std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, ymd, &abbrev};
+}
+
+template <class CharT>
+inline
+detail::parse_ymd_manip<CharT>
+parse(const CharT* format, year_month_day& ymd, std::chrono::minutes& offset)
+{
+    return {format, ymd, nullptr, &offset};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const CharT* format, year_month_day& ymd,
+      std::basic_string<CharT, Traits>& abbrev, std::chrono::minutes& offset)
+{
+    return {format, ymd, &abbrev, &offset};
+}
+
+template <class CharT, class Traits>
+inline
+detail::parse_ymd_manip<CharT, Traits>
+parse(const CharT* format, year_month_day& ymd,
+      std::chrono::minutes& offset, std::basic_string<CharT, Traits>& abbrev)
+{
+    return {format, ymd, &abbrev, &offset};
+}
 
 }  // namespace date
 
