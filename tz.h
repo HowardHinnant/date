@@ -1159,38 +1159,18 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
 }
 
 template <class Duration, class CharT, class Traits>
-struct parse_manip<utc_time<Duration>, CharT, Traits>
-{
-    using type = parse_manip;
-    const std::basic_string<CharT, Traits> format_;
-    utc_time<Duration>&                    tp_;
-    std::basic_string<CharT, Traits>*      abbrev_;
-    std::chrono::minutes*                  offset_;
-
-public:
-    parse_manip(std::basic_string<CharT, Traits> format,
-                utc_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
-                std::chrono::minutes* offset = nullptr)
-        : format_(std::move(format))
-        , tp_(tp)
-        , abbrev_(abbrev)
-        , offset_(offset)
-        {}
-
-};
-
-template <class Duration, class CharT, class Traits>
-std::basic_istream<CharT, Traits>&
-operator>>(std::basic_istream<CharT, Traits>& is,
-           const parse_manip<utc_time<Duration>, CharT, Traits>& x)
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
+            utc_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
     using namespace std::chrono;
     using CT = typename common_type<Duration, seconds>::type;
-    minutes offset{};
-    auto offptr = x.offset_ ? x.offset_ : &offset;
+    minutes offset_local{};
+    auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
-    parse(is, x.format_.c_str(), fds, x.abbrev_, offptr);
+    from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok())
         is.setstate(ios::failbit);
     if (!is.fail())
@@ -1198,12 +1178,11 @@ operator>>(std::basic_istream<CharT, Traits>& is,
         bool is_leap_second = fds.tod.seconds() == seconds{60};
         if (is_leap_second)
             fds.tod.seconds() -= seconds{1};
-        x.tp_ = to_utc_time(sys_days(fds.ymd) +
+        tp = to_utc_time(sys_days(fds.ymd) +
                     duration_cast<Duration>(fds.tod.to_duration() - *offptr));
         if (is_leap_second)
-            x.tp_ += seconds{1};
+            tp += seconds{1};
     }
-    return is;
 }
 
 // tai_clock
@@ -1291,45 +1270,24 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
 }
 
 template <class Duration, class CharT, class Traits>
-struct parse_manip<tai_time<Duration>, CharT, Traits>
-{
-    using type = parse_manip;
-    const std::basic_string<CharT, Traits> format_;
-    tai_time<Duration>&                    tp_;
-    std::basic_string<CharT, Traits>*      abbrev_;
-    std::chrono::minutes*                  offset_;
-
-public:
-    parse_manip(std::basic_string<CharT, Traits> format,
-                tai_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
-                std::chrono::minutes* offset = nullptr)
-        : format_(std::move(format))
-        , tp_(tp)
-        , abbrev_(abbrev)
-        , offset_(offset)
-        {}
-
-};
-
-template <class Duration, class CharT, class Traits>
-std::basic_istream<CharT, Traits>&
-operator>>(std::basic_istream<CharT, Traits>& is,
-           const parse_manip<tai_time<Duration>, CharT, Traits>& x)
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
+            tai_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
     using namespace std::chrono;
     using CT = typename common_type<Duration, seconds>::type;
-    minutes offset{};
-    auto offptr = x.offset_ ? x.offset_ : &offset;
+    minutes offset_local{};
+    auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
-    parse(is, x.format_.c_str(), fds, x.abbrev_, offptr);
+    from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok())
         is.setstate(ios::failbit);
     if (!is.fail())
-        x.tp_ = tai_time<Duration>{duration_cast<Duration>(
+        tp = tai_time<Duration>{duration_cast<Duration>(
                 (sys_days(fds.ymd) + fds.tod.to_duration() + (sys_days(year{1970}/jan/1) -
                 sys_days(year{1958}/jan/1)) - *offptr).time_since_epoch())};
-    return is;
 }
 
 // gps_clock
@@ -1417,46 +1375,25 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
 }
 
 template <class Duration, class CharT, class Traits>
-struct parse_manip<gps_time<Duration>, CharT, Traits>
-{
-    using type = parse_manip;
-    const std::basic_string<CharT, Traits> format_;
-    gps_time<Duration>&                    tp_;
-    std::basic_string<CharT, Traits>*      abbrev_;
-    std::chrono::minutes*                  offset_;
-
-public:
-    parse_manip(std::basic_string<CharT, Traits> format,
-                gps_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
-                std::chrono::minutes* offset = nullptr)
-        : format_(std::move(format))
-        , tp_(tp)
-        , abbrev_(abbrev)
-        , offset_(offset)
-        {}
-
-};
-
-template <class Duration, class CharT, class Traits>
-std::basic_istream<CharT, Traits>&
-operator>>(std::basic_istream<CharT, Traits>& is,
-           const parse_manip<gps_time<Duration>, CharT, Traits>& x)
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
+            gps_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
     using namespace std::chrono;
     using CT = typename common_type<Duration, seconds>::type;
-    minutes offset{};
-    auto offptr = x.offset_ ? x.offset_ : &offset;
+    minutes offset_local{};
+    auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
-    parse(is, x.format_.c_str(), fds, x.abbrev_, offptr);
+    from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok())
         is.setstate(ios::failbit);
     if (!is.fail())
-        x.tp_ = gps_time<Duration>{duration_cast<Duration>(
+        tp = gps_time<Duration>{duration_cast<Duration>(
                 (sys_days(fds.ymd) + fds.tod.to_duration() -
                 (sys_days(year{1980}/jan/sun[1]) -
                 sys_days(year{1970}/jan/1)) - *offptr).time_since_epoch())};
-    return is;
 }
 
 template <class Duration>
@@ -1496,168 +1433,6 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
     return gps_time<duration>{t.time_since_epoch()} -
             (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1958}/jan/1) + seconds{19});
 }
-
-#ifdef NO_EXPRESSION_SFINAE
-// format
-// basic_string formats
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
-       const zoned_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    os.imbue(loc);
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::basic_string<CharT, Traits>& fmt, const zoned_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, const zoned_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    os.imbue(loc);
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const CharT* fmt, const zoned_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, const utc_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    os.imbue(loc);
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const CharT* fmt, const utc_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
-       const utc_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    os.imbue(loc);
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::basic_string<CharT, Traits>& fmt, const utc_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, const tai_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    os.imbue(loc);
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const CharT* fmt, const tai_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
-       const tai_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    os.imbue(loc);
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::basic_string<CharT, Traits>& fmt, const tai_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const std::locale& loc, const CharT* fmt, const gps_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    os.imbue(loc);
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Duration>
-std::basic_string<CharT>
-format(const CharT* fmt, const gps_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT> os;
-    to_stream(os, fmt, tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::locale& loc, const std::basic_string<CharT, Traits>& fmt,
-       const gps_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    os.imbue(loc);
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-template <class CharT, class Traits, class Duration>
-std::basic_string<CharT, Traits>
-format(const std::basic_string<CharT, Traits>& fmt, const gps_time<Duration>& tp)
-{
-    std::basic_ostringstream<CharT, Traits> os;
-    to_stream(os, fmt.c_str(), tp);
-    return os.str();
-}
-
-#endif  // NO_EXPRESSION_SFINAE
 
 }  // namespace date
 
