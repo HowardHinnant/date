@@ -1158,10 +1158,10 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
     return os;
 }
 
-template <class Duration, class CharT, class Traits>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            utc_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            utc_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
@@ -1269,10 +1269,11 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
     return os;
 }
 
-template <class Duration, class CharT, class Traits>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            tai_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            tai_time<Duration>& tp,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
@@ -1374,10 +1375,11 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
     return os;
 }
 
-template <class Duration, class CharT, class Traits>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            gps_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            gps_time<Duration>& tp,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
