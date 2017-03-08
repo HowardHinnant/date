@@ -25,15 +25,15 @@
 // SOFTWARE.
 //
 // Our apologies.  When the previous paragraph was written, lowercase had not yet
-// been invented (that woud involve another several millennia of evolution).
+// been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
 #ifdef _WIN32
 // Windows.h will be included directly and indirectly (e.g. by curl).
 // We need to define these macros to prevent Windows.h bringing in
-// more than we need and do it eearly so Windows.h doesn't get included
+// more than we need and do it early so Windows.h doesn't get included
 // without these macros having been defined.
-// min/max macrosinterfere with the C++ versions.
+// min/max macros interfere with the C++ versions.
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -585,7 +585,7 @@ sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
     });
 }
 
-// This routine maps Win32 OS error codes to readable text strngs.
+// This routine maps Win32 OS error codes to readable text strings.
 static
 std::string
 get_win32_message(DWORD error_code)
@@ -2617,7 +2617,7 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
 
 #if USE_SHELL_API
     // When using shelling out with std::system() extra quotes are required around the
-    // whole command. It's weird but neccessary it seems, see:
+    // whole command. It's weird but necessary it seems, see:
     // http://stackoverflow.com/q/27975969/576911
 
     cmd = "\"" + cmd + "\"";

@@ -25,16 +25,16 @@
 // SOFTWARE.
 //
 // Our apologies.  When the previous paragraph was written, lowercase had not yet
-// been invented (that woud involve another several millennia of evolution).
+// been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
 // Get more recent database at http://www.iana.org/time-zones
 
 // The notion of "current timezone" is something the operating system is expected to "just
 // know". How it knows this is system specific. It's often a value set by the user at OS
-// intallation time and recorded by the OS somewhere. On Linux and Mac systems the current
+// installation time and recorded by the OS somewhere. On Linux and Mac systems the current
 // timezone name is obtained by looking at the name or contents of a particular file on
-// disk. On Windows the current timzeone name comes from the registry. In either method,
+// disk. On Windows the current timezone name comes from the registry. In either method,
 // there is no guarantee that the "native" current timezone name obtained will match any
 // of the "Standard" names in this library's "database". On Linux, the names usually do
 // seem to match so mapping functions to map from native to "Standard" are typically not

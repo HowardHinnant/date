@@ -24,7 +24,7 @@
 // SOFTWARE.
 //
 // Our apologies.  When the previous paragraph was written, lowercase had not yet
-// been invented (that woud involve another several millennia of evolution).
+// been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -124,7 +124,7 @@ public:
 // A Rule specifies one or more set of datetimes without using an offset.
 // Multiple dates are specified with multiple years.  The years in effect
 // go from starting_year_ to ending_year_, inclusive.  starting_year_ <=
-// ending_year_. save_ is ineffect for times from the specified time
+// ending_year_. save_ is in effect for times from the specified time
 // onward, including the specified time. When the specified time is
 // local, it uses the save_ from the chronologically previous Rule, or if
 // there is none, 0.
