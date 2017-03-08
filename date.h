@@ -3395,10 +3395,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const fields<Duration>& fds, const std::string* abbrev = nullptr,
           const std::chrono::seconds* offset_sec = nullptr);
 
-template <class CharT, class Traits, class Duration>
+template <class CharT, class Traits, class Duration, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            fields<Duration>& fds, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            fields<Duration>& fds, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
 
 // time_of_day
@@ -3914,12 +3914,12 @@ public:
           const fields<Duration>& fds, const std::string* abbrev,
           const std::chrono::seconds* offset_sec);
 
-    template <class CharT, class Traits, class Duration>
+    template <class CharT, class Traits, class Duration, class Alloc>
     friend
     void
     date::from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
           fields<Duration>& fds,
-          std::basic_string<CharT, Traits>* abbrev, std::chrono::minutes* offset);
+          std::basic_string<CharT, Traits, Alloc>* abbrev, std::chrono::minutes* offset);
 };
 
 template <class Rep, class Period>
@@ -4018,12 +4018,12 @@ public:
           const fields<Duration>& fds, const std::string* abbrev,
           const std::chrono::seconds* offset_sec);
 
-    template <class CharT, class Traits, class Duration>
+    template <class CharT, class Traits, class Duration, class Alloc>
     friend
     void
     date::from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
           fields<Duration>& fds,
-          std::basic_string<CharT, Traits>* abbrev, std::chrono::minutes* offset);
+          std::basic_string<CharT, Traits, Alloc>* abbrev, std::chrono::minutes* offset);
 };
 
 }  // namespace detail
@@ -5297,10 +5297,10 @@ read(std::basic_istream<CharT, Traits>& is, rld a0, Args&& ...args)
 
 }  // namespace detail;
 
-template <class CharT, class Traits, class Duration>
+template <class CharT, class Traits, class Duration, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            fields<Duration>& fds, std::basic_string<CharT, Traits>* abbrev,
+            fields<Duration>& fds, std::basic_string<CharT, Traits, Alloc>* abbrev,
             std::chrono::minutes* offset)
 {
     using namespace std;
@@ -5310,7 +5310,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     {
         auto& f = use_facet<time_get<CharT>>(is.getloc());
         std::tm tm{};
-        std::basic_string<CharT, Traits> temp_abbrev;
+        std::basic_string<CharT, Traits, Alloc> temp_abbrev;
         minutes temp_offset{};
         const CharT* command = nullptr;
         auto modified = CharT{};
@@ -6199,10 +6199,10 @@ broken:
     is.setstate(ios_base::failbit);
 }
 
-template <class CharT, class Traits>
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            year_month_day& ymd, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            year_month_day& ymd, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
@@ -6216,10 +6216,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         ymd = fds.ymd;
 }
 
-template <class Duration, class CharT, class Traits>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            sys_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            sys_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
@@ -6235,10 +6235,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         tp = sys_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration() - *offptr);
 }
 
-template <class Duration, class CharT, class Traits>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            local_time<Duration>& tp, std::basic_string<CharT, Traits>* abbrev = nullptr,
+            local_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
@@ -6252,11 +6252,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         tp = local_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration());
 }
 
-template <class Rep, class Period, class CharT, class Traits>
+template <class Rep, class Period, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 void
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::chrono::duration<Rep, Period>& d,
-            std::basic_string<CharT, Traits>* abbrev = nullptr,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
     using namespace std;
