@@ -3688,7 +3688,7 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 public:
     using precision = std::chrono::hours;
 
-    CONSTCD11 explicit time_of_day_storage() NOEXCEPT = default;
+    CONSTCD11 time_of_day_storage() NOEXCEPT = default;
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours since_midnight) NOEXCEPT
         : base(since_midnight, since_midnight < std::chrono::hours{0}, is24hr)
@@ -3758,7 +3758,7 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 public:
    using precision = std::chrono::minutes;
 
-   CONSTCD11 explicit time_of_day_storage() NOEXCEPT
+   CONSTCD11 time_of_day_storage() NOEXCEPT
         : base()
         , m_(0)
         {}
@@ -3837,7 +3837,7 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 public:
     using precision = std::chrono::seconds;
 
-    CONSTCD11 explicit time_of_day_storage() NOEXCEPT
+    CONSTCD11 time_of_day_storage() NOEXCEPT
         : base()
         , m_(0)
         , s_()
@@ -3939,7 +3939,7 @@ private:
     dfs                  s_;
 
 public:
-    CONSTCD11 explicit time_of_day_storage() NOEXCEPT
+    CONSTCD11 time_of_day_storage() NOEXCEPT
         : base()
         , m_(0)
         , s_()
@@ -4035,8 +4035,17 @@ class time_of_day
     using base = detail::time_of_day_storage<Duration>;
 public:
 #if !(defined(_MSC_VER) && !defined(__clang__))
-    // C++11
-    using base::base;
+    CONSTCD11 time_of_day() NOEXCEPT = default;
+
+    CONSTCD11 explicit time_of_day(Duration since_midnight) NOEXCEPT
+        : base(since_midnight)
+        {}
+
+    template <class Arg0, class Arg1, class ...Args>
+    CONSTCD11
+    explicit time_of_day(Arg0&& arg0, Arg1&& arg1, Args&& ...args) NOEXCEPT
+        : base(std::forward<Arg0>(arg0), std::forward<Arg1>(arg1), std::forward<Args>(args)...)
+        {}
 #else
     // MS cl compiler workaround.
     template <class ...Args>

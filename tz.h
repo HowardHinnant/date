@@ -284,16 +284,21 @@ public:
 
     zoned_time(const time_zone* z,      const local_time<Duration>& tp);
     zoned_time(const std::string& name, const local_time<Duration>& tp);
+    zoned_time(const char* name,        const local_time<Duration>& tp);
     zoned_time(const time_zone* z,      const local_time<Duration>& tp, choose c);
     zoned_time(const std::string& name, const local_time<Duration>& tp, choose c);
+    zoned_time(const char* name,        const local_time<Duration>& tp, choose c);
 
     zoned_time(const time_zone* z,      const zoned_time<Duration>& zt);
     zoned_time(const std::string& name, const zoned_time<Duration>& zt);
+    zoned_time(const char* name,        const zoned_time<Duration>& zt);
     zoned_time(const time_zone* z,      const zoned_time<Duration>& zt, choose);
     zoned_time(const std::string& name, const zoned_time<Duration>& zt, choose);
+    zoned_time(const char* name,        const zoned_time<Duration>& zt, choose);
 
     zoned_time(const time_zone* z,      const sys_time<Duration>& st);
     zoned_time(const std::string& name, const sys_time<Duration>& st);
+    zoned_time(const char* name,        const sys_time<Duration>& st);
 
     zoned_time& operator=(const sys_time<Duration>& st);
     zoned_time& operator=(const local_time<Duration>& ut);
@@ -807,6 +812,14 @@ zoned_time<Duration>::zoned_time(const std::string& name)
     {}
 
 template <class Duration>
+template <class Duration2, class>
+inline
+zoned_time<Duration>::zoned_time(const zoned_time<Duration2>& zt) NOEXCEPT
+    : zone_(zt.zone_)
+    , tp_(zt.tp_)
+    {}
+
+template <class Duration>
 inline
 zoned_time<Duration>::zoned_time(const time_zone* z, const local_time<Duration>& t)
     : zone_(z)
@@ -816,6 +829,12 @@ zoned_time<Duration>::zoned_time(const time_zone* z, const local_time<Duration>&
 template <class Duration>
 inline
 zoned_time<Duration>::zoned_time(const std::string& name, const local_time<Duration>& t)
+    : zoned_time(locate_zone(name), t)
+    {}
+
+template <class Duration>
+inline
+zoned_time<Duration>::zoned_time(const char* name, const local_time<Duration>& t)
     : zoned_time(locate_zone(name), t)
     {}
 
@@ -835,11 +854,10 @@ zoned_time<Duration>::zoned_time(const std::string& name, const local_time<Durat
     {}
 
 template <class Duration>
-template <class Duration2, class>
 inline
-zoned_time<Duration>::zoned_time(const zoned_time<Duration2>& zt) NOEXCEPT
-    : zone_(zt.zone_)
-    , tp_(zt.tp_)
+zoned_time<Duration>::zoned_time(const char* name, const local_time<Duration>& t,
+                                 choose c)
+    : zoned_time(locate_zone(name), t, c)
     {}
 
 template <class Duration>
@@ -852,6 +870,12 @@ zoned_time<Duration>::zoned_time(const time_zone* z, const zoned_time<Duration>&
 template <class Duration>
 inline
 zoned_time<Duration>::zoned_time(const std::string& name, const zoned_time<Duration>& zt)
+    : zoned_time(locate_zone(name), zt)
+    {}
+
+template <class Duration>
+inline
+zoned_time<Duration>::zoned_time(const char* name, const zoned_time<Duration>& zt)
     : zoned_time(locate_zone(name), zt)
     {}
 
@@ -870,6 +894,13 @@ zoned_time<Duration>::zoned_time(const std::string& name,
 
 template <class Duration>
 inline
+zoned_time<Duration>::zoned_time(const char* name,
+                                 const zoned_time<Duration>& zt, choose c)
+    : zoned_time(locate_zone(name), zt, c)
+    {}
+
+template <class Duration>
+inline
 zoned_time<Duration>::zoned_time(const time_zone* z, const sys_time<Duration>& st)
     : zone_(z)
     , tp_(st)
@@ -881,6 +912,11 @@ zoned_time<Duration>::zoned_time(const std::string& name, const sys_time<Duratio
     : zoned_time(locate_zone(name), st)
     {}
 
+template <class Duration>
+inline
+zoned_time<Duration>::zoned_time(const char* name, const sys_time<Duration>& st)
+    : zoned_time(locate_zone(name), st)
+    {}
 
 template <class Duration>
 inline
