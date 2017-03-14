@@ -59,7 +59,7 @@ main()
 
     using tod = time_of_day<minutes>;
 
-    static_assert(is_same<tod::precision, minutes>{}, "");
+    static_assert(is_same<tod::precision::period, minutes::period>{}, "");
 
     static_assert( is_trivially_destructible<tod>{}, "");
     static_assert( is_default_constructible<tod>{}, "");
@@ -70,7 +70,6 @@ main()
 
     static_assert(is_nothrow_constructible<tod, minutes>{}, "");
     static_assert(!is_convertible<minutes, tod>{}, "");
-    static_assert(is_nothrow_constructible<tod, hours, minutes, unsigned>{}, "");
 
     static_assert(is_nothrow_constructible<tod::precision, tod>{}, "");
     static_assert(!is_convertible<tod, tod::precision>{}, "");
