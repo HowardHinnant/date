@@ -210,6 +210,14 @@ expand_path(std::string path)
 
 #  endif  // !INSTALL
 
+static
+std::string
+get_download_folder()
+{
+    return expand_path("~/Downloads");
+}
+
+
 #endif  // !_WIN32
 
 namespace date
@@ -227,11 +235,7 @@ access_install()
     static std::string install 
 #ifndef INSTALL
 
-#  ifdef _WIN32
     = get_download_folder() + folder_delimiter + "tzdata";
-#  else
-    = expand_path("~/Downloads/tzdata");
-#  endif
 
 #else   // INSTALL
 
@@ -2333,25 +2337,6 @@ remote_version()
     return version;
 }
 
-bool
-remote_download(const std::string& version)
-{
-    assert(!version.empty());
-    auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version +
-               ".tar.gz";
-    bool result = download_to_file(url, get_download_gz_file(version),
-                                   download_file_options::binary);
-#ifdef TIMEZONE_MAPPING
-    if (result)
-    {
-        auto mapping_file = get_download_mapping_file(version);
-        result = download_to_file("http://unicode.org/repos/cldr/trunk/common/"
-                                  "supplemental/windowsZones.xml",
-            mapping_file, download_file_options::text);
-    }
-#endif
-    return result;
-}
 
 // TODO! Using system() create a process and a console window.
 // This is useful to see what errors may occur but is slow and distracting.
@@ -2728,6 +2713,37 @@ extract_gz_file(const std::string&, const std::string& gz_file, const std::strin
 #endif // !_WIN32
 
 bool
+remote_download(const std::string& version)
+{
+    assert(!version.empty());
+
+#ifdef _WIN32
+    // Download folder should be always available for Windows
+#else
+    // Create download folder if it does not exist on UNIX system
+    auto download_folder = get_download_folder();
+    if (!file_exists(download_folder)) {
+        make_directory(download_folder);
+    }
+#endif
+
+    auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version +
+               ".tar.gz";
+    bool result = download_to_file(url, get_download_gz_file(version),
+                                   download_file_options::binary);
+#ifdef TIMEZONE_MAPPING
+    if (result)
+    {
+        auto mapping_file = get_download_mapping_file(version);
+        result = download_to_file("http://unicode.org/repos/cldr/trunk/common/"
+                                  "supplemental/windowsZones.xml",
+            mapping_file, download_file_options::text);
+    }
+#endif
+    return result;
+}
+
+bool
 remote_install(const std::string& version)
 {
     auto success = false;
@@ -2735,6 +2751,7 @@ remote_install(const std::string& version)
 
     std::string install = get_install();
     auto gz_file = get_download_gz_file(version);
+
     if (file_exists(gz_file))
     {
         if (file_exists(install))
