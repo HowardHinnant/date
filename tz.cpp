@@ -2722,7 +2722,8 @@ remote_download(const std::string& version)
 #else
     // Create download folder if it does not exist on UNIX system
     auto download_folder = get_download_folder();
-    if (!file_exists(download_folder)) {
+    if (!file_exists(download_folder)) 
+    {
         make_directory(download_folder);
     }
 #endif
@@ -2751,7 +2752,6 @@ remote_install(const std::string& version)
 
     std::string install = get_install();
     auto gz_file = get_download_gz_file(version);
-
     if (file_exists(gz_file))
     {
         if (file_exists(install))
