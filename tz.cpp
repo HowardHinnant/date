@@ -212,7 +212,6 @@ expand_path(std::string path)
 
 #  endif  // !INSTALL
 
-
 // Execute command, use a pipe and get the output of it (we cannot grab the output with std::system)
 static
 std::string 
@@ -232,7 +231,6 @@ exec_and_get_output(const char* cmd)
 
     return output;
 }
-
 
 static
 std::string
