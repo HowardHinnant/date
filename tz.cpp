@@ -5,6 +5,7 @@
 // Copyright (c) 2016 Alexander Kormanovsky
 // Copyright (c) 2016, 2017 Jiangang Zhuang
 // Copyright (c) 2017 Nicolas Veloz Savino
+// Copyright (c) 2017 Florian Dang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -91,6 +92,7 @@
 #include <tuple>
 #include <vector>
 #include <sys/stat.h>
+#include <regex>
 
 #ifdef _WIN32
 #include <locale>
@@ -210,11 +212,59 @@ expand_path(std::string path)
 
 #  endif  // !INSTALL
 
+
+// Execute command, use a pipe and get the output of it (we cannot grab the output with std::system)
+static
+std::string 
+exec_and_get_output(const char* cmd) 
+{
+    std::array<char, 128> buffer;
+    std::string output;
+    FILE *pipe(popen(cmd, "r"));
+    if (!pipe) 
+        throw std::runtime_error("Cannot execute command");
+    while (!feof(pipe)) 
+    {
+        if (fgets(buffer.data(), 128, pipe) != nullptr)
+            output += buffer.data();
+    }
+    pclose(pipe);
+
+    return output;
+}
+
+
 static
 std::string
 get_download_folder()
 {
-    return expand_path("~/Downloads");
+    std::string download_folder = expand_path("~/Downloads"); // common download folder by default
+
+    // Get download folder in a generic way with XDG specification for UNIX system
+    // See http://stackoverflow.com/a/25055201/2352158
+    try 
+    {
+        std::string xdg_command = "xdg-user-dir DOWNLOAD";
+        std::string xdg_download_folder = exec_and_get_output(xdg_command.c_str());
+        // Remove non wanted new lines (could also be done only at the end of string)
+        xdg_download_folder.erase
+        (
+            std::remove(xdg_download_folder.begin(), xdg_download_folder.end(), '\n'), 
+            xdg_download_folder.end()
+        ); 
+        // Verify that output from command is a folder so we can use it
+        if (std::regex_match(xdg_download_folder, std::regex("^(/[^/ ]*)+/?$"))) 
+        {
+            download_folder = xdg_download_folder; 
+        }
+    }
+    catch(std::exception const& e) 
+    {
+        // If we cannot use xdg : we only warn, we keep going and use the most common download folder. 
+        std::cerr << e.what() << " xdg-user-dir" << '\n';
+    }
+    
+    return download_folder;
 }
 
 
