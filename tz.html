@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-03-02<br/>
+2017-03-22<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -925,6 +925,37 @@ it <i>always</i> does when <code>AUTO_DOWNLOAD == 0</code>), all outstanding
 <p>
 <i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
 be returned to a valid <code>TZ_DB</code>.
+</p>
+</blockquote>
+
+<pre>
+void set_install(const std::string&amp; s);
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Sets the location which the database is, or will be, installed at.
+</p>
+<p>
+<i>Default:</i> If this function is never called, and the macro <code>INSTALL</code> is
+defined, the location of the database is <code>INSTALL/tzdata</code>
+(<code>INSTALL\tzdata</code> on Windows).  If the macro <code>INSTALL</code> is not
+defined, the default location of the database is <code>~/Downloads/tzdata</code>
+(<code>%homedrive%\%homepath%\downloads\tzdata</code> on Windows).
+</p>
+<p>
+<i>Thread Safety:</i>  This function is <i>not</i> thread safe.  You must
+provide your own synchronization among threads calling this function.  It should be
+called prior to any other access to the database.
+</p>
+<p>
+<i>Throws:</i> Anything assignment to <code>std::string</code> might throw.
+</p>
+<p>
+<i>Note:</i> No expansion is attempted on the argument <code>s</code> (e.g. expanding
+<code>~/</code>).  This is a low-level function meant to enable other expansion techniques
+such as
+<a href="https://freedesktop.org/wiki/Software/xdg-user-dirs/ ">xdg-user-dirs</a> whose
+result can be passed directly to <code>set_install</code>.
 </p>
 </blockquote>
 
