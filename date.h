@@ -4141,9 +4141,50 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut
 template <class Duration>
 struct fields
 {
-    year_month_day        ymd;
-    time_of_day<Duration> tod;
+    year_month_day        ymd{0_y/0/0};
+    weekday               wd{7u};
+    time_of_day<Duration> tod{};
+
+    fields() = default;
+
+    fields(year_month_day ymd_) : ymd(ymd_) {}
+    fields(weekday wd_) : wd(wd_) {}
+    fields(time_of_day<Duration> tod_) : tod(tod_) {}
+
+    fields(year_month_day ymd_, weekday wd_) : ymd(ymd_), wd(wd_) {}
+    fields(year_month_day ymd_, time_of_day<Duration> tod_) : ymd(ymd_), tod(tod_) {}
+
+    fields(weekday wd_, time_of_day<Duration> tod_) : wd(wd_), tod(tod_) {}
+
+    fields(year_month_day ymd_, weekday wd_, time_of_day<Duration> tod_)
+        : ymd(ymd_)
+        , wd(wd_)
+        , tod(tod_)
+        {}
 };
+
+namespace detail
+{
+
+template <class Duration>
+unsigned
+extract_weekday(const fields<Duration>& fds)
+{
+    if (!fds.ymd.ok() && !fds.wd.ok())
+        throw std::runtime_error("Can not format %u with unknown weekday");
+    unsigned wd;
+    if (fds.ymd.ok())
+    {
+        wd = static_cast<unsigned>(weekday{fds.ymd});
+        if (fds.wd.ok() && wd != static_cast<unsigned>(fds.wd))
+            throw std::runtime_error("Can not format %u with inconsistent weekday");
+    }
+    else
+        wd = static_cast<unsigned>(fds.wd);
+    return wd;
+}
+
+}  // namespace detail
 
 template <class CharT, class Traits, class Duration>
 void
@@ -4171,7 +4212,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             {
                 if (modified == CharT{})
                 {
-                    tm.tm_wday = static_cast<int>(unsigned(weekday{fds.ymd}));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
                     const CharT f[] = {'%', *fmt};
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                 }
@@ -4224,7 +4265,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
                     tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     CharT f[3] = {'%'};
                     auto fe = begin(f) + 1;
@@ -4636,7 +4677,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
         case 'u':
             if (command)
             {
-                auto wd = static_cast<unsigned>(weekday{fds.ymd});
+                auto wd = detail::extract_weekday(fds);
                 if (modified == CharT{'O'})
                 {
                     const CharT f[] = {'%', modified, *fmt};
@@ -4667,7 +4708,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     const CharT f[] = {'%', modified, *fmt};
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4704,7 +4745,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     const CharT f[] = {'%', modified, *fmt};
                     auto const& ymd = fds.ymd;
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4736,7 +4777,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
         case 'w':
             if (command)
             {
-                auto wd = static_cast<unsigned>(weekday{fds.ymd});
+                auto wd = detail::extract_weekday(fds);
                 if (modified == CharT{'O'})
                 {
                     const CharT f[] = {'%', modified, *fmt};
@@ -4767,7 +4808,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     const CharT f[] = {'%', modified, *fmt};
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(static_cast<unsigned>(weekday{ld}));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4873,7 +4914,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             if (command)
             {
                 if (offset_sec == nullptr)
-                    throw std::runtime_error("Can not format local_time with %z");
+                    throw std::runtime_error("Can not format %z with unknown offset");
                 auto m = duration_cast<minutes>(*offset_sec);
                 auto neg = m < minutes{0};
                 m = abs(m);
@@ -4903,7 +4944,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 if (modified == CharT{})
                 {
                     if (abbrev == nullptr)
-                        throw std::runtime_error("Can not format local_time with %Z");
+                        throw std::runtime_error("Can not format %Z with unknown time_zone");
                     for (auto c : *abbrev)
                         os << CharT(c);
                 }
@@ -4977,11 +5018,71 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 template <class CharT, class Traits>
 inline
 void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const year& y)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{y/0/0};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const month& m)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{m/0/0};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const day& d)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{d/0/0};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const weekday& wd)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{wd};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const year_month& ym)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{ym/0};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
+to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt, const month_day& md)
+{
+    using CT = std::chrono::seconds;
+    fields<CT> fds{md/0};
+    to_stream(os, fmt, fds);
+}
+
+template <class CharT, class Traits>
+inline
+void
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const year_month_day& ymd)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{ymd, time_of_day<CT>{}};
+    fields<CT> fds{ymd};
     to_stream(os, fmt, fds);
 }
 
@@ -5051,7 +5152,7 @@ template <class CharT, class Traits, class Alloc, class Streamable>
 auto
 format(const std::locale& loc, const std::basic_string<CharT, Traits, Alloc>& fmt,
        const Streamable& tp)
-    -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt, tp),
+    -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt.c_str(), tp),
                 std::basic_string<CharT, Traits, Alloc>{})
 {
     std::basic_ostringstream<CharT, Traits> os;
@@ -5063,7 +5164,7 @@ format(const std::locale& loc, const std::basic_string<CharT, Traits, Alloc>& fm
 template <class CharT, class Traits, class Alloc, class Streamable>
 auto
 format(const std::basic_string<CharT, Traits, Alloc>& fmt, const Streamable& tp)
-    -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt, tp),
+    -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt.c_str(), tp),
                 std::basic_string<CharT, Traits, Alloc>{})
 {
     std::basic_ostringstream<CharT, Traits> os;
@@ -6047,6 +6148,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         {
             if (y != not_a_2digit_year)
             {
+                // Convert y and an optional C to Y
                 if (!(0 <= y && y <= 99))
                     goto broken;
                 if (C == not_a_century)
@@ -6074,6 +6176,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             }
             if (g != not_a_2digit_year)
             {
+                // Convert g and an optional C to G
                 if (!(0 <= g && g <= 99))
                     goto broken;
                 if (C == not_a_century)
@@ -6101,6 +6204,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             }
             if (G != not_a_year)
             {
+                // Convert G, V and wd to Y, m and d
                 if (V == not_a_week_num || wd == not_a_weekday)
                     goto broken;
                 auto ymd = year_month_day{local_days(year{G-1}/dec/thu[last]) +
@@ -6119,84 +6223,73 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 else if (day(d) != ymd.day())
                     goto broken;
             }
-            if (Y != not_a_year)
+            if (j != 0 && Y != not_a_year)
             {
-                if (!(static_cast<int>(year::min()) <= Y &&
-                      Y <= static_cast<int>(year::max())))
+                auto ymd = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
+                if (m == 0)
+                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
+                else if (month(m) != ymd.month())
                     goto broken;
-                if (j != 0)
-                {
-                    auto ymd = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
-                    if (m == 0)
-                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                    else if (month(m) != ymd.month())
-                        goto broken;
-                    if (d == 0)
-                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                    else if (day(d) != ymd.day())
-                        goto broken;
-                }
-                if (U != not_a_week_num)
-                {
-                    if (wd == not_a_weekday)
-                        goto broken;
-                    sys_days sd;
-                    if (U == 0)
-                        sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
-                    else
-                        sd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} + 
-                             (weekday{static_cast<unsigned>(wd)} - sun);
-                    year_month_day ymd = sd;
-                    if (year{Y} != ymd.year())
-                        goto broken;
-                    if (m == 0)
-                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                    else if (month(m) != ymd.month())
-                        goto broken;
-                    if (d == 0)
-                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                    else if (day(d) != ymd.day())
-                        goto broken;
-                }
-                if (W != not_a_week_num)
-                {
-                    if (wd == not_a_weekday)
-                        goto broken;
-                    sys_days sd;
-                    if (W == 0)
-                        sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
-                    else
-                        sd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} + 
-                             (weekday{static_cast<unsigned>(wd)} - mon);
-                    year_month_day ymd = sd;
-                    if (year{Y} != ymd.year())
-                        goto broken;
-                    if (m == 0)
-                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                    else if (month(m) != ymd.month())
-                        goto broken;
-                    if (d == 0)
-                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                    else if (day(d) != ymd.day())
-                        goto broken;
-                }
-                if (m != 0 && d != 0)
-                {
-                    auto ymd = year{Y}/m/d;
-                    if (!ymd.ok())
-                        goto broken;
-                    if (wd != not_a_weekday)
-                    {
-                        if (weekday{static_cast<unsigned>(wd)} != weekday(ymd))
-                            goto broken;
-                    }
-                    fds.ymd = ymd;
-                }
-                else
+                if (d == 0)
+                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                else if (day(d) != ymd.day())
                     goto broken;
             }
+            if (U != not_a_week_num && Y != not_a_year)
+            {
+                if (wd == not_a_weekday)
+                    goto broken;
+                sys_days sd;
+                if (U == 0)
+                    sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
+                else
+                    sd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} +
+                         (weekday{static_cast<unsigned>(wd)} - sun);
+                year_month_day ymd = sd;
+                if (year{Y} != ymd.year())
+                    goto broken;
+                if (m == 0)
+                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
+                else if (month(m) != ymd.month())
+                    goto broken;
+                if (d == 0)
+                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                else if (day(d) != ymd.day())
+                    goto broken;
+            }
+            if (W != not_a_week_num && Y != not_a_year)
+            {
+                if (wd == not_a_weekday)
+                    goto broken;
+                sys_days sd;
+                if (W == 0)
+                    sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
+                else
+                    sd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} +
+                         (weekday{static_cast<unsigned>(wd)} - mon);
+                year_month_day ymd = sd;
+                if (year{Y} != ymd.year())
+                    goto broken;
+                if (m == 0)
+                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
+                else if (month(m) != ymd.month())
+                    goto broken;
+                if (d == 0)
+                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                else if (day(d) != ymd.day())
+                    goto broken;
+            }
+            auto ymd = year{Y}/m/d;
+            if (wd != not_a_weekday && ymd.ok())
+            {
+                if (weekday{static_cast<unsigned>(wd)} != weekday(ymd))
+                    goto broken;
+            }
+            fds.ymd = ymd;
             fds.tod = time_of_day<Duration>(hours{h} + minutes{min});
             fds.tod.s_ = detail::decimal_format_seconds<Duration>{s};
+            if (wd != not_a_weekday)
+                fds.wd = weekday{static_cast<unsigned>(wd)};
             if (abbrev != nullptr)
                 *abbrev = std::move(temp_abbrev);
             if (offset != nullptr)
@@ -6206,6 +6299,106 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     }
 broken:
     is.setstate(ios_base::failbit);
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, year& y,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!is.fail())
+        y = fds.ymd.year();
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, month& m,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.ymd.month().ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        m = fds.ymd.month();
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, day& d,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.ymd.day().ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        d = fds.ymd.day();
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, weekday& wd,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.wd.ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        wd = fds.wd;
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, year_month& ym,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.ymd.month().ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        ym = fds.ymd.year()/fds.ymd.month();
+}
+
+template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
+void
+from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, month_day& md,
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr)
+{
+    using namespace std;
+    using namespace std::chrono;
+    using CT = seconds;
+    fields<CT> fds{};
+    from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.ymd.month().ok() || !fds.ymd.day().ok())
+        is.setstate(ios::failbit);
+    if (!is.fail())
+        md = fds.ymd.month()/fds.ymd.day();
 }
 
 template <class CharT, class Traits, class Alloc = std::allocator<CharT>>
