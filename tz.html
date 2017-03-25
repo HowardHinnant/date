@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-03-22<br/>
+2017-03-25<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2028,6 +2028,49 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 <blockquote>
 
 <pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const year&amp; y);
+</pre>
+
+<pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const month&amp; m);
+</pre>
+
+<pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const day&amp; d);
+</pre>
+
+<pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const weekday&amp; wd);
+</pre>
+
+<pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const year_month&amp; ym);
+</pre>
+
+<pre>
+template &lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const month_day&amp; md);
+</pre>
+
+
+<pre>
 template &lt;class CharT, class Traits, , class Rep, class Period&gt;
 void
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
@@ -2208,6 +2251,42 @@ For the overloads taking a <code>zoned_time</code> it is the value returned by
 <blockquote>
 
 <pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
 template &lt;class CharT, class Traits&gt;
 void
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
