@@ -4257,11 +4257,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     tm = std::tm{};
                     auto const& ymd = fds.ymd;
-                    time_of_day<seconds> hms{floor<seconds>(fds.tod.to_duration())};
                     auto ld = local_days(ymd);
-                    tm.tm_sec = static_cast<int>(hms.seconds().count());
-                    tm.tm_min = static_cast<int>(hms.minutes().count());
-                    tm.tm_hour = static_cast<int>(hms.hours().count());
+                    tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
+                    tm.tm_min = static_cast<int>(fds.tod.minutes().count());
+                    tm.tm_hour = static_cast<int>(fds.tod.hours().count());
                     tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
                     tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
@@ -4515,19 +4514,18 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
         case 'M':
             if (command)
             {
-                time_of_day<minutes> hms{floor<minutes>(fds.tod.to_duration())};
                 if (modified == CharT{'O'})
                 {
                     const CharT f[] = {'%', modified, *fmt};
-                    tm.tm_min = static_cast<int>(hms.minutes().count());
+                    tm.tm_min = static_cast<int>(fds.tod.minutes().count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
                 }
                 else if (modified == CharT{})
                 {
-                    if (hms.minutes() < minutes{10})
+                    if (fds.tod.minutes() < minutes{10})
                         os << CharT{'0'};
-                    os << hms.minutes().count();
+                    os << fds.tod.minutes().count();
                 }
                 else
                 {
@@ -4578,11 +4576,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             {
                 if (modified == CharT{})
                 {
-                    time_of_day<seconds> hms{floor<seconds>(fds.tod.to_duration())};
                     const CharT f[] = {'%', *fmt};
-                    tm.tm_hour = static_cast<int>(hms.hours().count());
-                    tm.tm_min = static_cast<int>(hms.minutes().count());
-                    tm.tm_sec = static_cast<int>(hms.seconds().count());
+                    tm.tm_hour = static_cast<int>(fds.tod.hours().count());
+                    tm.tm_min = static_cast<int>(fds.tod.minutes().count());
+                    tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                 }
                 else
@@ -4600,13 +4597,12 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             {
                 if (modified == CharT{})
                 {
-                    time_of_day<minutes> hms{floor<minutes>(fds.tod.to_duration())};
-                    if (hms.hours() < hours{10})
+                    if (fds.tod.hours() < hours{10})
                         os << CharT{'0'};
-                    os << hms.hours().count() << CharT{':'};
-                    if (hms.minutes() < minutes{10})
+                    os << fds.tod.hours().count() << CharT{':'};
+                    if (fds.tod.minutes() < minutes{10})
                         os << CharT{'0'};
-                    os << hms.minutes().count();
+                    os << fds.tod.minutes().count();
                 }
                 else
                 {
@@ -4844,11 +4840,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 else
                 {
                     tm = std::tm{};
-                    using CT = typename common_type<seconds, Duration>::type;
-                    time_of_day<CT> hms{duration_cast<CT>(fds.tod.to_duration())};
-                    tm.tm_sec = static_cast<int>(hms.seconds().count());
-                    tm.tm_min = static_cast<int>(hms.minutes().count());
-                    tm.tm_hour = static_cast<int>(hms.hours().count());
+                    tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
+                    tm.tm_min = static_cast<int>(fds.tod.minutes().count());
+                    tm.tm_hour = static_cast<int>(fds.tod.hours().count());
                     CharT f[3] = {'%'};
                     auto fe = begin(f) + 1;
                     if (modified == CharT{'E'})
