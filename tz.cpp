@@ -3208,8 +3208,9 @@ locate_native_zone(const std::string& native_tz_name)
 
 #endif  // TZ_TEST && TIMEZONE_MAPPING
 
+
+}  // namespace date
+
 #ifdef __GNUC__
 # pragma GCC diagnostic pop
 #endif
-
-}  // namespace date
