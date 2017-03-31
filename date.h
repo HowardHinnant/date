@@ -50,6 +50,14 @@
 #include <utility>
 #include <type_traits>
 
+#ifdef __GNUC__
+# pragma GCC diagnostic push
+# if __GNUC__ < 5
+   // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
+#  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+# endif
+#endif
+
 namespace date
 {
 
@@ -928,10 +936,6 @@ struct choose_trunc_type
                      >::type
                  >::type;
 };
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 template <class T>
 CONSTCD11
@@ -6589,5 +6593,11 @@ parse(const CharT* format, Parsable& tp,
 }
 
 }  // namespace date
+
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 
 #endif  // DATE_H
