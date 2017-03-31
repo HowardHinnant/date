@@ -141,10 +141,10 @@ static CONSTDATA char folder_delimiter = '/';
 
 #endif
 
-# if __GNUC__ < 5
+#if __GNUC__ < 5
 // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
 #ifdef _WIN32
@@ -3207,6 +3207,6 @@ locate_native_zone(const std::string& native_tz_name)
 
 }  // namespace date
 
-#ifdef __GNUC__
+#if __GNUC__ < 5
 # pragma GCC diagnostic pop
 #endif
