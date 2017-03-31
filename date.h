@@ -5,6 +5,7 @@
 //
 // Copyright (c) 2015, 2016, 2017 Howard Hinnant
 // Copyright (c) 2016 Adrian Colomitchi
+// Copyright (c) 2017 Florian Dang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +50,15 @@
 #include <string>
 #include <utility>
 #include <type_traits>
+
+#ifdef __GNUC__
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wpedantic"
+# if __GNUC__ < 5
+   // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
+#  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+# endif
+#endif
 
 namespace date
 {
@@ -902,12 +912,6 @@ public:
         {}
 };
 
-#ifdef __GNUC__
-// GCC complains about __int128 with -pedantic or -pedantic-errors
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-
 template <class T>
 struct choose_trunc_type
 {
@@ -928,10 +932,6 @@ struct choose_trunc_type
                      >::type
                  >::type;
 };
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 template <class T>
 CONSTCD11
@@ -6589,5 +6589,11 @@ parse(const CharT* format, Parsable& tp,
 }
 
 }  // namespace date
+
+
+#ifdef __GNUC__
+# pragma GCC diagnostic pop
+#endif
+
 
 #endif  // DATE_H
