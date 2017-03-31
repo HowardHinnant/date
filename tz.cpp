@@ -141,14 +141,10 @@ static CONSTDATA char folder_delimiter = '/';
 
 #endif
 
-#ifdef __GNUC__
-// GCC complains about unused return from strerror_r
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-result"
 # if __GNUC__ < 5
-   // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
+// GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
+#  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
 #endif
 
 #ifdef _WIN32

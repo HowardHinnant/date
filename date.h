@@ -50,14 +50,12 @@
 #include <utility>
 #include <type_traits>
 
-#ifdef __GNUC__
-// GCC complains about __int128 with -pedantic or -pedantic-errors
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wpedantic"
 # if __GNUC__ < 5
+#  pragma GCC diagnostic push
+   // GCC 4.7 Bug 50454 complains about __int128 with -pedantic or -pedantic-errors
+#  pragma GCC diagnostic ignored "-Wpedantic"
    // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
 #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
 #endif
 
 namespace date
