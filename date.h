@@ -4417,7 +4417,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.fill('0');
                         os.flags(std::ios::dec | std::ios::right);
                         os.width(2);
-                        os << static_cast<int>(y) % 100;
+                        os << std::abs(static_cast<int>(y)) % 100;
                     }
                 }
                 else
@@ -5088,7 +5088,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<Duration> fds{year_month_day{}, time_of_day<CT>{d}};
+    fields<Duration> fds{time_of_day<CT>{d}};
     to_stream(os, fmt, fds);
 }
 
