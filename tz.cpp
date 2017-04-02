@@ -2280,9 +2280,9 @@ download_to_string(const std::string& url, std::string& str)
     curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
                                       void* userp) -> std::size_t
     {
-        auto& str = *static_cast<std::string*>(userp);
+        auto& userstr = *static_cast<std::string*>(userp);
         auto realsize = size * nmemb;
-        str.append(contents, realsize);
+        userstr.append(contents, realsize);
         return realsize;
     };
     curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);

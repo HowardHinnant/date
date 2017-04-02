@@ -141,25 +141,25 @@ private:
 template <class Duration>
 inline
 nonexistent_local_time::nonexistent_local_time(local_time<Duration> tp,
-                                               local_seconds first,
+                                               local_seconds begin,
                                                const std::string& first_abbrev,
-                                               local_seconds last,
+                                               local_seconds end,
                                                const std::string& last_abbrev,
                                                sys_seconds time_sys)
-    : std::runtime_error(make_msg(tp, first, first_abbrev, last, last_abbrev, time_sys))
+    : std::runtime_error(make_msg(tp, begin, first_abbrev, end, last_abbrev, time_sys))
     {}
 
 template <class Duration>
 std::string
-nonexistent_local_time::make_msg(local_time<Duration> tp, local_seconds first,
-                                 const std::string& first_abbrev, local_seconds last,
+nonexistent_local_time::make_msg(local_time<Duration> tp, local_seconds begin,
+                                 const std::string& first_abbrev, local_seconds end,
                                  const std::string& last_abbrev, sys_seconds time_sys)
 {
     using namespace date;
     std::ostringstream os;
     os << tp << " is in a gap between\n"
-       << first << ' ' << first_abbrev << " and\n"
-       << last  << ' ' << last_abbrev
+       << begin << ' ' << first_abbrev << " and\n"
+       << end   << ' ' << last_abbrev
        << " which are both equivalent to\n"
        << time_sys << " UTC";
     return os.str();
