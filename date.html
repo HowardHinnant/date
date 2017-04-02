@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2016-11-24<br/>
+2017-04-01<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -63,7 +63,7 @@ If you want detailed explanations of the algorithms, go there.
 </p>
 
 <p>
-It performs best with C++14, which has vastly improved <code>constexpr</code> rules. 
+It performs best with C++14, which has vastly improved <code>constexpr</code> rules.
 However, the library will auto-adopt to C++11, sacrificing several <code>constexpr</code>
 declarations.  In C++11, this will effectively transfer some computations that should be
 done at compile-time to run-time.  Porting to C++98/03 has not been attempted.
@@ -1206,7 +1206,7 @@ That is, first find the first Thursday in January for year <code>y</code>, and t
 the number of days required to find the Monday before this day.  This could have been done
 with <code>days{3}</code>.   But I chose to code this as <code>(thu-mon)</code>.
 Computationally and performance wise, these two choices are identical: they both subtract
-the literal 3.  I chose the latter because I believe it to be more readable. 
+the literal 3.  I chose the latter because I believe it to be more readable.
 "<code>3</code>" is just a magic constant.  But "<code>(thu-mon)</code>" is the number of
 days Thursday is past Monday.
 </p>
@@ -1393,7 +1393,7 @@ limits()
 <p>
 I've included two extra units: <code>picoseconds</code>, and the units used by Visual
 Studio's <code>system_clock::time_point</code>.  Units finer than <code>picoseconds</code>
-do not work with this date library because the conversion factors needed to convert to 
+do not work with this date library because the conversion factors needed to convert to
 units such as <code>days</code> overflow the compile-time machinery.  As a practical
 matter this is not important as the range of a 64 bit femtosecond is only about +/- 2.5
 hours.  On the other side, units coarser than <code>hours</code>, if represented by at
@@ -1600,8 +1600,10 @@ operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const local_ti
 </pre></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td><a href="tz.html#format">Formatting</a> and</td><td>&nbsp;</td></tr>
-<tr><td><a href="tz.html#parse">Parsing</a></td><td>&nbsp;</td></tr>
+<tr><td><a href="#to_stream_formatting"><code>to_stream</code> formatting</a></td><td>&nbsp;</td></tr>
+<tr><td><a href="#format"><code>format</code></a></td><td>&nbsp;</td></tr>
+<tr><td><a href="#from_stream_formatting"><code>from_stream</code> formatting</a></td><td>&nbsp;</td></tr>
+<tr><td><a href="#parse"><code>parse</code></a></td><td>&nbsp;</td></tr>
 
 </table>
 
@@ -1664,13 +1666,60 @@ using years = std::chrono::duration
 <sup>1</sup>/<sub>12</sub> of a year.  This definition accurately describes the length of
 the average month in the Gregorian calendar.  <code>months</code> is the resultant type
 when subtracting two <code>month</code> field-based time points. <code>months</code> is
-not implicitly convertible to <code>days</code> or <code>weeks</code> nor vice-versa. 
+not implicitly convertible to <code>days</code> or <code>weeks</code> nor vice-versa.
 <code>months</code> will not implicitly convert to <code>years</code>.
 </p>
 <pre>
 using months = std::chrono::duration
     &lt;int, std::ratio_divide&lt;years::period, std::ratio&lt;12&gt;&gt;&gt;;
 </pre></blockquote>
+
+<h3>Formatting and parsing durations</h3>
+
+<pre>
+template &lt;class CharT, class Traits, class Rep, class Period&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>d</code>, converted to the
+<code>common_type&lt;duration, seconds&gt;</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%H</code>, <code>%I</code>, <code>%M</code>, <code>%p</code>, <code>%r</code>,
+<code>%R</code>, <code>%S</code>, <code>%T</code>, <code>%X</code>, <code>%n</code>,
+<code>%t</code> or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Rep, class Period, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            std::chrono::duration&lt;Rep, Period&gt;&amp; d,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>d</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%H</code>, <code>%I</code>, <code>%M</code>, <code>%p</code>,
+<code>%r</code>, <code>%R</code>, <code>%S</code>, <code>%T</code>, <code>%X</code>,
+<code>%n</code>, <code>%t</code>, <code>%z</code>, <code>%Z</code> or <code>%%</code>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+</blockquote>
 
 <a name="sys_time"></a><h3><code>sys_time</code></h3>
 
@@ -1710,7 +1759,7 @@ using sys_days = sys_time&lt;days&gt;;
 <blockquote>
 <p>
 <code>sys_seconds</code> is a <code>std::chrono::time_point</code> using
-<code>std::chrono::system_clock</code> and <code>std::chrono::seconds</code>. 
+<code>std::chrono::system_clock</code> and <code>std::chrono::seconds</code>.
 This makes <code>sys_seconds</code> interoperable with
 <code>std::chrono::system_clock::time_point</code>.  It is simply a count of
 <i>non-leap</i> seconds since the epoch of
@@ -1722,6 +1771,45 @@ as <a href="href="http://en.wikipedia.org/wiki/Unix_time"">Unix Time</a>.
 <pre>
 using sys_seconds = sys_time&lt;std::chrono::seconds&gt;;
 </pre>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const sys_time&lt;Duration&gt;&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>tp</code>, converted to the
+<code>common_type&lt;Duration, seconds&gt;</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  If
+<code>%Z</code> is in the formatting string <code>"UTC"</code> will be used.  If
+<code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            sys_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>tp</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.
+If <code>%z</code> is present, the parsed offset will be subtracted from the parsed time.
+If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
 </blockquote>
 
 <a name="local_time"></a><h3><code>local_time</code></h3>
@@ -1776,6 +1864,51 @@ using local_days = local_time&lt;days&gt;;
 <pre>
 using local_seconds = local_time&lt;std::chrono::seconds&gt;;
 </pre>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const local_time&lt;Duration&gt;&amp; tp, const std::string* abbrev = nullptr,
+          const std::chrono::seconds* offset_sec = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>tp</code>, converted to the
+<code>common_type&lt;Duration, seconds&gt;</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  If
+<code>%Z</code> is in the formatting string <code>*abbrev</code> will be used.  If
+<code>%z</code> is in the formatting string <code>*offset_sec</code> will be used.
+</p>
+
+<p>
+<i>Throws:</i> A <code>std::runtime_error</code> if <code>%Z</code> is in the formatting
+string and <code>abbrev == nullptr</code>, or if <code>%z</code> is in the formatting string
+and <code>offset_sec == nullptr</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            local_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>tp</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.
+If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
 </blockquote>
 
 <a name="last_spec"></a><h3><code>last_spec</code></h3>
@@ -1839,6 +1972,17 @@ constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const day&amp; d);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const day&amp; d);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 
 inline namespace literals {
 constexpr day operator "" _d(unsigned long long d) noexcept;
@@ -2103,6 +2247,47 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </p>
 </blockquote>
 
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const day&amp; d);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>d</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%d</code>, <code>%e</code>, <code>%n</code>,  <code>%t</code>
+or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>d</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%e</code>, <code>%e</code>, <code>%n</code>,
+<code>%t</code>, <code>%z</code>, <code>%Z</code> or <code>%%</code>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+</blockquote>
+
 </blockquote>
 
 <a name="month"></a><h3><code>month</code></h3>
@@ -2145,6 +2330,17 @@ constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month&amp; m);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const month&amp; m);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 
 inline namespace literals {
 constexpr month jan{1};
@@ -2437,6 +2633,47 @@ output for the month field by <code>asctime</code>.  Otherwise outputs
 </p>
 </blockquote>
 
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const month&amp; m);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>m</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%b</code>, <code>%B</code>, <code>%h</code>,  <code>%m</code>,  <code>%n</code>,
+<code>%t</code> or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>m</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%b</code>, <code>%B</code>, <code>%h</code>,  <code>%m</code>,
+<code>%n</code>, <code>%t</code>, <code>%z</code>, <code>%Z</code> or <code>%%</code>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+</blockquote>
+
 </blockquote>
 
 <a name="year"></a><h3><code>year</code></h3>
@@ -2487,6 +2724,17 @@ constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year&amp; y);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year&amp; y);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 
 inline namespace literals {
 constexpr year operator "" _y(unsigned long long y) noexcept;
@@ -2803,6 +3051,47 @@ into <code>os</code>. If the year is less than four decimal digits, pads the yea
 </p>
 </blockquote>
 
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year&amp; y);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>y</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%C</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>,  <code>%t</code>
+or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>y</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%C</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>,
+<code>%t</code>, <code>%z</code>, <code>%Z</code> or <code>%%</code>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+</blockquote>
+
 </blockquote>
 
 <a name="weekday"></a><h3><code>weekday</code></h3>
@@ -2846,6 +3135,17 @@ template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday&amp; wd);
 
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const weekday&amp; wd);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+
 inline namespace literals {
 constexpr weekday sun{0};
 constexpr weekday mon{1};
@@ -2861,7 +3161,7 @@ constexpr weekday sat{6};
 
 <p>
 <code>weekday</code> represents a day of the week in the Gregorian calendar.  It should
-only be representing values in the range 0 to 6, corresponding to Sunday thru Saturday. 
+only be representing values in the range 0 to 6, corresponding to Sunday thru Saturday.
 However it may hold values outside this range.  It can be constructed with any
 <code>unsigned</code> value, which will be subsequently truncated to fit into
 <code>weekday</code>'s internal storage.  <code>weekday</code> is equality comparable.
@@ -3159,6 +3459,47 @@ output for the weekday field by <code>asctime</code>.  Otherwise outputs
 </p>
 </blockquote>
 
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const weekday&amp; wd);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>wd</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%a</code>, <code>%A</code>, <code>%u</code>,  <code>%w</code>,  <code>%n</code>,
+<code>%t</code> or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>wd</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%a</code>, <code>%A</code>, <code>%u</code>, <code>%w</code>, <code>%n</code>,
+<code>%t</code>, <code>%z</code>, <code>%Z</code> or <code>%%</code>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+</blockquote>
+
 </blockquote>
 
 <a name="weekday_indexed"></a><h3><code>weekday_indexed</code></h3>
@@ -3325,7 +3666,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 <p><b>Overview</b></p>
 
 <p>
-<code>weekday_last</code> represents the last <code>weekday</code> of a month. 
+<code>weekday_last</code> represents the last <code>weekday</code> of a month.
 It is most easily constructed by indexing a <code>weekday</code> with <code>last</code>.
 </p>
 
@@ -3449,6 +3790,17 @@ constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noe
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day&amp; md);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const month_day&amp; md);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 </pre>
 
 <p><b>Overview</b></p>
@@ -3588,6 +3940,48 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const month_day&amp; md);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>md</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%b</code>, <code>%B</code>, <code>%d</code>,  <code>%e</code>,  <code>%h</code>,
+<code>%m</code>, <code>%n</code>,  <code>%t</code> or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>md</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%b</code>, <code>%B</code>,  <code>%d</code>,  <code>%e</code>,
+<code>%h</code>,  <code>%m</code>,  <code>%n</code>, <code>%t</code>, <code>%z</code>,
+<code>%Z</code> or <code>%%</code>.  If <code>abbrev</code> is not equal to
+<code>nullptr</code>, the information parsed by <code>%Z</code> (if present) will be
+placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
+<code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
+placed in <code>*offset</code>.
 </p>
 </blockquote>
 
@@ -4049,6 +4443,17 @@ constexpr year_month operator-(const year_month&amp; ym, const years&amp; dy) no
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month&amp; ym);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year_month&amp; ym);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 </pre>
 
 <p><b>Overview</b></p>
@@ -4316,6 +4721,48 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </p>
 </blockquote>
 
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year_month&amp; ym);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>ym</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.  The behavior
+is undefined except for the following flags (or modified versions of these flags):
+<code>%b</code>, <code>%B</code>, <code>%C</code>, <code>%h</code>, <code>%m</code>,
+<code>%y</code>, <code>%Y</code>,  <code>%n</code>,  <code>%t</code> or <code>%%</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>ym</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  The
+behavior is undefined except for the following flags (or modified versions of these
+flags): <code>%b</code>, <code>%B</code>, <code>%C</code>, <code>%h</code>,
+<code>%m</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>, <code>%t</code>,
+<code>%z</code>, <code>%Z</code> or <code>%%</code>.  If <code>abbrev</code> is not equal
+to <code>nullptr</code>, the information parsed by <code>%Z</code> (if present) will be
+placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
+<code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
+placed in <code>*offset</code>.
+</p>
+</blockquote>
+
 </blockquote>
 
 <a name="year_month_day"></a><h3><code>year_month_day</code></h3>
@@ -4368,6 +4815,17 @@ constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&am
 template&lt;class CharT, class Traits&gt;
 std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day&amp; ymd);
+
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year_month_day&amp; ymd);
+
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month_day&amp; ymd,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
 </pre>
 
 <p><b>Overview</b></p>
@@ -4378,7 +4836,7 @@ and <code>day</code>.  <code>year_month_day</code> is a field-based time point w
 resolution of <code>days</code>.  One can observe each field.  <code>year_month_day</code>
 supports <code>years</code> and <code>months</code> oriented arithmetic, but not
 <code>days</code> oriented arithmetic.  For the latter, there is a conversion to
-<code>sys_days</code> which efficiently supports <code>days</code> oriented arithmetic. 
+<code>sys_days</code> which efficiently supports <code>days</code> oriented arithmetic.
 There is also a conversion <i>from</i> <code>sys_days</code>.
 <code>year_month_day</code> is equality and less-than comparable.
 </p>
@@ -4733,6 +5191,45 @@ are prefixed with <code>'0'</code> if necessary..
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template&lt;class CharT, class Traits&gt;
+void
+to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
+          const year_month_day&amp; ymd);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>ymd</code> into <code>os</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.
+</p>
+<p>
+<i>Throws:</i> A <code>std::runtime_error</code> if <code>%z</code> or <code>%Z</code> is
+used in the <code>fmt</code> string.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month_day&amp; ymd,
+            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>ymd</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="#from_stream_formatting"><code>from_stream</code> formatting flags</a>.  If
+<code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
 </p>
 </blockquote>
 
@@ -5161,12 +5658,12 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <p>
 <code>year_month_weekday</code> represents a specific <code>year</code>,
-<code>month</code>, and nth <code>weekday</code> of the <code>month</code>. 
+<code>month</code>, and nth <code>weekday</code> of the <code>month</code>.
 <code>year_month_weekday</code> is a field-based time point with a resolution of
 <code>days</code>.  One can observe each field. <code>year_month_weekday</code> supports
 <code>years</code> and <code>months</code> oriented arithmetic, but not <code>days</code>
 oriented arithmetic. For the latter, there is a conversion to <code>sys_days</code> which
-efficiently supports <code>days</code> oriented arithmetic. 
+efficiently supports <code>days</code> oriented arithmetic.
 <code>year_month_weekday</code> is equality comparable.
 </p>
 
@@ -6817,7 +7314,7 @@ This specialization shall not exist unless <code>Period &lt; 1s</code>.
 </p>
 
 <pre>
-constexpr 
+constexpr
 time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;::time_of_day() noexcept;
 </pre>
 
@@ -6836,7 +7333,7 @@ corresponding to 0 fractional seconds after 00:00:00.
 </blockquote>
 
 <pre>
-constexpr explicit 
+constexpr explicit
 time_of_day&lt;std::chrono::duration&lt;Rep, Period&gt;&gt;::time_of_day(std::chrono::duration&lt;Rep, Period&gt; since_midnight) noexcept;
 </pre>
 
@@ -7034,6 +7531,779 @@ os &lt;&lt; year_month_day(floor&lt;days&gt;(tp));
 
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<a name="to_stream_formatting"></a><h3><code>to_stream</code> formatting</h3>
+
+<p>
+Each flag begins with a <code>%</code>.  Some flags can be modified by <code>E</code> or
+<code>O</code>.  During streaming each flag is replaced according to the table below. All
+characters in the format string which are not represented in the table below are inserted
+unchanged into the stream.
+</p>
+
+<blockquote>
+<table cellspacing="10">
+
+<tr>
+<td><code>%a</code></td>
+<td>The locale's abbreviated weekday name.</td>
+</tr>
+
+<tr>
+<td><code>%A</code></td>
+<td>The locale's full weekday name.</td>
+</tr>
+
+<tr>
+<td><code>%b</code></td>
+<td>The locale's abbreviated month name.</td>
+</tr>
+
+<tr>
+<td><code>%B</code></td>
+<td>The locale's full month name.</td>
+</tr>
+
+<tr>
+<td><code>%c</code></td>
+<td>The locale's date and time representation.  The modified command <code>%Ec</code>
+produces the locale's alternate date and time representation.</td>
+</tr>
+
+<tr>
+<td><code>%C</code></td>
+<td>The year divided by 100 using floored division.  If the result is a single decimal
+digit, it is prefixed with <code>0</code>.  The modified command <code>%EC</code>
+produces the locale's alternative representation of the century.</td>
+</tr>
+
+<tr>
+<td><code>%d</code></td>
+<td>The day of month as a decimal number.  If the result is a single decimal
+digit, it is prefixed with <code>0</code>.  The modified command <code>%Od</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%D</code></td>
+<td>Equivalent to <code>%m/%d/%y</code>.</td>
+</tr>
+
+<tr>
+<td><code>%e</code></td>
+<td>The day of month as a decimal number.  If the result is a single decimal
+digit, it is prefixed with a space.  The modified command <code>%Oe</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%F</code></td>
+<td>Equivalent to <code>%Y-%m-%d</code>.</td>
+</tr>
+
+<tr>
+<td><code>%g</code></td>
+<td>The last two decimal digits of the ISO week-based year.  If the result is a single
+digit it is prefixed by <code>0</code>.</td>
+</tr>
+
+<tr>
+<td><code>%G</code></td>
+<td>The ISO week-based year as a decimal number.  If the result is less than four
+digits it is left-padded with <code>0</code> to four digits.</td>
+</tr>
+
+<tr>
+<td><code>%h</code></td>
+<td>Equivalent to <code>%b</code>.</td>
+</tr>
+
+<tr>
+<td><code>%H</code></td>
+<td>The hour (24-hour clock) as a decimal number.  If the result is a single
+digit, it is prefixed with <code>0</code>.  The modified command <code>%OH</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%I</code></td>
+<td>The hour (12-hour clock) as a decimal number.  If the result is a single
+digit, it is prefixed with <code>0</code>.  The modified command <code>%OI</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%j</code></td>
+<td>The day of the year as a decimal number. Jan 1 is <code>001</code>. If the result
+is less than three digits, it is left-padded with <code>0</code> to three digits.</td>
+</tr>
+
+<tr>
+<td><code>%m</code></td>
+<td>The month as a decimal number.  Jan is <code>01</code>.  If the result is a single
+digit, it is prefixed with <code>0</code>.  The modified command <code>%Om</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%M</code></td>
+<td>The minute as a decimal number.  If the result is a single
+digit, it is prefixed with <code>0</code>.  The modified command <code>%OM</code>
+produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%n</code></td>
+<td>A newline character.</td>
+</tr>
+
+<tr>
+<td><code>%p</code></td>
+<td>The locale's equivalent of the AM/PM designations associated with a 12-hour
+clock.</td>
+</tr>
+
+<tr>
+<td><code>%r</code></td>
+<td>The locale's 12-hour clock time.</td>
+</tr>
+
+<tr>
+<td><code>%R</code></td>
+<td>Equivalent to <code>%H:%M</code>.</td>
+</tr>
+
+<tr>
+<td><code>%S</code></td>
+<td>Seconds as a decimal number.  If the number of seconds is less than 10, the result is
+prefixed with <code>0</code>.  If the precision of the input can not be exactly
+represented with seconds, then the format is a decimal floating point number with a fixed
+format and a precision matching that of the precision of the input (or to a microseconds
+precision if the conversion to floating point decimal seconds can not be made within 18
+fractional digits). The character for the decimal point is localized according to the
+locale.  The modified command <code>%OS</code> produces the locale's alternative
+representation.</td>
+</tr>
+
+<tr>
+<td><code>%t</code></td>
+<td>A horizontal-tab character.</td>
+</tr>
+
+<tr>
+<td><code>%T</code></td>
+<td>Equivalent to <code>%H:%M:%S</code>.</td>
+</tr>
+
+<tr>
+<td><code>%u</code></td>
+<td>The ISO weekday as a decimal number (1-7), where Monday is 1.  The modified command
+<code>%Ou</code> produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%U</code></td>
+<td>The week number of the year as a decimal number.  The first Sunday of the year is the
+first day of week <code>01</code>.  Days of the same year prior to that are in week
+<code>00</code>.  If the result is a single digit, it is prefixed with <code>0</code>.
+The modified command <code>%OU</code> produces the locale's alternative
+representation.</td>
+</tr>
+
+<tr>
+<td><code>%V</code></td>
+<td>The ISO week-based week number as a decimal number.  If the result is a single digit,
+it is prefixed with <code>0</code>. The modified command <code>%OV</code> produces the
+locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%w</code></td>
+<td>The weekday as a decimal number (0-6), where Sunday is 0.  The modified command
+<code>%Ow</code> produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%W</code></td>
+<td>The week number of the year as a decimal number.  The first Monday of the year is the
+first day of week <code>01</code>.  Days of the same year prior to that are in week
+<code>00</code>.  If the result is a single digit, it is prefixed with <code>0</code>. The
+modified command <code>%OW</code> produces the locale's alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%x</code></td>
+<td>The locale's date representation.  The modified command <code>%Ex</code>
+produces the locale's alternate date representation.</td>
+</tr>
+
+<tr>
+<td><code>%X</code></td>
+<td>The locale's time representation.  The modified command <code>%Ex</code>
+produces the locale's alternate time representation.</td>
+</tr>
+
+<tr>
+<td><code>%y</code></td>
+<td>The last two decimal digits of the year.  If the result is a single digit it is
+prefixed by <code>0</code>.</td>
+</tr>
+
+<tr>
+<td><code>%Y</code></td>
+<td>The year as a decimal number.  If the result is less than four digits it is
+left-padded with <code>0</code> to four digits.</td>
+</tr>
+
+<tr>
+<td><code>%z</code></td>
+<td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
+4 hours 30 minutes behind UTC.  If the offset is zero, <code>+0000</code> is used.
+The modified commands <code>%Ez</code> and <code>%Ez</code> insert a <code>:</code>
+between the hours and minutes: <code>-04:30</code>.  A <code>std::runtime_error</code> is
+thrown if the offset information is not available.</td>
+</tr>
+
+<tr>
+<td><code>%Z</code></td>
+<td>The time zone abbreviation.  A <code>std::runtime_error</code> is thrown if the time
+zone abbreviation is not available.  <code>UTC</code> is used for
+<code>sys_time</code>.</td>
+</tr>
+
+<tr>
+<td><code>%%</code></td>
+<td>A <code>%</code> character.</td>
+</tr>
+
+</table>
+</blockquote>
+
+<a name="format"></a><h3><code>format</code></h3>
+
+<pre>
+template &lt;class CharT, class Streamable&gt;
+std::basic_string&lt;CharT&gt;
+format(const std::locale&amp; loc, const CharT* fmt, const Streamable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i>  This function does not participate in overload resolution unless
+<code>to_stream(std::declval&lt;std::basic_ostream&lt;CharT&gt;&amp;&gt;(), fmt, tp)</code>
+is valid.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code> and
+imbues it with <code>loc</code>.  Calls <code>to_stream(os, fmt, tp)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os.str()</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Streamable&gt;
+std::basic_string&lt;CharT&gt;
+format(const CharT* fmt, const Streamable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i>  This function does not participate in overload resolution unless
+<code>to_stream(std::declval&lt;std::basic_ostream&lt;CharT&gt;&amp;&gt;(), fmt, tp)</code>
+is valid.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code>.
+Calls <code>to_stream(os, fmt, tp)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os.str()</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Streamable&gt;
+std::basic_string&lt;CharT&gt;
+format(const std::locale&amp; loc, const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const Streamable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i>  This function does not participate in overload resolution unless
+<code>to_stream(std::declval&lt;std::basic_ostream&lt;CharT&gt;&amp;&gt;(), fmt.c_str(), tp)</code>
+is valid.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code> and
+imbues it with <code>loc</code>.  Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os.str()</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Streamable&gt;
+std::basic_string&lt;CharT&gt;
+format(const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const Streamable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i>  This function does not participate in overload resolution unless
+<code>to_stream(std::declval&lt;std::basic_ostream&lt;CharT&gt;&amp;&gt;(), fmt.c_str(), tp)</code>
+is valid.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code>.
+Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os.str()</code>.
+</p>
+</blockquote>
+
+<a name="from_stream_formatting"></a><h3><code>from_stream</code> formatting</h3>
+
+<p>
+Each flag begins with a <code>%</code>.  Some flags can be modified by <code>E</code> or
+<code>O</code>.  During parsing each flag interprets characters as parts of date and time
+type according to the table below. Some flags can be modified by a width parameter which
+governs how many characters are parsed from the stream in interpreting the flag. All
+characters in the format string which are not represented in the table below are parsed
+unchanged from the stream.  The C++ specification says that the parsing of month and
+weekday names is both locale sensitive <i>and</i> case insensitive.  If you find this not
+to be the case, file a bug with your std::lib vendor.
+</p>
+
+<blockquote>
+<table cellspacing="10">
+
+<tr>
+<td><code>%a</code></td>
+<td>The locale's full or abbreviated case-insensitive weekday name.</td>
+</tr>
+
+<tr>
+<td><code>%A</code></td>
+<td>Equivalent to <code>%a</code>.</td>
+</tr>
+
+<tr>
+<td><code>%b</code></td>
+<td>The locale's full or abbreviated case-insensitive month name.</td>
+</tr>
+
+<tr>
+<td><code>%B</code></td>
+<td>Equivalent to <code>%b</code>.</td>
+</tr>
+
+<tr>
+<td><code>%c</code></td>
+<td>The locale's date and time representation.  The modified command <code>%Ec</code>
+interprets the locale's alternate date and time representation.</td>
+</tr>
+
+<tr>
+<td><code>%C</code></td>
+<td>The century as a decimal number.  The modified command <code>%NC</code> where
+<code>N</code> is a positive decimal integer specifies the maximum number of characters to
+read.  If not specified, the default is 2.  Leading zeroes are permitted but not required.
+The modified commands <code>%EC</code> and <code>%OC</code> interpret the locale's
+alternative representation of the century.</td>
+</tr>
+
+<tr>
+<td><code>%d</code></td>
+<td>The day of the month as a decimal number.  The modified command <code>%Nd</code> where
+<code>N</code> is a positive decimal integer specifies the maximum number of characters to
+read.  If not specified, the default is 2.  Leading zeroes are permitted but not required.
+The modified command <code>%EC</code> interprets the locale's alternative representation
+of the day of the month.</td>
+</tr>
+
+<tr>
+<td><code>%D</code></td>
+<td>Equivalent to <code>%m/%d/%y</code>.</td>
+</tr>
+
+<tr>
+<td><code>%e</code></td>
+<td>Equivalent to <code>%d</code> and can be modified like <code>%d</code>.</td>
+</tr>
+
+<tr>
+<td><code>%F</code></td>
+<td>Equivalent to <code>%Y-%m-%d</code>.  If modified with a width, the width is applied
+to only <code>%Y</code>.</td>
+</tr>
+
+<tr>
+<td><code>%g</code></td>
+<td>The last two decimal digits of the ISO week-based year. The modified command
+<code>%Ng</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 2.   Leading zeroes are
+permitted but not required.</td>
+</tr>
+
+<tr>
+<td><code>%G</code></td>
+<td>The ISO week-based year as a decimal number.  The modified command <code>%NG</code>
+where <code>N</code> is a positive decimal integer specifies the maximum number of
+characters to read.  If not specified, the default is 4.   Leading zeroes are permitted
+but not required.</td>
+</tr>
+
+<tr>
+<td><code>%h</code></td>
+<td>Equivalent to <code>%b</code>.</td>
+</tr>
+
+<tr>
+<td><code>%H</code></td>
+<td>The hour (24-hour clock) as a decimal number.  The modified command <code>%NH</code>
+where <code>N</code> is a positive decimal integer specifies the maximum number of
+characters to read.  If not specified, the default is 2.   Leading zeroes are permitted
+but not required.  The modified command <code>%OH</code> interprets the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%I</code></td>
+<td>The hour (12-hour clock) as a decimal number.  The modified command <code>%NI</code>
+where <code>N</code> is a positive decimal integer specifies the maximum number of
+characters to read.  If not specified, the default is 2.   Leading zeroes are permitted
+but not required.</td>
+</tr>
+
+<tr>
+<td><code>%j</code></td>
+<td>The day of the year as a decimal number. Jan 1 is <code>1</code>.  The modified
+command <code>%Nj</code> where <code>N</code> is a positive decimal integer specifies the
+maximum number of characters to read.  If not specified, the default is 3. Leading zeroes
+are permitted but not required.</td>
+</tr>
+
+<tr>
+<td><code>%m</code></td>
+<td>The month as a decimal number.  Jan is <code>1</code>.  The modified command
+<code>%Nm</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 2. Leading zeroes are
+permitted but not required.  The modified command <code>%Om</code> interprets the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%M</code></td>
+<td>The minutes as a decimal number.  The modified command
+<code>%NM</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 2. Leading zeroes are
+permitted but not required.  The modified command <code>%OM</code> interprets the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%n</code></td>
+<td>Matches one or more white space characters.  Consecutive <code>%n</code> and
+<code>%t</code> act as a single <code>%n</code>.</td>
+</tr>
+
+<tr>
+<td><code>%p</code></td>
+<td>The locale's equivalent of the AM/PM designations associated with a 12-hour clock.
+The command <code>%I</code> must precede <code>%p</code> in the format string.</td>
+</tr>
+
+<tr>
+<td><code>%r</code></td>
+<td>The locale's 12-hour clock time.</td>
+</tr>
+
+<tr>
+<td><code>%R</code></td>
+<td>Equivalent to <code>%H:%M</code>.</td>
+</tr>
+
+<tr>
+<td><code>%S</code></td>
+<td>The seconds as a decimal number.  The modified command <code>%NS</code> where
+<code>N</code> is a positive decimal integer specifies the maximum number of characters to
+read.  If not specified, the default is 2 if the input time has a precision convertible to
+seconds.  Otherwise the default width is determined by the decimal precision of the input
+and the field is interpreted as a long double in a fixed format.  If encountered, the
+locale determines the decimal point character. Leading zeroes are permitted but not
+required.  The modified command <code>%OS</code> interprets the locale's alternative
+representation.</td>
+</tr>
+
+<tr>
+<td><code>%t</code></td>
+<td>Equivalent to <code>%n</code>.</td>
+</tr>
+
+<tr>
+<td><code>%T</code></td>
+<td>Equivalent to <code>%H:%M:%S</code>.</td>
+</tr>
+
+<tr>
+<td><code>%u</code></td>
+<td>The ISO weekday as a decimal number (1-7), where Monday is 1. The modified command
+<code>%Nu</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 1. Leading zeroes are
+permitted but not required.  The modified command <code>%Ou</code> interprets the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%U</code></td>
+<td>The week number of the year as a decimal number.  The first Sunday of the year is the
+first day of week <code>01</code>.  Days of the same year prior to that are in week
+<code>00</code>.   The modified command <code>%NU</code> where <code>N</code> is a
+positive decimal integer specifies the maximum number of characters to read.  If not
+specified, the default is 2. Leading zeroes are permitted but not required.</td>
+</tr>
+
+<tr>
+<td><code>%V</code></td>
+<td>The ISO week-based week number as a decimal number.  The modified command
+<code>%NV</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 2. Leading zeroes are
+permitted but not required.</td>
+</tr>
+
+<tr>
+<td><code>%w</code></td>
+<td>The weekday as a decimal number (0-6), where Sunday is 0.  The modified command
+<code>%Nw</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 1. Leading zeroes are
+permitted but not required.  The modified command <code>%Ou</code> interprets the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%W</code></td>
+<td>The week number of the year as a decimal number.  The first Monday of the year is the
+first day of week <code>01</code>.  Days of the same year prior to that are in week
+<code>00</code>.  The modified command <code>%NW</code> where <code>N</code> is a positive
+decimal integer specifies the maximum number of characters to read.  If not specified, the
+default is 2. Leading zeroes are permitted but not required.</td>
+</tr>
+
+<tr>
+<td><code>%x</code></td>
+<td>The locale's date representation.  The modified command <code>%Ex</code>
+produces the locale's alternate date representation.</td>
+</tr>
+
+<tr>
+<td><code>%X</code></td>
+<td>The locale's time representation.  The modified command <code>%Ex</code>
+produces the locale's alternate time representation.</td>
+</tr>
+
+<tr>
+<td><code>%y</code></td>
+<td>The last two decimal digits of the year.  The modified command <code>%Ny</code> where
+<code>N</code> is a positive decimal integer specifies the maximum number of characters to
+read.  If not specified, the default is 2. Leading zeroes are permitted but not required.
+The modified commands <code>%Ey</code> and <code>%Oy</code> interpret the locale's
+alternative representation.</td>
+</tr>
+
+<tr>
+<td><code>%Y</code></td>
+<td>The year as a decimal number.  The modified command <code>%NY</code> where
+<code>N</code> is a positive decimal integer specifies the maximum number of characters to
+read.  If not specified, the default is 4. Leading zeroes are permitted but not required.
+The modified command <code>%EY</code> interprets the locale's alternative
+representation.</td>
+</tr>
+
+<tr>
+<td><code>%z</code></td>
+<td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
+4 hours 30 minutes behind UTC. The modified commands <code>%Ez</code> and <code>%Ez</code>
+parse a <code>:</code> between the hours and minutes and leading zeroes on the hour field
+are optional: <code>-4:30</code>.</td>
+</tr>
+
+<tr>
+<td><code>%Z</code></td>
+<td>The time zone abbreviation.  A single word is read as specified by the extraction
+operator for <code>std::basic_string</code>.</td>
+</tr>
+
+<tr>
+<td><code>%%</code></td>
+<td>A <code>%</code> character is extracted.</td>
+</tr>
+
+</table>
+</blockquote>
+
+<a name="parse"></a><h3><code>parse</code></h3>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits, class Alloc&gt;
+<i>unspecified</i>
+parse(const std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; format, Parsable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format.c_str(), tp)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format.c_str(), tp)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits, class Alloc&gt;
+<i>unspecified</i>
+parse(const std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; format, Parsable&amp; tp,
+      std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; abbrev);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format.c_str(), tp, &amp;abbrev)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format.c_str(), tp, &amp;abbrev)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits, class Alloc&gt;
+<i>unspecified</i>
+parse(const std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; format, Parsable&amp; tp,
+      std::chrono::minutes&amp; offset);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format.c_str(), tp, nullptr, &amp;offset)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format.c_str(), tp, nullptr, &amp;offset)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits&gt;
+<i>unspecified</i>
+parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, Parsable&amp; tp,
+      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format.c_str(), tp, &amp;abbrev, &amp;offset)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format.c_str(), tp, &amp;abbrev, &amp;offset)</code>.
+</p>
+</blockquote>
+
+<pre>
+// const CharT* formats
+
+template &lt;class Parsable, class CharT&gt;
+<i>unspecified</i>
+parse(const CharT* format, Parsable&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format, tp)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format, tp)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits, class Alloc&gt;
+<i>unspecified</i>
+parse(const CharT* format, Parsable&amp; tp, std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; abbrev);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format, tp, &amp;abbrev)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format, tp, &amp;abbrev)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT&gt;
+<i>unspecified</i>
+parse(const CharT* format, Parsable&amp; tp, std::chrono::minutes&amp; offset);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format, tp, nullptr, &amp;offset)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format, tp, nullptr, &amp;offset)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Parsable, class CharT, class Traits, class Alloc&gt;
+<i>unspecified</i>
+parse(const CharT* format, Parsable&amp; tp,
+      std::basic_string&lt;CharT, Traits, Alloc&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>from_stream(std::declval&lt;std::basic_istream&lt;CharT, Traits&gt;&amp;&gt;(), format, tp, &amp;abbrev, &amp;offset)</code>
+is valid
+</p>
+<p>
+<i>Returns:</i> A <code>basic_istream&lt;CharT, Traits&gt;</code> manipulator that on
+extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
+<code>from_stream(is, format, tp, &amp;abbrev, &amp;offset)</code>.
 </p>
 </blockquote>
 

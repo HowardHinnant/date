@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-03-25<br/>
+2017-04-01<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -57,10 +57,6 @@
     <li><a href="#time_zone"><code>time_zone</code></a></li>
     <li><a href="#zoned_time"><code>zoned_time</code></a></li>
     <li><a href="#make_zoned"><code>make_zoned</code></a></li>
-    <li><a href="#to_stream"><code>to_stream</code></a></li>
-    <li><a href="#format"><code>format</code></a></li>
-    <li><a href="#from_stream"><code>from_stream</code></a></li>
-    <li><a href="#parse"><code>parse</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
     <li><a href="#tai_clock"><code>tai_clock</code></a></li>
     <li><a href="#gps_clock"><code>gps_clock</code></a></li>
@@ -529,7 +525,7 @@ zone, and no <code>clock::now()</code>.  It is the <code>void*</code> of
 </p></li>
 
 <li><p>
-<code>time_zone</code>:  This represents a specific geographical area, and all 
+<code>time_zone</code>:  This represents a specific geographical area, and all
 time zone related information for this area over all time.  This includes a
 name for the area, and for any specific point in time, the UTC offset, the
 abbreviation, and additional information.
@@ -1513,7 +1509,7 @@ useful for debugging this library.
 <code>time_point</code> with precision <code>Duration</code>.  If <code>seconds</code>
 is not implicitly convertible to <code>Duration</code>, the instantiation is ill-formed.
 [<i>Note:</i> There exist <code>time_zone</code>s with UTC offsets that require a
-precision of <code>seconds</code>. <i>&mdash; end note:</i>] 
+precision of <code>seconds</code>. <i>&mdash; end note:</i>]
 </p>
 
 <pre>
@@ -1573,6 +1569,15 @@ operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duratio
 template &lt;class Duration1, class Duration2&gt;
 bool
 operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+
+template &lt;class CharT, class Traits, class Duration&gt;
+std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t)
+
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const zoned_time&lt;Duration&gt;&amp; tp);
 </pre>
 
 <p>
@@ -1879,11 +1884,25 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T %Z"
-and the value returned from <code>t.get_local_time()</code>.
+<i>Effects:</i> Calls <code>to_stream(os, "%F %T %Z", t)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const zoned_time&lt;Duration&gt;&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Constructs a copy of the <code>sys_info</code> object by calling
+<code>tp.get_info()</code> (stored in a local named <code>info</code> for example).
+Then calls <code>to_stream(os, fmt, tp.get_local_time(), &amp;info.abbrev, &amp;info.offset)</code>.
 </p>
 </blockquote>
 
@@ -2024,438 +2043,6 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 
 </blockquote>
 
-<a name="to_stream"></a><h3><code>to_stream</code></h3>
-<blockquote>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const year&amp; y);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const month&amp; m);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const day&amp; d);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const weekday&amp; wd);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const year_month&amp; ym);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const month_day&amp; md);
-</pre>
-
-
-<pre>
-template &lt;class CharT, class Traits, , class Rep, class Period&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, , class Rep, class Period&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const year_month_day&amp; ymd);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const local_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const sys_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const zoned_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const utc_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const tai_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-void
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const gps_time&lt;Duration&gt;&amp; tp);
-</pre>
-
-<blockquote>
-<p>
-These are lower-level functions with respect to <code>format</code>.  These functions
-will <i>format</i> directly to a <i>stream</i>.  If you use these you will not be able
-to align your formatted time stamp within a <code>width</code> respecting the stream's
-<code>adjustfield</code>.  But in forgoing that utility you may realize some performance
-gains over <code>format</code> as nothing in the implementation of <code>to_stream</code>
-creates temporary strings or streams to format into.
-</p>
-</blockquote>
-
-</blockquote>
-
-<a name="format"></a><h3><code>format</code></h3>
-<blockquote>
-<pre>
-template &lt;class CharT, class Streamable&gt;
-std::basic_string&lt;CharT&gt;
-format(const std::locale&amp; loc, const CharT* fmt, const Streamable&amp; tp);
-
-template &lt;class CharT, class Streamable&gt;
-std::basic_string&lt;CharT&gt;
-format(const CharT* fmt, const Streamable&amp; tp);
-
-template &lt;class CharT, class Traits, class Streamable&gt;
-std::basic_string&lt;CharT&gt;
-format(const std::locale&amp; loc, const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const Streamable&amp; tp);
-
-template &lt;class CharT, class Traits, class Streamable&gt;
-std::basic_string&lt;CharT&gt;
-format(const std::basic_string&lt;CharT, Traits&gt;&amp; fmt, const Streamable&amp; tp);
-</pre>
-<blockquote>
-<p>
-<i>Remarks:</i>  These functions do not participate in overload resolution unless
-<code>Streamable</code> has a <code>to_stream</code> overload of the form described in the
-previous section.
-</p>
-<p>
-<i>Effects:</i>  These functions create a formatted time stamp using the
-arguments, returning the result in a <code>std::string</code>.
-</p>
-<blockquote>
-<p>
-If a <code>locale</code> is passed in, then that <code>locale</code> is used for
-any formatting that requires a <code>locale</code>.  If no <code>locale</code>
-is passed in, then if a <code>locale</code> is required for formatting, a
-default constructed <code>locale</code> will be used (which makes a copy of the
-global <code>locale</code>).
-</p>
-<p>
-The <code>format</code> string follows the rules as specified for
-<code>std::time_put</code> with the following exceptions:
-</p>
-<ul>
-<li><p>
-If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string
-and the argument <code>tp</code> has precision that can not be exactly represented
-with seconds, then seconds
-are formatted as a decimal floating point number with a fixed format and a
-precision matching that of the precision of <code>tp</code> (or to a microseconds precision
-if the conversion to floating point decimal seconds can not be made within 18 digits).
-The character for the decimal point is localized according to the <code>locale</code>.
-</p></li>
-
-<li><p>
-If <code>%z</code> appears in the format, the behavior depends on the type of
-<code>tp</code>:
-</p>
-<ul>
-<li>
-<code>local_time</code>: An exception of type <code>std::runtime_error</code> is thrown.
-</li>
-<li>
-<code>zoned_time</code>: The offset associated with <code>tp.get_time_zone()</code> is
-used.
-</li>
-<li>
-<code>sys_time</code>: <code>"+0000"</code> is used.
-</li>
-</ul>
-<p>
-If <code>%z</code> is modified by either <code>E</code> or <code>O</code>
-(that is, <code>%Ez</code> or <code>%Oz</code>), then a colon is inserted
-between the hours and minutes: <code>+00:00</code>.
-</p>
-</li>
-
-<li><p>
-If <code>%Z</code> appears in the format, the behavior depends on the type of
-<code>tp</code>:
-</p>
-<ul>
-<li>
-<code>local_time</code>: An exception of type <code>std::runtime_error</code> is thrown.
-</li>
-<li>
-<code>zoned_time</code>: The abbreviation associated with
-<code>tp.get_time_zone()</code> is used.
-</li>
-<li>
-<code>sys_time</code>: <code>"UTC"</code> is used.
-</li>
-</ul>
-</li>
-
-</ul>
-
-<p>
-For the overloads taking a <code>zoned_time</code> it is the value returned by
-<code>tz.get_local_time()</code> that is formatted.
-</p>
-</blockquote>
-
-<p>
-<i>Returns:</i> The formatted string.
-</p>
-
-</blockquote>
-</blockquote>
-
-<a name="from_stream"></a><h3><code>from_stream</code></h3>
-<blockquote>
-
-<pre>
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
-            std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            year_month_day&amp; ymd, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Duration, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            sys_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Duration, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            local_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Rep, class Period, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            std::chrono::duration&lt;Rep, Period&gt;&amp; d,
-            std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Duration, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            utc_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Duration, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            tai_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-
-template &lt;class Duration, class CharT, class Traits&gt;
-void
-from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
-            gps_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
-            std::chrono::minutes* offset = nullptr);
-</pre>
-
-<blockquote>
-<p>
-<i>Effects:</i> These functions attempt to parse an object out of
-<code>is</code> according to <code>fmt</code>.  If the parse is unsuccessful,
-calls <code>is.setstate(std::ios::failbit)</code> which may throw an exception.
-<code>tp</code>, <code>*abbrev</code>, and <code>*offset</code> are altered only in
-the event of a successful parse, for the latter two, only if they are not equal to
-<code>nullptr</code>.
-</p>
-<blockquote>
-<p>
-The <code>format</code> string follows the rules as specified for <code>std::time_get</code>
-with the following exceptions:
-</p>
-<ul>
-<li><p>
-If <code>%F</code> appears in the <code>format</code> string it is interpreted as
-<code>%Y-%m-%d</code>.
-</p></li>
-
-<li><p>
-If <code>%S</code> or <code>%T</code> appears in the <code>format</code> string and the
-argument <code>tp</code> has precision that is not implicitly convertible to seconds, then
-the seconds are parsed as a <code>double</code>, and if that parse is successful
-contributes to the time stamp as if
-<code>round&lt;Duration&gt;(duration&lt;double&gt;{s})</code> where <code>s</code> is a
-local variable holding the parsed <code>double</code>.
-</p></li>
-
-<li><p>
-If <code>%z</code> appears in the <code>format</code> string and an offset is
-successfully parsed, the overloads taking <code>sys_time</code>, <code>utc_time</code>,
-<code>tai_time</code> and <code>gps_time</code> interpret the
-parsed time as a local time and subtracts the offset prior to assigning the
-value to <code>tp</code>, resulting in a value of <code>tp</code> representing a
-UTC timestamp.  The remaining overloads require a valid
-parse of the offset, but then ignore the offset in assigning a value to
-<code>tp</code>.  If <code>offset</code> is not equal to <code>nullptr</code>,
-on successful parse <code>*offset</code> will hold the value represented by
-<code>%z</code> if present, or will be assigned <code>0min</code> if
-<code>%z</code> is not present.
-</p>
-<p>
-The format of the offset is <code>+/-hhmm</code>.  The leading plus or minus
-sign is required.  If the format string was modified (i.e. <code>%Ez</code>
-or <code>%Oz</code>), a colon is required between hours and minutes, and the leading
-hours digit is optional:
-<code>+/-[h]h:mm</code>.
-</p>
-</li>
-
-<li><p>
-If <code>%Z</code> appears in the <code>format</code> string then an
-abbreviation is required in that position for a successful parse.  The
-abbreviation will be parsed as a <code>std::basic_string&lt;CharT, Traits&gt;</code>
-(delimited by white
-space).  The parsed abbreviation does not have to be a valid time zone
-abbreviation, and has no impact on the value parsed into <code>tp</code>.  If
- <code>abbrev</code> is not equal to <code>nullptr</code> one can discover what
-that parsed abbreviation is.  On successful parse, and if <code>abbrev != nullptr</code>,
-<code>*abbrev</code> will be
-assigned the value represented by <code>%Z</code> if present, or assigned the
-empty string if <code>%Z</code> is not present.
-</p></li>
-</ul>
-</blockquote>
-<p>
-<i>Note:</i>  There is no unique mapping from a time zone abbreviation to a
-<code>time_zone</code>.  But given a time zone abbreviation and a <code>sys_time</code>
-or <code>local_time</code>, one could make a list of potential <code>time_zone</code>s.
-Given a UTC offset, one might even narrow that list down further.
-</p>
-</blockquote>
-</blockquote>
-
-<a name="parse"></a><h3><code>parse</code></h3>
-<blockquote>
-<p>
-Each of the functions below return a <i>manipulator</i> which can be used to extract the
-desired information from a stream.  These functions do not participate in overload
-resolution unless <code>Parsable</code> has a corresponding <code>from_stream</code>
-overload.
-</p>
-
-<pre>
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, Parsable&amp; tp);
-
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, Parsable&amp; tp,
-      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
-
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, Parsable&amp; tp,
-      std::chrono::minutes&amp; offset);
-
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const std::basic_string&lt;CharT, Traits&gt;&amp; format, Parsable&amp; tp,
-      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
-
-// const CharT* formats
-
-template &lt;class Parsable, class CharT&gt;
-<i>unspecified</i>
-parse(const CharT* format, Parsable&amp; tp);
-
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const CharT* format, Parsable&amp; tp, std::basic_string&lt;CharT, Traits&gt;&amp; abbrev);
-
-template &lt;class Parsable, class CharT&gt;
-<i>unspecified</i>
-parse(const CharT* format, Parsable&amp; tp, std::chrono::minutes&amp; offset);
-
-template &lt;class Parsable, class CharT, class Traits&gt;
-<i>unspecified</i>
-parse(const CharT* format, Parsable&amp; tp,
-      std::basic_string&lt;CharT, Traits&gt;&amp; abbrev, std::chrono::minutes&amp; offset);
-</pre>
-</blockquote>
-
 <a name="utc_clock"></a><h3><code>utc_clock</code></h3>
 <blockquote>
 <pre>
@@ -2561,12 +2148,50 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T".  This
-differs from streaming <code>sys_time</code> only by the use of <code>60</code> for the
-seconds specifier when the value represents an inserted leap second.
+<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const utc_time&lt;Duration&gt;&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>tp</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="date.html#to_stream_formatting"><code>to_stream</code> formatting flags</a>.
+Time points representing leap second insertions which format seconds will show
+<code>60</code> in the seconds field.
+If <code>%Z</code> is in the formatting string <code>"UTC"</code> will be used.
+If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration, class CharT, class Traits&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            utc_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>tp</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="date.html#from_stream_formatting"><code>from_stream</code> formatting flags</a>.
+If <code>%z</code> is present, the parsed offset will be subtracted from the parsed time.
+If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
 </p>
 </blockquote>
 
@@ -2667,17 +2292,48 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
-</p>
-<blockquote><pre>
-auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} -
-              (sys_days{1970_y/jan/1} - sys_days{1958_y/jan/1});
-</pre></blockquote>
-<p>
-And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
+<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const tai_time&lt;Duration&gt;&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>tp</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="date.html#to_stream_formatting"><code>to_stream</code> formatting flags</a>.
+If <code>%Z</code> is in the formatting string <code>"TAI"</code> will be used.
+If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration, class CharT, class Traits&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            tai_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>tp</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="date.html#from_stream_formatting"><code>from_stream</code> formatting flags</a>.
+If <code>%z</code> is present, the parsed offset will be subtracted from the parsed time.
+If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
 </p>
 </blockquote>
 
@@ -2777,17 +2433,48 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Creates a <code>sys_time</code> from <code>t</code> as if by:
-</p>
-<blockquote><pre>
-auto tp = sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} +
-              (sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1});
-</pre></blockquote>
-<p>
-And then streams that <code>sys_time</code>: <code>os &lt;&lt; tp</code>.
+<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Duration&gt;
+void
+to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
+          const gps_time&lt;Duration&gt;&amp; tp);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Inserts <code>tp</code> into <code>os</code> using the format
+string <code>fmt</code> as specified by the
+<a href="date.html#to_stream_formatting"><code>to_stream</code> formatting flags</a>.
+If <code>%Z</code> is in the formatting string <code>"GPS"</code> will be used.
+If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration, class CharT, class Traits&gt;
+void
+from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
+            gps_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
+            std::chrono::minutes* offset = nullptr);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Extracts <code>tp</code> from <code>is</code> using the format string
+<code>fmt</code> as specified by the
+<a href="date.html#from_stream_formatting"><code>from_stream</code> formatting flags</a>.
+If <code>%z</code> is present, the parsed offset will be subtracted from the parsed time.
+If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
+<code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
+<code>%z</code> (if present) will be placed in <code>*offset</code>.
 </p>
 </blockquote>
 
@@ -2810,7 +2497,7 @@ int
 main()
 {
     using namespace date;
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     auto start = to_utc_time(sys_days{2015_y/jul/1} - 500ms);
     auto end = start + 2s;
     for (auto utc = start; utc &lt; end; utc += 100ms)
@@ -2818,10 +2505,10 @@ main()
         auto sys = to_sys_time(utc);
         auto tai = to_tai_time(utc);
         auto gps = to_gps_time(utc);
-        std::cout &lt;&lt; sys &lt;&lt; " SYS  ==  " 
-                  &lt;&lt; utc &lt;&lt; " UTC  ==  "
-                  &lt;&lt; tai &lt;&lt; " TAI  ==  "
-                  &lt;&lt; gps &lt;&lt; " GPS\n";
+        std::cout &lt;&lt; format("%F %T SYS  ==  ", sys)
+                  &lt;&lt; format("%F %T %Z  ==  ", utc)
+                  &lt;&lt; format("%F %T %Z  ==  ", tai)
+                  &lt;&lt; format("%F %T %Z\n", gps);
     }
 }
 </pre>
@@ -2865,7 +2552,7 @@ class leap
 public:
     leap(const leap&amp;)            = default;
     leap&amp; operator=(const leap&amp;) = default;
-    
+
     // Undocumented constructors
 
     sys_seconds date() const;
