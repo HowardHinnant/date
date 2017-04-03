@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-04-01<br/>
+2017-04-02<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -8109,11 +8109,14 @@ produces the locale's alternate time representation.</td>
 
 <tr>
 <td><code>%y</code></td>
-<td>The last two decimal digits of the year.  The modified command <code>%Ny</code> where
-<code>N</code> is a positive decimal integer specifies the maximum number of characters to
-read.  If not specified, the default is 2. Leading zeroes are permitted but not required.
-The modified commands <code>%Ey</code> and <code>%Oy</code> interpret the locale's
-alternative representation.</td>
+<td>The last two decimal digits of the year.
+If the century is not otherwise specified (e.g. with <code>%C</code>), values in the range
+[69 - 99] are presumed to refer to the years [1969 - 1999], and values in the range [00 -
+68] are presumed to refer to the years [2000 - 2068]. The modified command
+<code>%Ny</code> where <code>N</code> is a positive decimal integer specifies the maximum
+number of characters to read.  If not specified, the default is 2. Leading zeroes are
+permitted but not required. The modified commands <code>%Ey</code> and <code>%Oy</code>
+interpret the locale's alternative representation.</td>
 </tr>
 
 <tr>
