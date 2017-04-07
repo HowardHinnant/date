@@ -3494,6 +3494,12 @@ public:
         return s_ + sub_s_;
     }
 
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        using namespace std::chrono;
+        return sub_s_ < std::chrono::seconds{1} && s_ < minutes{1};
+    }
+
     template <class CharT, class Traits>
     friend
     std::basic_ostream<CharT, Traits>&
@@ -3531,6 +3537,12 @@ public:
     CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
     CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
     CONSTCD14 precision to_duration() const NOEXCEPT {return s_;}
+
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        using namespace std::chrono;
+        return s_ < minutes{1};
+    }
 
     template <class CharT, class Traits>
     friend
@@ -3622,6 +3634,11 @@ protected:
     CONSTCD14 void make12() NOEXCEPT;
 
     CONSTCD14 std::chrono::hours to24hr() const;
+
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        return !neg_ && h_ < days{1};
+    }
 };
 
 CONSTCD14
@@ -3717,6 +3734,11 @@ public:
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
 
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        return base::in_conventional_range();
+    }
+
     template<class CharT, class Traits>
     friend
     std::basic_ostream<CharT, Traits>&
@@ -3794,6 +3816,11 @@ public:
 
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
+
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        return base::in_conventional_range() && m_ < std::chrono::hours{1};
+    }
 
     template<class CharT, class Traits>
     friend
@@ -3878,6 +3905,12 @@ public:
 
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
+
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        return base::in_conventional_range() && m_ < std::chrono::hours{1} &&
+                                                s_.in_conventional_range();
+    }
 
     template<class CharT, class Traits>
     friend
@@ -3982,6 +4015,12 @@ public:
 
     CONSTCD14 time_of_day_storage& make24() NOEXCEPT {base::make24(); return *this;}
     CONSTCD14 time_of_day_storage& make12() NOEXCEPT {base::make12(); return *this;}
+
+    CONSTCD11 bool in_conventional_range() const NOEXCEPT
+    {
+        return base::in_conventional_range() && m_ < std::chrono::hours{1} &&
+                                                s_.in_conventional_range();
+    }
 
     template<class CharT, class Traits>
     friend
@@ -6425,7 +6464,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
     from_stream(is, fmt, fds, abbrev, offptr);
-    if (!fds.ymd.ok())
+    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
         tp = sys_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration() - *offptr);
@@ -6442,7 +6481,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     using CT = typename common_type<Duration, seconds>::type;
     fields<CT> fds{};
     from_stream(is, fmt, fds, abbrev, offset);
-    if (!fds.ymd.ok())
+    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
         tp = local_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration());

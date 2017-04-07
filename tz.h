@@ -1119,6 +1119,35 @@ to_utc_time(const sys_time<Duration>& st)
     return utc_time<duration>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
 }
 
+// Return pair<is_leap_second, seconds{number_of_leap_seconds_since_1970}>
+// first is true if ut is during a leap second insertion, otherwise false.
+// If ut is during a leap second insertion, that leap second is included in the count
+template <class Duration>
+std::pair<bool, std::chrono::seconds>
+is_leap_second(date::utc_time<Duration> const& ut)
+{
+    using namespace date;
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto const& leaps = get_tzdb().leaps;
+    auto tp = sys_time<duration>{ut.time_since_epoch()};
+    auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
+    auto ds = seconds{lt-leaps.begin()};
+    tp -= ds;
+    auto ls = false;
+    if (lt > leaps.begin())
+    {
+        if (tp < lt[-1])
+        {
+            if (tp >= lt[-1].date() - seconds{1})
+                ls = true;
+            else
+                --ds;
+        }
+    }
+    return {ls, ds};
+}
+
 template <class Duration>
 inline
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -1127,19 +1156,10 @@ to_sys_time(const utc_time<Duration>& ut)
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     auto const& leaps = get_tzdb().leaps;
-    auto tp = sys_time<duration>{ut.time_since_epoch()};
-    if (tp >= leaps.front())
-    {
-        auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
-        tp -= seconds{lt-leaps.begin()};
-        if (tp < lt[-1])
-        {
-            if (tp >= lt[-1].date() - seconds{1})
-                tp = lt[-1].date() - duration{1};
-            else
-                tp += seconds{1};
-        }
-    }
+    auto ls = is_leap_second(ut);
+    auto tp = sys_time<duration>{ut.time_since_epoch() - ls.second};
+    if (ls.first)
+        tp = floor<seconds>(tp) + seconds{1} - duration{1};
     return tp;
 }
 
@@ -1162,26 +1182,14 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     const string abbrev("UTC");
     CONSTDATA seconds offset{0};
     auto const& leaps = get_tzdb().leaps;
-    auto tp = sys_time<CT>{t.time_since_epoch()};
     year_month_day ymd;
     time_of_day<CT> time;
-    seconds ls{0};
-    if (tp >= leaps.front())
-    {
-        auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
-        tp -= seconds{lt-leaps.begin()};
-        if (tp < lt[-1])
-        {
-            if (tp >= lt[-1].date() - seconds{1})
-                ls = seconds{1};
-            else
-                tp += seconds{1};
-        }
-    }
+    auto ls = is_leap_second(t);
+    auto tp = sys_time<CT>{t.time_since_epoch() - ls.second};
     auto const sd = floor<days>(tp);
     ymd = sd;
     time = make_time(tp - sd);
-    time.seconds() += ls;
+    time.seconds() += seconds{ls.first};
     fields<CT> fds{ymd, time};
     to_stream(os, fmt, fds, &abbrev, &offset);
 }
@@ -1211,13 +1219,18 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         is.setstate(ios::failbit);
     if (!is.fail())
     {
-        bool is_leap_second = fds.tod.seconds() == seconds{60};
-        if (is_leap_second)
+        bool is_60_sec = fds.tod.seconds() == seconds{60};
+        if (is_60_sec)
             fds.tod.seconds() -= seconds{1};
-        tp = to_utc_time(sys_days(fds.ymd) +
-                    duration_cast<Duration>(fds.tod.to_duration() - *offptr));
-        if (is_leap_second)
-            tp += seconds{1};
+        auto tmp = to_utc_time(sys_days(fds.ymd) + (fds.tod.to_duration() - *offptr));
+        if (is_60_sec)
+            tmp += seconds{1};
+        if (is_60_sec != is_leap_second(tmp).first || !fds.tod.in_conventional_range())
+        {
+            is.setstate(ios::failbit);
+            return;
+        }
+        tp = time_point_cast<Duration>(tmp);
     }
 }
 
@@ -1319,7 +1332,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
     from_stream(is, fmt, fds, abbrev, offptr);
-    if (!fds.ymd.ok())
+    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
         tp = tai_time<Duration>{duration_cast<Duration>(
@@ -1425,7 +1438,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
     from_stream(is, fmt, fds, abbrev, offptr);
-    if (!fds.ymd.ok())
+    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
         tp = gps_time<Duration>{duration_cast<Duration>(
