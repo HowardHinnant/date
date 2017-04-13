@@ -129,6 +129,16 @@ operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>&
                                               string_literal<CharT, N2>{y}};
 }
 
+template <class CharT, class Traits, class Alloc, std::size_t N>
+inline
+std::basic_string<CharT, Traits, Alloc>
+operator+(std::basic_string<CharT, Traits, Alloc> x,
+          const string_literal<CharT, N>& y) noexcept
+{
+    x.append(y.data(), y.size());
+    return x;
+}
+
 template <class CharT, std::size_t N>
 constexpr
 inline
@@ -658,9 +668,8 @@ std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os,
            const std::chrono::duration<Rep, Period>& d)
 {
-    using namespace std::chrono;
-    return os << d.count()
-              << detail::get_units<CharT>(typename Period::type{});
+    using namespace std;
+    return os << to_string(d.count()) + detail::get_units<CharT>(typename Period::type{});
 }
 
 }  // namespace date
