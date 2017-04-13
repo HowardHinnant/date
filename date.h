@@ -6134,7 +6134,32 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        is >> temp_abbrev;
+                    {
+                        if (!temp_abbrev.empty())
+                            is.setstate(ios::failbit);
+                        else
+                        {
+                            while (is.rdstate() == std::ios::goodbit)
+                            {
+                                auto i = is.rdbuf()->sgetc();
+                                if (Traits::eq_int_type(i, Traits::eof()))
+                                {
+                                    is.setstate(ios::eofbit);
+                                    break;
+                                }
+                                auto C = Traits::to_char_type(i);
+                                auto c = static_cast<char>(C);
+                                // is c a valid time zone name or abbreviation character?
+                                if (!(CharT{1} < C && C < CharT{127}) || !(isalnum(c) ||
+                                        c == '_' || c == '/' || c == '-' || c == '+'))
+                                    break;
+                                temp_abbrev.push_back(c);
+                                is.rdbuf()->sbumpc();
+                            }
+                            if (temp_abbrev.empty())
+                                is.setstate(ios::failbit);
+                        }
+                    }
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
