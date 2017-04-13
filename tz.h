@@ -1155,7 +1155,6 @@ to_sys_time(const utc_time<Duration>& ut)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
-    auto const& leaps = get_tzdb().leaps;
     auto ls = is_leap_second(ut);
     auto tp = sys_time<duration>{ut.time_since_epoch() - ls.second};
     if (ls.first)
@@ -1181,14 +1180,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     using CT = typename common_type<Duration, seconds>::type;
     const string abbrev("UTC");
     CONSTDATA seconds offset{0};
-    auto const& leaps = get_tzdb().leaps;
-    year_month_day ymd;
-    time_of_day<CT> time;
     auto ls = is_leap_second(t);
     auto tp = sys_time<CT>{t.time_since_epoch() - ls.second};
     auto const sd = floor<days>(tp);
-    ymd = sd;
-    time = make_time(tp - sd);
+    year_month_day ymd = sd;
+    auto time = make_time(tp - sd);
     time.seconds() += seconds{ls.first};
     fields<CT> fds{ymd, time};
     to_stream(os, fmt, fds, &abbrev, &offset);
