@@ -6177,6 +6177,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             else
                 read(is, CharT{'%'}, width, modified);
         }
+        if (is.rdstate() != ios::goodbit && *fmt != CharT{} && !is.fail())
+            is.setstate(ios::failbit);
         if (!is.fail())
         {
             if (y != not_a_2digit_year)
