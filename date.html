@@ -1808,7 +1808,9 @@ If <code>%z</code> is present, the parsed offset will be subtracted from the par
 If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
-<code>%z</code> (if present) will be placed in <code>*offset</code>.
+<code>%z</code> (if present) will be placed in <code>*offset</code>.  If an invalid date
+is parsed, or a time of day which is outside of the conventional bounds, <code>failbit</code>
+will be set and <code>tp</code> will not be altered.
 </p>
 </blockquote>
 
@@ -1907,7 +1909,9 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
 If <code>abbrev</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
-<code>%z</code> (if present) will be placed in <code>*offset</code>.
+<code>%z</code> (if present) will be placed in <code>*offset</code>.  If an invalid date
+is parsed, or a time of day which is outside of the conventional bounds, <code>failbit</code>
+will be set and <code>tp</code> will not be altered.
 </p>
 </blockquote>
 
