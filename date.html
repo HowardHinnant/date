@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-04-02<br/>
+2017-04-13<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -8142,8 +8142,10 @@ are optional: <code>-4:30</code>.</td>
 
 <tr>
 <td><code>%Z</code></td>
-<td>The time zone abbreviation.  A single word is read as specified by the extraction
-operator for <code>std::basic_string</code>.</td>
+<td>The time zone abbreviation or name.  A single word is parsed.  This word can only
+contain characters from the <i>basic source character set</i> ([lex.charset] in the
+C++ standard) that are alphanumeric, or one of <code>'_'</code>, <code>'/'</code>,
+<code>'-'</code> or <code>'+'</code>.</td>
 </tr>
 
 <tr>
