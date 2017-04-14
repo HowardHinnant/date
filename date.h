@@ -35,6 +35,7 @@
 #if !(__cplusplus >= 201402)
 #  include <cmath>
 #endif
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
@@ -6652,6 +6653,677 @@ parse(const CharT* format, Parsable& tp,
                 parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, &abbrev, &offset})
 {
     return {format, tp, &abbrev, &offset};
+}
+
+// duration streaming
+
+namespace detail
+{
+
+#if __cplusplus >= 201402
+
+template <class CharT, std::size_t N>
+class string_literal
+{
+    CharT p_[N];
+
+public:
+    using const_iterator = const CharT*;
+
+    string_literal(string_literal const&) = default;
+    string_literal& operator=(string_literal const&) = delete;
+
+    template <std::size_t N1 = 2,
+              class = std::enable_if_t<N1 == N>>
+    CONSTCD14 string_literal(CharT c) NOEXCEPT
+        : p_{c}
+    {
+    }
+
+    CONSTCD14 string_literal(const CharT(&a)[N]) NOEXCEPT
+        : p_{}
+    {
+        for (std::size_t i = 0; i < N; ++i)
+            p_[i] = a[i];
+    }
+
+    template <class U = CharT, class = std::enable_if_t<1 < sizeof(U)>>
+    CONSTCD14 string_literal(const char(&a)[N]) NOEXCEPT
+        : p_{}
+    {
+        for (std::size_t i = 0; i < N; ++i)
+            p_[i] = a[i];
+    }
+
+    template <class CharT2, class = std::enable_if_t<!std::is_same<CharT2, CharT>{}>>
+    CONSTCD14 string_literal(string_literal<CharT2, N> const& a) NOEXCEPT
+        : p_{}
+    {
+        for (std::size_t i = 0; i < N; ++i)
+            p_[i] = a[i];
+    }
+
+    template <std::size_t N1, std::size_t N2,
+              class = std::enable_if_t<N1 + N2 - 1 == N>>
+    CONSTCD14 string_literal(const string_literal<CharT, N1>& x,
+                             const string_literal<CharT, N2>& y) NOEXCEPT
+        : p_{}
+    {
+        std::size_t i = 0;
+        for (; i < N1-1; ++i)
+            p_[i] = x[i];
+        for (std::size_t j = 0; j < N2; ++j, ++i)
+            p_[i] = y[j];
+    }
+
+    CONSTCD14 const CharT* data() const NOEXCEPT {return p_;}
+    CONSTCD14 std::size_t size() const NOEXCEPT {return N-1;}
+
+    CONSTCD14 const_iterator begin() const NOEXCEPT {return p_;}
+    CONSTCD14 const_iterator end()   const NOEXCEPT {return p_ + N-1;}
+
+    CONSTCD14 CharT const& operator[](std::size_t n) const NOEXCEPT
+    {
+        return p_[n];
+    }
+
+    template <class Traits>
+    friend
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const string_literal& s)
+    {
+        return os << s.p_;
+    }
+};
+
+template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
+CONSTCD14
+inline
+string_literal<std::conditional_t<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>,
+               N1 + N2 - 1>
+operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
+{
+    using CharT = std::conditional_t<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>;
+    return string_literal<CharT, N1 + N2 - 1>{string_literal<CharT, N1>{x},
+                                              string_literal<CharT, N2>{y}};
+}
+
+template <class CharT, class Traits, class Alloc, std::size_t N>
+inline
+std::basic_string<CharT, Traits, Alloc>
+operator+(std::basic_string<CharT, Traits, Alloc> x,
+          const string_literal<CharT, N>& y) NOEXCEPT
+{
+    x.append(y.data(), y.size());
+    return x;
+}
+
+template <class CharT, std::size_t N>
+CONSTCD14
+inline
+string_literal<CharT, N>
+msl(const CharT(&a)[N]) NOEXCEPT
+{
+    return string_literal<CharT, N>{a};
+}
+
+template <class CharT,
+          class = std::enable_if_t<std::is_same<CharT, char>{} ||
+                                   std::is_same<CharT, wchar_t>{} ||
+                                   std::is_same<CharT, char16_t>{} ||
+                                   std::is_same<CharT, char32_t>{}>>
+CONSTCD14
+inline
+string_literal<CharT, 2>
+msl(CharT c) NOEXCEPT
+{
+    return string_literal<CharT, 2>{c};
+}
+
+CONSTCD14
+std::size_t
+to_string_len(std::intmax_t i)
+{
+    std::size_t r = 0;
+    do
+    {
+        i /= 10;
+        ++r;
+    } while (i > 0);
+    return r;
+}
+
+template <std::intmax_t N>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    N < 10,
+    string_literal<char, to_string_len(N)+1>
+>
+msl() NOEXCEPT
+{
+    return msl(char(N % 10 + '0'));
+}
+
+template <std::intmax_t N>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    10 <= N,
+    string_literal<char, to_string_len(N)+1>
+>
+msl() NOEXCEPT
+{
+    return msl<N/10>() + msl(char(N % 10 + '0'));
+}
+
+template <class CharT, std::intmax_t N, std::intmax_t D>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    std::ratio<N, D>::type::den != 1,
+    string_literal<CharT, to_string_len(std::ratio<N, D>::type::num) +
+                          to_string_len(std::ratio<N, D>::type::den) + 4>
+>
+msl(std::ratio<N, D>) NOEXCEPT
+{
+    using R = typename std::ratio<N, D>::type;
+    return msl(CharT{'['}) + msl<R::num>() + msl(CharT{'/'}) +
+                             msl<R::den>() + msl(CharT{']'});
+}
+
+template <class CharT, std::intmax_t N, std::intmax_t D>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    std::ratio<N, D>::type::den == 1,
+    string_literal<CharT, to_string_len(std::ratio<N, D>::type::num) + 3>
+>
+msl(std::ratio<N, D>) NOEXCEPT
+{
+    using R = typename std::ratio<N, D>::type;
+    return msl(CharT{'['}) + msl<R::num>() + msl(CharT{']'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::atto) NOEXCEPT
+{
+    return msl(CharT{'a'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::femto) NOEXCEPT
+{
+    return msl(CharT{'f'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::pico) NOEXCEPT
+{
+    return msl(CharT{'p'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::nano) NOEXCEPT
+{
+    return msl(CharT{'n'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    std::is_same<CharT, char>{},
+    string_literal<char, 3>
+>
+msl(std::micro) NOEXCEPT
+{
+    return string_literal<char, 3>{"\xC2\xB5"};
+}
+
+template <class CharT>
+CONSTCD14
+inline
+std::enable_if_t
+<
+    !std::is_same<CharT, char>{},
+    string_literal<CharT, 2>
+>
+msl(std::micro) NOEXCEPT
+{
+    return string_literal<CharT, 2>{CharT{static_cast<unsigned char>('\xB5')}};
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::milli) NOEXCEPT
+{
+    return msl(CharT{'m'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::centi) NOEXCEPT
+{
+    return msl(CharT{'c'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::deci) NOEXCEPT
+{
+    return msl(CharT{'d'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::deca) NOEXCEPT
+{
+    return string_literal<CharT, 3>{"da"};
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::hecto) NOEXCEPT
+{
+    return msl(CharT{'h'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::kilo) NOEXCEPT
+{
+    return msl(CharT{'k'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::mega) NOEXCEPT
+{
+    return msl(CharT{'M'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::giga) NOEXCEPT
+{
+    return msl(CharT{'G'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::tera) NOEXCEPT
+{
+    return msl(CharT{'T'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::peta) NOEXCEPT
+{
+    return msl(CharT{'P'});
+}
+
+template <class CharT>
+CONSTCD14
+inline
+auto
+msl(std::exa) NOEXCEPT
+{
+    return msl(CharT{'E'});
+}
+
+template <class CharT, class Period>
+CONSTCD14
+auto
+get_units(Period p)
+{
+    return msl<CharT>(p) + string_literal<CharT, 2>{"s"};
+}
+
+template <class CharT>
+CONSTCD14
+auto
+get_units(std::ratio<1>)
+{
+    return string_literal<CharT, 2>{"s"};
+}
+
+template <class CharT>
+CONSTCD14
+auto
+get_units(std::ratio<60>)
+{
+    return string_literal<CharT, 4>{"min"};
+}
+
+template <class CharT>
+CONSTCD14
+auto
+get_units(std::ratio<3600>)
+{
+    return string_literal<CharT, 2>{"h"};
+}
+
+#else  //  __cplusplus < 201402
+
+inline
+std::string
+to_string(std::uint64_t x)
+{
+    return std::to_string(x);
+}
+
+template <class CharT>
+std::basic_string<CharT>
+to_string(std::uint64_t x)
+{
+    auto y = std::to_string(x);
+    return std::basic_string<CharT>(y.begin(), y.end());
+}
+
+template <class CharT, std::intmax_t N, std::intmax_t D>
+inline
+typename std::enable_if
+<
+    std::ratio<N, D>::type::den != 1,
+    std::basic_string<CharT>
+>::type
+msl(std::ratio<N, D>)
+{
+    using R = typename std::ratio<N, D>::type;
+    return std::basic_string<CharT>(1, '[') + to_string<CharT>(R::num) + CharT{'/'} +
+                                              to_string<CharT>(R::den) + CharT{']'};
+}
+
+template <class CharT, std::intmax_t N, std::intmax_t D>
+inline
+typename std::enable_if
+<
+    std::ratio<N, D>::type::den == 1,
+    std::basic_string<CharT>
+>::type
+msl(std::ratio<N, D>)
+{
+    using R = typename std::ratio<N, D>::type;
+    return std::basic_string<CharT>(1, '[') + to_string<CharT>(R::num) + CharT{']'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::atto)
+{
+    return {'a'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::femto)
+{
+    return {'f'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::pico)
+{
+    return {'p'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::nano)
+{
+    return {'n'};
+}
+
+template <class CharT>
+inline
+typename std::enable_if
+<
+    std::is_same<CharT, char>::value,
+    std::string
+>::type
+msl(std::micro)
+{
+    return "\xC2\xB5";
+}
+
+template <class CharT>
+inline
+typename std::enable_if
+<
+    !std::is_same<CharT, char>::value,
+    std::basic_string<CharT>
+>::type
+msl(std::micro)
+{
+    return {CharT(static_cast<unsigned char>('\xB5'))};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::milli)
+{
+    return {'m'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::centi)
+{
+    return {'c'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::deci)
+{
+    return {'d'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::deca)
+{
+    return {'d', 'a'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::hecto)
+{
+    return {'h'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::kilo)
+{
+    return {'k'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::mega)
+{
+    return {'M'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::giga)
+{
+    return {'G'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::tera)
+{
+    return {'T'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::peta)
+{
+    return {'P'};
+}
+
+template <class CharT>
+inline
+std::basic_string<CharT>
+msl(std::exa)
+{
+    return {'E'};
+}
+
+template <class CharT, class Period>
+std::basic_string<CharT>
+get_units(Period p)
+{
+    return msl<CharT>(p) + CharT{'s'};
+}
+
+template <class CharT>
+std::basic_string<CharT>
+get_units(std::ratio<1>)
+{
+    return {'s'};
+}
+
+template <class CharT>
+std::basic_string<CharT>
+get_units(std::ratio<60>)
+{
+    return {'m', 'i', 'n'};
+}
+
+template <class CharT>
+std::basic_string<CharT>
+get_units(std::ratio<3600>)
+{
+    return {'h'};
+}
+
+#endif  //  __cplusplus >= 201402
+
+template <class CharT, class Traits = std::char_traits<CharT>>
+struct make_string;
+
+template <>
+struct make_string<char>
+{
+    template <class Rep>
+    static
+    std::string
+    from(Rep n)
+    {
+        return std::to_string(n);
+    }
+};
+
+template <class Traits>
+struct make_string<char, Traits>
+{
+    template <class Rep>
+    static
+    std::basic_string<char, Traits>
+    from(Rep n)
+    {
+        auto s = std::to_string(n);
+        return std::basic_string<char, Traits>(s.begin(), s.end());
+    }
+};
+
+template <>
+struct make_string<wchar_t>
+{
+    template <class Rep>
+    static
+    std::wstring
+    from(Rep n)
+    {
+        return std::to_wstring(n);
+    }
+};
+
+template <class Traits>
+struct make_string<wchar_t, Traits>
+{
+    template <class Rep>
+    static
+    std::wstring
+    from(Rep n)
+    {
+        auto s = std::to_wstring(n);
+        return std::basic_string<wchar_t, Traits>(s.begin(), s.end());
+    }
+};
+
+}  // namespace detail
+
+template <class CharT, class Traits, class Rep, class Period>
+inline
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os,
+           const std::chrono::duration<Rep, Period>& d)
+{
+    using namespace detail;
+    return os << make_string<CharT, Traits>::from(d.count()) +
+                 get_units<CharT>(typename Period::type{});
 }
 
 }  // namespace date
