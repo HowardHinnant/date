@@ -1485,6 +1485,7 @@ and predictable.
 <tr><td>&nbsp;</td><td><a href="#weeks"><code>weeks</code></a></td></tr>
 <tr><td>&nbsp;</td><td><a href="#months"><code>months</code></a></td></tr>
 <tr><td>&nbsp;</td><td><a href="#years"><code>years</code></a></td></tr>
+<tr><td>&nbsp;</td><td><a href="#duration_io"><code>Formatting and parsing durations</code></a></td></tr>
 
 <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 <tr><td>time_points</td><td>&nbsp;</td></tr>
@@ -1674,7 +1675,7 @@ using months = std::chrono::duration
     &lt;int, std::ratio_divide&lt;years::period, std::ratio&lt;12&gt;&gt;&gt;;
 </pre></blockquote>
 
-<h3>Formatting and parsing durations</h3>
+<a name="duration_io"></a><h3>Formatting and parsing durations</h3>
 
 <pre>
 template &lt;class CharT, class Traits, class Rep, class Period&gt;
@@ -1720,6 +1721,65 @@ flags): <code>%H</code>, <code>%I</code>, <code>%M</code>, <code>%p</code>,
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
 </p>
 </blockquote>
+
+<pre>
+template &lt;class CharT, class Traits, class Rep, class Period&gt;
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
+operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os,
+           const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
+</pre>
+
+<blockquote>
+<p>
+<i>Effects:</i> Equivalent to:
+</p>
+<blockquote><pre>
+os &lt;&lt; to_string&lt;CharT, Traits&gt;(d.count()) + detail::get_units&lt;CharT&gt;(duration&lt;Rep, typename Period::type&gt;{});
+</pre>
+<p>
+Where <code>to_string</code> is pseudo code that returns a
+<code>std::basic_string&lt;CharT, Traits&gt;</code> representation of <code>d.count()</code>,
+and <code>detail::get_units&lt;CharT&gt;()</code> returns a null-terminated string of
+<code>CharT</code> which depends only on <code>Period::type</code> as follows (let
+<code>period</code> be the type <code>Period::type</code>):
+</p>
+
+<ul>
+<li>If <code>period</code> is type <code>std::atto</code>, <code>as</code>, else</li>
+<li>if <code>period</code> is type <code>std::femto</code>, <code>fs</code>, else</li>
+<li>if <code>period</code> is type <code>std::pico</code>, <code>ps</code>, else</li>
+<li>if <code>period</code> is type <code>std::nano</code>, <code>ns</code>, else</li>
+<li>if <code>period</code> is type <code>std::micro</code>, <code>&micro;s</code> (U+00B5), else</li>
+<li>if <code>period</code> is type <code>std::milli</code>, <code>ms</code>, else</li>
+<li>if <code>period</code> is type <code>std::centi</code>, <code>cs</code>, else</li>
+<li>if <code>period</code> is type <code>std::deci</code>, <code>ds</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;1&gt;</code>, <code>s</code>, else</li>
+<li>if <code>period</code> is type <code>std::deca</code>, <code>das</code>, else</li>
+<li>if <code>period</code> is type <code>std::hecto</code>, <code>hs</code>, else</li>
+<li>if <code>period</code> is type <code>std::kilo</code>, <code>ks</code>, else</li>
+<li>if <code>period</code> is type <code>std::mega</code>, <code>Ms</code>, else</li>
+<li>if <code>period</code> is type <code>std::giga</code>, <code>Gs</code>, else</li>
+<li>if <code>period</code> is type <code>std::tera</code>, <code>Ts</code>, else</li>
+<li>if <code>period</code> is type <code>std::peta</code>, <code>Ps</code>, else</li>
+<li>if <code>period</code> is type <code>std::exa</code>, <code>Es</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;60&gt;</code>, <code>min</code>, else</li>
+<li>if <code>period</code> is type <code>std::ratio&lt;3600&gt;</code>, <code>h</code>, else</li>
+<li>if <code>period::den == 1</code>, <code>[num]s</code>, else</li>
+<li><code>[num/den]s</code>.</li>
+</ul>
+
+<p>
+In the list above the use of <code>num</code> and <code>den</code> refer to the
+static data members of <code>period</code> which are converted to arrays of
+<code>CharT</code> using a decimal conversion with no leading zeroes.
+</p>
+
+</blockquote>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
+</blockquote>
+
 
 <a name="sys_time"></a><h3><code>sys_time</code></h3>
 
