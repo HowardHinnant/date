@@ -710,13 +710,6 @@ struct timezone_mapping
     std::string type;
 };
 
-struct timezone_info
-{
-    timezone_info() = default;
-    std::string timezone_id;
-    std::string standard_name;
-};
-
 }  // detail
 
 #endif  // TIMEZONE_MAPPING
@@ -731,7 +724,6 @@ struct TZ_DB
 #ifdef TIMEZONE_MAPPING
     // TODO! These need some protection.
     std::vector<detail::timezone_mapping> mappings;
-    std::vector<detail::timezone_info> native_zones;
 #endif
 
     TZ_DB() = default;
@@ -740,16 +732,13 @@ struct TZ_DB
     TZ_DB& operator=(TZ_DB&&) = default;
 #else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&& src)
-    :
-        version(std::move(src.version)),
-        zones(std::move(src.zones)),
-        links(std::move(src.links)),
-        leaps(std::move(src.leaps)),
-        rules(std::move(src.rules))
+        : version(std::move(src.version))
+        , zones(std::move(src.zones))
+        , links(std::move(src.links))
+        , leaps(std::move(src.leaps))
+        , rules(std::move(src.rules))
 #ifdef TIMEZONE_MAPPING
-        ,
-        mappings(std::move(src.mappings)),
-        native_zones(std::move(src.native_zones))
+        , mappings(std::move(src.mappings))
 #endif
     {}
 
@@ -762,7 +751,6 @@ struct TZ_DB
         rules = std::move(src.rules);
 #ifdef TIMEZONE_MAPPING
         mappings = std::move(src.mappings);
-        native_zones = std::move(src.native_zones);
 #endif
         return *this;
     }
