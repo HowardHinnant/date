@@ -141,7 +141,7 @@ static CONSTDATA char folder_delimiter = '/';
 
 #endif
 
-#if __GNUC__ < 5
+#if defined(__GNUC__) && __GNUC__ < 5
 // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -3062,23 +3062,33 @@ const time_zone*
 current_zone()
 {
 #ifdef TIMEZONE_MAPPING
-    TIME_ZONE_INFORMATION tzi{};
-    DWORD tz_result = ::GetTimeZoneInformation(&tzi);
-    if (tz_result == TIME_ZONE_ID_INVALID)
-    {
-        auto error_code = ::GetLastError(); // Store this quick before it gets overwritten.
-        throw std::runtime_error("GetTimeZoneInformation failed: "
-            + get_win32_message(error_code));
-    }
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::string standard_name(converter.to_bytes(tzi.StandardName));
-    auto tz = find_native_timezone_by_standard_name(standard_name);
+    DYNAMIC_TIME_ZONE_INFORMATION dtzi;
+    auto result = GetDynamicTimeZoneInformation(&dtzi);
+    if (result == TIME_ZONE_ID_INVALID)
+        throw std::runtime_error("current_zone(): GetDynamicTimeZoneInformation() reported TIME_ZONE_ID_INVALID.");
+    std::size_t timeZoneKeyNameLenMB;
+    std::size_t timeZoneKeyNameLenWide = wcslen(dtzi.TimeZoneKeyName);
+    // Estimate the buffer size needed.
+    auto err = wcstombs_s(&timeZoneKeyNameLenMB, nullptr, 0, dtzi.TimeZoneKeyName, timeZoneKeyNameLenWide);
+    if (err != 0)
+        throw std::runtime_error("current_zone(): wcstombs_s() reported an error estimating time zone key name length.");   
+    // The size returned is in bytes and it includes + 1 for the nul terminator.
+    // We subtract 1 in the call to resize for the nul terminator
+    // because the C++ spec says resize will re add 1 to the size.
+    // Note also that the C++ spec says (as of LWG 2475) we can overwrite
+    // the null character with a nul character so resize after is not needed.
+    std::string tzKeyName;
+    tzKeyName.resize(timeZoneKeyNameLenMB - 1);
+    err = wcstombs_s(&timeZoneKeyNameLenMB, &tzKeyName[0], timeZoneKeyNameLenMB, dtzi.TimeZoneKeyName, timeZoneKeyNameLenWide);
+    if (err != 0)
+        throw std::runtime_error("current_zone(): wcstombs_s reported an error converting the time zone key name.");
+    auto tz = find_native_timezone_by_standard_name(tzKeyName);
     if (!tz)
     {
         std::string msg;
         msg = "current_zone() failed: ";
-        msg += standard_name;
-        msg += " was not found in the Windows Time Zone registry";
+        msg += tzKeyName;
+        msg += " was not found in the Windows Time Zone registry.";
         throw std::runtime_error( msg );
     }
     std::string standard_tzid;
@@ -3208,6 +3218,6 @@ locate_native_zone(const std::string& native_tz_name)
 
 }  // namespace date
 
-#if __GNUC__ < 5
+#if defined(__GNUC__) && __GNUC__ < 5
 # pragma GCC diagnostic pop
 #endif
