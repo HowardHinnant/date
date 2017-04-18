@@ -716,6 +716,18 @@ test_Z()
     }
 }
 
+void
+test_trailing_Z()
+{
+    std::string format = "%FT%TZ";
+    std::string datetime = "2017-2-15T13:13:13";
+    std::istringstream input(datetime);
+    date::sys_seconds tp;
+    input >> date::parse(format, tp);
+    assert(input.fail());
+    assert(input.eof());
+}
+
 int
 main()
 {
@@ -743,4 +755,5 @@ main()
     test_X();
     test_z();
     test_Z();
+    test_trailing_Z();
 }

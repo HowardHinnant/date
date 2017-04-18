@@ -5367,9 +5367,8 @@ read(std::basic_istream<CharT, Traits>& is, CharT a0, Args&& ...args)
     if (a0 != CharT{})
     {
         auto ic = is.peek();
-        if (Traits::eq_int_type(ic, Traits::eof()))
-            return;
-        if (!Traits::eq(Traits::to_char_type(ic), a0))
+        if (Traits::eq_int_type(ic, Traits::eof()) ||
+            !Traits::eq(Traits::to_char_type(ic), a0))
         {
             is.setstate(std::ios::failbit);
             return;
