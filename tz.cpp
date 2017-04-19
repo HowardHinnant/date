@@ -2884,7 +2884,9 @@ getTimeZoneKeyName()
     char buf[128] = {};
     assert(sizeof(buf) >= wlen+1);
     wcstombs(buf, dtzi.TimeZoneKeyName, wlen);
-    return std::string(buf);
+    if (strcmp(buf, "Coordinated Universal Time") == 0)
+        return "UTC";
+    return buf;
 }
 
 const time_zone*
