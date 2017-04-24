@@ -31,6 +31,5 @@ There has been a recent change in the library design.  If you are trying to migr
 
 **Projects that use this project**
 
-* [Datum](https://github.com/schmidt9/Datum)
 
 If you would like to see your project listed here, and it isn't, please let me know.  If your project is listed here and it shouldn't be, please let me know.
