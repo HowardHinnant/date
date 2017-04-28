@@ -2946,10 +2946,10 @@ current_zone()
         else
         {
             std::ostringstream os;
+            os << "realpath failure: errno = " << errno;
             char message[128];
-            if (strerror_r(errno, message, sizeof(message)) != 0)
-                message[0] = '\0';
-            os << "realpath failure: errno = " << errno << "; " << message;
+            if (strerror_r(errno, message, sizeof(message)) == 0)
+                os << "; " << message;
             throw std::runtime_error(os.str());
         }
 
