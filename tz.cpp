@@ -2946,9 +2946,7 @@ current_zone()
             result = string(rp);
         else
         {
-            throw runtime_error("realpath failure: errno = " +
-                                to_string(errno) + "; " +
-                                system_error(errno, system_category()).what());
+            throw system_error(errno, system_category(), "realpath() failed");
         }
 
         const char zonepath[] = "/usr/share/zoneinfo/";
