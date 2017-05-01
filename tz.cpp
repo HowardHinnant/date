@@ -2939,23 +2939,19 @@ current_zone()
     CONSTDATA auto timezone = "/etc/localtime";
     if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        std::string result;
+        using namespace std;
+        string result;
         char rp[PATH_MAX];
         if (realpath(timezone, rp))
-            result = std::string(rp);
+            result = string(rp);
         else
         {
-            std::ostringstream os;
-            char message[128];
-            if (strerror_r(errno, message, sizeof(message)) != 0)
-                message[0] = '\0';
-            os << "realpath failure: errno = " << errno << "; " << message;
-            throw std::runtime_error(os.str());
+            throw system_error(errno, system_category(), "realpath() failed");
         }
 
         const char zonepath[] = "/usr/share/zoneinfo/";
-        const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-        const std::size_t pos = result.find(zonepath);
+        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const size_t pos = result.find(zonepath);
         if (pos != result.npos)
             result.erase(0, zonepath_len+pos);
         return locate_zone(result);
