@@ -2919,43 +2919,6 @@ current_zone()
 
 #else // !WIN32
 
-// +-------------------------------------------+
-// | Begin XSI-compliant strerror_r workaround |
-// +-------------------------------------------+
-//
-// At compile-time this workaround wraps both the XSI-compliant and GNU-specific
-// strerror_r functions behind a common function interface which is identical to
-// the interface of the GNU-specific strerror_r. Doing it the other way around
-// would require copying/moving the error message into the provided buffer.
-
-namespace {
-
-template <typename strerror_r_t> struct StrErrorR;
-
-template <> // Specialization for XSI-compliant strerror_r:
-struct StrErrorR<int (int, char *, ::size_t)> {
-    static char * call(int errnum, char * buffer, std::size_t buflen) noexcept
-    { return ::strerror_r(errnum, buffer, buflen) ? nullptr : buffer; }
-};
-
-template <> // Specialization (pass-through) for GNU-specific strerror_r:
-struct StrErrorR<char * (int, char *, ::size_t)> {
-    constexpr static auto const call = ::strerror_r;
-};
-
-// Note that this definition of strerror_r is in an anonymous namespace inside
-// the ::date namespace
-static inline char * strerror_r(int errnum, char * buffer, std::size_t buflen)
-        noexcept
-{ return StrErrorR<decltype(::strerror_r)>::call(errnum, buffer, buflen); }
-
-} // anonymous namespace
-
-// +-----------------------------------------+
-// | End XSI-compliant strerror_r workaround |
-// +-----------------------------------------+
-
-
 const time_zone*
 current_zone()
 {
@@ -2976,23 +2939,21 @@ current_zone()
     CONSTDATA auto timezone = "/etc/localtime";
     if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        std::string result;
+        using namespace std;
+        string result;
         char rp[PATH_MAX];
         if (realpath(timezone, rp))
-            result = std::string(rp);
+            result = string(rp);
         else
         {
-            std::ostringstream os;
-            os << "realpath failure: errno = " << errno;
-            char buffer[128];
-            if (auto message = strerror_r(errno, buffer, sizeof(buffer)))
-                os << "; " << message;
-            throw std::runtime_error(os.str());
+            throw runtime_error("realpath failure: errno = " +
+                                to_string(errno) + "; " +
+                                system_error(errno, system_category()).what());
         }
 
         const char zonepath[] = "/usr/share/zoneinfo/";
-        const std::size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-        const std::size_t pos = result.find(zonepath);
+        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const size_t pos = result.find(zonepath);
         if (pos != result.npos)
             result.erase(0, zonepath_len+pos);
         return locate_zone(result);
