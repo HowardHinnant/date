@@ -5448,7 +5448,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using namespace std;
     using namespace std::chrono;
-    typename basic_istream<CharT, Traits>::sentry ok{is};
+    typename basic_istream<CharT, Traits>::sentry ok{is, true};
     if (ok)
     {
         auto& f = use_facet<time_get<CharT>>(is.getloc());
