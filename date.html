@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-04-13<br/>
+2017-05-04<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -7934,14 +7934,17 @@ Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
 <a name="from_stream_formatting"></a><h3><code>from_stream</code> formatting</h3>
 
 <p>
-Each flag begins with a <code>%</code>.  Some flags can be modified by <code>E</code> or
-<code>O</code>.  During parsing each flag interprets characters as parts of date and time
-type according to the table below. Some flags can be modified by a width parameter which
-governs how many characters are parsed from the stream in interpreting the flag. All
-characters in the format string which are not represented in the table below are parsed
-unchanged from the stream.  The C++ specification says that the parsing of month and
-weekday names is both locale sensitive <i>and</i> case insensitive.  If you find this not
-to be the case, file a bug with your std::lib vendor.
+All <code>from_stream</code> overloads behave as an unformatted input function.  Each
+overload takes a format string containing ordinary characters and flags which have special
+meaning. Each flag begins with a <code>%</code>.  Some flags can be modified by
+<code>E</code> or <code>O</code>.  During parsing each flag interprets characters as parts
+of date and time type according to the table below. Some flags can be modified by a width
+parameter which governs how many characters are parsed from the stream in interpreting the
+flag. All characters in the format string which are not represented in the table below,
+except for white space, are parsed unchanged from the stream. A white space character
+matches zero or more white space characters in the input stream. The C++ specification
+says that the parsing of month and weekday names is both locale sensitive <i>and</i> case
+insensitive. If you find this not to be the case, file a bug with your std::lib vendor.
 </p>
 
 <blockquote>
