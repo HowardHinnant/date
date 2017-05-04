@@ -5128,7 +5128,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<Duration> fds{time_of_day<CT>{d}};
+    fields<CT> fds{time_of_day<CT>{d}};
     to_stream(os, fmt, fds);
 }
 
