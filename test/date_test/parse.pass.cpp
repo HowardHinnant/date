@@ -728,6 +728,18 @@ test_trailing_Z()
     assert(input.eof());
 }
 
+void
+test_leading_ws()
+{
+    using namespace std;
+    using namespace date;
+    istringstream in{"05/04/17 5/4/17"};
+    year_month_day d1, d2;
+    in >> parse("%D", d1) >> parse("%n%D", d2);
+    assert(d1 == may/4/2017);
+    assert(d2 == may/4/2017);
+}
+
 int
 main()
 {
@@ -756,4 +768,5 @@ main()
     test_z();
     test_Z();
     test_trailing_Z();
+    test_leading_ws();
 }

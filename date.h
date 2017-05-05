@@ -5805,6 +5805,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     for (++fmt; *fmt == 'n' || *fmt == 't'; ++fmt)
                         ;
                     --fmt;
+                    command = nullptr;
+                    width = -1;
+                    modified = CharT{};
                 }
                 else
                     read(is, *fmt);
