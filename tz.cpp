@@ -104,6 +104,11 @@
 
 #ifdef _WIN32
 #  include <io.h> // _unlink etc.
+
+#  if defined(__clang__)
+    struct IUnknown;    // fix for issue with static_cast<> in objbase.h (see https://github.com/philsquared/Catch/issues/690)
+#  endif
+
 #  include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
 #  if HAS_REMOTE_API
 #    include <direct.h> // _mkdir
@@ -654,7 +659,7 @@ detail::MonthDayTime::MonthDayTime(local_seconds tp, tz timezone)
     : zone_(timezone)
 {
     using namespace date;
-    const auto dp = floor<days>(tp);
+    const auto dp = date::floor<days>(tp);
     const auto hms = make_time(tp - dp);
     const auto ymd = year_month_day(dp);
     u = ymd.month() / ymd.day();
@@ -1827,14 +1832,14 @@ format_abbrev(std::string format, const std::string& variable, std::chrono::seco
                 }
                 else
                     temp = '+';
-                auto h = floor<hours>(off);
+                auto h = date::floor<hours>(off);
                 off -= h;
                 if (h < hours{10})
                     temp += '0';
                 temp += std::to_string(h.count());
                 if (off > seconds{0})
                 {
-                    auto m = floor<minutes>(off);
+                    auto m = date::floor<minutes>(off);
                     off -= m;
                     if (m < minutes{10})
                         temp += '0';
@@ -1891,7 +1896,7 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
     using namespace date;
     tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
-    auto y = year_month_day(floor<days>(tp)).year();
+    auto y = year_month_day(date::floor<days>(tp)).year();
     if (y < min_year || y > max_year)
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
