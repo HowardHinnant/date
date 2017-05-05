@@ -448,7 +448,7 @@ sys_info
 time_zone::get_info(sys_time<Duration> st) const
 {
     using namespace std::chrono;
-    return get_info_impl(floor<seconds>(st));
+    return get_info_impl(date::floor<seconds>(st));
 }
 
 template <class Duration>
@@ -457,7 +457,7 @@ local_info
 time_zone::get_info(local_time<Duration> tp) const
 {
     using namespace std::chrono;
-    return get_info_impl(floor<seconds>(tp));
+    return get_info_impl(date::floor<seconds>(tp));
 }
 
 template <class Duration>

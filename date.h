@@ -1069,7 +1069,7 @@ std::chrono::time_point<Clock, To>
 floor(const std::chrono::time_point<Clock, FromDuration>& tp)
 {
     using std::chrono::time_point;
-    return time_point<Clock, To>{floor<To>(tp.time_since_epoch())};
+    return time_point<Clock, To>{date::floor<To>(tp.time_since_epoch())};
 }
 
 // round to nearest, to even on tie
@@ -4156,7 +4156,7 @@ typename std::enable_if
 >::type
 operator<<(std::basic_ostream<CharT, Traits>& os, const sys_time<Duration>& tp)
 {
-    auto const dp = floor<days>(tp);
+    auto const dp = date::floor<days>(tp);
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
 }
 
@@ -4173,7 +4173,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut)
 {
-    return os << sys_time<Duration>{ut.time_since_epoch()};
+    return (os << sys_time<Duration>{ut.time_since_epoch()});
 }
 
 // to_stream
@@ -4951,7 +4951,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     throw std::runtime_error("Can not format %z with unknown offset");
                 auto m = duration_cast<minutes>(*offset_sec);
                 auto neg = m < minutes{0};
-                m = abs(m);
+                m = date::abs(m);
                 auto h = duration_cast<hours>(m);
                 m -= h;
                 if (neg)
