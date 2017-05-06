@@ -975,6 +975,10 @@ trunc(T t) NOEXCEPT
 
 }  // detail
 
+// VS Update 2 provides floor, ceil, round, abs in chrono.
+// trunc only used to implement these, so not needed either for this VS ver.
+#if _MSC_FULL_VER < 190023918
+
 // trunc towards zero
 template <class To, class Rep, class Period>
 CONSTCD11
@@ -1093,6 +1097,7 @@ ceil(const std::chrono::time_point<Clock, FromDuration>& tp)
     using std::chrono::time_point;
     return time_point<Clock, To>{ceil<To>(tp.time_since_epoch())};
 }
+#endif
 
 #else  // HAS_CHRONO_ROUNDING == 1
 
