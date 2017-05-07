@@ -5128,7 +5128,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<Duration> fds{time_of_day<CT>{d}};
+    fields<CT> fds{time_of_day<CT>{d}};
     to_stream(os, fmt, fds);
 }
 
@@ -5367,9 +5367,8 @@ read(std::basic_istream<CharT, Traits>& is, CharT a0, Args&& ...args)
     if (a0 != CharT{})
     {
         auto ic = is.peek();
-        if (Traits::eq_int_type(ic, Traits::eof()))
-            return;
-        if (!Traits::eq(Traits::to_char_type(ic), a0))
+        if (Traits::eq_int_type(ic, Traits::eof()) ||
+            !Traits::eq(Traits::to_char_type(ic), a0))
         {
             is.setstate(std::ios::failbit);
             return;
@@ -5449,7 +5448,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using namespace std;
     using namespace std::chrono;
-    typename basic_istream<CharT, Traits>::sentry ok{is};
+    typename basic_istream<CharT, Traits>::sentry ok{is, true};
     if (ok)
     {
         auto& f = use_facet<time_get<CharT>>(is.getloc());
@@ -5806,6 +5805,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     for (++fmt; *fmt == 'n' || *fmt == 't'; ++fmt)
                         ;
                     --fmt;
+                    command = nullptr;
+                    width = -1;
+                    modified = CharT{};
                 }
                 else
                     read(is, *fmt);

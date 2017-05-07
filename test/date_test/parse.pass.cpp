@@ -716,6 +716,30 @@ test_Z()
     }
 }
 
+void
+test_trailing_Z()
+{
+    std::string format = "%FT%TZ";
+    std::string datetime = "2017-2-15T13:13:13";
+    std::istringstream input(datetime);
+    date::sys_seconds tp;
+    input >> date::parse(format, tp);
+    assert(input.fail());
+    assert(input.eof());
+}
+
+void
+test_leading_ws()
+{
+    using namespace std;
+    using namespace date;
+    istringstream in{"05/04/17 5/4/17"};
+    year_month_day d1, d2;
+    in >> parse("%D", d1) >> parse("%n%D", d2);
+    assert(d1 == may/4/2017);
+    assert(d2 == may/4/2017);
+}
+
 int
 main()
 {
@@ -743,4 +767,6 @@ main()
     test_X();
     test_z();
     test_Z();
+    test_trailing_Z();
+    test_leading_ws();
 }

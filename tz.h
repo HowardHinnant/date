@@ -118,10 +118,7 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #endif
 
 #include "date.h"
-
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
 #include "tz_private.h"
-#endif
 
 #include <algorithm>
 #include <cassert>
@@ -159,14 +156,7 @@ enum class choose {earliest, latest};
 
 namespace detail
 {
-#if TIMEZONE_RULES
     struct undocumented;
-#endif
-
-#if TIMEZONE_FILES
-    class zone_info;
-    class transition;
-#endif
 }
 
 class nonexistent_local_time
@@ -281,8 +271,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const sys_info& r)
 {
     os << r.begin << '\n';
     os << r.end << '\n';
-    os << make_time(r.offset) << '\n';
-    os << make_time(r.save) << '\n';
+    os << make_time(r.offset) << "\n";
+    os << make_time(r.save) << "\n";
     os << r.abbrev << '\n';
     return os;
 }
@@ -424,6 +414,41 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const basic_zoned_time<Duratio
 
 #if TIMEZONE_FILES
 
+namespace detail
+{
+
+class zone_info
+{
+public:
+    zone_info(const std::chrono::seconds& g, const bool& d, const std::string& a);
+
+    std::chrono::seconds gmt_offset;
+    bool                 is_dst;
+    std::string          abbreviation;
+};
+
+class transition
+{
+public:
+    sys_seconds      timepoint;
+    const zone_info* info;
+
+    transition(const sys_seconds& t=sys_seconds(), const zone_info* i = nullptr);
+};
+
+inline zone_info::zone_info(const std::chrono::seconds& g, const bool& d, const std::string& a)
+    : gmt_offset(g)
+    , is_dst(d)
+    , abbreviation(a)
+{}
+
+inline transition::transition(const sys_seconds& t, const zone_info* i)
+    : timepoint(t)
+    , info(i)
+{}
+
+} // namespace detail
+
 class leap;
 class tzfile_db;
 
@@ -467,13 +492,13 @@ public:
     friend bool operator< (const tzfile_zone& x, const tzfile_zone& y) NOEXCEPT;
     friend DATE_API std::ostream& operator<<(std::ostream& os, const tzfile_zone& z);
 
-    static tzfile_db& get_tzdb(const std::string& tz_dir=TZDIR);
-    static tzfile_db& reload_tzdb(const std::string& tz_dir=TZDIR);
+    static const tzfile_db& get_tzdb(const std::string& tz_dir=TZDIR);
+    static const tzfile_db& reload_tzdb(const std::string& tz_dir=TZDIR);
     static tzfile_db init_tzdb(const std::string& tz_dir=TZDIR);
 
 
-   DATE_API static const tzfile_zone* locate_zone(const std::string& tz_name);
-   DATE_API static const tzfile_zone* current_zone();
+   DATE_API static const tzfile_zone* locate_zone(const std::string& tz_name, const std::string& tz_dir=TZDIR);
+   DATE_API static const tzfile_zone* current_zone(const std::string& tz_dir=TZDIR);
 
 private:
     DATE_API sys_info   get_info_impl(sys_seconds tp) const;
@@ -511,11 +536,11 @@ public:
         return *this;
     }
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    DATE_API static const tzfile_zone* locate_zone(const std::string& tz_name);
-    DATE_API static const tzfile_zone* current_zone();
+    DATE_API static const tzfile_zone* locate_zone(const std::string& tz_name, const std::string& tz_dir=TZDIR);
+    DATE_API static const tzfile_zone* current_zone(const std::string& tz_dir=TZDIR);
     
-    DATE_API static tzfile_db& get_tzdb(const std::string& tz_dir=TZDIR);
-    DATE_API static tzfile_db& reload_tzdb(const std::string& tz_dir=TZDIR);
+    DATE_API static const tzfile_db& get_tzdb(const std::string& tz_dir=TZDIR);
+    DATE_API static const tzfile_db& reload_tzdb(const std::string& tz_dir=TZDIR);
     DATE_API static tzfile_db init_tzdb(std::string tz_dir=TZDIR);
     
     static CONSTDATA char version[] = "tzfile";
@@ -524,19 +549,19 @@ public:
 DATE_API std::ostream&
 operator<<(std::ostream& os, const tzfile_db& db);
 
-inline const tzfile_zone* tzfile_zone::locate_zone(const std::string& tz_name)
-{ return tzfile_db::locate_zone(tz_name); }
+inline const tzfile_zone* tzfile_zone::locate_zone(const std::string& tz_name, const std::string& tz_dir)
+{ return tzfile_db::locate_zone(tz_name, tz_dir); }
 
-inline const tzfile_zone* tzfile_zone::current_zone()
-{ return tzfile_db::current_zone(); }
+inline const tzfile_zone* tzfile_zone::current_zone(const std::string& tz_dir)
+{ return tzfile_db::current_zone(tz_dir); }
 
 inline
-tzfile_db&
+const tzfile_db&
 tzfile_zone::get_tzdb(const std::string& tz_dir)
 { return tzfile_db::get_tzdb(tz_dir); }
 
 inline
-tzfile_db&
+const tzfile_db&
 tzfile_zone::reload_tzdb(const std::string& tz_dir)
 { return tzfile_db::reload_tzdb(tz_dir); }
 
@@ -716,8 +741,8 @@ public:
 #endif // TZ_TEST
    DATE_API static const tzrule_zone* current_zone();
    
-   static tzrule_db& get_tzdb();
-   static tzrule_db& reload_tzdb();
+   static const tzrule_db& get_tzdb();
+   static const tzrule_db& reload_tzdb();
    static tzrule_db init_tzdb();
 
 private:
@@ -736,6 +761,7 @@ private:
 };
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
+
 inline
 tzrule_zone::tzrule_zone(tzrule_zone&& src)
     : name_(std::move(src.name_))
@@ -860,6 +886,7 @@ tzrule_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     }
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
+
 #endif // TIMEZONE_RULES
 
 class link
@@ -1055,25 +1082,24 @@ struct timezone_mapping
     std::string type;
 };
 
-struct timezone_info
-{
-    timezone_info() = default;
-    std::string timezone_id;
-    std::string standard_name;
-};
-
 }  // detail
 
 #endif  // TIMEZONE_MAPPING
 
+#if TIMEZONE_RULES
+
 class tzrule_db
 {
 public:
-    std::vector<tzrule_zone>    zones;
-    std::vector<leap>         leaps;
     std::string               version;
+    std::vector<tzrule_zone>  zones;
     std::vector<link>         links;
+    std::vector<leap>         leaps;
     std::vector<detail::Rule> rules;
+#if TIMEZONE_MAPPING
+    // TODO! These need some protection.
+    std::vector<detail::timezone_mapping> mappings;
+#endif
 
     tzrule_db() = default;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -1081,96 +1107,110 @@ public:
     tzrule_db& operator=(tzrule_db&&) = default;
 #else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     tzrule_db(tzrule_db&& src)
-        : zones(std::move(src.zones))
+        : version(std::move(src.version))
+        , zones(std::move(src.zones))
         , links(std::move(src.links))
-        , version(std::move(src.version))
         , leaps(std::move(src.leaps))
         , rules(std::move(src.rules))
+#if TIMEZONE_MAPPING
+        , mappings(std::move(src.mappings))
+#endif
     {}
 
     tzrule_db& operator=(tzrule_db&& src)
     {
+        version = std::move(src.version);
         zones = std::move(src.zones);
         links = std::move(src.links);
-        version = std::move(src.version);
         leaps = std::move(src.leaps);
         rules = std::move(src.rules);
+#if TIMEZONE_MAPPING
+        mappings = std::move(src.mappings);
+#endif
         return *this;
     }
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
-    static const tzrule_zone* locate_zone(const std::string& tz_name);
-    static const tzrule_zone* current_zone();
+    DATE_API static const tzrule_zone* locate_zone(const std::string& tz_name);
+#ifdef TZ_TEST
+#  if _WIN32
+    DATE_API static const tzrule_zone* locate_native_zone(const std::string& native_tz_name);
+#  endif // _WIN32
+#endif // TZ_TEST
+    DATE_API static const tzrule_zone* current_zone();
     
-    DATE_API static tzrule_db& get_tzdb();
-    DATE_API static tzrule_db& reload_tzdb();
+    DATE_API static const tzrule_db& get_tzdb();
+    DATE_API static const tzrule_db& reload_tzdb();
     DATE_API static tzrule_db init_tzdb();
+
+    DATE_API static void        set_install(const std::string& install);
+
+#if HAS_REMOTE_API
+    DATE_API static std::string remote_version();
+    DATE_API static bool        remote_download(const std::string& version);
+    DATE_API static bool        remote_install(const std::string& version);
+#endif
+
 };
 
 DATE_API std::ostream&
 operator<<(std::ostream& os, const tzrule_db& db);
 
 inline
-const tzrule_zone*
-tzrule_zone::locate_zone(const std::string& tz_name)
-{ return tzrule_db::locate_zone(tz_name); }
+void set_install(const std::string& install)
+{ return tzrule_db::set_install(install); }
+
+#if HAS_REMOTE_API
+inline
+std::string remote_version()
+{ return tzrule_db::remote_version(); }
 
 inline
-const tzrule_zone*
-tzrule_zone::current_zone()
-{ return tzrule_db::current_zone(); }
+bool remote_download(const std::string& version)
+{ return tzrule_db::remote_download(version); }
 
 inline
-tzrule_db&
-tzrule_zone::get_tzdb()
+bool remote_install(const std::string& version)
+{ return tzrule_db::remote_install(version); }
+#endif
+
+inline
+const tzrule_db& tzrule_zone::get_tzdb()
 { return tzrule_db::get_tzdb(); }
 
 inline
-tzrule_db&
-tzrule_zone::reload_tzdb()
+const tzrule_db& tzrule_zone::reload_tzdb()
 { return tzrule_db::reload_tzdb(); }
 
 inline
-tzrule_db
-tzrule_zone::init_tzdb()
+tzrule_db tzrule_zone::init_tzdb()
 { return tzrule_db::init_tzdb(); }
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
+inline
+const tzrule_zone* tzrule_zone::locate_zone(const std::string& tz_name)
+{ return tzrule_db::locate_zone(tz_name); }
 
 inline
-tzrule_zone::tzrule_zone(tzrule_zone&& src)
-    : name_(std::move(src.name_))
-    , zonelets_(std::move(src.zonelets_))
-#if LAZY_INIT
-    , adjusted_(std::move(src.adjusted_))
-#endif
-    {}
+const tzrule_zone* tzrule_zone::current_zone()
+{ return tzrule_db::current_zone(); }
+
+#ifdef TZ_TEST
+#  if _WIN32
+inline
+const tzrule_zone* locate_native_zone(const std::string& native_tz_name)
+{ return tzrule_db::locate_native_zone(native_tz_name); }
+#  endif // _WIN32
+#endif // TZ_TEST
+
+#endif // TIMEZONE_RULES
 
 inline
-tzrule_zone&
-tzrule_zone::operator=(tzrule_zone&& src)
-{
-    name_ = std::move(src.name_);
-    zonelets_ = std::move(src.zonelets_);
-#if LAZY_INIT
-    adjusted_ = std::move(src.adjusted_);
-#endif
-    return *this;
-}
+const time_zone* locate_zone(const std::string& tz_name)
+{ return TZ_DB::locate_zone(tz_name); }
 
-#endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
-
-DATE_API void         set_install(const std::string& install);
-
-#if HAS_REMOTE_API
-DATE_API std::string remote_version();
-DATE_API bool        remote_download(const std::string& version);
-DATE_API bool        remote_install(const std::string& version);
-#endif
-
-#if defined(TZ_TEST) && TIMEZONE_MAPPING
-DATE_API const tzrule_zone* locate_native_zone(const std::string& native_tz_name);
-#endif
+inline
+const time_zone* current_zone()
+{ return TZ_DB::current_zone(); }
 
 // zoned_time
 
@@ -1194,7 +1234,7 @@ basic_zoned_time<Duration,TimeZone>::basic_zoned_time(const std::string& name)
     {}
 
 template <class Duration, class TimeZone>
-template<class Duration2, class>
+template <class Duration2, class>
 inline
 basic_zoned_time<Duration,TimeZone>::basic_zoned_time(const basic_zoned_time<Duration2,TimeZone>& zt) NOEXCEPT
     : zone_(zt.zone_)
@@ -1855,7 +1895,5 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
 }
 
 }  // namespace date
-
-#include "tz_private.h"
 
 #endif  // TZ_H

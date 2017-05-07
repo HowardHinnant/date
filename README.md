@@ -26,3 +26,10 @@ This is actually several separate C++11/C++14 libraries:
 There has been a recent change in the library design.  If you are trying to migrate from the previous design, rename `day_point` to `sys_days` everywhere, and that ought to bring the number of errors down to a small roar.
 
 `"date.h"` and `"tz.h"` are now being proposed for standardization: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r2.html
+
+<hr/>
+
+**Projects that use this project**
+
+
+If you would like to see your project listed here, and it isn't, please let me know.  If your project is listed here and it shouldn't be, please let me know.

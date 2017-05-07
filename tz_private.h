@@ -29,6 +29,7 @@
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 #include "tz.h"
+#include <vector>
 #else
 #include "date.h"
 #include <vector>
@@ -365,50 +366,6 @@ CONSTCD11 int64_t interpret_time(const char* buffer, const size_t& size)
     return size == 4 ?
         static_cast<int32_t>(interpret32(buffer)) :
         interpret64(buffer);
-}
-
-class zone_info
-{
-public:
-    zone_info(const std::chrono::seconds& g, const bool& d, const std::string& a);
-
-    std::chrono::seconds gmt_offset;
-    bool                 is_dst;
-    std::string          abbreviation;
-};
-
-class transition
-{
-public:
-    sys_seconds      timepoint;
-    const zone_info* info;
-
-    transition(const sys_seconds& t=sys_seconds(), const zone_info* i = nullptr);
-    
-    operator local_seconds() const;
-    operator sys_seconds() const;
-    
-};
-
-inline zone_info::zone_info(const std::chrono::seconds& g, const bool& d, const std::string& a)
-    : gmt_offset(g)
-    , is_dst(d)
-    , abbreviation(a)
-{}
-
-inline transition::transition(const sys_seconds& t, const zone_info* i)
-    : timepoint(t)
-    , info(i)
-{}
-
-inline transition::operator local_seconds() const
-{
-    return local_seconds{(timepoint + info->gmt_offset).time_since_epoch()};
-}
-
-inline transition::operator sys_seconds() const
-{
-    return timepoint;
 }
 
 #endif // TIMEZONE_FILES
