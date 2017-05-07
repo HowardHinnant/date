@@ -5364,21 +5364,21 @@ template <class CharT, class Traits, class ...Args>
 void
 read(std::basic_istream<CharT, Traits>& is, CharT a0, Args&& ...args)
 {
+    // No-op if a0 == CharT{}
     if (a0 != CharT{})
     {
         auto ic = is.peek();
-        if (Traits::eq_int_type(ic, Traits::eof()) ||
-            !Traits::eq(Traits::to_char_type(ic), a0))
+        if (Traits::eq_int_type(ic, Traits::eof()))
+        {
+            is.setstate(std::ios::failbit | std::ios::eofbit);
+            return;
+        }
+        if (!Traits::eq(Traits::to_char_type(ic), a0))
         {
             is.setstate(std::ios::failbit);
             return;
         }
         (void)is.get();
-    }
-    else
-    {
-        while (isspace(is.peek()))
-            (void)is.get();
     }
     read(is, std::forward<Args>(args)...);
 }
@@ -5486,12 +5486,6 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         using detail::rld;
         for (; *fmt && is.rdstate() == std::ios::goodbit; ++fmt)
         {
-            if (isspace(*fmt))
-            {
-                // space matches 0 or more white space characters
-                ws(is);
-                continue;
-            }
             switch (*fmt)
             {
             case 'a':
@@ -5791,20 +5785,23 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             case 't':
                 if (command)
                 {
-                    // %n and %t match 1 or more white space characters
-                    // consecutive %n and %t count as one 
+                    // %n matches a single white space character
+                    // %t matches 0 or 1 white space characters
                     auto ic = is.peek();
                     if (Traits::eq_int_type(ic, Traits::eof()))
-                        break;
-                    if (!isspace(ic))
                     {
-                        is.setstate(ios::failbit);
+                        ios_base::iostate err = ios_base::eofbit;
+                        if (*fmt == 'n')
+                            err |= ios_base::failbit;
+                        is.setstate(err);
                         break;
                     }
-                    ws(is);
-                    for (++fmt; *fmt == 'n' || *fmt == 't'; ++fmt)
-                        ;
-                    --fmt;
+                    if (isspace(ic))
+                    {
+                        (void)is.get();
+                    }
+                    else if (*fmt == 'n')
+                        is.setstate(ios_base::failbit);
                     command = nullptr;
                     width = -1;
                     modified = CharT{};
@@ -6192,8 +6189,13 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         modified = CharT{};
                     }
                 }
-                else
-                    read(is, *fmt);
+                else  // !command
+                {
+                    if (isspace(*fmt))
+                        ws(is); // space matches 0 or more white space characters
+                    else
+                        read(is, *fmt);
+                }
                 break;
             }
         }
