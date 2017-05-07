@@ -23,11 +23,12 @@
 // weekday_last / weekday_last not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = fri[last]/fri[last];
+    static_assert(!decltype(test_can_divide(fri[last],fri[last]))::value, "weekday_last / weekday_last not allowed");
 }

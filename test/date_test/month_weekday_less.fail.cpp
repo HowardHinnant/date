@@ -23,6 +23,7 @@
 // month_weekday < month_weekday not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
@@ -30,5 +31,5 @@ main()
     using namespace date;
     month_weekday mwd1 = {feb, sat[4]};
     month_weekday mwd2 = {mar, mon[1]};
-    auto b = mwd1 < mwd2;
+    static_assert(!decltype(test_can_less_than(mwd1, mwd2))::value, "month_weekday < month_weekday not allowed");
 }

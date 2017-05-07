@@ -23,11 +23,12 @@
 // year_month + year_month not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = year_month{2015_y, jan} + year_month{2015_y, jan};
+    static_assert(!decltype(test_can_add(year_month{2015_y, jan}, year_month{2015_y, jan}))::value, "year_month + year_month not allowed");
 }

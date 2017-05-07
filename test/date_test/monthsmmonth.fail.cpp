@@ -23,10 +23,11 @@
 // months - month not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-    auto x = months{3} - jul;
+    static_assert(!decltype(test_can_subtract(months{3},jul))::value, "months - month not allowed");
 }

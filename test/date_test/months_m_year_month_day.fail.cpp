@@ -20,14 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// months - year_month_day not allowed
+// month - year_month_day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-
-    auto x = jan - year_month_day{2015_y, aug, 9_d};
+    static_assert(!decltype(test_can_subtract(jan, year_month_day{2015_y, aug, 9_d}))::value, "month - year_month_day not allowed");
 }

@@ -23,10 +23,11 @@
 // years - year not allowed
 
 #include "iso_week.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace iso_week;
-    auto x = years{3} - 2015_y;
+    static_assert(!decltype(date::test_can_subtract(years{3}, 2015_y))::value, "years - year not allowed");
 }

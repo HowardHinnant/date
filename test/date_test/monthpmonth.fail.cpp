@@ -23,10 +23,11 @@
 // month + month not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-    auto x = mar + jul;
+    static_assert(!decltype(test_can_add(mar,jul))::value, "month + month not allowed");
 }

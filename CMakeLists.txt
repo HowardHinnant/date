@@ -1,0 +1,83 @@
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+project(date VERSION 0.1 LANGUAGES CXX)
+
+enable_testing()
+
+option(ENABLE_TESTS "Build unit tests" On)
+
+message(STATUS "Using ${CMAKE_CXX_COMPILER} (compiler id: ${CMAKE_CXX_COMPILER_ID})")
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+# 	set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++14 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
+# elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+# 	set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++14 ${CMAKE_CXX_FLAGS}")
+# endif ()
+# if(NOT WIN32)
+# 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++fs -DDATE_USE_EXPERIMENTAL_FILESYSTEM")
+# endif()
+
+#Enable all available timezone sources
+if(WIN32)
+	if(NOT TZ_NO_TZMAP)
+		add_definitions(-DTIMEZONE_MAPPING=1)
+	endif()
+else()
+	if(NOT TZ_NO_TZFILE)
+		add_definitions(-DTIMEZONE_FILES=1)
+	endif()
+endif()
+
+
+find_package(CURL)
+
+if(CURL_FOUND)
+	message("Found CURL. Explicitly enabling HAS_REMOTE_API")
+	add_definitions(-DHAS_REMOTE_API=1)
+	include_directories(${CURL_INCLUDE_DIRS})
+	set(TZLINKS ${CURL_LIBRARIES})
+else()
+	message("Couldn't find CURL. Disabling HAS_REMOTE_API")
+	add_definitions(-DHAS_REMOTE_API=0)
+endif()
+
+add_library(tz STATIC tz.cpp)
+
+target_link_libraries(tz ${TZLINKS})
+
+set_property(TARGET tz PROPERTY CXX_STADARD 14)
+
+if(ENABLE_TESTS)
+	if(NOT TZ_NO_TZRULE)
+		add_definitions(-DTIMEZONE_RULES=1)
+	endif()
+	include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/test)
+	add_executable(validate test/tz_test/validate.cpp)
+
+	set_property(TARGET validate PROPERTY CXX_STADARD 14)
+
+	target_link_libraries(validate tz)
+	
+	if(NOT TZ_NO_TZRULE)
+		add_test(validate_rules validate tzrule)
+	endif()
+	if(NOT TZ_NO_TZFILE)
+		add_test(validate_files validate tzfile)
+	endif()
+	
+	file(GLOB_RECURSE DATE_STATIC_TESTS RELATIVE ${CMAKE_SOURCE_DIR}/test/ *.fail.cpp)
+	foreach(source_file ${DATE_STATIC_TESTS})
+		string(REPLACE "." "_" source_target ${source_file})
+		string(REPLACE "/" "_" source_target ${source_target})
+		string(REPLACE "\\" "_" source_target ${source_target})
+		string(REPLACE "_cpp" "" source_target ${source_target})
+		add_executable(${source_target} ${CMAKE_SOURCE_DIR}/test/${source_file})
+	endforeach()
+	
+	file(GLOB_RECURSE DATE_RUNTIME_TESTS RELATIVE ${CMAKE_SOURCE_DIR}/test/ *.pass.cpp)
+	foreach(source_file ${DATE_RUNTIME_TESTS})
+		string(REPLACE "." "_" source_target ${source_file})
+		string(REPLACE "/" "_" source_target ${source_target})
+		string(REPLACE "\\" "_" source_target ${source_target})
+		string(REPLACE "_cpp" "" source_target ${source_target})
+		add_test(${source_target} ${source_target})
+	endforeach()
+endif()

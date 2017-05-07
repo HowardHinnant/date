@@ -23,11 +23,12 @@
 // month / year not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = aug/2015_y;
+    static_assert(!decltype(test_can_divide(aug,2015_y))::value, "month / year not allowed");
 }

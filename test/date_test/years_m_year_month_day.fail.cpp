@@ -23,11 +23,12 @@
 // years - year_month_day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = 2015_y - year_month_day{2015_y, aug, 9_d};
+    static_assert(!decltype(test_can_subtract(2015_y, year_month_day{2015_y, aug, 9_d}))::value, "years - year_month_day not allowed");
 }

@@ -74,23 +74,10 @@ IMPLEMENTED_PASS=0
 afunc() {
 	fail=0
 	pass=0
-	if (ls ${TEST_PREFIX}*fail.cpp > /dev/null 2>&1)
-	then
-		for FILE in $(ls ${TEST_PREFIX}*fail.cpp); do
-			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE > /dev/null 2>&1
-			then
-				rm ./$TEST_EXE
-				echo "$FILE should not compile"
-				fail=$(($fail+1))
-			else
-				pass=$(($pass+1))
-			fi
-		done
-	fi
 
-	if (ls ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
+	if (ls ${TEST_PREFIX}*fail.cpp ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
 	then
-		for FILE in $(ls ${TEST_PREFIX}*pass.cpp); do
+		for FILE in $(ls ${TEST_PREFIX}*fail.cpp ${TEST_PREFIX}*pass.cpp); do
             if [ "$VERBOSE" ]
             then
              	echo "Running test: " $FILE
