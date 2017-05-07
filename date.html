@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-05-04<br/>
+2017-05-07<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -8076,8 +8076,11 @@ alternative representation.</td>
 
 <tr>
 <td><code>%n</code></td>
-<td>Matches one or more white space characters.  Consecutive <code>%n</code> and
-<code>%t</code> act as a single <code>%n</code>.</td>
+<td>Matches one white space character.
+[<i>Note:</i> <code>%n</code>, <code>%t</code> and a space, can be combined to match
+a wide range of white-space patterns.  For example <code>"%n "</code> matches one or
+more white space charcters, and <code>"%n%t%t"</code> matches one to three white
+space characters. &mdash; <i>end note</i>]</td>
 </tr>
 
 <tr>
@@ -8110,7 +8113,7 @@ representation.</td>
 
 <tr>
 <td><code>%t</code></td>
-<td>Equivalent to <code>%n</code>.</td>
+<td>Matches zero or one white space characters.</td>
 </tr>
 
 <tr>
