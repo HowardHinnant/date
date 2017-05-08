@@ -75,9 +75,24 @@ afunc() {
 	fail=0
 	pass=0
 
-	if (ls ${TEST_PREFIX}*fail.cpp ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
+	TEST_FILES=""
+	if (ls ${TEST_PREFIX}*.fail.cpp > /dev/null 2>&1)
 	then
-		for FILE in $(ls ${TEST_PREFIX}*fail.cpp ${TEST_PREFIX}*pass.cpp); do
+		TEST_FILES=$(ls ${TEST_PREFIX}*.fail.cpp)
+	fi
+	if (ls ${TEST_PREFIX}*.pass.cpp > /dev/null 2>&1)
+	then
+		if [ "${TEST_FILES}" == "" ]
+		then
+			TEST_FILES="$(ls ${TEST_PREFIX}*.pass.cpp)"
+		else
+			TEST_FILES="${TEST_FILES} $(ls ${TEST_PREFIX}*.pass.cpp)"
+		fi
+	fi
+	
+	if [ "${TEST_FILES}" != "" ]
+	then
+		for FILE in ${TEST_FILES}; do
             if [ "$VERBOSE" ]
             then
              	echo "Running test: " $FILE

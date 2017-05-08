@@ -30,5 +30,5 @@ main()
 {
     using namespace date;
 
-    static_assert(!decltype(test_can_add(year_month_day{2015_y, aug, 9_d}, year_month_day{2015_y, aug, 9_d}))::value);
+    static_assert(!decltype(test_can_add(year_month_day{2015_y, aug, 9_d}, year_month_day{2015_y, aug, 9_d}))::value, "year_month_day + year_month_day not allowed");
 }

@@ -99,6 +99,7 @@
 #include <vector>
 #include <sys/stat.h>
 #if TIMEZONE_FILES
+#  include <array>
 #  include <queue>
 #  include <dirent.h>
 #endif // TIMEZONE_FILES
@@ -290,11 +291,12 @@ get_download_gz_file(const std::string& version)
 }
 #endif  // HAS_REMOTE_API
 
-#endif // TIMEZONE_RULES
 
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
+
+#endif // TIMEZONE_RULES
 
 CONSTDATA auto min_day = date::jan/1;
 CONSTDATA auto max_day = date::dec/31;
@@ -2307,7 +2309,7 @@ delete_file(const std::string& file)
 #endif // !WIN32
 }
 
-#ifdef TIMEZONE_MAPPING
+#if TIMEZONE_MAPPING
 
 static
 bool
@@ -2905,39 +2907,15 @@ getTimeZoneKeyName()
     return buf;
 }
 
-const tzrule_zone*
-current_zone()
-{
-#if TIMEZONE_MAPPING
-    std::string win_tzid = getTimeZoneKeyName();
-    std::string standard_tzid;
-    if (!native_to_standard_timezone_name(win_tzid, standard_tzid))
-    {
-        std::string msg;
-        msg = "current_zone() failed: A mapping from the Windows Time Zone id \"";
-        msg += win_tzid;
-        msg += "\" was not found in the time zone mapping database.";
-        throw std::runtime_error(msg);
-    }
-    return date::locate_zone(standard_tzid);
-#else  // !TIMEZONE_MAPPING
-    // Currently Win32 requires iana <--> windows tz name mappings
-    // for this function to work.
-    // TODO! we should really support TIMEZONE_MAPPINGS=0 on Windows,
-    // And in this mode we should read the current iana timezone from a file.
-    // This would allow the TZ library do be used by apps that don't care
-    // about Windows standard names just iana names.
-    // This would allow the xml dependency to be dropped and none of
-    // the name mapping functions would be needed.
-    throw std::runtime_error("current_zone not implemented.");
-#endif // !TIMEZONE_MAPPING
-}
-
-#else // !WIN32
+#endif // _WIN32
 
 #endif // TIMEZONE_RULES
 
-std::string detail::current_zone_string()
+namespace detail
+{
+
+std::string
+current_zone_string()
 {
 #ifndef _WIN32
     // localtime() uses TZ environment variable first
@@ -2946,7 +2924,6 @@ std::string detail::current_zone_string()
     {
         return tz;
     }
-#endif
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
     // containing time zone details or a symlink to such a file.
@@ -2972,7 +2949,7 @@ std::string detail::current_zone_string()
         else
             throw system_error(errno, system_category(), "realpath() failed");
 
-        const char zonepath[] = "/usr/share/zoneinfo/";
+        const char zonepath[] = "/usr/share/zone_info";
         const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
         const size_t pos = result.find(zonepath);
         if (pos != result.npos)
@@ -3014,9 +2991,34 @@ std::string detail::current_zone_string()
         // Fall through to try other means.
     }
     throw std::runtime_error("Could not get current timezone");
+#else // _WIN32
+#  if TIMEZONE_MAPPING
+    std::string win_tzid = getTimeZoneKeyName();
+    std::string standard_tzid;
+    if (!native_to_standard_timezone_name(win_tzid, standard_tzid))
+    {
+        std::string msg;
+        msg = "current_zone_string() failed: A mapping from the Windows Time Zone id \"";
+        msg += win_tzid;
+        msg += "\" was not found in the time zone mapping database.";
+        throw std::runtime_error(msg);
+    }
+    return standard_tzid;
+#  else  // !TIMEZONE_MAPPING
+    // Currently Win32 requires iana <--> windows tz name mappings
+    // for this function to work.
+    // TODO! we should really support TIMEZONE_MAPPINGS=0 on Windows,
+    // And in this mode we should read the current iana timezone from a file.
+    // This would allow the TZ library do be used by apps that don't care
+    // about Windows standard names just iana names.
+    // This would allow the xml dependency to be dropped and none of
+    // the name mapping functions would be needed.
+    throw std::runtime_error("current_zone_string not implemented.");
+#  endif // !TIMEZONE_MAPPING
+#endif // !WIN32
 }
 
-#endif // !WIN32
+}
 
 #if defined(TZ_TEST) && TIMEZONE_MAPPING
 
@@ -3330,9 +3332,6 @@ tzfile_db::init_tzdb(std::string tz_dir)
     }
     using namespace date;
     tzfile_db db;
-    const std::string install = get_install();
-    const std::string path = install + folder_delimiter;
-    std::string line;
 
     //Iterate through folders
     std::queue<std::string> subfolders;

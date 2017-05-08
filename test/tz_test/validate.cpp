@@ -175,14 +175,25 @@ main(int argc, char** argv)
     {
         if(argc == 2) {
             std::string t{argv[1]};
+#if TIMEZONE_FILES
             if(t == "tzfile") {
                 tzmain<date::tzfile_zone>();
-            } else if(t == "tzrule") {
+            }
+            else
+#endif
+#if TIMEZONE_RULES
+            if(t == "tzrule")
+            {
                 tzmain<date::tzrule_zone>();
-            } else {
+            }
+            else
+#endif
+            {
                 throw std::runtime_error{"Unknown test: " +t};
             }
-        } else {
+        }
+        else 
+        {
             tzmain<date::time_zone>();
         }
     }

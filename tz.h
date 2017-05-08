@@ -318,7 +318,7 @@ public:
                           std::is_convertible<sys_time<Duration2>,
                                               sys_time<Duration>>::value
                       >::type>
-        basic_zoned_time(const basic_zoned_time<Duration2,TimeZone>& zt) NOEXCEPT;
+    basic_zoned_time(const basic_zoned_time<Duration2,TimeZone>& zt) NOEXCEPT;
 
     basic_zoned_time(const TimeZone* z,      const local_time<Duration>& tp);
     basic_zoned_time(const std::string& name, const local_time<Duration>& tp);

@@ -18,6 +18,10 @@ int
 main()
 {
     using namespace date;
+#if TIMEZONE_RULES
     test_zone<tzrule_zone>::test();
+#endif
+#if TIMEZONE_FILES
     test_zone<tzfile_zone>::test();
+#endif
 }
