@@ -51,7 +51,13 @@
 #    error "Timezone mapping is not required or not implemented for this platform."
 #  endif
 #  if !defined(TIMEZONE_FILES) && !defined(TIMEZONE_RULES)
-#    define TIMEZONE_FILES 1
+#    if !defined(__APPLE__)
+#      define TIMEZONE_RULES 1
+#      define TIMEZONE_FILES 0
+#    else
+#      define TIMEZONE_RULES 0
+#      define TIMEZONE_FILES 1
+#    endif
 #  endif
 #endif
 
@@ -110,12 +116,12 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  endif
 #endif
 
-#if TIMEZONE_DEFAULT == 0 && !defined(TIMEZONE_FILES)
-#  error "Cannot use TIMEZONE_FILES as TIMEZONE_DEFAULT if TIMEZONE_FILES isn't defined!"
-#elif TIMEZONE_DEFAULT == 1 && !defined(TIMEZONE_MAPPING)
-#  error "Cannot use TIMEZONE_MAPPING as TIMEZONE_DEFAULT if TIMEZONE_MAPPING isn't defined!"
-#elif TIMEZONE_DEFAULT == 2 && !defined(TIMEZONE_RULES)
-#  error "Cannot use TIMEZONE_RULES as TIMEZONE_DEFAULT if TIMEZONE_RULES isn't defined!"
+#if TIMEZONE_DEFAULT == 0 && !TIMEZONE_FILES
+#  error "Cannot use TIMEZONE_FILES as TIMEZONE_DEFAULT if TIMEZONE_FILES is disabled!"
+#elif TIMEZONE_DEFAULT == 1 && !TIMEZONE_MAPPING
+#  error "Cannot use TIMEZONE_MAPPING as TIMEZONE_DEFAULT if TIMEZONE_MAPPING is disabled!"
+#elif TIMEZONE_DEFAULT == 2 && TIMEZONE_RULES
+#  error "Cannot use TIMEZONE_RULES as TIMEZONE_DEFAULT if TIMEZONE_RULES is disabled!"
 #endif
 
 #if defined(__APPLE__) && !defined(DATE_TIMEZONE_FILES_NO_LEAP)
@@ -124,6 +130,10 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 
 #ifndef DATE_TIMEZONE_FILES_NO_LEAP
 #  define DATE_TIMEZONE_FILES_NO_LEAP 0
+#endif
+
+#if TIMEZONE_DEFAULT == 0 && DATE_TIMEZONE_FILES_NO_LEAP && !TIMEZONE_RULES
+#  warning "TIMEZONE_RULES must be explicitly enabled on this system in order to use leap seconds"
 #endif
 
 #include "date.h"
