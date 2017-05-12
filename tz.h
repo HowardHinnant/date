@@ -126,14 +126,6 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  define DATE_TIMEZONE_FILES_NO_LEAP 0
 #endif
 
-#if TIMEZONE_DEFAULT == 0 && DATE_TIMEZONE_FILES_NO_LEAP && defined(__APPLE__)
-#  define DATE_TIMEZONE_USE_TIME2POSIX 1
-#endif
-
-#ifndef DATE_TIMEZONE_USE_TIME2POSIX
-#  define DATE_TIMEZONE_USE_TIME2POSIX 0
-#endif
-
 #include "date.h"
 #include "tz_private.h"
 
@@ -153,9 +145,6 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <type_traits>
 #include <utility>
 #include <vector>
-#if DATE_TIMEZONE_USE_TIME2POSIX
-#  include <time.h>
-#endif
 
 #ifdef _WIN32
 #  ifdef DATE_BUILD_DLL
@@ -1599,13 +1588,9 @@ to_utc_time(const sys_time<Duration>& st)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
-#if DATE_TIMEZONE_USE_TIME2POSIX
-    return utc_time<duration>{seconds{posix2time(st.time_since_epoch().count())}};
-#else
     auto const& leaps = Tzdb::get_tzdb().leaps;
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), st);
     return utc_time<duration>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
-#endif
 }
 
 // Return pair<is_leap_second, seconds{number_of_leap_seconds_since_1970}>
@@ -1618,14 +1603,6 @@ is_leap_second(date::utc_time<Duration> const& ut)
     using namespace date;
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
-#if DATE_TIMEZONE_USE_TIME2POSIX
-    const time_t t = time2posix(ut.time_since_epoch().count());
-    time_t t0 = time2posix(ut.time_since_epoch().count()-1);
-    if(t == t0)
-        return {true, t - ut.time_since_epoch().count()};
-    t0 = time2posix(ut.time_since_epoch().count()+1);
-    return {t == t0, t - ut.time_since_epoch().count()};
-#else
     auto const& leaps = Tzdb::get_tzdb().leaps;
     auto tp = sys_time<duration>{ut.time_since_epoch()};
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
@@ -1643,7 +1620,6 @@ is_leap_second(date::utc_time<Duration> const& ut)
         }
     }
     return {ls, ds};
-#endif
 }
 
 template <class Duration>
