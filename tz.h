@@ -1581,7 +1581,13 @@ template <class Duration>
 
 using utc_seconds = utc_time<std::chrono::seconds>;
 
-template <class Duration, class Tzdb=TZ_DB>
+template <class Duration, class Tzdb=
+#if TIMEZONE_DEFAULT == 0 && DATE_TIMEZONE_FILES_NO_LEAP && TIMEZONE_RULES
+tzrule_db
+#else
+TZ_DB
+#endif
+>
 inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(const sys_time<Duration>& st)
@@ -1596,7 +1602,13 @@ to_utc_time(const sys_time<Duration>& st)
 // Return pair<is_leap_second, seconds{number_of_leap_seconds_since_1970}>
 // first is true if ut is during a leap second insertion, otherwise false.
 // If ut is during a leap second insertion, that leap second is included in the count
-template <class Duration, class Tzdb=TZ_DB>
+template <class Duration, class Tzdb=
+#if TIMEZONE_DEFAULT == 0 && DATE_TIMEZONE_FILES_NO_LEAP && TIMEZONE_RULES
+tzrule_db
+#else
+TZ_DB
+#endif
+>
 std::pair<bool, std::chrono::seconds>
 is_leap_second(date::utc_time<Duration> const& ut)
 {
