@@ -2828,6 +2828,10 @@ tzrule_db::locate_zone(const std::string& tz_name)
     return &*zi;
 }
 
+const tzrule_zone*
+tzrule_db::current_zone()
+{ return locate_zone(detail::current_zone_string()); }
+
 std::ostream&
 operator<<(std::ostream& os, const tzrule_db& db)
 {
@@ -2949,8 +2953,9 @@ current_zone_string()
         else
             throw system_error(errno, system_category(), "realpath() failed");
 
-        const char zonepath[] = "/usr/share/zone_info";
-        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
+        const char zonepath[] = TZDIR;
+        assert(zonepath[0] != '\0');
+        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0]) - (zonepath[sizeof(zonepath)-2] == folder_delimiter ? 1 : 0);
         const size_t pos = result.find(zonepath);
         if (pos != result.npos)
             result.erase(0, zonepath_len+pos);
@@ -3041,44 +3046,76 @@ locate_native_zone(const std::string& native_tz_name)
 
 #if TIMEZONE_FILES
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-    tzfile_zone(tzfile_zone&& src)
-        : name_{std::move(src.name_)}
-        , transitions_{std::move(src.transitions_)}
-        , local_infos_{std::move(src.local_infos_)}
-    {}
-    tzfile_zone& operator=(tzfile_zone&& src)
+tzfile_zone::tzfile_zone(const std::string& name, std::istream& in)
+    : name_{name}
+    , p{}
+{
+    in.exceptions(std::ios::failbit | std::ios::badbit);
+    std::array<char,20> buffer;
+    
+    if(!in.read(buffer.data(), buffer.size()) ||
+        buffer[0] != 'T' || 
+        buffer[1] != 'Z' ||
+        buffer[2] != 'i' ||
+        buffer[3] != 'f')
     {
-        name_ = std::move(src.name_);
-        transitions_ = std::move(src.transitions_);
-        local_infos_ = std::move(src.local_infos_);
-        return *this;
+        throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
     }
-#endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
+#if LAZY_INIT
+}
 
-    tzfile_zone::tzfile_zone(const std::string& name, std::istream& in, std::vector<leap>* leaps)
-        : name_{name}, transitions_{}, local_infos_{}
+void
+tzfile_zone::load_data(std::istream& in, detail::tzfile_data& p)
+{
+    in.exceptions(std::ios::failbit | std::ios::badbit);
+    std::array<char,20> buffer;
+    
+    if(!in.read(buffer.data(), buffer.size()) ||
+        buffer[0] != 'T' || 
+        buffer[1] != 'Z' ||
+        buffer[2] != 'i' ||
+        buffer[3] != 'f')
     {
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        std::array<char,20> buffer;
-        
-        if(!in.read(buffer.data(), buffer.size()) ||
-            buffer[0] != 'T' || 
+        throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
+    }
+#endif
+    const size_t time_size = buffer[4] == '\0' ? 4 : buffer[4] == '2' ? 8 : buffer[4] == '3' ? 8 : throw std::runtime_error{"invalid tzfile: expected \\0, 2, or 3 got "+std::string(1,buffer[4])};
+    
+    std::uint32_t is_gmt_count;
+    std::uint32_t is_dst_count;
+    std::uint32_t leap_count;
+    std::uint32_t time_count;
+    std::uint32_t type_count;
+    std::uint32_t char_count;
+    
+    in.read(buffer.data(), buffer.size());
+    is_gmt_count = detail::interpret32(&buffer[0]);
+    is_dst_count = detail::interpret32(&buffer[4]);
+    leap_count = detail::interpret32(&buffer[8]);
+    time_count = detail::interpret32(&buffer[12]);
+    type_count = detail::interpret32(&buffer[16]);
+    in.read(buffer.data(), 4);
+    char_count = detail::interpret32(&buffer[0]);
+    if(time_size == 8)
+    {  //Skip to v2 part of file
+        in.ignore(
+            5 * time_count +
+            6 * type_count +
+            char_count +
+            8 * leap_count +
+            is_dst_count +
+            is_gmt_count
+        );
+        in.read(buffer.data(), buffer.size());
+        if(    buffer[0] != 'T' || 
             buffer[1] != 'Z' ||
             buffer[2] != 'i' ||
-            buffer[3] != 'f')
+            buffer[3] != 'f' ||
+            (buffer[4] != '2' &&
+            buffer[4] != '3'))
         {
             throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
         }
-        const size_t time_size = buffer[4] == '\0' ? 4 : buffer[4] == '2' ? 8 : buffer[4] == '3' ? 8 : throw std::runtime_error{"invalid tzfile: expected \\0, 2, or 3 got "+std::string(1,buffer[4])};
-        
-        std::uint32_t is_gmt_count;
-        std::uint32_t is_dst_count;
-        std::uint32_t leap_count;
-        std::uint32_t time_count;
-        std::uint32_t type_count;
-        std::uint32_t char_count;
-        
         in.read(buffer.data(), buffer.size());
         is_gmt_count = detail::interpret32(&buffer[0]);
         is_dst_count = detail::interpret32(&buffer[4]);
@@ -3087,121 +3124,145 @@ locate_native_zone(const std::string& native_tz_name)
         type_count = detail::interpret32(&buffer[16]);
         in.read(buffer.data(), 4);
         char_count = detail::interpret32(&buffer[0]);
-        if(time_size == 8)
-        {  //Skip to v2 part of file
-            in.ignore(
-                5 * time_count +
-                6 * type_count +
-                char_count +
-                8 * leap_count +
-                is_dst_count +
-                is_gmt_count
-            );
-            in.read(buffer.data(), buffer.size());
-            if(    buffer[0] != 'T' || 
-                buffer[1] != 'Z' ||
-                buffer[2] != 'i' ||
-                buffer[3] != 'f' ||
-                (buffer[4] != '2' &&
-                buffer[4] != '3'))
-            {
-                throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
-            }
-            in.read(buffer.data(), buffer.size());
-            is_gmt_count = detail::interpret32(&buffer[0]);
-            is_dst_count = detail::interpret32(&buffer[4]);
-            leap_count = detail::interpret32(&buffer[8]);
-            time_count = detail::interpret32(&buffer[12]);
-            type_count = detail::interpret32(&buffer[16]);
-            in.read(buffer.data(), 4);
-            char_count = detail::interpret32(&buffer[0]);
-        }
-        if(leaps)
-        {
-            if(leap_count == 0)
-                throw std::runtime_error{"No leaps in "+name_};
-            leaps->clear();
-            leaps->reserve(leap_count);
-            in.ignore(
-                (time_size+1) * time_count +
-                6 * type_count +
-                char_count
-               );
-            size_t buffer_size = time_size + 4;
-            for(std::uint32_t leap_last = 0; leap_last < leap_count;) {
-                if(!in.read(buffer.data(), buffer_size))break;
-                std::uint32_t count = detail::interpret32(&buffer[time_size]);
-                if(++leap_last != count) {
-                    throw std::runtime_error{"invalid tzfile"};
-                }
-                leaps->emplace_back(sys_seconds{std::chrono::seconds{detail::interpret_time(buffer.data(), time_size)}});
-            }
-        }
-        else
-        {
-            transitions_.reserve(time_count);
-            for(std::uint32_t i = 0; i < time_count; ++i) {
-                in.read(buffer.data(), time_size);
-                std::chrono::seconds s{detail::interpret_time(buffer.data(), time_size)};
-                transitions_.emplace_back(sys_seconds{s});
-            }
-            std::vector<std::uint8_t> transition_indexes(time_count, 0);
-            in.read(reinterpret_cast<char*>(transition_indexes.data()), transition_indexes.size());
-            local_infos_.reserve(type_count);
-            std::vector<std::uint8_t> abbreviation_indexes;
-            abbreviation_indexes.reserve(type_count);
-            for(; type_count > 0; --type_count) {
-                in.read(buffer.data(), 6);
-                std::chrono::seconds s{detail::interpret_time(buffer.data(), 4)};
-                local_infos_.emplace_back(s, buffer[4] != 0, std::string{});
-                abbreviation_indexes.push_back(buffer[5]);
-                if(abbreviation_indexes.back() >= char_count) {
-                    throw std::runtime_error{"invalid tzfile: abbreviation index "+std::to_string(abbreviation_indexes.back())+" >= "+std::to_string(char_count)};
-                }
-            }
-            for(size_t i = 0; i < transition_indexes.size(); ++i) {
-                transitions_[i].info = &local_infos_.at(transition_indexes[i]);
-            }
-            std::unique_ptr<char[]> abbreviations(new char[char_count+1]);
-            if(char_count > 0) {
-                in.read(abbreviations.get(), char_count);
-                abbreviations[char_count] = '\0';
-                for(size_t i = 0; i < abbreviation_indexes.size(); ++i) {
-                    local_infos_[i].abbreviation = &abbreviations[abbreviation_indexes[i]];
-                }
-            }
-            std::vector<leap> leaps_;
-            leaps_.reserve(leap_count);
-            size_t buffer_size = time_size + 4;
-            for(std::uint32_t leap_last = 0; leap_last < leap_count;) {
-                if(!in.read(buffer.data(), buffer_size))break;
-                std::uint32_t count = detail::interpret32(&buffer[time_size]);
-                if(++leap_last != count) {
-                    throw std::runtime_error{"invalid tzfile"};
-                }
-                leaps_.emplace_back(sys_seconds{std::chrono::seconds{detail::interpret_time(buffer.data(), time_size)}});
-            }
-            if(!leaps_.empty()) {
-                auto itr = leaps_.begin();
-                auto l = itr->date();
-                std::chrono::seconds leap_count{0};
-                for(auto& t : transitions_) {
-                    if(t.timepoint >= l) {
-                        if(itr+1 == leaps_.end()) {
-                            l = sys_seconds::max();
-                        } else {
-                            ++itr;
-                            l = itr->date();
-                            *itr -= leap_count;
-                        }
-                        ++leap_count;
-                        
-                    }
-                    t.timepoint -= leap_count;
-                }
-            }
+    }
+    p.transitions_.reserve(time_count);
+    for(std::uint32_t i = 0; i < time_count; ++i) {
+        in.read(buffer.data(), time_size);
+        std::chrono::seconds s{detail::interpret_time(buffer.data(), time_size)};
+        p.transitions_.emplace_back(sys_seconds{s});
+    }
+    std::vector<std::uint8_t> transition_indexes(time_count, 0);
+    in.read(reinterpret_cast<char*>(transition_indexes.data()), transition_indexes.size());
+    p.local_infos_.reserve(type_count);
+    std::vector<std::uint8_t> abbreviation_indexes;
+    abbreviation_indexes.reserve(type_count);
+    for(; type_count > 0; --type_count) {
+        in.read(buffer.data(), 6);
+        std::chrono::seconds s{detail::interpret_time(buffer.data(), 4)};
+        p.local_infos_.emplace_back(s, buffer[4] != 0, std::string{});
+        abbreviation_indexes.push_back(buffer[5]);
+        if(abbreviation_indexes.back() >= char_count) {
+            throw std::runtime_error{"invalid tzfile: abbreviation index "+std::to_string(abbreviation_indexes.back())+" >= "+std::to_string(char_count)};
         }
     }
+    for(size_t i = 0; i < transition_indexes.size(); ++i) {
+        p.transitions_[i].info = &p.local_infos_.at(transition_indexes[i]);
+    }
+    std::unique_ptr<char[]> abbreviations(new char[char_count+1]);
+    if(char_count > 0) {
+        in.read(abbreviations.get(), char_count);
+        abbreviations[char_count] = '\0';
+        for(size_t i = 0; i < abbreviation_indexes.size(); ++i) {
+            p.local_infos_[i].abbreviation = &abbreviations[abbreviation_indexes[i]];
+        }
+    }
+    std::vector<leap> leaps_;
+    leaps_.reserve(leap_count);
+    size_t buffer_size = time_size + 4;
+    for(std::uint32_t leap_last = 0; leap_last < leap_count;) {
+        if(!in.read(buffer.data(), buffer_size))break;
+        std::uint32_t count = detail::interpret32(&buffer[time_size]);
+        if(++leap_last != count) {
+            throw std::runtime_error{"invalid tzfile"};
+        }
+        leaps_.emplace_back(sys_seconds{std::chrono::seconds{detail::interpret_time(buffer.data(), time_size)}});
+    }
+    if(!leaps_.empty()) {
+        auto itr = leaps_.begin();
+        auto l = itr->date();
+        std::chrono::seconds leap_count{0};
+        for(auto& t : p.transitions_) {
+            if(t.timepoint >= l) {
+                if(itr+1 == leaps_.end()) {
+                    l = sys_seconds::max();
+                } else {
+                    ++itr;
+                    l = itr->date();
+                    *itr -= leap_count;
+                }
+                ++leap_count;
+                
+            }
+            t.timepoint -= leap_count;
+        }
+    }
+}
+
+void tzfile_zone::load_leaps(std::istream& in, std::vector<leap>& leaps_)
+{
+    in.exceptions(std::ios::failbit | std::ios::badbit);
+    std::array<char,20> buffer;
+    
+    if(!in.read(buffer.data(), buffer.size()) ||
+        buffer[0] != 'T' || 
+        buffer[1] != 'Z' ||
+        buffer[2] != 'i' ||
+        buffer[3] != 'f')
+    {
+        throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
+    }
+    const size_t time_size = buffer[4] == '\0' ? 4 : buffer[4] == '2' ? 8 : buffer[4] == '3' ? 8 : throw std::runtime_error{"invalid tzfile: expected \\0, 2, or 3 got "+std::string(1,buffer[4])};
+    
+    std::uint32_t is_gmt_count;
+    std::uint32_t is_dst_count;
+    std::uint32_t leap_count;
+    std::uint32_t time_count;
+    std::uint32_t type_count;
+    std::uint32_t char_count;
+    
+    in.read(buffer.data(), buffer.size());
+    is_gmt_count = detail::interpret32(&buffer[0]);
+    is_dst_count = detail::interpret32(&buffer[4]);
+    leap_count = detail::interpret32(&buffer[8]);
+    time_count = detail::interpret32(&buffer[12]);
+    type_count = detail::interpret32(&buffer[16]);
+    in.read(buffer.data(), 4);
+    char_count = detail::interpret32(&buffer[0]);
+    if(time_size == 8)
+    {  //Skip to v2 part of file
+        in.ignore(
+            5 * time_count +
+            6 * type_count +
+            char_count +
+            8 * leap_count +
+            is_dst_count +
+            is_gmt_count
+        );
+        in.read(buffer.data(), buffer.size());
+        if(    buffer[0] != 'T' || 
+            buffer[1] != 'Z' ||
+            buffer[2] != 'i' ||
+            buffer[3] != 'f' ||
+            (buffer[4] != '2' &&
+            buffer[4] != '3'))
+        {
+            throw std::runtime_error{"invalid tzfile: expected TZif got "+std::string(buffer.data(), 4)};
+        }
+        in.read(buffer.data(), buffer.size());
+        is_gmt_count = detail::interpret32(&buffer[0]);
+        is_dst_count = detail::interpret32(&buffer[4]);
+        leap_count = detail::interpret32(&buffer[8]);
+        time_count = detail::interpret32(&buffer[12]);
+        type_count = detail::interpret32(&buffer[16]);
+        in.read(buffer.data(), 4);
+        char_count = detail::interpret32(&buffer[0]);
+    }
+    in.ignore(
+        (time_size+1) * time_count +
+        6 * type_count +
+        char_count
+    );
+    leaps_.reserve(leap_count);
+    size_t buffer_size = time_size + 4;
+    for(std::uint32_t leap_last = 0; leap_last < leap_count;) {
+        if(!in.read(buffer.data(), buffer_size))break;
+        std::uint32_t count = detail::interpret32(&buffer[time_size]);
+        if(++leap_last != count) {
+            throw std::runtime_error{"invalid tzfile"};
+        }
+        leaps_.emplace_back(sys_seconds{std::chrono::seconds{detail::interpret_time(buffer.data(), time_size)}});
+    }
+}
 
 sys_info
 tzfile_zone::get_info_impl(sys_seconds tp) const
@@ -3240,6 +3301,11 @@ tzfile_zone::get_info_impl(sys_seconds tp, int tz_int) const
 {
     using namespace std::chrono;
     using namespace date;
+#if LAZY_INIT
+    const auto& transitions_ = p->transitions_;
+#else
+    const auto& transitions_ = p.transitions_;
+#endif
     typedef decltype(transitions_.begin()) itr_t;
     tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
@@ -3247,14 +3313,18 @@ tzfile_zone::get_info_impl(sys_seconds tp, int tz_int) const
     std::function<bool(const sys_seconds&, const itr_t&)> comparator;
     if(timezone == tz::utc)
     {
-        comparator = [this](const sys_seconds& tp, const itr_t& itr)
+        comparator = [](const sys_seconds& tp, const itr_t& itr)
         { return tp < itr->timepoint; };
     }
     else
     {
         comparator = [this](const sys_seconds& tp, const itr_t& itr)
         {
-            return tp < itr->timepoint + (itr == transitions_.begin() ? initial_zone_info() : (itr-1)->info)->gmt_offset;
+#if LAZY_INIT
+            return tp < itr->timepoint + (itr == p->transitions_.begin() ? initial_zone_info() : (itr-1)->info)->gmt_offset;
+#else
+            return tp < itr->timepoint + (itr == p.transitions_.begin() ? initial_zone_info() : (itr-1)->info)->gmt_offset;
+#endif
         };
     }
     auto itr = upper_bound_itrcmp(transitions_.begin(), transitions_.end(), tp, comparator);
@@ -3298,6 +3368,11 @@ tzfile_zone::get_info_impl(sys_seconds tp, int tz_int) const
 const detail::zone_info*
 tzfile_zone::initial_zone_info() const
 {
+#if LAZY_INIT
+    const auto& local_infos_ = p->local_infos_;
+#else
+    const auto& local_infos_ = p.local_infos_;
+#endif
     for(const auto& i : local_infos_) {
         if(!i.is_dst) {
             return &i;
@@ -3365,16 +3440,20 @@ tzfile_db::init_tzdb(std::string tz_dir)
                 {
                     try {
                         std::ifstream in(subname, std::ios_base::binary);
-                        db.zones.emplace_back(subname.substr(tz_dir.length()+1), in, nullptr);
+                        tzfile_zone z(subname.substr(tz_dir.length()+1), in);
+                        db.zones.push_back(std::move(z));
                     } catch(...) {}
                 }
             }
         }
         closedir(dir);
     }
+    db.zones.shrink_to_fit();
     std::sort(db.zones.begin(), db.zones.end());
+#if !DATE_TIMEZONE_FILES_NO_LEAP
     std::ifstream in((tz_dir + folder_delimiter) + TZLEAP_FILE, std::ios_base::binary);
-    tzfile_zone tz("leapseconds", in, &db.leaps);
+    tzfile_zone::load_leaps(in, db.leaps);
+#endif
     return db;
 }
 
@@ -3414,6 +3493,19 @@ tzfile_db::locate_zone(const std::string& tz_name, const std::string& tz_dir)
     {
         throw std::runtime_error(tz_name + " not found in timezone database");
     }
+#if LAZY_INIT
+    if(!zi->p)
+    {
+        std::unique_ptr<detail::tzfile_data> p(new detail::tzfile_data());
+        std::string d = tz_dir;
+        if(d.empty() || *d.rbegin() != folder_delimiter)
+            d += folder_delimiter;
+        d += tz_name;
+        std::ifstream i(d, std::ios_base::binary);
+        tzfile_zone::load_data(i, *p);
+        const_cast<tzfile_zone *>(&*zi)->p = std::move(p);
+    }
+#endif // LAZY_INIT
     return &*zi;
 }
 

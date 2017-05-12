@@ -66,11 +66,11 @@
 #  define TIMEZONE_FILES 0
 #endif
 
-#if TIMEZONE_RULES
-#  ifndef LAZY_INIT
-#    define LAZY_INIT 1
-#  endif
+#ifndef LAZY_INIT
+#  define LAZY_INIT 1
+#endif
 
+#if TIMEZONE_RULES
 #  ifndef HAS_REMOTE_API
 #    ifdef _WIN32
 #      define HAS_REMOTE_API 0
@@ -92,20 +92,21 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #endif // TIMEZONE_RULES
 
 #if TIMEZONE_FILES
-#  ifndef TZDIR
-#    define TZDIR "/usr/share/zoneinfo"
-#  endif
 #  ifndef TZLEAP_FILE
 #    define TZLEAP_FILE "right/UTC"
 #  endif
 #  include <map>
 #endif // TIMEZONE_FILES
 
+#if !defined(TZDIR) && (TIMEZONE_FILES || !defined(_WIN32))
+#  define TZDIR "/usr/share/zoneinfo"
+#endif
+
 #ifndef TIMEZONE_DEFAULT
-#  if TIMEZONE_RULES
-#    define TIMEZONE_DEFAULT 1
-#  else
+#  if TIMEZONE_FILES
 #    define TIMEZONE_DEFAULT 0
+#  else
+#    define TIMEZONE_DEFAULT 1
 #  endif
 #endif
 
@@ -115,6 +116,22 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  error "Cannot use TIMEZONE_MAPPING as TIMEZONE_DEFAULT if TIMEZONE_MAPPING isn't defined!"
 #elif TIMEZONE_DEFAULT == 2 && !defined(TIMEZONE_RULES)
 #  error "Cannot use TIMEZONE_RULES as TIMEZONE_DEFAULT if TIMEZONE_RULES isn't defined!"
+#endif
+
+#if defined(__APPLE__) && !defined(DATE_TIMEZONE_FILES_NO_LEAP)
+#  define DATE_TIMEZONE_FILES_NO_LEAP 1
+#endif
+
+#ifndef DATE_TIMEZONE_FILES_NO_LEAP
+#  define DATE_TIMEZONE_FILES_NO_LEAP 0
+#endif
+
+#if TIMEZONE_DEFAULT == 0 && DATE_TIMEZONE_FILES_NO_LEAP && defined(__APPLE__)
+#  define DATE_TIMEZONE_USE_TIME2POSIX 1
+#endif
+
+#ifndef DATE_TIMEZONE_USE_TIME2POSIX
+#  define DATE_TIMEZONE_USE_TIME2POSIX 0
 #endif
 
 #include "date.h"
@@ -136,6 +153,9 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <type_traits>
 #include <utility>
 #include <vector>
+#if DATE_TIMEZONE_USE_TIME2POSIX
+#  include <time.h>
+#endif
 
 #ifdef _WIN32
 #  ifdef DATE_BUILD_DLL
@@ -301,6 +321,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_info& r)
     return os;
 }
 
+namespace detail { struct time_zone_tag {}; }
+
 template <class Duration, class TimeZone>
 class basic_zoned_time
 {
@@ -365,27 +387,8 @@ template <class CharT, class Traits, class Duration1, class TimeZone>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const basic_zoned_time<Duration1, TimeZone>& t);
 
-#if TIMEZONE_DEFAULT == 0
-class tzfile_db;
-class tzfile_zone;
-typedef tzfile_zone time_zone;
-typedef tzfile_db TZ_DB;
-#elif TIMEZONE_DEFAULT == 1
-class tzrule_db;
-class tzrule_zone;
-typedef tzrule_db TZ_DB;
-typedef tzrule_zone time_zone;
-#else
-static_assert(false, "TIMEZONE_DEFAULT must be between 0 and 1");
-#endif
-
 template<class TimeZone>
 using basic_zoned_seconds = basic_zoned_time<std::chrono::seconds, TimeZone>;
-
-template<class Duration>
-using zoned_time = basic_zoned_time<Duration, time_zone>;
-
-typedef basic_zoned_seconds<time_zone> zoned_seconds;
 
 template <class Duration1, class Duration2, class TimeZone>
 inline
@@ -436,6 +439,15 @@ public:
     transition(const sys_seconds& t=sys_seconds(), const zone_info* i = nullptr);
 };
 
+class tzfile_data
+{
+public:
+    std::vector<transition> transitions_;
+    std::vector<zone_info>  local_infos_;
+
+       tzfile_data();
+};
+
 inline zone_info::zone_info(const std::chrono::seconds& g, const bool& d, const std::string& a)
     : gmt_offset(g)
     , is_dst(d)
@@ -447,18 +459,28 @@ inline transition::transition(const sys_seconds& t, const zone_info* i)
     , info(i)
 {}
 
-} // namespace detail
+inline tzfile_data::tzfile_data()
+    : transitions_{}
+    , local_infos_{}
+{}
+
+}
 
 class leap;
 class tzfile_db;
 
-class tzfile_zone
+class tzfile_zone : public detail::time_zone_tag
 {
 private:
-
-    std::string                     name_;
-    std::vector<detail::transition> transitions_;
-    std::vector<detail::zone_info>  local_infos_;
+    friend class tzfile_db;
+#if LAZY_INIT
+    using data_t = std::unique_ptr<detail::tzfile_data>;
+    DATE_API static void load_data(std::istream& s, detail::tzfile_data& pimpl);
+#else
+    using data_t = detail::tzfile_data;
+#endif
+    std::string name_;
+    data_t      p;
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -469,7 +491,8 @@ public:
     tzfile_zone& operator=(tzfile_zone&& src);
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 
-    DATE_API explicit tzfile_zone(const std::string& name, std::istream& s, std::vector<leap>* leaps);
+    DATE_API explicit tzfile_zone(const std::string& name, std::istream& s);
+    DATE_API static void load_leaps(std::istream& s, std::vector<leap>& leaps);
 
     const std::string& name() const NOEXCEPT;
 
@@ -518,7 +541,9 @@ class tzfile_db
 {
 public:
     std::vector<tzfile_zone> zones;
+#if !DATE_TIMEZONE_FILES_NO_LEAP
     std::vector<leap>        leaps;
+#endif
     tzfile_db() = default;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     tzfile_db(tzfile_db&&) = default;
@@ -526,13 +551,17 @@ public:
 #else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
     tzfile_db(tzfile_db&& src)
         : zones(std::move(src.zones))
+#if !DATE_TIMEZONE_FILES_NO_LEAP
         , leaps(std::move(src.leaps))
+#endif
     {}
 
     tzfile_db& operator=(tzfile_db&& src)
     {
         zones = std::move(src.zones);
+#if !DATE_TIMEZONE_FILES_NO_LEAP
         leaps = std::move(src.leaps);
+#endif
         return *this;
     }
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -663,17 +692,13 @@ tzfile_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
     tzfile_zone::tzfile_zone(tzfile_zone&& src)
         : name_(std::move(src.name_))
-        , transitions_(std::move(src.transitions_))
-        , local_infos_(std::move(src.local_infos_))
-        , leaps_(std::move(src.leaps_))
+        , p(std::move(src.p))
     {}
     
     tzfile_zone& tzfile_zone::operator=(tzfile_zone&& src)
     {
         name_ = std::move(src.name_);
-        transitions_ = std::move(src.transitions_);
-        local_infos_ = std::move(src.local_infos_);
-        leaps_ = std::move(src.leaps);
+        p = std::move(src.p);
         return *this;
     }
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -688,7 +713,7 @@ namespace detail { struct zonelet; }
 
 class tzrule_db;
 
-class tzrule_zone
+class tzrule_zone : public detail::time_zone_tag
 {
 private:
 
@@ -1204,6 +1229,21 @@ const tzrule_zone* locate_native_zone(const std::string& native_tz_name)
 
 #endif // TIMEZONE_RULES
 
+#if TIMEZONE_DEFAULT == 0
+typedef tzfile_zone time_zone;
+typedef tzfile_db TZ_DB;
+#elif TIMEZONE_DEFAULT == 1
+typedef tzrule_db TZ_DB;
+typedef tzrule_zone time_zone;
+#else
+static_assert(false, "TIMEZONE_DEFAULT must be between 0 and 1");
+#endif
+
+template<class Duration>
+using zoned_time = basic_zoned_time<Duration, time_zone>;
+
+typedef basic_zoned_seconds<time_zone> zoned_seconds;
+
 inline
 const time_zone* locate_zone(const std::string& tz_name)
 { return TZ_DB::locate_zone(tz_name); }
@@ -1406,7 +1446,15 @@ basic_zoned_time<Duration,TimeZone>::get_info() const
 
 // make_zoned_time
 
-template <class Duration, class TimeZone=time_zone>
+template <class Duration>
+inline
+basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
+make_zoned(const sys_time<Duration>& tp)
+{
+    return {tp};
+}
+
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const sys_time<Duration>& tp)
@@ -1414,7 +1462,7 @@ make_zoned(const sys_time<Duration>& tp)
     return {tp};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const TimeZone* zone, const local_time<Duration>& tp)
@@ -1422,7 +1470,15 @@ make_zoned(const TimeZone* zone, const local_time<Duration>& tp)
     return {zone, tp};
 }
 
-template <class Duration, class TimeZone=time_zone>
+template <class Duration>
+inline
+basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
+make_zoned(const std::string& name, const local_time<Duration>& tp)
+{
+    return {name, tp};
+}
+
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const local_time<Duration>& tp)
@@ -1430,7 +1486,7 @@ make_zoned(const std::string& name, const local_time<Duration>& tp)
     return {name, tp};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const TimeZone* zone, const local_time<Duration>& tp, choose c)
@@ -1438,7 +1494,15 @@ make_zoned(const TimeZone* zone, const local_time<Duration>& tp, choose c)
     return {zone, tp, c};
 }
 
-template <class Duration, class TimeZone=time_zone>
+template <class Duration>
+inline
+basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
+make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
+{
+    return {name, tp, c};
+}
+
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
@@ -1446,7 +1510,7 @@ make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
     return {name, tp, c};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const TimeZone* zone, const basic_zoned_time<Duration,TimeZone>& zt)
@@ -1454,7 +1518,7 @@ make_zoned(const TimeZone* zone, const basic_zoned_time<Duration,TimeZone>& zt)
     return {zone, zt};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const basic_zoned_time<Duration,TimeZone>& zt)
@@ -1462,7 +1526,7 @@ make_zoned(const std::string& name, const basic_zoned_time<Duration,TimeZone>& z
     return {name, zt};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const TimeZone* zone, const basic_zoned_time<Duration,TimeZone>& zt, choose c)
@@ -1470,7 +1534,7 @@ make_zoned(const TimeZone* zone, const basic_zoned_time<Duration,TimeZone>& zt, 
     return {zone, zt, c};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const basic_zoned_time<Duration,TimeZone>& zt, choose c)
@@ -1478,7 +1542,7 @@ make_zoned(const std::string& name, const basic_zoned_time<Duration,TimeZone>& z
     return {name, zt, c};
 }
 
-template <class Duration, class TimeZone>
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const TimeZone* zone, const sys_time<Duration>& st)
@@ -1486,7 +1550,15 @@ make_zoned(const TimeZone* zone, const sys_time<Duration>& st)
     return {zone, st};
 }
 
-template <class Duration, class TimeZone=time_zone>
+template <class Duration>
+inline
+basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
+make_zoned(const std::string& name, const sys_time<Duration>& st)
+{
+    return {name, st};
+}
+
+template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const sys_time<Duration>& st)
@@ -1494,7 +1566,7 @@ make_zoned(const std::string& name, const sys_time<Duration>& st)
     return {name, st};
 }
 
-template <class CharT, class Traits, class Duration, class TimeZone>
+template <class CharT, class Traits, class Duration, class TimeZone, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 void
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const basic_zoned_time<Duration,TimeZone>& tp)
@@ -1527,21 +1599,33 @@ to_utc_time(const sys_time<Duration>& st)
 {
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
+#if DATE_TIMEZONE_USE_TIME2POSIX
+    return utc_time<duration>{seconds{posix2time(st.time_since_epoch().count())}};
+#else
     auto const& leaps = Tzdb::get_tzdb().leaps;
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), st);
     return utc_time<duration>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
+#endif
 }
 
 // Return pair<is_leap_second, seconds{number_of_leap_seconds_since_1970}>
 // first is true if ut is during a leap second insertion, otherwise false.
 // If ut is during a leap second insertion, that leap second is included in the count
-template <class Duration, class Tzdb=time_zone>
+template <class Duration, class Tzdb=TZ_DB>
 std::pair<bool, std::chrono::seconds>
 is_leap_second(date::utc_time<Duration> const& ut)
 {
     using namespace date;
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
+#if DATE_TIMEZONE_USE_TIME2POSIX
+    const time_t t = time2posix(ut.time_since_epoch().count());
+    time_t t0 = time2posix(ut.time_since_epoch().count()-1);
+    if(t == t0)
+        return {true, t - ut.time_since_epoch().count()};
+    t0 = time2posix(ut.time_since_epoch().count()+1);
+    return {t == t0, t - ut.time_since_epoch().count()};
+#else
     auto const& leaps = Tzdb::get_tzdb().leaps;
     auto tp = sys_time<duration>{ut.time_since_epoch()};
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
@@ -1559,6 +1643,7 @@ is_leap_second(date::utc_time<Duration> const& ut)
         }
     }
     return {ls, ds};
+#endif
 }
 
 template <class Duration>
