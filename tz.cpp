@@ -3338,7 +3338,7 @@ tzfile_zone::get_info_impl(sys_seconds tp, int tz_int) const
     const zone_info* info;
     if(itr == transitions_.begin())
     {
-        if(!comparator(tp+seconds{1}, itr)) {
+        if(itr != transitions_.end() && !comparator(tp+seconds{1}, itr)) {
             r.begin = itr->timepoint;
             info = itr->info;
         } else {

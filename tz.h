@@ -52,11 +52,11 @@
 #  endif
 #  if !defined(TIMEZONE_FILES) && !defined(TIMEZONE_RULES)
 #    if !defined(__APPLE__)
-#      define TIMEZONE_RULES 1
-#      define TIMEZONE_FILES 0
-#    else
 #      define TIMEZONE_RULES 0
 #      define TIMEZONE_FILES 1
+#    else
+#      define TIMEZONE_RULES 1
+#      define TIMEZONE_FILES 0
 #    endif
 #  endif
 #endif
@@ -329,6 +329,9 @@ class basic_zoned_time
     sys_time<Duration> tp_;
 
 public:
+    typedef Duration duration;
+    typedef TimeZone time_zone;
+
              basic_zoned_time(const sys_time<Duration>& st);
     explicit basic_zoned_time(const TimeZone* z);
     explicit basic_zoned_time(const std::string& name);
@@ -1445,15 +1448,7 @@ basic_zoned_time<Duration,TimeZone>::get_info() const
 
 // make_zoned_time
 
-template <class Duration>
-inline
-basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
-make_zoned(const sys_time<Duration>& tp)
-{
-    return {tp};
-}
-
-template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
+template <class TimeZone=time_zone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const sys_time<Duration>& tp)
@@ -1469,15 +1464,7 @@ make_zoned(const TimeZone* zone, const local_time<Duration>& tp)
     return {zone, tp};
 }
 
-template <class Duration>
-inline
-basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
-make_zoned(const std::string& name, const local_time<Duration>& tp)
-{
-    return {name, tp};
-}
-
-template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
+template <class TimeZone=time_zone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const local_time<Duration>& tp)
@@ -1493,15 +1480,7 @@ make_zoned(const TimeZone* zone, const local_time<Duration>& tp, choose c)
     return {zone, tp, c};
 }
 
-template <class Duration>
-inline
-basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
-make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
-{
-    return {name, tp, c};
-}
-
-template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
+template <class TimeZone=time_zone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
@@ -1549,15 +1528,7 @@ make_zoned(const TimeZone* zone, const sys_time<Duration>& st)
     return {zone, st};
 }
 
-template <class Duration>
-inline
-basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,time_zone>
-make_zoned(const std::string& name, const sys_time<Duration>& st)
-{
-    return {name, st};
-}
-
-template <class TimeZone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
+template <class TimeZone=time_zone, class Duration, typename std::enable_if<std::is_base_of<detail::time_zone_tag,TimeZone>::value,int>::type = 0>
 inline
 basic_zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,TimeZone>
 make_zoned(const std::string& name, const sys_time<Duration>& st)
