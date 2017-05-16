@@ -270,6 +270,8 @@ get_install()
     return ref;
 }
 
+#if HAS_REMOTE_API
+
 static
 std::string
 get_download_gz_file(const std::string& version)
@@ -277,6 +279,8 @@ get_download_gz_file(const std::string& version)
     auto file = get_install() + version + ".tar.gz";
     return file;
 }
+
+#endif // HAS_REMOTE_API
 
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();

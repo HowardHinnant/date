@@ -1,6 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +24,7 @@
 // month_weekday < month_weekday not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
@@ -30,5 +32,6 @@ main()
     using namespace date;
     month_weekday mwd1 = {feb, sat[4]};
     month_weekday mwd2 = {mar, mon[1]};
-    auto b = mwd1 < mwd2;
+    static_assert(!test::test_can_less_than(mwd1, mwd2), "month_weekday < month_weekday not allowed");
+    return 0;
 }

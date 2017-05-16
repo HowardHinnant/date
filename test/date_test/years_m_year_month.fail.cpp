@@ -1,6 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +24,12 @@
 // years - year_month not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-
-    auto x = years{1} - year_month{2015_y, jan};
+    static_assert(!test::test_can_subtract(years{1}, year_month{2015_y, jan}), "years - year_month not allowed");
+    return 0;
 }

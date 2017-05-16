@@ -21,15 +21,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// month / month not allowed
-
-#include "date.h"
-#include "test_type_traits.h"
+#include "tz.h"
+#include <iostream>
 
 int
 main()
 {
+    using namespace std::chrono;
     using namespace date;
-    static_assert(!test::test_can_divide(aug,aug), "month / month not allowed");
-    return 0;
+	int ret = 0;
+	const auto&& now = system_clock::now();
+	try{
+		std::cout << make_zoned(current_zone(), now) << '\n';
+		std::cout << make_zoned("America/New_York", now) << '\n';
+	}catch(const std::exception& e){
+		std::cerr << "error while running make_zoned(current_zone(), now()): " << e.what() << '\n';
+		ret = 1;
+	}
+	return ret;
 }
+

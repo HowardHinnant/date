@@ -2,6 +2,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2015, 2016 Howard Hinnant
+# Copyright (c) 2017 Aaron Bishop
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
 
 currentpath=`pwd`
 origpath=$currentpath
@@ -48,7 +50,7 @@ if [ -z "$CXX_LANG" ]
 then
     CXX_LANG=c++14
 fi
-OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -Wall"
+OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -I$ROOT/test -Wall"
 
 case $TRIPLE in
   *-*-mingw* | *-*-cygwin* | *-*-win*)
@@ -74,23 +76,25 @@ IMPLEMENTED_PASS=0
 afunc() {
 	fail=0
 	pass=0
-	if (ls ${TEST_PREFIX}*fail.cpp > /dev/null 2>&1)
-	then
-		for FILE in $(ls ${TEST_PREFIX}*fail.cpp); do
-			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE > /dev/null 2>&1
-			then
-				rm ./$TEST_EXE
-				echo "$FILE should not compile"
-				fail=$(($fail+1))
-			else
-				pass=$(($pass+1))
-			fi
-		done
-	fi
 
-	if (ls ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
+	TEST_FILES=""
+	if (ls ${TEST_PREFIX}*.fail.cpp > /dev/null 2>&1)
 	then
-		for FILE in $(ls ${TEST_PREFIX}*pass.cpp); do
+		TEST_FILES=$(ls ${TEST_PREFIX}*.fail.cpp)
+	fi
+	if (ls ${TEST_PREFIX}*.pass.cpp > /dev/null 2>&1)
+	then
+		if [ "${TEST_FILES}" == "" ]
+		then
+			TEST_FILES="$(ls ${TEST_PREFIX}*.pass.cpp)"
+		else
+			TEST_FILES="${TEST_FILES} $(ls ${TEST_PREFIX}*.pass.cpp)"
+		fi
+	fi
+	
+	if [ "${TEST_FILES}" != "" ]
+	then
+		for FILE in ${TEST_FILES}; do
             if [ "$VERBOSE" ]
             then
              	echo "Running test: " $FILE
