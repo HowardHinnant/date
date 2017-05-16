@@ -1069,7 +1069,7 @@ std::chrono::time_point<Clock, To>
 floor(const std::chrono::time_point<Clock, FromDuration>& tp)
 {
     using std::chrono::time_point;
-    return time_point<Clock, To>{floor<To>(tp.time_since_epoch())};
+    return time_point<Clock, To>{date::floor<To>(tp.time_since_epoch())};
 }
 
 // round to nearest, to even on tie
@@ -4156,7 +4156,7 @@ typename std::enable_if
 >::type
 operator<<(std::basic_ostream<CharT, Traits>& os, const sys_time<Duration>& tp)
 {
-    auto const dp = floor<days>(tp);
+    auto const dp = date::floor<days>(tp);
     return os << year_month_day(dp) << ' ' << make_time(tp-dp);
 }
 
@@ -4173,7 +4173,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut)
 {
-    return os << sys_time<Duration>{ut.time_since_epoch()};
+    return (os << sys_time<Duration>{ut.time_since_epoch()});
 }
 
 // to_stream
@@ -4951,7 +4951,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     throw std::runtime_error("Can not format %z with unknown offset");
                 auto m = duration_cast<minutes>(*offset_sec);
                 auto neg = m < minutes{0};
-                m = abs(m);
+                m = date::abs(m);
                 auto h = duration_cast<hours>(m);
                 m -= h;
                 if (neg)
@@ -5128,7 +5128,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<Duration> fds{time_of_day<CT>{d}};
+    fields<CT> fds{time_of_day<CT>{d}};
     to_stream(os, fmt, fds);
 }
 
@@ -5364,22 +5364,21 @@ template <class CharT, class Traits, class ...Args>
 void
 read(std::basic_istream<CharT, Traits>& is, CharT a0, Args&& ...args)
 {
+    // No-op if a0 == CharT{}
     if (a0 != CharT{})
     {
         auto ic = is.peek();
         if (Traits::eq_int_type(ic, Traits::eof()))
+        {
+            is.setstate(std::ios::failbit | std::ios::eofbit);
             return;
+        }
         if (!Traits::eq(Traits::to_char_type(ic), a0))
         {
             is.setstate(std::ios::failbit);
             return;
         }
         (void)is.get();
-    }
-    else
-    {
-        while (isspace(is.peek()))
-            (void)is.get();
     }
     read(is, std::forward<Args>(args)...);
 }
@@ -5449,7 +5448,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using namespace std;
     using namespace std::chrono;
-    typename basic_istream<CharT, Traits>::sentry ok{is};
+    typename basic_istream<CharT, Traits>::sentry ok{is, true};
     if (ok)
     {
         auto& f = use_facet<time_get<CharT>>(is.getloc());
@@ -5487,12 +5486,6 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         using detail::rld;
         for (; *fmt && is.rdstate() == std::ios::goodbit; ++fmt)
         {
-            if (isspace(*fmt))
-            {
-                // space matches 0 or more white space characters
-                ws(is);
-                continue;
-            }
             switch (*fmt)
             {
             case 'a':
@@ -5792,20 +5785,26 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             case 't':
                 if (command)
                 {
-                    // %n and %t match 1 or more white space characters
-                    // consecutive %n and %t count as one 
+                    // %n matches a single white space character
+                    // %t matches 0 or 1 white space characters
                     auto ic = is.peek();
                     if (Traits::eq_int_type(ic, Traits::eof()))
-                        break;
-                    if (!isspace(ic))
                     {
-                        is.setstate(ios::failbit);
+                        ios_base::iostate err = ios_base::eofbit;
+                        if (*fmt == 'n')
+                            err |= ios_base::failbit;
+                        is.setstate(err);
                         break;
                     }
-                    ws(is);
-                    for (++fmt; *fmt == 'n' || *fmt == 't'; ++fmt)
-                        ;
-                    --fmt;
+                    if (isspace(ic))
+                    {
+                        (void)is.get();
+                    }
+                    else if (*fmt == 'n')
+                        is.setstate(ios_base::failbit);
+                    command = nullptr;
+                    width = -1;
+                    modified = CharT{};
                 }
                 else
                     read(is, *fmt);
@@ -6190,8 +6189,13 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         modified = CharT{};
                     }
                 }
-                else
-                    read(is, *fmt);
+                else  // !command
+                {
+                    if (isspace(*fmt))
+                        ws(is); // space matches 0 or more white space characters
+                    else
+                        read(is, *fmt);
+                }
                 break;
             }
         }
