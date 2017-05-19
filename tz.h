@@ -41,16 +41,6 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
-#ifdef _WIN32
-#  ifndef TIMEZONE_MAPPING
-#    define TIMEZONE_MAPPING 1
-#  endif
-#else
-#  ifdef TIMEZONE_MAPPING
-#    error "Timezone mapping is not required or not implemented for this platform."
-#  endif
-#endif
-
 #ifndef LAZY_INIT
 #  define LAZY_INIT 1
 #endif
@@ -676,7 +666,7 @@ operator>=(const sys_time<Duration>& x, const leap& y)
     return !(x < y);
 }
 
-#ifdef TIMEZONE_MAPPING
+#ifdef _WIN32
 
 namespace detail
 {
@@ -712,7 +702,7 @@ struct timezone_mapping
 
 }  // detail
 
-#endif  // TIMEZONE_MAPPING
+#endif  // _WIN32
 
 struct TZ_DB
 {
@@ -721,8 +711,7 @@ struct TZ_DB
     std::vector<link>         links;
     std::vector<leap>         leaps;
     std::vector<detail::Rule> rules;
-#ifdef TIMEZONE_MAPPING
-    // TODO! These need some protection.
+#ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
 #endif
 
@@ -737,7 +726,7 @@ struct TZ_DB
         , links(std::move(src.links))
         , leaps(std::move(src.leaps))
         , rules(std::move(src.rules))
-#ifdef TIMEZONE_MAPPING
+#ifdef _WIN32
         , mappings(std::move(src.mappings))
 #endif
     {}
@@ -749,7 +738,7 @@ struct TZ_DB
         links = std::move(src.links);
         leaps = std::move(src.leaps);
         rules = std::move(src.rules);
-#ifdef TIMEZONE_MAPPING
+#ifdef _WIN32
         mappings = std::move(src.mappings);
 #endif
         return *this;
@@ -771,11 +760,6 @@ DATE_API bool        remote_install(const std::string& version);
 #endif
 
 DATE_API const time_zone* locate_zone(const std::string& tz_name);
-#ifdef TZ_TEST
-#  if _WIN32
-DATE_API const time_zone* locate_native_zone(const std::string& native_tz_name);
-#  endif // _WIN32
-#endif // TZ_TEST
 DATE_API const time_zone* current_zone();
 
 // zoned_time

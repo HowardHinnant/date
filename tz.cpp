@@ -30,57 +30,57 @@
 // We did not mean to shout.
 
 #ifdef _WIN32
-// Windows.h will be included directly and indirectly (e.g. by curl).
-// We need to define these macros to prevent Windows.h bringing in
-// more than we need and do it early so Windows.h doesn't get included
-// without these macros having been defined.
-// min/max macros interfere with the C++ versions.
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-// We don't need all that Windows has to offer.
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
+   // Windows.h will be included directly and indirectly (e.g. by curl).
+   // We need to define these macros to prevent Windows.h bringing in
+   // more than we need and do it early so Windows.h doesn't get included
+   // without these macros having been defined.
+   // min/max macros interfere with the C++ versions.
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+   // We don't need all that Windows has to offer.
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+
+   // for wcstombs
+#  ifndef _CRT_SECURE_NO_WARNINGS
+#    define _CRT_SECURE_NO_WARNINGS
+#  endif
+
+   // None of this happens with the MS SDK (at least VS14 which I tested), but:
+   // Compiling with mingw, we get "error: 'KF_FLAG_DEFAULT' was not declared in this scope."
+   // and error: 'SHGetKnownFolderPath' was not declared in this scope.".
+   // It seems when using mingw NTDDI_VERSION is undefined and that
+   // causes KNOWN_FOLDER_FLAG and the KF_ flags to not get defined.
+   // So we must define NTDDI_VERSION to get those flags on mingw.
+   // The docs say though here:
+   // https://msdn.microsoft.com/en-nz/library/windows/desktop/aa383745(v=vs.85).aspx
+   // that "If you define NTDDI_VERSION, you must also define _WIN32_WINNT."
+   // So we declare we require Vista or greater.
+#  ifdef __MINGW32__
+
+#    ifndef NTDDI_VERSION
+#      define NTDDI_VERSION 0x06000000
+#      define _WIN32_WINNT _WIN32_WINNT_VISTA
+#    elif NTDDI_VERSION < 0x06000000
+#      warning "If this fails to compile NTDDI_VERSION may be to low. See comments above."
+#    endif
+     // But once we define the values above we then get this linker error:
+     // "tz.cpp:(.rdata$.refptr.FOLDERID_Downloads[.refptr.FOLDERID_Downloads]+0x0): "
+     //     "undefined reference to `FOLDERID_Downloads'"
+     // which #include <initguid.h> cures see:
+     // https://support.microsoft.com/en-us/kb/130869
+#    include <initguid.h>
+     // But with <initguid.h> included, the error moves on to:
+     // error: 'FOLDERID_Downloads' was not declared in this scope
+     // Which #include <knownfolders.h> cures.
+#    include <knownfolders.h>
+
+#  endif  // __MINGW32__
+
+#  include <Windows.h>
 #endif  // _WIN32
-
-// for wcstombs
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-// None of this happens with the MS SDK (at least VS14 which I tested), but:
-// Compiling with mingw, we get "error: 'KF_FLAG_DEFAULT' was not declared in this scope."
-// and error: 'SHGetKnownFolderPath' was not declared in this scope.".
-// It seems when using mingw NTDDI_VERSION is undefined and that
-// causes KNOWN_FOLDER_FLAG and the KF_ flags to not get defined.
-// So we must define NTDDI_VERSION to get those flags on mingw.
-// The docs say though here:
-// https://msdn.microsoft.com/en-nz/library/windows/desktop/aa383745(v=vs.85).aspx
-// that "If you define NTDDI_VERSION, you must also define _WIN32_WINNT."
-// So we declare we require Vista or greater.
-#ifdef __MINGW32__
-
-#ifndef NTDDI_VERSION
-#define NTDDI_VERSION 0x06000000
-#define _WIN32_WINNT _WIN32_WINNT_VISTA
-#elif NTDDI_VERSION < 0x06000000
-#warning "If this fails to compile NTDDI_VERSION may be to low. See comments above."
-#endif
-// But once we define the values above we then get this linker error:
-// "tz.cpp:(.rdata$.refptr.FOLDERID_Downloads[.refptr.FOLDERID_Downloads]+0x0): "
-//     "undefined reference to `FOLDERID_Downloads'"
-// which #include <initguid.h> cures see:
-// https://support.microsoft.com/en-us/kb/130869
-#include <initguid.h>
-// But with <initguid.h> included, the error moves on to:
-// error: 'FOLDERID_Downloads' was not declared in this scope
-// Which #include <knownfolders.h> cures.
-#include <knownfolders.h>
-
-#endif // __MINGW32__
-
-#include <Windows.h>
-#endif // _WIN32
 
 #include "tz_private.h"
 #include "ios.h"
@@ -106,7 +106,8 @@
 #  include <io.h> // _unlink etc.
 
 #  if defined(__clang__)
-    struct IUnknown;    // fix for issue with static_cast<> in objbase.h (see https://github.com/philsquared/Catch/issues/690)
+    struct IUnknown;    // fix for issue with static_cast<> in objbase.h
+                        //   (see https://github.com/philsquared/Catch/issues/690)
 #  endif
 
 #  include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
@@ -114,7 +115,7 @@
 #    include <direct.h> // _mkdir
 #    include <Shellapi.h> // ShFileOperation etc.
 #  endif  // HAS_REMOTE_API
-#else   // !WIN32
+#else   // !_WIN32
 #  include <unistd.h>
 #  include <wordexp.h>
 #  include <limits.h>
@@ -127,30 +128,26 @@
 #    include <sys/wait.h>
 #    include <sys/types.h>
 #  endif //!USE_SHELL_API
-#endif  // !WIN32
+#endif  // !_WIN32
 
 
 #if HAS_REMOTE_API
-// Note curl includes windows.h so we must include curl AFTER definitions of things
-// that effect windows.h such as NOMINMAX.
-#include <curl/curl.h>
+   // Note curl includes windows.h so we must include curl AFTER definitions of things
+   // that effect windows.h such as NOMINMAX.
+#  include <curl/curl.h>
 #endif
 
 #ifdef _WIN32
-
 static CONSTDATA char folder_delimiter = '\\';
-
-#else
-
+#else   // !_WIN32
 static CONSTDATA char folder_delimiter = '/';
-
-#endif
+#endif  // !_WIN32
 
 #if defined(__GNUC__) && __GNUC__ < 5
-// GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
+   // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif  // defined(__GNUC__) && __GNUC__ < 5
 
 #ifdef _WIN32
 
@@ -210,14 +207,14 @@ expand_path(std::string path)
 {
 #    if TARGET_OS_IPHONE
     return date::iOSUtils::get_tzdata_path();
-#    else
+#    else  // !TARGET_OS_IPHONE
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
-#    endif
+#    endif  // !TARGET_OS_IPHONE
 }
 
 #  endif  // !INSTALL
@@ -248,14 +245,14 @@ access_install()
 
     = get_download_folder() + folder_delimiter + "tzdata";
 
-#else   // INSTALL
+#else   // !INSTALL
 
 #  define STRINGIZEIMP(x) #x
 #  define STRINGIZE(x) STRINGIZEIMP(x)
 
     = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
 
-#endif  // INSTALL
+#endif  // !INSTALL
 
     return install;
 }
@@ -304,190 +301,7 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
-#ifdef TIMEZONE_MAPPING
-
-namespace // Put types in an anonymous name space.
-{
-
-const std::string&
-get_windows_zones_install()
-{
-    static const std::string install
-#ifndef WINDOWSZONES_INSTALL
-    = get_install();
-#else
-#  define STRINGIZEIMP(x) #x
-#  define STRINGIZE(x) STRINGIZEIMP(x)
-    = STRINGIZE(WINDOWSZONES_INSTALL);
-#endif
-    return install;
-}
-
-} // anonymous namespace
-
-static
-std::string
-get_download_mapping_file(const std::string& version)
-{
-    auto file = get_install() + version + "windowsZones.xml";
-    return file;
-}
-
-// Parse this XML file:
-// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
-// The parsing method is designed to be simple and quick. It is not overly
-// forgiving of change but it should diagnose basic format issues.
-// See timezone_mapping structure for more info.
-static
-std::vector<detail::timezone_mapping>
-load_timezone_mappings_from_xml_file(const std::string& input_path)
-{
-    std::size_t line_num = 0;
-    std::vector<detail::timezone_mapping> mappings;
-    std::string line;
-
-    std::ifstream is(input_path);
-    if (!is.is_open())
-    {
-        // We don't emit file exceptions because that's an implementation detail.
-        std::string msg = "Error opening time zone mapping file \"";
-        msg += input_path;
-        msg += "\".";
-        throw std::runtime_error(msg);
-    }
-
-    auto error = [&input_path, &line_num](const char* info)
-    {
-        std::string msg = "Error loading time zone mapping file \"";
-        msg += input_path;
-        msg += "\" at line ";
-        msg += std::to_string(line_num);
-        msg += ": ";
-        msg += info;
-        throw std::runtime_error(msg);
-    };
-    // [optional space]a="b"
-    auto read_attribute = [&line_num, &line, &error]
-                          (const char* name, std::string& value, std::size_t startPos)
-                          ->std::size_t
-    {
-        value.clear();
-        // Skip leading space before attribute name.
-        std::size_t spos = line.find_first_not_of(' ', startPos);
-        if (spos == std::string::npos)
-            spos = startPos;
-        // Assume everything up to next = is the attribute name
-        // and that an = will always delimit that.
-        std::size_t epos = line.find('=', spos);
-        if (epos == std::string::npos)
-            error("Expected \'=\' right after attribute name.");
-        std::size_t name_len = epos - spos;
-        // Expect the name we find matches the name we expect.
-        if (line.compare(spos, name_len, name) != 0)
-        {
-            std::string msg;
-            msg = "Expected attribute name \'";
-            msg += name;
-            msg += "\' around position ";
-            msg += std::to_string(spos);
-            msg += " but found something else.";
-            error(msg.c_str());
-        }
-        ++epos; // Skip the '=' that is after the attribute name.
-        spos = epos;
-        if (spos < line.length() && line[spos] == '\"')
-            ++spos; // Skip the quote that is before the attribute value.
-        else
-        {
-            std::string msg = "Expected '\"' to begin value of attribute \'";
-            msg += name;
-            msg += "\'.";
-            error(msg.c_str());
-        }
-        epos = line.find('\"', spos);
-        if (epos == std::string::npos)
-        {
-            std::string msg = "Expected '\"' to end value of attribute \'";
-            msg += name;
-            msg += "\'.";
-            error(msg.c_str());
-        }
-        // Extract everything in between the quotes. Note no escaping is done.
-        std::size_t value_len = epos - spos;
-        value.assign(line, spos, value_len);
-        ++epos; // Skip the quote that is after the attribute value;
-        return epos;
-    };
-
-    // Quick but not overly forgiving XML mapping file processing.
-    bool mapTimezonesOpenTagFound = false;
-    bool mapTimezonesCloseTagFound = false;
-    bool mapZoneOpenTagFound = false;
-    bool mapTZoneCloseTagFound = false;
-    std::size_t mapZonePos = std::string::npos;
-    std::size_t mapTimezonesPos = std::string::npos;
-    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
-    CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
-    CONSTDATA std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) /
-                                                 sizeof(mapZoneOpeningTag[0]) - 1;
-    while (!mapTimezonesOpenTagFound)
-    {
-        std::getline(is, line);
-        ++line_num;
-        if (is.eof())
-        {
-            // If there is no mapTimezones tag is it an error?
-            // Perhaps if there are no mapZone mappings it might be ok for
-            // its parent mapTimezones element to be missing?
-            // We treat this as an error though on the assumption that if there
-            // really are no mappings we should still get a mapTimezones parent
-            // element but no mapZone elements inside. Assuming we must
-            // find something will hopefully at least catch more drastic formatting
-            // changes or errors than if we don't do this and assume nothing found.
-            error("Expected a mapTimezones opening tag.");
-        }
-        mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
-        mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
-    }
-
-    // NOTE: We could extract the version info that follows the opening
-    // mapTimezones tag and compare that to the version of other data we have.
-    // I would have expected them to be kept in synch but testing has shown
-    // it is typically does not match anyway. So what's the point?
-    while (!mapTimezonesCloseTagFound)
-    {
-        std::getline(is, line);
-        ++line_num;
-        if (is.eof())
-            error("Expected a mapTimezones closing tag.");
-        if (line.empty())
-            continue;
-        mapZonePos = line.find(mapZoneOpeningTag);
-        if (mapZonePos != std::string::npos)
-        {
-            mapZonePos += mapZoneOpeningTagLen;
-            detail::timezone_mapping zm{};
-            std::size_t pos = read_attribute("other", zm.other, mapZonePos);
-            pos = read_attribute("territory", zm.territory, pos);
-            read_attribute("type", zm.type, pos);
-            mappings.push_back(std::move(zm));
-
-            continue;
-        }
-        mapTimezonesPos = line.find("</mapTimezones>");
-        mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
-        if (!mapTimezonesCloseTagFound)
-        {
-            std::size_t commentPos = line.find("<!--");
-            if (commentPos == std::string::npos)
-                error("Unexpected mapping record found. A xml mapZone or comment "
-                      "attribute or mapTimezones closing tag was expected.");
-        }
-    }
-
-    is.close();
-    return mappings;
-}
+#ifdef _WIN32
 
 static
 void
@@ -515,37 +329,6 @@ sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
     });
 }
 
-// This routine maps Win32 OS error codes to readable text strings.
-static
-std::string
-get_win32_message(DWORD error_code)
-{
-    struct free_message {
-        void operator()(char buf[]) {
-            if (buf != nullptr)
-            {
-                auto result = HeapFree(GetProcessHeap(), 0, buf);
-                assert(result != 0);
-            }
-        }
-    };
-    char* msg = nullptr;
-    auto result = FormatMessageA(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
-                                       | FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        reinterpret_cast<char*>(&msg), 0, nullptr );
-    std::unique_ptr<char[], free_message> message_buffer(msg);
-    if (result == 0) // If there is no error message, still give the code.
-    {
-        std::string err = "Error getting message for error number ";
-        err += std::to_string(error_code);
-        return err;
-    }
-    assert(message_buffer.get() != nullptr);
-    return std::string(message_buffer.get());
-}
-
 static
 bool
 native_to_standard_timezone_name(const std::string& native_tz_name,
@@ -571,7 +354,7 @@ native_to_standard_timezone_name(const std::string& native_tz_name,
     return false;
 }
 
-#endif  // TIMEZONE_MAPPING
+#endif  // _WIN32
 
 // Parsing helpers
 
@@ -2177,14 +1960,14 @@ static
 bool
 remove_folder_and_subfolders(const std::string& folder)
 {
-#ifdef _WIN32
-#  if USE_SHELL_API
+#  ifdef _WIN32
+#    if USE_SHELL_API
     // Delete the folder contents by deleting the folder.
     std::string cmd = "rd /s /q \"";
     cmd += folder;
     cmd += '\"';
     return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     // Create a buffer containing the path to delete. It must be terminated
     // by two nuls. Who designs these API's...
     std::vector<char> from;
@@ -2199,11 +1982,11 @@ remove_folder_and_subfolders(const std::string& folder)
     if (ret == 0 && !fo.fAnyOperationsAborted)
         return true;
     return false;
-#  endif  // !USE_SHELL_API
-#else   // !WIN32
-#  if USE_SHELL_API
+#    endif  // !USE_SHELL_API
+#  else   // !_WIN32
+#    if USE_SHELL_API
     return std::system(("rm -R " + folder).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
+#    else // !USE_SHELL_API
     struct dir_deleter {
         dir_deleter() {}
         void operator()(DIR* d) const
@@ -2248,84 +2031,72 @@ remove_folder_and_subfolders(const std::string& folder)
         r = rmdir(folder.c_str()) == 0;
 
     return r;
-#  endif // !USE_SHELL_API
-#endif  // !WIN32
+#    endif // !USE_SHELL_API
+#  endif  // !_WIN32
 }
 
 static
 bool
 make_directory(const std::string& folder)
 {
-#ifdef _WIN32
-#  if USE_SHELL_API
+#  ifdef _WIN32
+#    if USE_SHELL_API
     // Re-create the folder.
     std::string cmd = "mkdir \"";
     cmd += folder;
     cmd += '\"';
     return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     return _mkdir(folder.c_str()) == 0;
-#  endif // !USE_SHELL_API
-#else // !WIN32
-#  if USE_SHELL_API
+#    endif // !USE_SHELL_API
+#  else  // !_WIN32
+#    if USE_SHELL_API
     return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     return mkdir(folder.c_str(), 0777) == 0;
-#  endif // !USE_SHELL_API
-#endif
+#    endif  // !USE_SHELL_API
+#  endif  // !_WIN32
 }
 
 static
 bool
 delete_file(const std::string& file)
 {
-#ifdef _WIN32
-#  if USE_SHELL_API
+#  ifdef _WIN32
+#    if USE_SHELL_API
     std::string cmd = "del \"";
     cmd += file;
     cmd += '\"';
     return std::system(cmd.c_str()) == 0;
-#  else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     return _unlink(file.c_str()) == 0;
-#  endif // !USE_SHELL_API
-#else  // !WIN32
-#  if USE_SHELL_API
+#    endif // !USE_SHELL_API
+#  else  // !_WIN32
+#    if USE_SHELL_API
     return std::system(("rm " + file).c_str()) == EXIT_SUCCESS;
-#  else // !USE_SHELL_API
+#    else // !USE_SHELL_API
     return unlink(file.c_str()) == 0;
-#  endif // !USE_SHELL_API
-#endif // !WIN32
+#    endif // !USE_SHELL_API
+#  endif  // !_WIN32
 }
 
-#ifdef TIMEZONE_MAPPING
+#  ifdef _WIN32
 
 static
 bool
 move_file(const std::string& from, const std::string& to)
 {
-#ifdef _WIN32
-#  if USE_SHELL_API
+#    if USE_SHELL_API
     std::string cmd = "move \"";
     cmd += from;
     cmd += "\" \"";
     cmd += to;
     cmd += '\"';
     return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#  else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     return !!::MoveFile(from.c_str(), to.c_str());
-#  endif // !USE_SHELL_API
-#else  // !WIN32
-#  if USE_SHELL_API
-    return std::system(("mv " + from + " " + to).c_str()) == EXIT_SUCCESS;
-#  else
-    return rename(from, to) == 0);
-#  endif
-#endif // !WIN32
+#    endif // !USE_SHELL_API
 }
-
-#endif  // TIMEZONE_MAPPING
-
-#ifdef _WIN32
 
 // Note folder can and usually does contain spaces.
 static
@@ -2365,7 +2136,7 @@ get_unzip_program()
     return path;
 }
 
-#if !USE_SHELL_API
+#    if !USE_SHELL_API
 static
 int
 run_program(const std::string& command)
@@ -2393,7 +2164,7 @@ run_program(const std::string& command)
     }
     return EXIT_FAILURE;
 }
-#endif // !USE_SHELL_API
+#    endif // !USE_SHELL_API
 
 static
 std::string
@@ -2428,7 +2199,7 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd += dest_folder;
     cmd += '\"';
 
-#if USE_SHELL_API
+#    if USE_SHELL_API
     // When using shelling out with std::system() extra quotes are required around the
     // whole command. It's weird but necessary it seems, see:
     // http://stackoverflow.com/q/27975969/576911
@@ -2436,10 +2207,10 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd = "\"" + cmd + "\"";
     if (std::system(cmd.c_str()) == EXIT_SUCCESS)
         unzip_result = true;
-#else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
         unzip_result = true;
-#endif // !USE_SHELL_API
+#    endif // !USE_SHELL_API
     if (unzip_result)
         delete_file(gz_file);
 
@@ -2453,14 +2224,14 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     cmd += "\" -o\"";
     cmd += get_install();
     cmd += '\"';
-#if USE_SHELL_API
+#    if USE_SHELL_API
     cmd = "\"" + cmd + "\"";
     if (std::system(cmd.c_str()) == EXIT_SUCCESS)
         unzip_result = true;
-#else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
         unzip_result = true;
-#endif // !USE_SHELL_API
+#    endif // !USE_SHELL_API
 
     if (unzip_result)
         delete_file(tar_file);
@@ -2468,9 +2239,173 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     return unzip_result;
 }
 
-#else  // !_WIN32
+static
+std::string
+get_download_mapping_file(const std::string& version)
+{
+    auto file = get_install() + version + "windowsZones.xml";
+    return file;
+}
 
-#if !USE_SHELL_API
+// Parse this XML file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// The parsing method is designed to be simple and quick. It is not overly
+// forgiving of change but it should diagnose basic format issues.
+// See timezone_mapping structure for more info.
+static
+std::vector<detail::timezone_mapping>
+load_timezone_mappings_from_xml_file(const std::string& input_path)
+{
+    std::size_t line_num = 0;
+    std::vector<detail::timezone_mapping> mappings;
+    std::string line;
+
+    std::ifstream is(input_path);
+    if (!is.is_open())
+    {
+        // We don't emit file exceptions because that's an implementation detail.
+        std::string msg = "Error opening time zone mapping file \"";
+        msg += input_path;
+        msg += "\".";
+        throw std::runtime_error(msg);
+    }
+
+    auto error = [&input_path, &line_num](const char* info)
+    {
+        std::string msg = "Error loading time zone mapping file \"";
+        msg += input_path;
+        msg += "\" at line ";
+        msg += std::to_string(line_num);
+        msg += ": ";
+        msg += info;
+        throw std::runtime_error(msg);
+    };
+    // [optional space]a="b"
+    auto read_attribute = [&line_num, &line, &error]
+                          (const char* name, std::string& value, std::size_t startPos)
+                          ->std::size_t
+    {
+        value.clear();
+        // Skip leading space before attribute name.
+        std::size_t spos = line.find_first_not_of(' ', startPos);
+        if (spos == std::string::npos)
+            spos = startPos;
+        // Assume everything up to next = is the attribute name
+        // and that an = will always delimit that.
+        std::size_t epos = line.find('=', spos);
+        if (epos == std::string::npos)
+            error("Expected \'=\' right after attribute name.");
+        std::size_t name_len = epos - spos;
+        // Expect the name we find matches the name we expect.
+        if (line.compare(spos, name_len, name) != 0)
+        {
+            std::string msg;
+            msg = "Expected attribute name \'";
+            msg += name;
+            msg += "\' around position ";
+            msg += std::to_string(spos);
+            msg += " but found something else.";
+            error(msg.c_str());
+        }
+        ++epos; // Skip the '=' that is after the attribute name.
+        spos = epos;
+        if (spos < line.length() && line[spos] == '\"')
+            ++spos; // Skip the quote that is before the attribute value.
+        else
+        {
+            std::string msg = "Expected '\"' to begin value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        epos = line.find('\"', spos);
+        if (epos == std::string::npos)
+        {
+            std::string msg = "Expected '\"' to end value of attribute \'";
+            msg += name;
+            msg += "\'.";
+            error(msg.c_str());
+        }
+        // Extract everything in between the quotes. Note no escaping is done.
+        std::size_t value_len = epos - spos;
+        value.assign(line, spos, value_len);
+        ++epos; // Skip the quote that is after the attribute value;
+        return epos;
+    };
+
+    // Quick but not overly forgiving XML mapping file processing.
+    bool mapTimezonesOpenTagFound = false;
+    bool mapTimezonesCloseTagFound = false;
+    bool mapZoneOpenTagFound = false;
+    bool mapTZoneCloseTagFound = false;
+    std::size_t mapZonePos = std::string::npos;
+    std::size_t mapTimezonesPos = std::string::npos;
+    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+    CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
+    CONSTDATA std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) /
+                                                 sizeof(mapZoneOpeningTag[0]) - 1;
+    while (!mapTimezonesOpenTagFound)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+        {
+            // If there is no mapTimezones tag is it an error?
+            // Perhaps if there are no mapZone mappings it might be ok for
+            // its parent mapTimezones element to be missing?
+            // We treat this as an error though on the assumption that if there
+            // really are no mappings we should still get a mapTimezones parent
+            // element but no mapZone elements inside. Assuming we must
+            // find something will hopefully at least catch more drastic formatting
+            // changes or errors than if we don't do this and assume nothing found.
+            error("Expected a mapTimezones opening tag.");
+        }
+        mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
+        mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
+    }
+
+    // NOTE: We could extract the version info that follows the opening
+    // mapTimezones tag and compare that to the version of other data we have.
+    // I would have expected them to be kept in synch but testing has shown
+    // it is typically does not match anyway. So what's the point?
+    while (!mapTimezonesCloseTagFound)
+    {
+        std::getline(is, line);
+        ++line_num;
+        if (is.eof())
+            error("Expected a mapTimezones closing tag.");
+        if (line.empty())
+            continue;
+        mapZonePos = line.find(mapZoneOpeningTag);
+        if (mapZonePos != std::string::npos)
+        {
+            mapZonePos += mapZoneOpeningTagLen;
+            detail::timezone_mapping zm{};
+            std::size_t pos = read_attribute("other", zm.other, mapZonePos);
+            pos = read_attribute("territory", zm.territory, pos);
+            read_attribute("type", zm.type, pos);
+            mappings.push_back(std::move(zm));
+
+            continue;
+        }
+        mapTimezonesPos = line.find("</mapTimezones>");
+        mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
+        if (!mapTimezonesCloseTagFound)
+        {
+            std::size_t commentPos = line.find("<!--");
+            if (commentPos == std::string::npos)
+                error("Unexpected mapping record found. A xml mapZone or comment "
+                      "attribute or mapTimezones closing tag was expected.");
+        }
+    }
+
+    is.close();
+    return mappings;
+}
+
+#  else  // !_WIN32
+
+#    if !USE_SHELL_API
 static
 int
 run_program(const char* prog, const char*const args[])
@@ -2514,22 +2449,22 @@ run_program(const char* prog, const char*const args[])
     exit(EXIT_FAILURE);
     return EXIT_FAILURE;
 }
-#endif // !USE_SHELL_API
+#    endif // !USE_SHELL_API
 
 static
 bool
 extract_gz_file(const std::string&, const std::string& gz_file, const std::string&)
 {
-#if USE_SHELL_API
+#    if USE_SHELL_API
     bool unzipped = std::system(("tar -xzf " + gz_file + " -C " + get_install()).c_str()) == EXIT_SUCCESS;
-#else  // !USE_SHELL_API
+#    else  // !USE_SHELL_API
     const char prog[] = {"/usr/bin/tar"};
     const char*const args[] =
     {
         prog, "-xzf", gz_file.c_str(), "-C", get_install().c_str(), nullptr
     };
     bool unzipped = (run_program(prog, args) == EXIT_SUCCESS);
-#endif // !USE_SHELL_API
+#    endif // !USE_SHELL_API
     if (unzipped)
     {
         delete_file(gz_file);
@@ -2538,29 +2473,29 @@ extract_gz_file(const std::string&, const std::string& gz_file, const std::strin
     return false;
 }
 
-#endif // !_WIN32
+#  endif // !_WIN32
 
 bool
 remote_download(const std::string& version)
 {
     assert(!version.empty());
 
-#ifdef _WIN32
+#  ifdef _WIN32
     // Download folder should be always available for Windows
-#else
+#  else  // !_WIN32
     // Create download folder if it does not exist on UNIX system
     auto download_folder = get_download_folder();
     if (!file_exists(download_folder)) 
     {
         make_directory(download_folder);
     }
-#endif
+#  endif  // _WIN32
 
     auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version +
                ".tar.gz";
     bool result = download_to_file(url, get_download_gz_file(version),
                                    download_file_options::binary);
-#ifdef TIMEZONE_MAPPING
+#  ifdef _WIN32
     if (result)
     {
         auto mapping_file = get_download_mapping_file(version);
@@ -2568,7 +2503,7 @@ remote_download(const std::string& version)
                                   "supplemental/windowsZones.xml",
             mapping_file, download_file_options::text);
     }
-#endif
+#  endif  // _WIN32
     return result;
 }
 
@@ -2588,18 +2523,19 @@ remote_install(const std::string& version)
         {
             if (extract_gz_file(version, gz_file, install))
                 success = true;
-#ifdef TIMEZONE_MAPPING
+#  ifdef _WIN32
             auto mapping_file_source = get_download_mapping_file(version);
-            auto mapping_file_dest = get_windows_zones_install();
+            auto mapping_file_dest = get_install();
             mapping_file_dest += folder_delimiter;
             mapping_file_dest += "windowsZones.xml";
             if (!move_file(mapping_file_source, mapping_file_dest))
                 success = false;
-#endif
+#  endif  // _WIN32
         }
     }
     return success;
 }
+
 #endif  // HAS_REMOTE_API
 
 static
@@ -2744,18 +2680,18 @@ init_tzdb()
 #if !LAZY_INIT
     for (auto& z : db.zones)
         z.adjust_infos(db.rules);
-#endif
+#endif  // !LAZY_INIT
     db.zones.shrink_to_fit();
     std::sort(db.links.begin(), db.links.end());
     db.links.shrink_to_fit();
     std::sort(db.leaps.begin(), db.leaps.end());
     db.leaps.shrink_to_fit();
 
-#ifdef TIMEZONE_MAPPING
-    std::string mapping_file = get_windows_zones_install() + folder_delimiter + "windowsZones.xml";
+#ifdef _WIN32
+    std::string mapping_file = get_install() + folder_delimiter + "windowsZones.xml";
     db.mappings = load_timezone_mappings_from_xml_file(mapping_file);
     sort_zone_mappings(db.mappings);
-#endif // TIMEZONE_MAPPING
+#endif // _WIN32
 
     return db;
 }
@@ -2775,7 +2711,7 @@ reload_tzdb()
     auto const& v = access_tzdb().version;
     if (!v.empty() && v == remote_version())
         return access_tzdb();
-#endif
+#endif  // AUTO_DOWNLOAD
     return access_tzdb() = init_tzdb();
 }
 
@@ -2899,7 +2835,6 @@ getTimeZoneKeyName()
 const time_zone*
 current_zone()
 {
-#ifdef TIMEZONE_MAPPING
     std::string win_tzid = getTimeZoneKeyName();
     std::string standard_tzid;
     if (!native_to_standard_timezone_name(win_tzid, standard_tzid))
@@ -2911,20 +2846,9 @@ current_zone()
         throw std::runtime_error(msg);
     }
     return date::locate_zone(standard_tzid);
-#else  // !TIMEZONE_MAPPING
-    // Currently Win32 requires iana <--> windows tz name mappings
-    // for this function to work.
-    // TODO! we should really support TIMEZONE_MAPPINGS=0 on Windows,
-    // And in this mode we should read the current iana timezone from a file.
-    // This would allow the TZ library do be used by apps that don't care
-    // about Windows standard names just iana names.
-    // This would allow the xml dependency to be dropped and none of
-    // the name mapping functions would be needed.
-    throw std::runtime_error("current_zone not implemented.");
-#endif // !TIMEZONE_MAPPING
 }
 
-#else // !WIN32
+#else  // !_WIN32
 
 const time_zone*
 current_zone()
@@ -2998,27 +2922,7 @@ current_zone()
     throw std::runtime_error("Could not get current timezone");
 }
 
-#endif // !WIN32
-
-#if defined(TZ_TEST) && defined(TIMEZONE_MAPPING)
-
-const time_zone*
-locate_native_zone(const std::string& native_tz_name)
-{
-    std::string standard_tz_name;
-    if (!native_to_standard_timezone_name(native_tz_name, standard_tz_name))
-    {
-        std::string msg;
-        msg = "locate_native_zone() failed: A mapping from the native/Windows Time Zone id \"";
-        msg += native_tz_name;
-        msg += "\" was not found in the time zone mapping database.";
-        throw std::runtime_error(msg);
-    }
-    return locate_zone(standard_tz_name);
-}
-
-#endif  // TZ_TEST && TIMEZONE_MAPPING
-
+#endif  // !_WIN32
 
 }  // namespace date
 
