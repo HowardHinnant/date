@@ -41,10 +41,6 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
-#ifndef LAZY_INIT
-#  define LAZY_INIT 1
-#endif
-
 #ifndef HAS_REMOTE_API
 #  ifdef _WIN32
 #    define HAS_REMOTE_API 0
@@ -75,10 +71,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <chrono>
 #include <istream>
 #include <locale>
-#if LAZY_INIT
-#  include <memory>
-#  include <mutex>
-#endif
+#include <memory>
+#include <mutex>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -346,9 +340,7 @@ private:
 
     std::string          name_;
     std::vector<detail::zonelet> zonelets_;
-#if LAZY_INIT
     std::unique_ptr<std::once_flag> adjusted_;
-#endif
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -406,9 +398,7 @@ inline
 time_zone::time_zone(time_zone&& src)
     : name_(std::move(src.name_))
     , zonelets_(std::move(src.zonelets_))
-#if LAZY_INIT
     , adjusted_(std::move(src.adjusted_))
-#endif
     {}
 
 inline
@@ -417,9 +407,7 @@ time_zone::operator=(time_zone&& src)
 {
     name_ = std::move(src.name_);
     zonelets_ = std::move(src.zonelets_);
-#if LAZY_INIT
     adjusted_ = std::move(src.adjusted_);
-#endif
     return *this;
 }
 

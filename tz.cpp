@@ -1157,9 +1157,7 @@ detail::zonelet::zonelet(const zonelet& i)
 }
 
 time_zone::time_zone(const std::string& s, detail::undocumented)
-#if LAZY_INIT
     : adjusted_(new std::once_flag{})
-#endif
 {
     try
     {
@@ -1684,13 +1682,11 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
                                  + std::to_string(static_cast<int>(max_year)) + "]");
-#if LAZY_INIT
     std::call_once(*adjusted_,
                    [this]()
                    {
                        const_cast<time_zone*>(this)->adjust_infos(get_tzdb().rules);
                    });
-#endif
     auto i = std::upper_bound(zonelets_.begin(), zonelets_.end(), tp,
         [timezone](sys_seconds t, const zonelet& zl)
         {
@@ -1745,13 +1741,11 @@ operator<<(std::ostream& os, const time_zone& z)
     detail::save_stream<char> _(os);
     os.fill(' ');
     os.flags(std::ios::dec | std::ios::left);
-#if LAZY_INIT
     std::call_once(*z.adjusted_,
                    [&z]()
                    {
                        const_cast<time_zone&>(z).adjust_infos(get_tzdb().rules);
                    });
-#endif
     os.width(35);
     os << z.name_;
     std::string indent;
@@ -2677,10 +2671,6 @@ init_tzdb()
     std::sort(db.rules.begin(), db.rules.end());
     Rule::split_overlaps(db.rules);
     std::sort(db.zones.begin(), db.zones.end());
-#if !LAZY_INIT
-    for (auto& z : db.zones)
-        z.adjust_infos(db.rules);
-#endif  // !LAZY_INIT
     db.zones.shrink_to_fit();
     std::sort(db.links.begin(), db.links.end());
     db.links.shrink_to_fit();
