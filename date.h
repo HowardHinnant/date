@@ -1403,14 +1403,21 @@ year::is_leap() const NOEXCEPT
 }
 
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
-CONSTCD11 inline bool year::ok() const NOEXCEPT {return true;}
+
+CONSTCD11
+inline
+bool
+year::ok() const NOEXCEPT
+{
+    return y_ != std::numeric_limits<short>::min();
+}
 
 CONSTCD11
 inline
 year
 year::min() NOEXCEPT
 {
-    return year{std::numeric_limits<short>::min()};
+    return year{std::numeric_limits<short>::min()+1};
 }
 
 CONSTCD11
@@ -5458,7 +5465,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         const CharT* command = nullptr;
         auto modified = CharT{};
         auto width = -1;
-        CONSTDATA int not_a_year = 33000;
+        CONSTDATA int not_a_year = numeric_limits<short>::min();
         int Y = not_a_year;
         CONSTDATA int not_a_century = not_a_year / 100;
         int C = not_a_century;
@@ -6377,6 +6384,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, year& y,
     using CT = seconds;
     fields<CT> fds{};
     from_stream(is, fmt, fds, abbrev, offset);
+    if (!fds.ymd.year().ok())
+        is.setstate(ios::failbit);
     if (!is.fail())
         y = fds.ymd.year();
 }

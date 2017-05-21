@@ -41,7 +41,7 @@ main()
     using namespace std::chrono;
     std::ostringstream os;
     os << format("%F %T", sys_days{jan/1/year::min()});
-    assert(os.str() == "-32768-01-01 00:00:00");
+    assert(os.str() == "-32767-01-01 00:00:00");
     os.str("");
     os << format("%F %T", sys_days{dec/last/year::max()});
     assert(os.str() == "32767-12-31 00:00:00");
@@ -52,7 +52,7 @@ main()
     os.str("");
 
     os << format("%Y-%m-%d %H:%M:%S", sys_days{jan/1/year::min()});
-    assert(os.str() == "-32768-01-01 00:00:00");
+    assert(os.str() == "-32767-01-01 00:00:00");
     os.str("");
     os << format("%Y-%m-%d %H:%M:%S", sys_days{dec/last/year::max()});
     assert(os.str() == "32767-12-31 00:00:00");
@@ -63,14 +63,14 @@ main()
     os.str("");
 
     os << format("%F %T", sys_days{jan/1/year::min()} + microfortnights{1});
-    assert(os.str() == "-32768-01-01 00:00:01.2096");
+    assert(os.str() == "-32767-01-01 00:00:01.2096");
     os.str("");
     os << format("%F %T", sys_days{dec/last/year::max()} + microfortnights{1});
     assert(os.str() == "32767-12-31 00:00:01.2096");
     os.str("");
 
     os << format("%F %T", jan/1/year::min());
-    assert(os.str() == "-32768-01-01 00:00:00");
+    assert(os.str() == "-32767-01-01 00:00:00");
     os.str("");
     os << format("%F %T", dec/last/year::max());
     assert(os.str() == "32767-12-31 00:00:00");
