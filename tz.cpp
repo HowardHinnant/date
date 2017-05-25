@@ -284,6 +284,22 @@ get_download_gz_file(const std::string& version)
 }
 #endif  // HAS_REMOTE_API
 
+static
+const std::string&
+get_windows_zones_install()
+{
+    static const std::string install
+#ifndef WINDOWSZONES_INSTALL
+    = get_install();
+#else
+#  define STRINGIZEIMP(x) #x
+#  define STRINGIZE(x) STRINGIZEIMP(x)
+    = STRINGIZE(WINDOWSZONES_INSTALL);
+#endif
+    std::cout << install << std::endl;
+    return install;
+}
+
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
