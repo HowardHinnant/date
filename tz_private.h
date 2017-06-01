@@ -4,6 +4,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +30,7 @@
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 #include "tz.h"
+#include <vector>
 #else
 #include "date.h"
 #include <vector>
@@ -41,6 +43,8 @@ namespace detail
 {
 
 enum class tz {utc, local, standard};
+
+#if TIMEZONE_RULES
 
 //forward declare to avoid warnings in gcc 6.2
 class MonthDayTime;
@@ -253,6 +257,122 @@ struct zonelet
     zonelet(const zonelet& i);
     zonelet& operator=(const zonelet&) = delete;
 };
+
+template<class Tzdb>
+std::ostream&
+output_db(std::ostream& os, const Tzdb& db)
+{
+    os << "Version: " << db.version << '\n';
+    std::string title("--------------------------------------------"
+                      "--------------------------------------------\n"
+                      "Name           ""Start Y ""End Y   "
+                      "Beginning                              ""Offset  "
+                      "Designator\n"
+                      "--------------------------------------------"
+                      "--------------------------------------------\n");
+    int count = 0;
+    for (const auto& x : db.rules)
+    {
+        if (count++ % 50 == 0)
+            os << title;
+        os << x << '\n';
+    }
+    os << '\n';
+    title = std::string("---------------------------------------------------------"
+                        "--------------------------------------------------------\n"
+                        "Name                               ""Offset      "
+                        "Rule           ""Abrev      ""Until\n"
+                        "---------------------------------------------------------"
+                        "--------------------------------------------------------\n");
+    count = 0;
+    for (const auto& x : db.zones)
+    {
+        if (count++ % 10 == 0)
+            os << title;
+        os << x << '\n';
+    }
+    os << '\n';
+    title = std::string("---------------------------------------------------------"
+                        "--------------------------------------------------------\n"
+                        "Alias                                   ""To\n"
+                        "---------------------------------------------------------"
+                        "--------------------------------------------------------\n");
+    count = 0;
+    for (const auto& x : db.links)
+    {
+        if (count++ % 45 == 0)
+            os << title;
+        os << x << '\n';
+    }
+    os << '\n';
+    title = std::string("---------------------------------------------------------"
+                        "--------------------------------------------------------\n"
+                        "Leap second on\n"
+                        "---------------------------------------------------------"
+                        "--------------------------------------------------------\n");
+    os << title;
+    for (const auto& x : db.leaps)
+        os << x << '\n';
+    return os;
+}
+
+#endif // TIMEZONE_RULES
+
+#ifdef TIMEZONE_FILES
+
+template<typename ForwardIterator, typename ValType, typename Compare>
+ForwardIterator
+upper_bound_itrcmp(ForwardIterator first, ForwardIterator last, const ValType& val, Compare comp)
+{
+    auto len = std::distance(first, last);
+    while (len > 0)
+    {
+        auto half = len >> 1;
+        auto middle = first;
+        std::advance(middle, half);
+        if (comp(val, middle)) {
+            len = half;
+        } else {
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+CONSTCD11 uint32_t interpret32(const char* buffer)
+{
+    return 
+        static_cast<uint32_t>(static_cast<uint8_t>(buffer[0]) & 0xFF) << 24 |
+        static_cast<uint32_t>(static_cast<uint8_t>(buffer[1]) & 0xFF) << 16 |
+        static_cast<uint32_t>(static_cast<uint8_t>(buffer[2]) & 0xFF) << 8 |
+        static_cast<uint32_t>(static_cast<uint8_t>(buffer[3]) & 0xFF);
+}
+CONSTCD11 uint64_t interpret64(const char* buffer)
+{
+    return 
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[0]) & 0xFF) << 56 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[1]) & 0xFF) << 48 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[2]) & 0xFF) << 40 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[3]) & 0xFF) << 32 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[4]) & 0xFF) << 24 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[5]) & 0xFF) << 16 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[6]) & 0xFF) << 8 |
+        static_cast<uint64_t>(static_cast<uint8_t>(buffer[7]) & 0xFF);
+}
+
+CONSTCD11 int64_t interpret_time(const char* buffer, const size_t& size)
+{
+    return size == 4 ?
+        static_cast<int32_t>(interpret32(buffer)) :
+        interpret64(buffer);
+}
+
+#endif // TIMEZONE_FILES
+
+
+std::string current_zone_string();
 
 }  // namespace detail
 

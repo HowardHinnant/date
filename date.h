@@ -3713,7 +3713,13 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 public:
     using precision = std::chrono::hours;
 
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     CONSTCD11 time_of_day_storage() NOEXCEPT = default;
+#else // defined(_MSC_VER) && (_MSC_VER < 1900)
+	CONSTCD11 time_of_day_storage() NOEXCEPT
+		: base()
+	    {}
+#endif // defined(_MSC_VER) && (_MSC_VER < 1900)
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours since_midnight) NOEXCEPT
         : base(since_midnight, since_midnight < std::chrono::hours{0}, is24hr)
@@ -4188,7 +4194,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut
 template <class Duration>
 struct fields
 {
-    year_month_day        ymd{0_y/0/0};
+    year_month_day        ymd{year{0}/0/0};
     weekday               wd{7u};
     time_of_day<Duration> tod{};
 

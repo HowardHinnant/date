@@ -23,6 +23,7 @@
 // month_weekday_last < month_weekday_last not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
@@ -30,5 +31,5 @@ main()
     using namespace date;
     month_weekday_last mwdl1 = {feb, sat[last]};
     month_weekday_last mwdl2 = {mar, mon[last]};
-    auto b = mwdl1 < mwdl2;
+    static_assert(!decltype(test_can_less_than(mwdl1, mwdl2))::value, "month_weekday_last < month_weekday_last not allowed");
 }

@@ -23,11 +23,12 @@
 // year_month_day + year_month_day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = year_month_day{2015_y, aug, 9_d} + year_month_day{2015_y, aug, 9_d};
+    static_assert(!decltype(test_can_add(year_month_day{2015_y, aug, 9_d}, year_month_day{2015_y, aug, 9_d}))::value, "year_month_day + year_month_day not allowed");
 }

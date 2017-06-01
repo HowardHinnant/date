@@ -23,10 +23,11 @@
 // day + day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-    auto x = 3_d + 7_d;
+    static_assert(!decltype(test_can_add(3_d, 7_d))::value, "day + day not allowed");
 }

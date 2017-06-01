@@ -23,10 +23,11 @@
 // days - weekday not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-    auto b = days{1} - sun;
+    static_assert(!decltype(test_can_subtract(days{1}, sun))::value, "days - weekday not allowed");
 }

@@ -23,11 +23,12 @@
 // weekday_indexed / weekday_indexed not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = fri[2]/fri[2];
+    static_assert(!decltype(test_can_divide(fri[2],fri[2]))::value, "weekday_indexed / weekday_indexed not allowed");
 }

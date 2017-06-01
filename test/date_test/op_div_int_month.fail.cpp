@@ -23,11 +23,12 @@
 // int / month not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = 8/aug;
+    static_assert(!decltype(test_can_divide(8,aug))::value, "int / month not allowed");
 }

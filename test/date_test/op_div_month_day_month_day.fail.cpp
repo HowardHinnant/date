@@ -23,11 +23,12 @@
 // month_day / month_day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = (aug/14_d)/(aug/14_d);
+    static_assert(!decltype(test_can_divide(aug/14_d,aug/14_d))::value, "month_day / month_day not allowed");
 }

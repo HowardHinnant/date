@@ -23,10 +23,11 @@
 // weeknum + weeknum not allowed
 
 #include "iso_week.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace iso_week;
-    auto x = 3_w + 4_w;
+    static_assert(!decltype(date::test_can_add(3_w, 4_w))::value, "weeknum + weeknum not allowed");
 }

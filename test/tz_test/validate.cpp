@@ -1,8 +1,9 @@
 #include "tz.h"
 #include <iostream>
 
+template<class TimeZone>
 void
-test_info(const date::time_zone* zone, const date::sys_info& info)
+test_info(const TimeZone* zone, const date::sys_info& info)
 {
     using namespace date;
     using namespace std::chrono;
@@ -10,7 +11,7 @@ test_info(const date::time_zone* zone, const date::sys_info& info)
     auto end = info.end - microseconds{1};
     auto mid = begin + (end - begin) /2;
     using sys_microseconds = sys_time<microseconds>;
-    using zoned_microseconds = zoned_time<microseconds>;
+    using zoned_microseconds = basic_zoned_time<microseconds,TimeZone>;
     zoned_microseconds local{zone};
 
     if (begin > sys_days{jan/1/1700})
@@ -82,12 +83,22 @@ test_info(const date::time_zone* zone, const date::sys_info& info)
     }
 }
 
-void
-tzmain()
+#if TIMEZONE_FILES
+std::vector<std::string> get_names_list(const date::tzfile_db& db)
 {
-    using namespace date;
-    using namespace std::chrono;
-    auto& db = get_tzdb();
+    std::vector<std::string> names;
+    names.reserve(db.zones.size());
+    for(const auto& z : db.zones) {
+        names.push_back(z.name());
+    }
+    std::sort(names.begin(), names.end());
+    return names;
+}
+#endif
+
+#if TIMEZONE_RULES
+std::vector<std::string> get_names_list(const date::tzrule_db& db)
+{
     std::vector<std::string> names;
     names.reserve(db.zones.size() + db.links.size());
     for (auto& zone : db.zones)
@@ -95,11 +106,25 @@ tzmain()
     for (auto& link : db.links)
         names.push_back(link.name());
     std::sort(names.begin(), names.end());
+    return names;
+}
+#endif
+
+template<class TimeZone>
+void
+tzmain()
+{
+    using namespace date;
+    using namespace std::chrono;
+    
+    const auto& db = TimeZone::get_tzdb();
+    auto names = get_names_list(db);
     std::cout << db.version << "\n\n";
     for (auto const& name : names)
     {
         std::cout << name << '\n';
-        auto z = locate_zone(name);
+        const TimeZone* z = TimeZone::locate_zone(name);
+        assert(z != nullptr);
         auto begin = sys_days(jan/1/year::min()) + seconds{0};
         auto end   = sys_days(jan/1/2035) + seconds{0};
         auto info = z->get_info(begin);
@@ -144,11 +169,33 @@ tzmain()
 }
 
 int
-main()
+main(int argc, char** argv)
 {
     try
     {
-        tzmain();
+        if(argc == 2) {
+            std::string t{argv[1]};
+#if TIMEZONE_FILES
+            if(t == "tzfile") {
+                tzmain<date::tzfile_zone>();
+            }
+            else
+#endif
+#if TIMEZONE_RULES
+            if(t == "tzrule")
+            {
+                tzmain<date::tzrule_zone>();
+            }
+            else
+#endif
+            {
+                throw std::runtime_error{"Unknown test: " +t};
+            }
+        }
+        else 
+        {
+            tzmain<date::time_zone>();
+        }
     }
     catch(const std::exception& ex)
     {

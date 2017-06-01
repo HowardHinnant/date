@@ -23,10 +23,11 @@
 // year + year not allowed
 
 #include "iso_week.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace iso_week;
-    auto x = 2015_y + 2015_y;
+    static_assert(!decltype(date::test_can_add(2015_y, 2015_y))::value, "year + year not allowed");
 }

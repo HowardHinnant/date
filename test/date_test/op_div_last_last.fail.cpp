@@ -23,11 +23,12 @@
 // last / last not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
 
-    auto x = last/last;
+    static_assert(!decltype(test_can_divide(last,last))::value, "last / last not allowed");
 }

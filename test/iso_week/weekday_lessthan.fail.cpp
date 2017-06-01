@@ -23,10 +23,11 @@
 // weekday < weekday not allowed
 
 #include "iso_week.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace iso_week;
-    auto b = sun < mon;
+    static_assert(!decltype(date::test_can_less_than(sun, mon))::value, "weekday < weekday not allowed");
 }
