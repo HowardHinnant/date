@@ -6,6 +6,7 @@
 // Copyright (c) 2016, 2017 Jiangang Zhuang
 // Copyright (c) 2017 Nicolas Veloz Savino
 // Copyright (c) 2017 Florian Dang
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -85,6 +86,9 @@
 #include "tz_private.h"
 #include "ios.h"
 
+#if USE_OS_TZDB
+#  include <dirent.h>
+#endif
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -92,6 +96,9 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#if USE_OS_TZDB
+#  include <queue>
+#endif
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -149,7 +156,9 @@ static CONSTDATA char folder_delimiter = '/';
 #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif  // defined(__GNUC__) && __GNUC__ < 5
 
-#ifdef _WIN32
+#if !USE_OS_TZDB
+
+#  ifdef _WIN32
 
 namespace
 {
@@ -197,27 +206,27 @@ get_download_folder()
     return get_known_folder(FOLDERID_Downloads);
 }
 
-#else // !_WIN32
+#  else // !_WIN32
 
-#  ifndef INSTALL
+#    ifndef INSTALL
 
 static
 std::string
 expand_path(std::string path)
 {
-#    if TARGET_OS_IPHONE
+#      if TARGET_OS_IPHONE
     return date::iOSUtils::get_tzdata_path();
-#    else  // !TARGET_OS_IPHONE
+#      else  // !TARGET_OS_IPHONE
     ::wordexp_t w{};
     ::wordexp(path.c_str(), &w, 0);
     assert(w.we_wordc == 1);
     path = w.we_wordv[0];
     ::wordfree(&w);
     return path;
-#    endif  // !TARGET_OS_IPHONE
+#      endif  // !TARGET_OS_IPHONE
 }
 
-#  endif  // !INSTALL
+#    endif  // !INSTALL
 
 static
 std::string
@@ -226,7 +235,9 @@ get_download_folder()
     return expand_path("~/Downloads");
 }
 
-#endif  // !_WIN32
+#  endif  // !_WIN32
+
+#endif  // !USE_OS_TZDB
 
 namespace date
 {
@@ -235,6 +246,8 @@ namespace date
 // +---------------------+
 
 using namespace detail;
+
+#if !USE_OS_TZDB
 
 static
 std::string&
@@ -281,12 +294,21 @@ get_download_gz_file(const std::string& version)
 }
 #endif  // HAS_REMOTE_API
 
+#endif  // !USE_OS_TZDB
+
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
 
 CONSTDATA auto min_day = date::jan/1;
 CONSTDATA auto max_day = date::dec/31;
+
+CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
+CONSTCD14 const sys_seconds max_seconds = sys_days(max_year/max_day);
+
+#ifndef _WIN32
+constexpr const char tz_dir[] = "/usr/share/zoneinfo";
+#endif
 
 // +-------------------+
 // | End Configuration |
@@ -300,6 +322,16 @@ struct undocumented {explicit undocumented() = default;};
 #ifndef _MSC_VER
 static_assert(min_year <= max_year, "Configuration error");
 #endif
+
+static
+TZ_DB&
+access_tzdb()
+{
+    static TZ_DB tz_db;
+    return tz_db;
+}
+
+#if !USE_OS_TZDB
 
 #ifdef _WIN32
 
@@ -1108,127 +1140,6 @@ detail::Rule::split_overlaps(std::vector<Rule>& rules)
     rules.shrink_to_fit();
 }
 
-// time_zone
-
-detail::zonelet::~zonelet()
-{
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    using minutes = std::chrono::minutes;
-    using string = std::string;
-    if (tag_ == has_save)
-        u.save_.~minutes();
-    else
-        u.rule_.~string();
-#endif
-}
-
-detail::zonelet::zonelet()
-{
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    ::new(&u.rule_) std::string();
-#endif
-}
-
-detail::zonelet::zonelet(const zonelet& i)
-    : gmtoff_(i.gmtoff_)
-    , tag_(i.tag_)
-    , format_(i.format_)
-    , until_year_(i.until_year_)
-    , until_date_(i.until_date_)
-    , until_utc_(i.until_utc_)
-    , until_std_(i.until_std_)
-    , until_loc_(i.until_loc_)
-    , initial_save_(i.initial_save_)
-    , initial_abbrev_(i.initial_abbrev_)
-    , first_rule_(i.first_rule_)
-    , last_rule_(i.last_rule_)
-{
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    if (tag_ == has_save)
-        ::new(&u.save_) std::chrono::minutes(i.u.save_);
-    else
-        ::new(&u.rule_) std::string(i.u.rule_);
-#else
-    if (tag_ == has_save)
-        u.save_ = i.u.save_;
-    else
-        u.rule_ = i.u.rule_;
-#endif
-}
-
-time_zone::time_zone(const std::string& s, detail::undocumented)
-    : adjusted_(new std::once_flag{})
-{
-    try
-    {
-        using namespace date;
-        std::istringstream in(s);
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        std::string word;
-        in >> word >> name_;
-        parse_info(in);
-    }
-    catch (...)
-    {
-        std::cerr << s << '\n';
-        std::cerr << *this << '\n';
-        zonelets_.pop_back();
-        throw;
-    }
-}
-
-void
-time_zone::add(const std::string& s)
-{
-    try
-    {
-        std::istringstream in(s);
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        ws(in);
-        if (!in.eof() && in.peek() != '#')
-            parse_info(in);
-    }
-    catch (...)
-    {
-        std::cerr << s << '\n';
-        std::cerr << *this << '\n';
-        zonelets_.pop_back();
-        throw;
-    }
-}
-
-void
-time_zone::parse_info(std::istream& in)
-{
-    using namespace date;
-    using namespace std::chrono;
-    zonelets_.emplace_back();
-    auto& zonelet = zonelets_.back();
-    zonelet.gmtoff_ = parse_signed_time(in);
-    in >> zonelet.u.rule_;
-    if (zonelet.u.rule_ == "-")
-        zonelet.u.rule_.clear();
-    in >> zonelet.format_;
-    if (!in.eof())
-        ws(in);
-    if (in.eof() || in.peek() == '#')
-    {
-        zonelet.until_year_ = year::max();
-        zonelet.until_date_ = MonthDayTime(max_day, tz::utc);
-    }
-    else
-    {
-        int y;
-        in >> y;
-        zonelet.until_year_ = year{y};
-        in >> zonelet.until_date_;
-        zonelet.until_date_.canonicalize(zonelet.until_year_);
-    }
-    if ((zonelet.until_year_ < min_year) ||
-            (zonelets_.size() > 1 && zonelets_.end()[-2].until_year_ > max_year))
-        zonelets_.pop_back();
-}
-
 // Find the rule that comes chronologically before Rule r.  For multi-year rules,
 // y specifies which rules in r.  For single year rules, y is assumed to be equal
 // to the year specified by r.
@@ -1468,6 +1379,630 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
     return x;
 }
 
+// zonelet
+
+detail::zonelet::~zonelet()
+{
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+    using minutes = std::chrono::minutes;
+    using string = std::string;
+    if (tag_ == has_save)
+        u.save_.~minutes();
+    else
+        u.rule_.~string();
+#endif
+}
+
+detail::zonelet::zonelet()
+{
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+    ::new(&u.rule_) std::string();
+#endif
+}
+
+detail::zonelet::zonelet(const zonelet& i)
+    : gmtoff_(i.gmtoff_)
+    , tag_(i.tag_)
+    , format_(i.format_)
+    , until_year_(i.until_year_)
+    , until_date_(i.until_date_)
+    , until_utc_(i.until_utc_)
+    , until_std_(i.until_std_)
+    , until_loc_(i.until_loc_)
+    , initial_save_(i.initial_save_)
+    , initial_abbrev_(i.initial_abbrev_)
+    , first_rule_(i.first_rule_)
+    , last_rule_(i.last_rule_)
+{
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+    if (tag_ == has_save)
+        ::new(&u.save_) std::chrono::minutes(i.u.save_);
+    else
+        ::new(&u.rule_) std::string(i.u.rule_);
+#else
+    if (tag_ == has_save)
+        u.save_ = i.u.save_;
+    else
+        u.rule_ = i.u.rule_;
+#endif
+}
+
+#endif  // !USE_OS_TZDB
+
+// time_zone
+
+#if USE_OS_TZDB
+
+time_zone::time_zone(const std::string& s, detail::undocumented)
+    : name_(s)
+    , adjusted_(new std::once_flag{})
+{
+}
+
+enum class endian
+{
+    native = __BYTE_ORDER__,
+    little = __ORDER_LITTLE_ENDIAN__,
+    big    = __ORDER_BIG_ENDIAN__
+};
+
+template <class T>
+static
+inline
+void
+reverse_bytes(T& t)
+{
+    unsigned char* bytes = static_cast<unsigned char*>(std::memmove(std::addressof(t),
+                                                                    std::addressof(t),
+                                                                    sizeof(T)));
+    for (unsigned i = 0; i < sizeof(T)/2; ++i)
+        std::swap(bytes[i], bytes[sizeof(T)-1-i]);
+}
+
+template <class T>
+static
+inline
+void
+maybe_reverse_bytes(T& t, std::false_type)
+{
+}
+
+template <class T>
+static
+inline
+void
+maybe_reverse_bytes(T& t, std::true_type)
+{
+    reverse_bytes(t);
+}
+
+template <class T>
+static
+inline
+void
+maybe_reverse_bytes(T& t)
+{
+    maybe_reverse_bytes(t, std::integral_constant<bool,
+                                                  endian::native == endian::little>{});
+}
+
+static
+void
+load_header(std::istream& inf)
+{
+    // Read TZif
+    auto t = inf.get();
+    auto z = inf.get();
+    auto i = inf.get();
+    auto f = inf.get();
+    assert(t == 'T');
+    assert(z == 'Z');
+    assert(i == 'i');
+    assert(f == 'f');
+}
+
+static
+unsigned char
+load_version(std::istream& inf)
+{
+    // Read version
+    auto v = inf.get();
+    assert(v != EOF);
+    return static_cast<unsigned char>(v);
+}
+
+static
+void
+skip_reserve(std::istream& inf)
+{
+    inf.ignore(15);
+}
+
+static
+void
+load_counts(std::istream& inf,
+            std::int32_t& tzh_ttisgmtcnt, std::int32_t& tzh_ttisstdcnt,
+            std::int32_t& tzh_leapcnt,    std::int32_t& tzh_timecnt,
+            std::int32_t& tzh_typecnt,    std::int32_t& tzh_charcnt)
+{
+    // Read counts;
+    inf.read(reinterpret_cast<char*>(&tzh_ttisgmtcnt), 4);
+    maybe_reverse_bytes(tzh_ttisgmtcnt);
+    inf.read(reinterpret_cast<char*>(&tzh_ttisstdcnt), 4);
+    maybe_reverse_bytes(tzh_ttisstdcnt);
+    inf.read(reinterpret_cast<char*>(&tzh_leapcnt), 4);
+    maybe_reverse_bytes(tzh_leapcnt);
+    inf.read(reinterpret_cast<char*>(&tzh_timecnt), 4);
+    maybe_reverse_bytes(tzh_timecnt);
+    inf.read(reinterpret_cast<char*>(&tzh_typecnt), 4);
+    maybe_reverse_bytes(tzh_typecnt);
+    inf.read(reinterpret_cast<char*>(&tzh_charcnt), 4);
+    maybe_reverse_bytes(tzh_charcnt);
+}
+
+template <class TimeType>
+static
+std::vector<detail::transition>
+load_transitions(std::istream& inf, std::int32_t tzh_timecnt)
+{
+    // Read transitions
+    using namespace std::chrono;
+    std::vector<detail::transition> transitions;
+    transitions.reserve(tzh_timecnt);
+    for (std::int32_t i = 0; i < tzh_timecnt; ++i)
+    {
+        TimeType t;
+        inf.read(reinterpret_cast<char*>(&t), sizeof(t));
+        maybe_reverse_bytes(t);
+        transitions.emplace_back(sys_seconds{seconds{t}});
+        if (transitions.back().timepoint < min_seconds)
+            transitions.back().timepoint = min_seconds;
+    }
+    return transitions;
+}
+
+static
+std::vector<std::uint8_t>
+load_indices(std::istream& inf, std::int32_t tzh_timecnt)
+{
+    // Read indices
+    std::vector<std::uint8_t> indices;
+    indices.reserve(tzh_timecnt);
+    for (std::int32_t i = 0; i < tzh_timecnt; ++i)
+    {
+        std::uint8_t t;
+        inf.read(reinterpret_cast<char*>(&t), sizeof(t));
+        indices.emplace_back(t);
+    }
+    return indices;
+}
+
+static
+std::vector<ttinfo>
+load_ttinfo(std::istream& inf, std::int32_t tzh_typecnt)
+{
+    // Read ttinfo
+    std::vector<ttinfo> ttinfos;
+    ttinfos.reserve(tzh_typecnt);
+    for (std::int32_t i = 0; i < tzh_typecnt; ++i)
+    {
+        ttinfo t;
+        inf.read(reinterpret_cast<char*>(&t), 6);
+        maybe_reverse_bytes(t.tt_gmtoff);
+        ttinfos.emplace_back(t);
+    }
+    return ttinfos;
+}
+
+static
+std::string
+load_abbreviations(std::istream& inf, std::int32_t tzh_charcnt)
+{
+    // Read abbreviations
+    std::string abbrev;
+    abbrev.resize(tzh_charcnt, '\0');
+    inf.read(&abbrev[0], tzh_charcnt);
+    return abbrev;
+}
+
+#if !MISSING_LEAP_SECONDS
+
+template <class TimeType>
+static
+std::vector<leap>
+load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
+{
+    // Read tzh_leapcnt pairs
+    using namespace std::chrono;
+    std::vector<leap> leap_seconds;
+    leap_seconds.reserve(tzh_leapcnt);
+    for (std::int32_t i = 0; i < tzh_leapcnt; ++i)
+    {
+        TimeType     t0;
+        std::int32_t t1;
+        inf.read(reinterpret_cast<char*>(&t0), sizeof(t0));
+        inf.read(reinterpret_cast<char*>(&t1), sizeof(t1));
+        maybe_reverse_bytes(t0);
+        maybe_reverse_bytes(t1);
+        leap_seconds.emplace_back(sys_seconds{seconds{t0 - (t1-1)}},
+                                  detail::undocumented{});
+    }
+    return leap_seconds;
+}
+
+template <class TimeType>
+static
+std::vector<leap>
+load_leap_data(std::istream& inf,
+               std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
+               std::int32_t tzh_typecnt, std::int32_t tzh_charcnt)
+{
+    inf.ignore(tzh_timecnt*sizeof(TimeType) + tzh_timecnt + tzh_typecnt*6 + tzh_charcnt);
+    return load_leaps<TimeType>(inf, tzh_leapcnt);
+}
+
+static
+std::vector<leap>
+load_just_leaps(std::istream& inf)
+{
+    // Read tzh_leapcnt pairs
+    using namespace std::chrono;
+    load_header(inf);
+    auto v = load_version(inf);
+    std::int32_t tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                 tzh_timecnt,    tzh_typecnt,    tzh_charcnt;
+    skip_reserve(inf);
+    load_counts(inf, tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                     tzh_timecnt,    tzh_typecnt,    tzh_charcnt);
+    if (v == 0)
+        return load_leap_data<int32_t>(inf, tzh_leapcnt, tzh_timecnt, tzh_typecnt,
+                                       tzh_charcnt);
+#if !defined(NDEBUG)
+    inf.ignore((4+1)*tzh_timecnt + 6*tzh_typecnt + tzh_charcnt + 8*tzh_leapcnt +
+               tzh_ttisstdcnt + tzh_ttisgmtcnt);
+    load_header(inf);
+    auto v2 = load_version(inf);
+    assert(v == v2);
+    skip_reserve(inf);
+#else  // defined(NDEBUG)
+    inf.ignore((4+1)*tzh_timecnt + 6*tzh_typecnt + tzh_charcnt + 8*tzh_leapcnt +
+               tzh_ttisstdcnt + tzh_ttisgmtcnt + (4+1+15));
+#endif  // defined(NDEBUG)
+    load_counts(inf, tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                     tzh_timecnt,    tzh_typecnt,    tzh_charcnt);
+    return load_leap_data<int64_t>(inf, tzh_leapcnt, tzh_timecnt, tzh_typecnt,
+                                   tzh_charcnt);
+}
+
+#endif  // !MISSING_LEAP_SECONDS
+
+template <class TimeType>
+void
+time_zone::load_data(std::istream& inf,
+                     std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
+                     std::int32_t tzh_typecnt, std::int32_t tzh_charcnt)
+{
+    using namespace std::chrono;
+    transitions_ = load_transitions<TimeType>(inf, tzh_timecnt);
+    auto indices = load_indices(inf, tzh_timecnt);
+    auto infos = load_ttinfo(inf, tzh_typecnt);
+    auto abbrev = load_abbreviations(inf, tzh_charcnt);
+#if !MISSING_LEAP_SECONDS
+    auto& leap_seconds = access_tzdb().leaps;
+    if (leap_seconds.empty() && tzh_leapcnt > 0)
+        leap_seconds = load_leaps<TimeType>(inf, tzh_leapcnt);
+#endif
+    ttinfos_.reserve(infos.size());
+    for (auto& info : infos)
+    {
+        ttinfos_.push_back({seconds{info.tt_gmtoff},
+                            abbrev.c_str() + info.tt_abbrind,
+                            info.tt_isdst != 0});
+    }
+    auto i = 0;
+    if (transitions_.empty() || transitions_.front().timepoint != min_seconds)
+    {
+        transitions_.emplace(transitions_.begin(), min_seconds);
+        auto tf = std::find_if(ttinfos_.begin(), ttinfos_.end(),
+                               [](const expanded_ttinfo& ti)
+                                   {return ti.is_dst == 0;});
+        if (tf == ttinfos_.end())
+            tf = ttinfos_.begin();
+        transitions_[i].info = &*tf;
+        ++i;
+    }
+    for (auto j = 0; i < transitions_.size(); ++i, ++j)
+        transitions_[i].info = ttinfos_.data() + indices[j];
+}
+
+void
+time_zone::init_impl()
+{
+    using namespace std;
+    using namespace std::chrono;
+    auto name = tz_dir + ('/' + name_);
+    std::ifstream inf(name);
+    if (!inf.is_open())
+        throw std::runtime_error{"Unable to open " + name};
+    inf.exceptions(std::ios::failbit | std::ios::badbit);
+    load_header(inf);
+    auto v = load_version(inf);
+    std::int32_t tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                 tzh_timecnt,    tzh_typecnt,    tzh_charcnt;
+    skip_reserve(inf);
+    load_counts(inf, tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                     tzh_timecnt,    tzh_typecnt,    tzh_charcnt);
+    if (v == 0)
+    {
+        load_data<int32_t>(inf, tzh_leapcnt, tzh_timecnt, tzh_typecnt, tzh_charcnt);
+    }
+    else
+    {
+#if !defined(NDEBUG)
+        inf.ignore((4+1)*tzh_timecnt + 6*tzh_typecnt + tzh_charcnt + 8*tzh_leapcnt +
+                   tzh_ttisstdcnt + tzh_ttisgmtcnt);
+        load_header(inf);
+        auto v2 = load_version(inf);
+        assert(v == v2);
+        skip_reserve(inf);
+#else  // defined(NDEBUG)
+        inf.ignore((4+1)*tzh_timecnt + 6*tzh_typecnt + tzh_charcnt + 8*tzh_leapcnt +
+                   tzh_ttisstdcnt + tzh_ttisgmtcnt + (4+1+15));
+#endif  // defined(NDEBUG)
+        load_counts(inf, tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
+                         tzh_timecnt,    tzh_typecnt,    tzh_charcnt);
+        load_data<int64_t>(inf, tzh_leapcnt, tzh_timecnt, tzh_typecnt, tzh_charcnt);
+    }
+#if !MISSING_LEAP_SECONDS
+    if (tzh_leapcnt > 0)
+    {
+        auto& leap_seconds = access_tzdb().leaps;
+        auto itr = leap_seconds.begin();
+        auto l = itr->date();
+        seconds leap_count{0};
+        for (auto t = std::upper_bound(transitions_.begin(), transitions_.end(), l,
+                                       [](const sys_seconds& x, const transition& t)
+                                       {
+                                           return x < t.timepoint;
+                                       });
+                  t != transitions_.end(); ++t)
+        {
+            while (t->timepoint >= l)
+            {
+                ++leap_count;
+                if (++itr == leap_seconds.end())
+                    l = max_seconds;
+                else
+                    l = itr->date() + leap_count;
+            }
+            t->timepoint -= leap_count;
+        }
+    }
+#endif  // !MISSING_LEAP_SECONDS
+    auto b = transitions_.begin();
+    auto i = transitions_.end();
+    if (i != b)
+    {
+        for (--i; i != b; --i)
+        {
+            if (i->info->offset == i[-1].info->offset &&
+                i->info->abbrev == i[-1].info->abbrev &&
+                i->info->is_dst == i[-1].info->is_dst)
+                i = transitions_.erase(i);
+        }
+    }
+}
+
+void
+time_zone::init() const
+{
+    std::call_once(*adjusted_, [this]() {const_cast<time_zone*>(this)->init_impl();});
+}
+
+sys_info
+time_zone::load_sys_info(std::vector<detail::transition>::const_iterator i) const
+{
+    using namespace std::chrono;
+    assert(!transitions_.empty());
+    assert(i != transitions_.begin());
+    sys_info r;
+    r.begin = i[-1].timepoint;
+    r.end = i != transitions_.end() ? i->timepoint : sys_days(year::max()/max_day);
+    r.offset = i[-1].info->offset;
+    r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
+    r.abbrev = i[-1].info->abbrev;
+    return r;
+}
+
+sys_info
+time_zone::get_info_impl(sys_seconds tp) const
+{
+    using namespace std;
+    init();
+    return load_sys_info(upper_bound(transitions_.begin(), transitions_.end(), tp,
+                                     [](const sys_seconds& x, const transition& t)
+                                     {
+                                         return x < t.timepoint;
+                                     }));
+}
+
+local_info
+time_zone::get_info_impl(local_seconds tp) const
+{
+    using namespace std::chrono;
+    init();
+    local_info i;
+    i.result = local_info::unique;
+    auto tr = upper_bound(transitions_.begin(), transitions_.end(), tp,
+                          [](const local_seconds& x, const transition& t)
+                          {
+                              return sys_seconds{x.time_since_epoch()} -
+                                                         t.info->offset < t.timepoint;
+                          });
+    i.first = load_sys_info(tr);
+    auto tps = sys_seconds{(tp - i.first.offset).time_since_epoch()};
+    if (tps < i.first.begin + days{1} && tr != transitions_.begin())
+    {
+        i.second = load_sys_info(--tr);
+        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
+        if (tps < i.second.end)
+        {
+           i.result = local_info::ambiguous;
+           std::swap(i.first, i.second);
+        }
+        else
+        {
+            i.second = {};
+        }
+    }
+    else if (tps >= i.first.end && tr != transitions_.end())
+    {
+        i.second = load_sys_info(++tr);
+        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
+        if (tps < i.second.begin)
+            i.result = local_info::nonexistent;
+        else
+            i.second = {};
+    }
+    return i;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const time_zone& z)
+{
+    using namespace std::chrono;
+    z.init();
+    os << z.name_ << '\n';
+    os << "Initially:           ";
+    auto const& t = z.transitions_.front();
+    if (t.info->offset >= seconds{0})
+        os << '+';
+    os << make_time(t.info->offset);
+    if (t.info->is_dst > 0)
+        os << " daylight ";
+    else
+        os << " standard ";
+    os << t.info->abbrev << '\n';
+    for (auto i = std::next(z.transitions_.cbegin()); i < z.transitions_.cend(); ++i)
+        os << *i << '\n';
+    return os;
+}
+
+#if !MISSING_LEAP_SECONDS
+
+leap::leap(const sys_seconds& s, detail::undocumented)
+    : date_(s)
+{
+}
+
+#endif  // !MISSING_LEAP_SECONDS
+
+#else  // !USE_OS_TZDB
+
+time_zone::time_zone(const std::string& s, detail::undocumented)
+    : adjusted_(new std::once_flag{})
+{
+    try
+    {
+        using namespace date;
+        std::istringstream in(s);
+        in.exceptions(std::ios::failbit | std::ios::badbit);
+        std::string word;
+        in >> word >> name_;
+        parse_info(in);
+    }
+    catch (...)
+    {
+        std::cerr << s << '\n';
+        std::cerr << *this << '\n';
+        zonelets_.pop_back();
+        throw;
+    }
+}
+
+sys_info
+time_zone::get_info_impl(sys_seconds tp) const
+{
+    return get_info_impl(tp, static_cast<int>(tz::utc));
+}
+
+local_info
+time_zone::get_info_impl(local_seconds tp) const
+{
+    using namespace std::chrono;
+    local_info i{};
+    i.first = get_info_impl(sys_seconds{tp.time_since_epoch()}, static_cast<int>(tz::local));
+    auto tps = sys_seconds{(tp - i.first.offset).time_since_epoch()};
+    if (tps < i.first.begin)
+    {
+        i.second = std::move(i.first);
+        i.first = get_info_impl(i.second.begin - seconds{1}, static_cast<int>(tz::utc));
+        i.result = local_info::nonexistent;
+    }
+    else if (i.first.end - tps <= days{1})
+    {
+        i.second = get_info_impl(i.first.end, static_cast<int>(tz::utc));
+        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
+        if (tps >= i.second.begin)
+            i.result = local_info::ambiguous;
+        else
+            i.second = {};
+    }
+    return i;
+}
+
+void
+time_zone::add(const std::string& s)
+{
+    try
+    {
+        std::istringstream in(s);
+        in.exceptions(std::ios::failbit | std::ios::badbit);
+        ws(in);
+        if (!in.eof() && in.peek() != '#')
+            parse_info(in);
+    }
+    catch (...)
+    {
+        std::cerr << s << '\n';
+        std::cerr << *this << '\n';
+        zonelets_.pop_back();
+        throw;
+    }
+}
+
+void
+time_zone::parse_info(std::istream& in)
+{
+    using namespace date;
+    using namespace std::chrono;
+    zonelets_.emplace_back();
+    auto& zonelet = zonelets_.back();
+    zonelet.gmtoff_ = parse_signed_time(in);
+    in >> zonelet.u.rule_;
+    if (zonelet.u.rule_ == "-")
+        zonelet.u.rule_.clear();
+    in >> zonelet.format_;
+    if (!in.eof())
+        ws(in);
+    if (in.eof() || in.peek() == '#')
+    {
+        zonelet.until_year_ = year::max();
+        zonelet.until_date_ = MonthDayTime(max_day, tz::utc);
+    }
+    else
+    {
+        int y;
+        in >> y;
+        zonelet.until_year_ = year{y};
+        in >> zonelet.until_date_;
+        zonelet.until_date_.canonicalize(zonelet.until_year_);
+    }
+    if ((zonelet.until_year_ < min_year) ||
+            (zonelets_.size() > 1 && zonelets_.end()[-2].until_year_ > max_year))
+        zonelets_.pop_back();
+}
+
 void
 time_zone::adjust_infos(const std::vector<Rule>& rules)
 {
@@ -1640,44 +2175,13 @@ format_abbrev(std::string format, const std::string& variable, std::chrono::seco
 }
 
 sys_info
-time_zone::get_info_impl(sys_seconds tp) const
-{
-    return get_info_impl(tp, static_cast<int>(tz::utc));
-}
-
-local_info
-time_zone::get_info_impl(local_seconds tp) const
-{
-    using namespace std::chrono;
-    local_info i{};
-    i.first = get_info_impl(sys_seconds{tp.time_since_epoch()}, static_cast<int>(tz::local));
-    auto tps = sys_seconds{(tp - i.first.offset).time_since_epoch()};
-    if (tps < i.first.begin)
-    {
-        i.second = std::move(i.first);
-        i.first = get_info_impl(i.second.begin - seconds{1}, static_cast<int>(tz::utc));
-        i.result = local_info::nonexistent;
-    }
-    else if (i.first.end - tps <= days{1})
-    {
-        i.second = get_info_impl(i.first.end, static_cast<int>(tz::utc));
-        tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
-        if (tps >= i.second.begin)
-            i.result = local_info::ambiguous;
-        else
-            i.second = {};
-    }
-    return i;
-}
-
-sys_info
 time_zone::get_info_impl(sys_seconds tp, int tz_int) const
 {
     using namespace std::chrono;
     using namespace date;
     tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
-    auto y = year_month_day(date::floor<days>(tp)).year();
+    auto y = year_month_day(floor<days>(tp)).year();
     if (y < min_year || y > max_year)
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
@@ -1787,6 +2291,111 @@ operator<<(std::ostream& os, const time_zone& z)
     return os;
 }
 
+#endif  // !USE_OS_TZDB
+
+#if !MISSING_LEAP_SECONDS
+
+std::ostream&
+operator<<(std::ostream& os, const leap& x)
+{
+    using namespace date;
+    return os << x.date_ << "  +";
+}
+
+#endif  // !MISSING_LEAP_SECONDS
+
+#if USE_OS_TZDB
+
+static
+std::string
+get_version()
+{
+    using namespace std;
+    auto path = tz_dir + string("/+VERSION");
+    ifstream in{path};
+    string version;
+    in >> version;
+    if (in.fail())
+        throw std::runtime_error("Unable to get Timezone database version from " + path);
+    return version;
+}
+
+static
+TZ_DB
+init_tzdb()
+{
+    TZ_DB db;
+
+    //Iterate through folders
+    std::queue<std::string> subfolders;
+    subfolders.emplace(tz_dir);
+    struct dirent* d;
+    struct stat s;
+    while (!subfolders.empty())
+    {
+        auto dirname = std::move(subfolders.front());
+        subfolders.pop();
+        auto dir = opendir(dirname.c_str());
+        if (!dir)
+            continue;
+        while ((d = readdir(dir)) != nullptr)
+        {
+            // Ignore these files:
+            if (d->d_name[0]                     == '.' || // curdir, prevdir, hidden
+                memcmp(d->d_name, "posix", 5)    == 0   || // starts with posix
+                strcmp(d->d_name, "Factory")     == 0   ||
+                strcmp(d->d_name, "iso3166.tab") == 0   ||
+                strcmp(d->d_name, "right")       == 0   ||
+                strcmp(d->d_name, "+VERSION")    == 0   ||
+                strcmp(d->d_name, "zone.tab")    == 0     )
+                continue;
+            auto subname = dirname + folder_delimiter + d->d_name;
+            if(stat(subname.c_str(), &s) == 0)
+            {
+                if(S_ISDIR(s.st_mode))
+                {
+                    if(!S_ISLNK(s.st_mode))
+                    {
+                        subfolders.push(subname);
+                    }
+                }
+                else
+                {
+                    db.zones.emplace_back(subname.substr(sizeof(tz_dir)),
+                                          detail::undocumented{});
+                }
+            }
+        }
+        closedir(dir);
+    }
+    db.zones.shrink_to_fit();
+    std::sort(db.zones.begin(), db.zones.end());
+#  if !MISSING_LEAP_SECONDS
+    std::ifstream in(tz_dir + std::string(1, folder_delimiter) + "right/UTC",
+                     std::ios_base::binary);
+    if (in)
+    {
+        in.exceptions(std::ios::failbit | std::ios::badbit);
+        db.leaps = load_just_leaps(in);
+    }
+    else
+    {
+        in.clear();
+        in.open(tz_dir + std::string(1, folder_delimiter) + "UTC", std::ios_base::binary);
+        if (!in)
+            throw std::runtime_error("Unable to extract leap second information");
+        in.exceptions(std::ios::failbit | std::ios::badbit);
+        db.leaps = load_just_leaps(in);
+    }
+#  endif  // !MISSING_LEAP_SECONDS
+#  ifdef __APPLE__
+    db.version = get_version();
+#  endif
+    return db;
+}
+
+#else  // !USE_OS_TZDB
+
 // link
 
 link::link(const std::string& s)
@@ -1821,13 +2430,6 @@ leap::leap(const std::string& s, detail::undocumented)
     MonthDayTime date;
     in >> word >> y >> date;
     date_ = date.to_time_point(year(y));
-}
-
-std::ostream&
-operator<<(std::ostream& os, const leap& x)
-{
-    using namespace date;
-    return os << x.date_ << "  +";
 }
 
 static
@@ -2686,14 +3288,6 @@ init_tzdb()
     return db;
 }
 
-static
-TZ_DB&
-access_tzdb()
-{
-    static TZ_DB tz_db;
-    return tz_db;
-}
-
 const TZ_DB&
 reload_tzdb()
 {
@@ -2704,6 +3298,8 @@ reload_tzdb()
 #endif  // AUTO_DOWNLOAD
     return access_tzdb() = init_tzdb();
 }
+
+#endif  // !USE_OS_TZDB
 
 const TZ_DB&
 get_tzdb()
@@ -2723,6 +3319,7 @@ locate_zone(const std::string& tz_name)
         });
     if (zi == db.zones.end() || zi->name() != tz_name)
     {
+#if !USE_OS_TZDB
         auto li = std::lower_bound(db.links.begin(), db.links.end(), tz_name,
         [](const link& z, const std::string& nm)
         {
@@ -2738,10 +3335,29 @@ locate_zone(const std::string& tz_name)
             if (zi != db.zones.end() && zi->name() == li->target())
                 return &*zi;
         }
+#endif  // !USE_OS_TZDB
         throw std::runtime_error(tz_name + " not found in timezone database");
     }
     return &*zi;
 }
+
+#if USE_OS_TZDB
+
+std::ostream&
+operator<<(std::ostream& os, const TZ_DB& db)
+{
+    os << "Version: " << db.version << "\n\n";
+    for (const auto& x : db.zones)
+        os << x << '\n';
+#if !MISSING_LEAP_SECONDS
+    os << '\n';
+    for (const auto& x : db.leaps)
+        os << x << '\n';
+#endif  // !MISSING_LEAP_SECONDS
+    return os;
+}
+
+#else  // !USE_OS_TZDB
 
 std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db)
@@ -2800,6 +3416,8 @@ operator<<(std::ostream& os, const TZ_DB& db)
     return os;
 }
 
+#endif  // !USE_OS_TZDB
+
 // -----------------------
 
 #ifdef _WIN32
@@ -2835,7 +3453,7 @@ current_zone()
         msg += "\" was not found in the time zone mapping database.";
         throw std::runtime_error(msg);
     }
-    return date::locate_zone(standard_tzid);
+    return locate_zone(standard_tzid);
 }
 
 #else  // !_WIN32
@@ -2868,11 +3486,9 @@ current_zone()
         else
             throw system_error(errno, system_category(), "realpath() failed");
 
-        const char zonepath[] = "/usr/share/zoneinfo/";
-        const size_t zonepath_len = sizeof(zonepath)/sizeof(zonepath[0])-1;
-        const size_t pos = result.find(zonepath);
+        const size_t pos = result.find(tz_dir);
         if (pos != result.npos)
-            result.erase(0, zonepath_len+pos);
+            result.erase(0, sizeof(tz_dir)+pos);
         return locate_zone(result);
     }
     {

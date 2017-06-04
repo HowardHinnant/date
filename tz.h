@@ -5,6 +5,7 @@
 //
 // Copyright (c) 2015, 2016, 2017 Howard Hinnant
 // Copyright (c) 2017 Jiangang Zhuang
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,13 +42,24 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
+#ifndef USE_OS_TZDB
+#  define USE_OS_TZDB 0
+#endif
+
 #ifndef HAS_REMOTE_API
-#  ifdef _WIN32
+#  if USE_OS_TZDB == 0
+#    ifdef _WIN32
+#      define HAS_REMOTE_API 0
+#    else
+#      define HAS_REMOTE_API 1
+#    endif
+#  else  // HAS_REMOTE_API makes no since when using the OS timezone database
 #    define HAS_REMOTE_API 0
-#  else
-#    define HAS_REMOTE_API 1
 #  endif
 #endif
+
+static_assert(!(USE_OS_TZDB && HAS_REMOTE_API),
+              "USE_OS_TZDB and HAS_REMOTE_API can not be used together");
 
 #ifndef AUTO_DOWNLOAD
 #  define AUTO_DOWNLOAD HAS_REMOTE_API
@@ -58,6 +70,19 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 
 #ifndef USE_SHELL_API
 #  define USE_SHELL_API 1
+#endif
+
+#if USE_OS_TZDB
+#  ifdef _WIN32
+#    error "USE_OS_TZDB can not be used on Windows"
+#  endif
+#  ifndef MISSING_LEAP_SECONDS
+#    ifdef __APPLE__
+#      define MISSING_LEAP_SECONDS 1
+#    else
+#      define MISSING_LEAP_SECONDS 0
+#    endif
+#  endif
 #endif
 
 #include "date.h"
@@ -198,8 +223,6 @@ ambiguous_local_time::make_msg(local_time<Duration> tp,
     return os.str();
 }
 
-namespace detail { class Rule; }
-
 struct sys_info
 {
     sys_seconds          begin;
@@ -331,16 +354,31 @@ operator!=(const zoned_time<Duration1>& x, const zoned_time<Duration2>& y)
 }
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-namespace detail { struct zonelet; }
-#endif
+
+namespace detail
+{
+#  if USE_OS_TZDB
+    struct transition;
+    struct expanded_ttinfo;
+#  else  // !USE_OS_TZDB
+    struct zonelet;
+    class Rule;
+#  endif  // !USE_OS_TZDB
+}
+
+#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
 class time_zone
 {
 private:
-
-    std::string          name_;
-    std::vector<detail::zonelet> zonelets_;
-    std::unique_ptr<std::once_flag> adjusted_;
+    std::string                          name_;
+#if USE_OS_TZDB
+    std::vector<detail::transition>      transitions_;
+    std::vector<detail::expanded_ttinfo> ttinfos_;
+#else  // !USE_OS_TZDB
+    std::vector<detail::zonelet>         zonelets_;
+#endif  // !USE_OS_TZDB
+    std::unique_ptr<std::once_flag>      adjusted_;
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -374,15 +412,13 @@ public:
     friend bool operator< (const time_zone& x, const time_zone& y) NOEXCEPT;
     friend DATE_API std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
+#if !USE_OS_TZDB
     DATE_API void add(const std::string& s);
-    DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
+#endif  // !USE_OS_TZDB
 
 private:
     DATE_API sys_info   get_info_impl(sys_seconds tp) const;
     DATE_API local_info get_info_impl(local_seconds tp) const;
-    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
-
-    void parse_info(std::istream& in);
 
     template <class Duration>
         sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -390,6 +426,22 @@ private:
     template <class Duration>
         sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
         to_sys_impl(local_time<Duration> tp, choose, std::true_type) const;
+
+#if USE_OS_TZDB
+    DATE_API void init() const;
+    DATE_API void init_impl();
+    DATE_API sys_info
+        load_sys_info(std::vector<detail::transition>::const_iterator i) const;
+
+    template <class TimeType>
+    DATE_API void
+    load_data(std::istream& inf, std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
+                                 std::int32_t tzh_typecnt, std::int32_t tzh_charcnt);
+#else  // !USE_OS_TZDB
+    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
+    DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
+    DATE_API void parse_info(std::istream& in);
+#endif  // !USE_OS_TZDB
 };
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -515,6 +567,8 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
 
+#if !USE_OS_TZDB
+
 class link
 {
 private:
@@ -537,13 +591,21 @@ inline bool operator> (const link& x, const link& y) {return   y < x;}
 inline bool operator<=(const link& x, const link& y) {return !(y < x);}
 inline bool operator>=(const link& x, const link& y) {return !(x < y);}
 
+#endif  // !USE_OS_TZDB
+
+#if !MISSING_LEAP_SECONDS
+
 class leap
 {
 private:
     sys_seconds date_;
 
 public:
+#if USE_OS_TZDB
+    DATE_API explicit leap(const sys_seconds& s, detail::undocumented);
+#else
     DATE_API explicit leap(const std::string& s, detail::undocumented);
+#endif
 
     sys_seconds date() const {return date_;}
 
@@ -654,6 +716,8 @@ operator>=(const sys_time<Duration>& x, const leap& y)
     return !(x < y);
 }
 
+#endif  // !MISSING_LEAP_SECONDS
+
 #ifdef _WIN32
 
 namespace detail
@@ -694,11 +758,17 @@ struct timezone_mapping
 
 struct TZ_DB
 {
-    std::string               version;
+    std::string               version = "unknown";
     std::vector<time_zone>    zones;
+#if !USE_OS_TZDB
     std::vector<link>         links;
+#endif
+#if !MISSING_LEAP_SECONDS
     std::vector<leap>         leaps;
+#endif
+#if !USE_OS_TZDB
     std::vector<detail::Rule> rules;
+#endif
 #ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
 #endif
@@ -707,16 +777,14 @@ struct TZ_DB
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&&) = default;
     TZ_DB& operator=(TZ_DB&&) = default;
-#else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
+#else  // defined(_MSC_VER) && (_MSC_VER < 1900)
     TZ_DB(TZ_DB&& src)
         : version(std::move(src.version))
         , zones(std::move(src.zones))
         , links(std::move(src.links))
         , leaps(std::move(src.leaps))
         , rules(std::move(src.rules))
-#ifdef _WIN32
         , mappings(std::move(src.mappings))
-#endif
     {}
 
     TZ_DB& operator=(TZ_DB&& src)
@@ -726,25 +794,30 @@ struct TZ_DB
         links = std::move(src.links);
         leaps = std::move(src.leaps);
         rules = std::move(src.rules);
-#ifdef _WIN32
         mappings = std::move(src.mappings);
-#endif
         return *this;
     }
-#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+#endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 };
 
 DATE_API std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db);
 
 DATE_API const TZ_DB& get_tzdb();
+
+#if !USE_OS_TZDB
+
 DATE_API const TZ_DB& reload_tzdb();
 DATE_API void         set_install(const std::string& install);
 
+#endif  // !USE_OS_TZDB
+
 #if HAS_REMOTE_API
+
 DATE_API std::string remote_version();
 DATE_API bool        remote_download(const std::string& version);
 DATE_API bool        remote_install(const std::string& version);
+
 #endif
 
 DATE_API const time_zone* locate_zone(const std::string& tz_name);
@@ -1049,6 +1122,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration>& t)
     to_stream(os, "%F %T %Z", t);
     return os;
 }
+
+#if !MISSING_LEAP_SECONDS
 
 class utc_clock
 {
@@ -1440,6 +1515,8 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
     return gps_time<duration>{t.time_since_epoch()} -
             (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1958}/jan/1) + seconds{19});
 }
+
+#endif  // !MISSING_LEAP_SECONDS
 
 }  // namespace date
 

@@ -40,6 +40,8 @@ namespace date
 namespace detail
 {
 
+#if !USE_OS_TZDB
+
 enum class tz {utc, local, standard};
 
 //forward declare to avoid warnings in gcc 6.2
@@ -253,6 +255,56 @@ struct zonelet
     zonelet(const zonelet& i);
     zonelet& operator=(const zonelet&) = delete;
 };
+
+#else  // USE_OS_TZDB
+
+struct ttinfo
+{
+    std::int32_t  tt_gmtoff;
+    unsigned char tt_isdst;
+    unsigned char tt_abbrind;
+    unsigned char pad[2];
+};
+
+static_assert(sizeof(ttinfo) == 8, "");
+
+struct expanded_ttinfo
+{
+    std::chrono::seconds offset;
+    std::string          abbrev;
+    bool                 is_dst;
+};
+
+struct transition
+{
+    sys_seconds            timepoint;
+    const expanded_ttinfo* info;
+
+    transition(sys_seconds tp, const expanded_ttinfo* i = nullptr)
+        : timepoint(tp)
+        , info(i)
+        {}
+
+    friend
+    std::ostream&
+    operator<<(std::ostream& os, const transition& t)
+    {
+        using namespace date;
+        using namespace std::chrono;
+        os << t.timepoint << "Z ";
+        if (t.info->offset >= seconds{0})
+            os << '+';
+        os << make_time(t.info->offset);
+        if (t.info->is_dst > 0)
+            os << " daylight ";
+        else
+            os << " standard ";
+        os << t.info->abbrev;
+        return os;
+    }
+};
+
+#endif  // USE_OS_TZDB
 
 }  // namespace detail
 
