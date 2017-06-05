@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-04-01<br/>
+2017-06-04<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -801,6 +801,27 @@ conversions among time zones).  But it represents <i>all</i> of the data, and
 hides <i>none</i> of it.
 </p>
 
+<p>
+If compiled with <code>-DUSE_OS_TZDB</code> some of the information above will be missing:
+</p>
+
+<ul>
+<li><p>
+<code>version</code> will have the value <code>"unknown"</code> on Linux.
+</p></li>
+<li><p>
+<code>links</code> is missing as this version of the database makes no distinction between
+links and time zones.
+</p></li>
+<li><p>
+<code>leaps</code> will be missing on those platforms that do not ship with this
+information, which includes macOS and iOS.
+</p></li>
+<li><p>
+<code>rules</code> is missing.
+</p></li>
+</ul>
+
 <pre>
 const TZ_DB&amp; get_tzdb();
 </pre>
@@ -922,6 +943,10 @@ it <i>always</i> does when <code>AUTO_DOWNLOAD == 0</code>), all outstanding
 <i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
 be returned to a valid <code>TZ_DB</code>.
 </p>
+
+<p>
+<i>Remarks:</i> Not available with <code>USE_OS_TZDB == 1</code>.
+</p>
 </blockquote>
 
 <pre>
@@ -953,6 +978,10 @@ such as
 <a href="https://freedesktop.org/wiki/Software/xdg-user-dirs/ ">xdg-user-dirs</a> whose
 result can be passed directly to <code>set_install</code>.
 </p>
+
+<p>
+<i>Remarks:</i> Not available with <code>USE_OS_TZDB == 1</code>.
+</p>
 </blockquote>
 
 <p>
@@ -968,6 +997,10 @@ will be notified at compile time if <code>AUTO_DOWNLOAD == 1</code> and
 defaults to <code>1</code>.  This is because
 <a href="https://curl.haxx.se/libcurl/"><code>libcurl</code></a> comes preinstalled
 everywhere but Windows, but it is available for Windows.
+</p>
+
+<p>
+None of these are available with <code>USE_OS_TZDB == 1</code>.
 </p>
 
 <p>
@@ -1251,6 +1284,15 @@ such information is to query the <code>time_zone</code> with a
 an <code>sys_info</code> except that it is guaranteed <i>not</i> to be in the range
 <code>[begin, end)</code> (if <code>save != 0min</code> for this <code>sys_info</code>).
 </p>
+
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, the underlying database collapses this
+information down to a <code>bool</code> which is fase when daylight saving is not in
+effect and true when it is.  When <code>USE_OS_TZDB == 1</code>, the <code>save</code>
+field will be <code>0min</code> when daylight saving is not in effect and
+<code>1min</code> when daylight saving is in effect.
+</p>
+
 <p>
 The <code>abbrev</code> field indicates the current abbreviation used for the
 associated <code>time_zone</code> and <code>time_point</code>.  Abbreviations
@@ -2074,6 +2116,12 @@ account, <code>utc_clock</code> and its associated <code>time_point</code>,
 in performing those conversions.
 </p>
 
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, some platforms do not support leap
+second information.  When this is the case, <code>utc_clock</code> will not exist and
+<code>MISSING_LEAP_SECONDS == 1</code>.
+</p>
+
 <pre>
 static utc_clock::time_point utc_clock::now() noexcept;
 </pre>
@@ -2226,6 +2274,12 @@ With each leap second, the offset from <code>utc_time</code> grows by another
 second.
 </p>
 
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, some platforms do not support leap
+second information.  When this is the case, <code>tai_clock</code> will not exist and
+<code>MISSING_LEAP_SECONDS == 1</code>.
+</p>
+
 <pre>
 static tai_clock::time_point tai_clock::now() noexcept;
 </pre>
@@ -2365,6 +2419,12 @@ using gps_seconds = gps_time&lt;std::chrono::seconds&gt;;
 but when printed out, <i>always</i> has 60 seconds per minute.  It's epoch
 is 1980-01-06 and was equivalent to UTC at that time.  If drifts ahead of UTC
 with each inserted leap second.  It is always exactly 19s behind TAI.
+</p>
+
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, some platforms do not support leap
+second information.  When this is the case, <code>gps_clock</code> will not exist and
+<code>MISSING_LEAP_SECONDS == 1</code>.
 </p>
 
 <pre>
@@ -2586,6 +2646,13 @@ with the member function <code>date()</code> and that will be the date of the le
 insertion.  <code>leap</code> is equality and less-than comparable, both with itself, and
 with <code>sys_time&lt;Duration&gt;</code>.
 </p>
+
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, some platforms do not support leap
+second information.  When this is the case, <code>leap</code> will not exist and
+<code>MISSING_LEAP_SECONDS == 1</code>.
+</p>
+
 </blockquote>
 
 <a name="link"></a><h3><code>link</code></h3>
@@ -2615,6 +2682,10 @@ A <code>link</code> is an alternative name for a <code>time_zone</code>.  The al
 name is <code>name()</code>.  The name of the <code>time_zone</code> for which this is
 an alternative name is <code>target()</code>.  <code>link</code>s will be constructed
 for you when the time zone database is initialized.
+</p>
+
+<p>
+When compiled with <code>USE_OS_TZDB == 1</code>, <code>link</code> will not exist.
 </p>
 </blockquote>
 
@@ -2669,6 +2740,10 @@ If specified, <code>"/tzdata"</code> will be appended to whatever you supply
 <i>Warning:</i> When coupled with <code>AUTO_DOWNLOAD=1</CODE>, this <i>will</i> overwrite
 everthing at <code>INSTALL/tzdata</code> if it already exists.  Set with care.
 </p>
+<p>
+When compiling with <code>USE_OS_TZDB == 1</code> <code>INSTALL</code> can not be used.
+The zic-compiled time zone database will be wherever your OS installed it.
+</p>
 </dd>
 
 <dt><code>HAS_REMOTE_API</code></dt>
@@ -2700,6 +2775,10 @@ However one can download it for Windows.
 <blockquote><pre>
 -DHAS_REMOTE_API=0
 </pre></blockquote>
+<p>
+When compiling with <code>USE_OS_TZDB == 1</code> <code>HAS_REMOTE_API</code> can not be
+enabled.  You will be using whatever zic-compiled database your OS supplies.
+</p>
 </dd>
 
 <dt><code>AUTO_DOWNLOAD</code></dt>
@@ -2734,6 +2813,40 @@ must be <code>1</code>, else a compile-time error will be emitted.
 <i>Warning:</i> This <i>will</i> overwrite everthing at <code>INSTALL/tzdata</code> if
 it already exists.
 </p>
+<p>
+When compiling with <code>USE_OS_TZDB == 1</code> <code>AUTO_DOWNLOAD</code> can not be
+enabled.  You will be using whatever zic-compiled database your OS supplies.
+</p>
+</dd>
+
+<dt><code>USE_OS_TZDB</code></dt>
+<dd>
+<p>
+If <code>USE_OS_TZDB</code> is <code>1</code> then this library will use the zic-compiled
+time zone database provided by your OS.  This option relieves you of having to install the
+IANA time zone database, either manually, or automatically with
+<code>AUTO_DOWNLOAD</code>.  This option is not available on Windows.
+</p>
+<p>
+The OS-supplied database may contain a subset of the information available when using the
+IANA text-file database.  For example on Apple platforms there is no leap second data
+available, and the time zone transition points are limited to the range of 1901-12-13
+20:45:52 to 2038-01-19 03:14:07.  The library continues to give results outside this
+range, but the offsets may not be the same as when using the text-file IANA database. In
+extreme cases, the reported local time can be off by nearly a day (e.g. America/Adak,
+prior to 1867-10-17).  This is caused (for example) by some regions "jumping" the
+international date line in the 1800's. Additionally the IANA time zone database version
+may not be available.  If unavailable, the version will be "unknown".
+</p>
+<p>
+<i>Default:</i> <code>0</code>.
+</p>
+<p>
+<i>Example:</i>  Enable the use of the OS-supplied time zone database:
+</p>
+<blockquote><pre>
+-DUSE_OS_TZDB=1
+</pre></blockquote>
 </dd>
 
 <dt><code>USE_SHELL_API</code></dt>
@@ -2790,6 +2903,15 @@ http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a> int
 
 <p>
 mingw users:  <code>-lpthread</code> is required.
+</p>
+
+<h3>Linux specific:</h3>
+
+<p>
+You may have to use <code>-lpthread</code>.  If you're getting a mysterious crash on first
+access to the database, it is likely that you aren't linking to the <code>pthread</code>
+library.  The <code>pthread</code> library is used to assure that that library
+initialization is thread safe in a multithreaded environment.
 </p>
 
 <h3>iOS specific:</h3>
