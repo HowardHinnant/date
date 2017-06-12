@@ -92,6 +92,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -1807,7 +1808,8 @@ time_zone::load_sys_info(std::vector<detail::transition>::const_iterator i) cons
     assert(i != transitions_.begin());
     sys_info r;
     r.begin = i[-1].timepoint;
-    r.end = i != transitions_.end() ? i->timepoint : sys_days(year::max()/max_day);
+    r.end = i != transitions_.end() ? i->timepoint :
+                                      sys_seconds(sys_days(year::max()/max_day));
     r.offset = i[-1].info->offset;
     r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
     r.abbrev = i[-1].info->abbrev;
