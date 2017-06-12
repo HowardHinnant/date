@@ -5249,7 +5249,7 @@ read_unsigned(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M 
             break;
         (void)is.get();
         ++count;
-        x = 10*x + (c - '0');
+        x = 10*x + static_cast<unsigned>(c - '0');
         if (count == M)
             break;
     }
@@ -5593,7 +5593,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 {
                     if (modified == CharT{})
                     {
-                        read(is, rs{C, 1, width == -1 ? 2u : width});
+                        read(is, rs{C, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     }
                     else
                     {
@@ -5633,8 +5633,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, rs{Y, 1, width == -1 ? 4u : width}, CharT{'-'},
-                                 ru{m, 1, 2}, CharT{'-'}, ru{d, 1, 2});
+                        read(is, rs{Y, 1, width == -1 ? 4u : static_cast<unsigned>(width)},
+                                 CharT{'-'}, ru{m, 1, 2}, CharT{'-'}, ru{d, 1, 2});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -5649,7 +5649,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, rs{d, 1, width == -1 ? 2u : width});
+                        read(is, rs{d, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else if (modified == CharT{'O'})
                     {
                         ios_base::iostate err = ios_base::goodbit;
@@ -5676,7 +5676,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (modified == CharT{})
                     {
                         int H;
-                        read(is, ru{H, 1, width == -1 ? 2u : width});
+                        read(is, ru{H, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         if (!is.fail())
                             h = hours{H};
                     }
@@ -5703,7 +5703,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (modified == CharT{})
                     {
                         // reads in an hour into I, but most be in [1, 12]
-                        read(is, rs{I, 1, width == -1 ? 2u : width});
+                        read(is, rs{I, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         if (I != not_a_hour_12_value)
                         {
                             if (!(1 <= I && I <= 12))
@@ -5726,7 +5726,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{j, 1, width == -1 ? 3u : width});
+                        read(is, ru{j, 1, width == -1 ? 3u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -5742,7 +5742,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (modified == CharT{})
                     {
                         int M;
-                        read(is, ru{M, 1, width == -1 ? 2u : width});
+                        read(is, ru{M, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         if (!is.fail())
                             min = minutes{M};
                     }
@@ -5767,7 +5767,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, rs{m, 1, width == -1 ? 2u : width});
+                        read(is, rs{m, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else if (modified == CharT{'O'})
                     {
                         ios_base::iostate err = ios_base::goodbit;
@@ -5893,7 +5893,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         using dfs = detail::decimal_format_seconds<Duration>;
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
                         long double S;
-                        read(is, rld{S, 1, width == -1 ? w : width});
+                        read(is, rld{S, 1, width == -1 ? w : static_cast<unsigned>(width)});
                         if (!is.fail())
                             s = round<Duration>(duration<long double>{S});
                     }
@@ -5946,7 +5946,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, rs{Y, 1, width == -1 ? 4u : width});
+                        read(is, rs{Y, 1, width == -1 ? 4u : static_cast<unsigned>(width)});
                     else if (modified == CharT{'E'})
                     {
                         ios_base::iostate err = ios_base::goodbit;
@@ -5971,7 +5971,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{y, 1, width == -1 ? 2u : width});
+                        read(is, ru{y, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else
                     {
                         ios_base::iostate err = ios_base::goodbit;
@@ -5991,7 +5991,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{g, 1, width == -1 ? 2u : width});
+                        read(is, ru{g, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -6005,7 +6005,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, rs{G, 1, width == -1 ? 4u : width});
+                        read(is, rs{G, 1, width == -1 ? 4u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -6019,7 +6019,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{U, 1, width == -1 ? 2u : width});
+                        read(is, ru{U, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -6033,7 +6033,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{V, 1, width == -1 ? 2u : width});
+                        read(is, ru{V, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -6047,7 +6047,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 if (command)
                 {
                     if (modified == CharT{})
-                        read(is, ru{W, 1, width == -1 ? 2u : width});
+                        read(is, ru{W, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
                     command = nullptr;
@@ -6063,7 +6063,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 {
                     if (modified == CharT{})
                     {
-                        read(is, ru{wd, 1, width == -1 ? 1u : width});
+                        read(is, ru{wd, 1, width == -1 ? 1u : static_cast<unsigned>(width)});
                         if (!is.fail() && *fmt == 'u')
                         {
                             if (wd == 7)
@@ -6288,11 +6288,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 if (m == 0)
                     m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(m) != ymd.month())
+                else if (month(static_cast<unsigned>(m)) != ymd.month())
                     goto broken;
                 if (d == 0)
                     d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(d) != ymd.day())
+                else if (day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
             if (j != 0 && Y != not_a_year)
@@ -6300,11 +6300,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 auto ymd = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
                 if (m == 0)
                     m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(m) != ymd.month())
+                else if (month(static_cast<unsigned>(m)) != ymd.month())
                     goto broken;
                 if (d == 0)
                     d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(d) != ymd.day())
+                else if (day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
             if (U != not_a_week_num && Y != not_a_year)
@@ -6322,11 +6322,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 if (m == 0)
                     m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(m) != ymd.month())
+                else if (month(static_cast<unsigned>(m)) != ymd.month())
                     goto broken;
                 if (d == 0)
                     d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(d) != ymd.day())
+                else if (day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
             if (W != not_a_week_num && Y != not_a_year)
@@ -6344,11 +6344,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 if (m == 0)
                     m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(m) != ymd.month())
+                else if (month(static_cast<unsigned>(m)) != ymd.month())
                     goto broken;
                 if (d == 0)
                     d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(d) != ymd.day())
+                else if (day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
             auto ymd = year{Y}/m/d;

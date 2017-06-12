@@ -106,7 +106,7 @@ test_arithmetic()
 
     for (int y1 = 2010; y1 <= 2015; ++y1)
     {
-        for (unsigned m1 = 1; m1 <= 12; ++m1)
+        for (int m1 = 1; m1 <= 12; ++m1)
         {
             auto ymd1 = mon[2]/m1/y1;;
             auto ymd2 = ymd1 + months(24);

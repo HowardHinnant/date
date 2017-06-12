@@ -304,8 +304,12 @@ CONSTDATA auto max_year = date::year::max();
 CONSTDATA auto min_day = date::jan/1;
 CONSTDATA auto max_day = date::dec/31;
 
+#if USE_OS_TZDB
+
 CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 CONSTCD14 const sys_seconds max_seconds = sys_days(max_year/max_day);
+
+#endif  // USE_OS_TZDB
 
 #ifndef _WIN32
 constexpr const char tz_dir[] = "/usr/share/zoneinfo";
@@ -1549,7 +1553,7 @@ load_transitions(std::istream& inf, std::int32_t tzh_timecnt)
     // Read transitions
     using namespace std::chrono;
     std::vector<detail::transition> transitions;
-    transitions.reserve(tzh_timecnt);
+    transitions.reserve(static_cast<unsigned>(tzh_timecnt));
     for (std::int32_t i = 0; i < tzh_timecnt; ++i)
     {
         TimeType t;
@@ -1568,7 +1572,7 @@ load_indices(std::istream& inf, std::int32_t tzh_timecnt)
 {
     // Read indices
     std::vector<std::uint8_t> indices;
-    indices.reserve(tzh_timecnt);
+    indices.reserve(static_cast<unsigned>(tzh_timecnt));
     for (std::int32_t i = 0; i < tzh_timecnt; ++i)
     {
         std::uint8_t t;
@@ -1584,7 +1588,7 @@ load_ttinfo(std::istream& inf, std::int32_t tzh_typecnt)
 {
     // Read ttinfo
     std::vector<ttinfo> ttinfos;
-    ttinfos.reserve(tzh_typecnt);
+    ttinfos.reserve(static_cast<unsigned>(tzh_typecnt));
     for (std::int32_t i = 0; i < tzh_typecnt; ++i)
     {
         ttinfo t;
@@ -1601,7 +1605,7 @@ load_abbreviations(std::istream& inf, std::int32_t tzh_charcnt)
 {
     // Read abbreviations
     std::string abbrev;
-    abbrev.resize(tzh_charcnt, '\0');
+    abbrev.resize(static_cast<unsigned>(tzh_charcnt), '\0');
     inf.read(&abbrev[0], tzh_charcnt);
     return abbrev;
 }
@@ -1700,7 +1704,7 @@ time_zone::load_data(std::istream& inf,
                             abbrev.c_str() + info.tt_abbrind,
                             info.tt_isdst != 0});
     }
-    auto i = 0;
+    auto i = 0u;
     if (transitions_.empty() || transitions_.front().timepoint != min_seconds)
     {
         transitions_.emplace(transitions_.begin(), min_seconds);
@@ -1712,7 +1716,7 @@ time_zone::load_data(std::istream& inf,
         transitions_[i].info = &*tf;
         ++i;
     }
-    for (auto j = 0; i < transitions_.size(); ++i, ++j)
+    for (auto j = 0u; i < transitions_.size(); ++i, ++j)
         transitions_[i].info = ttinfos_.data() + indices[j];
 }
 
@@ -2512,7 +2516,7 @@ download_to_file(const std::string& url, const std::string& local_filename,
     {
         auto& of = *static_cast<std::ofstream*>(userp);
         auto realsize = size * nmemb;
-        of.write(contents, realsize);
+        of.write(contents, static_cast<std::streamsize>(realsize));
         return realsize;
     };
     curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
