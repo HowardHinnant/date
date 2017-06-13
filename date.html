@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-05-07<br/>
+2017-06-12<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -1611,7 +1611,7 @@ operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const local_ti
 <p>
 Everything here is contained in the namespace <code>date</code>.  The literal operators,
 and the constexpr field literals (e.g. <code>sun</code>, <code>jan</code>, etc.) are
-in namespace <code>date_literals</code> and imported into namespace <code>date</code>.
+in namespace <code>date::literals</code> and imported into namespace <code>date</code>.
 </p>
 
 <a name="days"></a><h3><code>days</code></h3>
@@ -1947,9 +1947,9 @@ string <code>fmt</code> as specified by the
 </p>
 
 <p>
-<i>Throws:</i> A <code>std::runtime_error</code> if <code>%Z</code> is in the formatting
-string and <code>abbrev == nullptr</code>, or if <code>%z</code> is in the formatting string
-and <code>offset_sec == nullptr</code>.
+If <code>%Z</code> is in the formatting string and <code>abbrev == nullptr</code>, or if
+<code>%z</code> is in the formatting string and <code>offset_sec == nullptr</code>,
+<code>failbit</code> will be set for <code>os</code>.
 </p>
 </blockquote>
 
@@ -5272,8 +5272,8 @@ to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const Cha
 <a href="#to_stream_formatting"><code>to_stream</code> formatting flags</a>.
 </p>
 <p>
-<i>Throws:</i> A <code>std::runtime_error</code> if <code>%z</code> or <code>%Z</code> is
-used in the <code>fmt</code> string.
+If <code>%z</code> or <code>%Z</code> is used in the <code>fmt</code> string
+<code>failbit</code> will be set for <code>os</code>.
 </p>
 </blockquote>
 
@@ -7826,14 +7826,14 @@ left-padded with <code>0</code> to four digits.</td>
 <td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
 4 hours 30 minutes behind UTC.  If the offset is zero, <code>+0000</code> is used.
 The modified commands <code>%Ez</code> and <code>%Ez</code> insert a <code>:</code>
-between the hours and minutes: <code>-04:30</code>.  A <code>std::runtime_error</code> is
-thrown if the offset information is not available.</td>
+between the hours and minutes: <code>-04:30</code>.  If the offset information is not
+available, <code>failbit</code> will be set.</td>
 </tr>
 
 <tr>
 <td><code>%Z</code></td>
-<td>The time zone abbreviation.  A <code>std::runtime_error</code> is thrown if the time
-zone abbreviation is not available.  <code>UTC</code> is used for
+<td>The time zone abbreviation.  If the time zone abbreviation is not available,
+<code>failbit</code> will be set.  <code>UTC</code> is used for
 <code>sys_time</code>.</td>
 </tr>
 
