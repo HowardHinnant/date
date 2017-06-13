@@ -4213,18 +4213,26 @@ struct fields
 namespace detail
 {
 
-template <class Duration>
+template <class CharT, class Traits, class Duration>
 unsigned
-extract_weekday(const fields<Duration>& fds)
+extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& fds)
 {
     if (!fds.ymd.ok() && !fds.wd.ok())
-        throw std::runtime_error("Can not format %u with unknown weekday");
+    {
+        // fds does not contain a valid weekday
+        os.setstate(std::ios::failbit);
+        return 7;
+    }
     unsigned wd;
     if (fds.ymd.ok())
     {
         wd = static_cast<unsigned>(weekday{fds.ymd});
         if (fds.wd.ok() && wd != static_cast<unsigned>(fds.wd))
-            throw std::runtime_error("Can not format %u with inconsistent weekday");
+        {
+            // fds.ymd and fds.wd are inconsistent
+            os.setstate(std::ios::failbit);
+            return 7;
+        }
     }
     else
         wd = static_cast<unsigned>(fds.wd);
@@ -4247,10 +4255,6 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     CharT modified = CharT{};
     for (; *fmt; ++fmt)
     {
-        if (!command && modified != CharT{})
-            throw std::logic_error("loop invariant broken: !command && modified");
-        else if (modified != CharT{} && modified != CharT{'E'} && modified != CharT{'O'})
-            throw std::logic_error(std::string("bad value for modified: ") + char(modified));
         switch (*fmt)
         {
         case 'a':
@@ -4259,7 +4263,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             {
                 if (modified == CharT{})
                 {
-                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(os, fds));
+                    if (os.fail())
+                        return;
                     const CharT f[] = {'%', *fmt};
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                 }
@@ -4311,7 +4317,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
                     tm.tm_mon = static_cast<int>(static_cast<unsigned>(ymd.month()) - 1);
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(os, fds));
+                    if (os.fail())
+                        return;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     CharT f[3] = {'%'};
                     auto fe = begin(f) + 1;
@@ -4720,7 +4728,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
         case 'u':
             if (command)
             {
-                auto wd = detail::extract_weekday(fds);
+                auto wd = detail::extract_weekday(os, fds);
+                if (os.fail())
+                    return;
                 if (modified == CharT{'O'})
                 {
                     const CharT f[] = {'%', modified, *fmt};
@@ -4751,7 +4761,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     const CharT f[] = {'%', modified, *fmt};
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(os, fds));
+                    if (os.fail())
+                        return;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4788,7 +4800,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     const CharT f[] = {'%', modified, *fmt};
                     auto const& ymd = fds.ymd;
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(os, fds));
+                    if (os.fail())
+                        return;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4820,7 +4834,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
         case 'w':
             if (command)
             {
-                auto wd = detail::extract_weekday(fds);
+                auto wd = detail::extract_weekday(os, fds);
+                if (os.fail())
+                    return;
                 if (modified == CharT{'O'})
                 {
                     const CharT f[] = {'%', modified, *fmt};
@@ -4851,7 +4867,9 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     const CharT f[] = {'%', modified, *fmt};
                     tm.tm_year = static_cast<int>(ymd.year()) - 1900;
-                    tm.tm_wday = static_cast<int>(detail::extract_weekday(fds));
+                    tm.tm_wday = static_cast<int>(detail::extract_weekday(os, fds));
+                    if (os.fail())
+                        return;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
                     modified = CharT{};
@@ -4955,7 +4973,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             if (command)
             {
                 if (offset_sec == nullptr)
-                    throw std::runtime_error("Can not format %z with unknown offset");
+                {
+                    // Can not format %z with unknown offset
+                    os.setstate(ios::failbit);
+                    return;
+                }
                 auto m = duration_cast<minutes>(*offset_sec);
                 auto neg = m < minutes{0};
                 m = date::abs(m);
@@ -4985,7 +5007,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 if (modified == CharT{})
                 {
                     if (abbrev == nullptr)
-                        throw std::runtime_error("Can not format %Z with unknown time_zone");
+                    {
+                        // Can not format %Z with unknown time_zone
+                        os.setstate(ios::failbit);
+                        return;
+                    }
                     for (auto c : *abbrev)
                         os << CharT(c);
                 }
