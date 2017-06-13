@@ -89,12 +89,18 @@ tzmain()
     using namespace std::chrono;
     auto& db = get_tzdb();
     std::vector<std::string> names;
+#if USE_OS_TZDB
+    names.reserve(db.zones.size());
+    for (auto& zone : db.zones)
+        names.push_back(zone.name());
+#else  // !USE_OS_TZDB
     names.reserve(db.zones.size() + db.links.size());
     for (auto& zone : db.zones)
         names.push_back(zone.name());
     for (auto& link : db.links)
         names.push_back(link.name());
     std::sort(names.begin(), names.end());
+#endif  // !USE_OS_TZDB
     std::cout << db.version << "\n\n";
     for (auto const& name : names)
     {

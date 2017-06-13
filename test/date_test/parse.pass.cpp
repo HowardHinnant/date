@@ -34,7 +34,7 @@ test_a()
         // correct abbreviation
         std::istringstream in{"Sun 2016-12-11"};
         sys_days tp;
-        parse(in, "%a %F", tp);
+        in >> parse("%a %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -44,7 +44,7 @@ test_a()
         // correct abbreviation
         std::istringstream in{"Sun 2016-12-11"};
         sys_days tp;
-        parse(in, "%A %F", tp);
+        in >> parse("%A %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -54,7 +54,7 @@ test_a()
         // correct full name
         std::istringstream in{"Sunday 2016-12-11"};
         sys_days tp;
-        parse(in, "%a %F", tp);
+        in >> parse("%a %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -64,7 +64,7 @@ test_a()
         // correct full name
         std::istringstream in{"Sunday 2016-12-11"};
         sys_days tp;
-        parse(in, "%A %F", tp);
+        in >> parse("%A %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -74,7 +74,7 @@ test_a()
         // not a valid name
         std::istringstream in{"Dec 2016-12-11"};
         sys_days tp;
-        parse(in, "%a %F", tp);
+        in >> parse("%a %F", tp);
         assert( in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -84,7 +84,7 @@ test_a()
         // wrong name
         std::istringstream in{"Sat 2016-12-11"};
         sys_days tp;
-        parse(in, "%a %F", tp);
+        in >> parse("%a %F", tp);
         assert( in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -94,7 +94,7 @@ test_a()
         // extra ws in input
         std::istringstream in{"Sun  2016-12-11"};
         sys_days tp;
-        parse(in, "%a %F", tp);
+        in >> parse("%a %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -104,7 +104,7 @@ test_a()
         // extra ws in format
         std::istringstream in{"Sun 2016-12-11"};
         sys_days tp;
-        parse(in, "%a  %F", tp);
+        in >> parse("%a  %F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -120,7 +120,7 @@ test_b()
         // correct abbreviation
         std::istringstream in{"Dec 11 2016"};
         sys_days tp;
-        parse(in, "%b %d %Y", tp);
+        in >> parse("%b %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -130,7 +130,7 @@ test_b()
         // correct abbreviation
         std::istringstream in{"Dec 11 2016"};
         sys_days tp;
-        parse(in, "%B %d %Y", tp);
+        in >> parse("%B %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -140,7 +140,7 @@ test_b()
         // correct abbreviation
         std::istringstream in{"Dec 11 2016"};
         sys_days tp;
-        parse(in, "%h %d %Y", tp);
+        in >> parse("%h %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -150,7 +150,7 @@ test_b()
         // correct full name
         std::istringstream in{"December 11 2016"};
         sys_days tp;
-        parse(in, "%b %d %Y", tp);
+        in >> parse("%b %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -160,7 +160,7 @@ test_b()
         // correct full name
         std::istringstream in{"December 11 2016"};
         sys_days tp;
-        parse(in, "%B %d %Y", tp);
+        in >> parse("%B %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -170,7 +170,7 @@ test_b()
         // correct full name
         std::istringstream in{"December 11 2016"};
         sys_days tp;
-        parse(in, "%h %d %Y", tp);
+        in >> parse("%h %d %Y", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -180,7 +180,7 @@ test_b()
         // incorrect abbreviation
         std::istringstream in{"Dece 11 2016"};
         sys_days tp;
-        parse(in, "%b %d %Y", tp);
+        in >> parse("%b %d %Y", tp);
         assert( in.fail());
         assert(!in.bad());
         assert(!in.eof());
@@ -197,7 +197,7 @@ test_c()
         // correct abbreviation
         std::istringstream in{"Sun Dec 11 14:02:43 2016"};
         sys_seconds tp;
-        parse(in, "%c", tp);
+        in >> parse("%c", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{14} + minutes{2} + seconds{43});
@@ -213,7 +213,7 @@ test_x()
         // correct abbreviation
         std::istringstream in{"12/11/16"};
         sys_seconds tp;
-        parse(in, "%x", tp);
+        in >> parse("%x", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11});
@@ -229,7 +229,7 @@ test_X()
         // correct abbreviation
         std::istringstream in{"2016-12-11 14:02:43"};
         sys_seconds tp;
-        parse(in, "%F %X", tp);
+        in >> parse("%F %X", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{14} + minutes{2} + seconds{43});
@@ -244,7 +244,7 @@ test_C()
     {
         std::istringstream in{"20 16 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/11);
@@ -252,7 +252,7 @@ test_C()
     {
         std::istringstream in{"-2 1 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == -101_y/12/11);
@@ -260,7 +260,7 @@ test_C()
     {
         std::istringstream in{"-1 0 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == -100_y/12/11);
@@ -268,7 +268,7 @@ test_C()
     {
         std::istringstream in{"-1 99 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == -99_y/12/11);
@@ -276,7 +276,7 @@ test_C()
     {
         std::istringstream in{"-1 1 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == -1_y/12/11);
@@ -284,7 +284,7 @@ test_C()
     {
         std::istringstream in{"0 0 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 0_y/12/11);
@@ -292,7 +292,7 @@ test_C()
     {
         std::istringstream in{"0 1 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 1_y/12/11);
@@ -300,7 +300,7 @@ test_C()
     {
         std::istringstream in{"0 99 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 99_y/12/11);
@@ -308,7 +308,7 @@ test_C()
     {
         std::istringstream in{"1 0 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 100_y/12/11);
@@ -316,7 +316,7 @@ test_C()
     {
         std::istringstream in{"1 1 12 11"};
         sys_days tp;
-        parse(in, "%C %y %m %d", tp);
+        in >> parse("%C %y %m %d", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 101_y/12/11);
@@ -331,7 +331,7 @@ test_d()
     {
         std::istringstream in{"2016 09 12"};
         sys_days tp;
-        parse(in, "%Y %d %m", tp);
+        in >> parse("%Y %d %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/9);
@@ -339,7 +339,7 @@ test_d()
     {
         std::istringstream in{"2016 09 12"};
         sys_days tp;
-        parse(in, "%Y %e %m", tp);
+        in >> parse("%Y %e %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/9);
@@ -347,7 +347,7 @@ test_d()
     {
         std::istringstream in{"2016 9 12"};
         sys_days tp;
-        parse(in, "%Y %d %m", tp);
+        in >> parse("%Y %d %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/9);
@@ -355,7 +355,7 @@ test_d()
     {
         std::istringstream in{"2016 9 12"};
         sys_days tp;
-        parse(in, "%Y %e %m", tp);
+        in >> parse("%Y %e %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/9);
@@ -370,7 +370,7 @@ test_D()
     {
         std::istringstream in{"12/11/16"};
         sys_days tp;
-        parse(in, "%D", tp);
+        in >> parse("%D", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/11);
@@ -385,7 +385,15 @@ test_F()
     {
         std::istringstream in{"2016-12-13"};
         sys_days tp;
-        parse(in, "%F", tp);
+        in >> parse("%F", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == 2016_y/12/13);
+    }
+    {
+        std::istringstream in{"2016-12-13"};
+        year_month_day tp;
+        in >> parse("%F", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/12/13);
@@ -400,7 +408,7 @@ test_H()
     {
         std::istringstream in{"2016-12-11 15"};
         sys_time<hours> tp;
-        parse(in, "%F %H", tp);
+        in >> parse("%F %H", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{15});
@@ -415,7 +423,7 @@ test_Ip()
     {
         std::istringstream in{"2016-12-11 1 pm"};
         sys_time<hours> tp;
-        parse(in, "%F %I %p", tp);
+        in >> parse("%F %I %p", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{13});
@@ -423,7 +431,7 @@ test_Ip()
     {
         std::istringstream in{"2016-12-11 1 am"};
         sys_time<hours> tp;
-        parse(in, "%F %I %p", tp);
+        in >> parse("%F %I %p", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{1});
@@ -438,7 +446,7 @@ test_j()
     {
         std::istringstream in{"2016 361"};
         sys_days tp;
-        parse(in, "%Y %j", tp);
+        in >> parse("%Y %j", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -453,7 +461,7 @@ test_m()
     {
         std::istringstream in{"2016 12 09"};
         sys_days tp;
-        parse(in, "%Y %d %m", tp);
+        in >> parse("%Y %d %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/9/12);
@@ -461,7 +469,7 @@ test_m()
     {
         std::istringstream in{"2016 12 9"};
         sys_days tp;
-        parse(in, "%Y %d %m", tp);
+        in >> parse("%Y %d %m", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == 2016_y/9/12);
@@ -476,7 +484,7 @@ test_M()
     {
         std::istringstream in{"2016-12-11 15"};
         sys_time<minutes> tp;
-        parse(in, "%F %M", tp);
+        in >> parse("%F %M", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + minutes{15});
@@ -491,7 +499,7 @@ test_S()
     {
         std::istringstream in{"2016-12-11 15"};
         sys_seconds tp;
-        parse(in, "%F %S", tp);
+        in >> parse("%F %S", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + seconds{15});
@@ -499,7 +507,7 @@ test_S()
     {
         std::istringstream in{"2016-12-11 15.001"};
         sys_time<milliseconds> tp;
-        parse(in, "%F %S", tp);
+        in >> parse("%F %S", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + seconds{15} + milliseconds{1});
@@ -514,7 +522,7 @@ test_T()
     {
         std::istringstream in{"2016-12-11 15:43:22"};
         sys_seconds tp;
-        parse(in, "%F %T", tp);
+        in >> parse("%F %T", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{15} + minutes{43} + seconds{22});
@@ -522,7 +530,7 @@ test_T()
     {
         std::istringstream in{"2016-12-11 15:43:22.001"};
         sys_time<milliseconds> tp;
-        parse(in, "%F %T", tp);
+        in >> parse("%F %T", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{15} + minutes{43} + seconds{22} +
@@ -531,10 +539,18 @@ test_T()
     {
         std::istringstream in{"2016-12-11 15:43:22"};
         sys_time<milliseconds> tp;
-        parse(in, "%F %T", tp);
+        in >> parse("%F %T", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{15} + minutes{43} + seconds{22});
+    }
+    {
+        std::istringstream in{"15:43:22.001"};
+        milliseconds d;
+        in >> parse("%T", d);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(d == hours{15} + minutes{43} + seconds{22} + milliseconds{1});
     }
 }
 
@@ -546,7 +562,7 @@ test_p()
     {
         std::istringstream in{"2016-12-11 11pm"};
         sys_time<hours> tp;
-        parse(in, "%F %I%p", tp);
+        in >> parse("%F %I%p", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{23});
@@ -561,7 +577,7 @@ test_r()
     {
         std::istringstream in{"2016-12-26 1:36:57 pm"};
         sys_seconds tp;
-        parse(in, "%F %r", tp);
+        in >> parse("%F %r", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26} + hours{13} + minutes{36} + seconds{57});
@@ -576,7 +592,7 @@ test_R()
     {
         std::istringstream in{"2016-12-26 13:36"};
         sys_seconds tp;
-        parse(in, "%F %R", tp);
+        in >> parse("%F %R", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26} + hours{13} + minutes{36});
@@ -591,7 +607,7 @@ test_U()
     {
         std::istringstream in{"2016-52-1"};
         sys_days tp;
-        parse(in, "%Y-%U-%w", tp);
+        in >> parse("%Y-%U-%w", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -606,7 +622,7 @@ test_W()
     {
         std::istringstream in{"2016-52-1"};
         sys_days tp;
-        parse(in, "%Y-%W-%w", tp);
+        in >> parse("%Y-%W-%w", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -621,7 +637,7 @@ test_GV()
     {
         std::istringstream in{"2016-52-1"};
         sys_days tp;
-        parse(in, "%G-%V-%w", tp);
+        in >> parse("%G-%V-%w", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -629,7 +645,7 @@ test_GV()
     {
         std::istringstream in{"2016-52-1"};
         sys_days tp;
-        parse(in, "%G-%V-%w", tp);
+        in >> parse("%G-%V-%w", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -637,7 +653,7 @@ test_GV()
     {
         std::istringstream in{"20 16-52-1"};
         sys_days tp;
-        parse(in, "%C %g-%V-%w", tp);
+        in >> parse("%C %g-%V-%w", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -645,7 +661,7 @@ test_GV()
     {
         std::istringstream in{"20 16-52-1"};
         sys_days tp;
-        parse(in, "%C %g-%V-%u", tp);
+        in >> parse("%C %g-%V-%u", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
@@ -660,7 +676,7 @@ test_z()
     {
         std::istringstream in{"2016-12-26 15:53:22 -0500"};
         sys_seconds tp;
-        parse(in, "%F %T %z", tp);
+        in >> parse("%F %T %z", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26} + hours{20} + minutes{53} + seconds{22});
@@ -668,7 +684,7 @@ test_z()
     {
         std::istringstream in{"2016-12-26 15:53:22 -0500"};
         local_seconds tp;
-        parse(in, "%F %T %z", tp);
+        in >> parse("%F %T %z", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == local_days{2016_y/12/26} + hours{15} + minutes{53} + seconds{22});
@@ -676,7 +692,7 @@ test_z()
     {
         std::istringstream in{"2016-12-26 15:53:22 -05:00"};
         sys_seconds tp;
-        parse(in, "%F %T %Ez", tp);
+        in >> parse("%F %T %Ez", tp);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26} + hours{20} + minutes{53} + seconds{22});
@@ -692,11 +708,110 @@ test_Z()
         std::string a;
         std::istringstream in{"2016-12-26 15:53:22 word"};
         local_seconds tp;
-        parse(in, "%F %T %Z", tp, a);
+        in >> parse("%F %T %Z", tp, a);
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == local_days{2016_y/12/26} + hours{15} + minutes{53} + seconds{22});
         assert(a == "word");
+    }
+}
+
+void
+test_trailing_Z()
+{
+    std::string format = "%FT%TZ";
+    std::string datetime = "2017-2-15T13:13:13";
+    std::istringstream input(datetime);
+    date::sys_seconds tp;
+    input >> date::parse(format, tp);
+    assert(input.fail());
+    assert(input.eof());
+}
+
+void
+test_leading_ws()
+{
+    using namespace std;
+    using namespace date;
+    istringstream in{"05/04/17 5/4/17"};
+    year_month_day d1, d2;
+    in >> parse("%D", d1) >> parse("%n%D", d2);
+    assert(d1 == may/4/2017);
+    assert(d2 == may/4/2017);
+}
+
+void
+test_space()
+{
+    using namespace std;
+    using namespace date;
+    {
+        istringstream in{"05/04/17"};
+        year_month_day d1;
+        in >> parse(" %D", d1);
+        assert(d1 == may/4/2017);
+    }
+    {
+        istringstream in{" 05/04/17"};
+        year_month_day d1;
+        in >> parse(" %D", d1);
+        assert(d1 == may/4/2017);
+    }
+    {
+        istringstream in{"  05/04/17"};
+        year_month_day d1;
+        in >> parse(" %D", d1);
+        assert(d1 == may/4/2017);
+    }
+}
+
+void
+test_n()
+{
+    using namespace std;
+    using namespace date;
+    {
+        istringstream in{"05/04/17"};
+        year_month_day d1;
+        in >> parse("%n%D", d1);
+        assert(in.fail());
+    }
+    {
+        istringstream in{" 05/04/17"};
+        year_month_day d1;
+        in >> parse("%n%D", d1);
+        assert(d1 == may/4/2017);
+    }
+    {
+        istringstream in{"  05/04/17"};
+        year_month_day d1;
+        in >> parse("%n%D", d1);
+        assert(in.fail());
+    }
+}
+
+void
+test_t()
+{
+    using namespace std;
+    using namespace date;
+    {
+        istringstream in{"05/04/17"};
+        year_month_day d1;
+        in >> parse("%t%D", d1);
+        assert(d1 == may/4/2017);
+    }
+    {
+        istringstream in{" 05/04/17"};
+        year_month_day d1;
+        in >> parse("%t%D", d1);
+        assert(d1 == may/4/2017);
+    }
+    {
+        istringstream in{"  05/04/17"};
+        year_month_day d1;
+        in >> parse("%t%D", d1);
+        assert(in.fail());
     }
 }
 
@@ -727,4 +842,9 @@ main()
     test_X();
     test_z();
     test_Z();
+    test_trailing_Z();
+    test_leading_ws();
+    test_space();
+    test_n();
+    test_t();
 }
