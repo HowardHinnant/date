@@ -493,7 +493,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     bool mapTZoneCloseTagFound = false;
     std::size_t mapZonePos = std::string::npos;
     std::size_t mapTimezonesPos = std::string::npos;
-    CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+	CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
     CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
     CONSTDATA std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) /
                                                  sizeof(mapZoneOpeningTag[0]) - 1;
@@ -546,7 +546,8 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
         if (!mapTimezonesCloseTagFound)
         {
             std::size_t commentPos = line.find("<!--");
-            if (commentPos == std::string::npos)
+			std::size_t emptyTabPos = line.find("\t\t\t");
+			if (commentPos == std::string::npos && emptyTabPos == std::string::npos)
                 error("Unexpected mapping record found. A xml mapZone or comment "
                       "attribute or mapTimezones closing tag was expected.");
         }
