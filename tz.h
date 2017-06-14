@@ -273,8 +273,12 @@ class time_zone;
 template <class Duration>
 class zoned_time
 {
+public:
+    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
+
+private:
     const time_zone*   zone_;
-    sys_time<Duration> tp_;
+    sys_time<duration> tp_;
 
 public:
              zoned_time(const sys_time<Duration>& st);
@@ -310,12 +314,12 @@ public:
     zoned_time& operator=(const sys_time<Duration>& st);
     zoned_time& operator=(const local_time<Duration>& ut);
 
-             operator sys_time<Duration>() const;
-    explicit operator local_time<Duration>() const;
+             operator sys_time<duration>() const;
+    explicit operator local_time<duration>() const;
 
     const time_zone*     get_time_zone() const;
-    local_time<Duration> get_local_time() const;
-    sys_time<Duration>   get_sys_time() const;
+    local_time<duration> get_local_time() const;
+    sys_time<duration>   get_sys_time() const;
     sys_info             get_info() const;
 
     template <class Duration1, class Duration2>
@@ -330,9 +334,6 @@ public:
 
 private:
     template <class D> friend class zoned_time;
-
-    static_assert(std::is_convertible<std::chrono::seconds, Duration>::value,
-                  "zoned_time must have a precision of seconds or finer");
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
@@ -971,14 +972,14 @@ zoned_time<Duration>::operator=(const local_time<Duration>& ut)
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator local_time<Duration>() const
+zoned_time<Duration>::operator local_time<duration>() const
 {
     return get_local_time();
 }
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator sys_time<Duration>() const
+zoned_time<Duration>::operator sys_time<duration>() const
 {
     return get_sys_time();
 }
@@ -993,7 +994,7 @@ zoned_time<Duration>::get_time_zone() const
 
 template <class Duration>
 inline
-local_time<Duration>
+local_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_local_time() const
 {
     return zone_->to_local(tp_);
@@ -1001,7 +1002,7 @@ zoned_time<Duration>::get_local_time() const
 
 template <class Duration>
 inline
-sys_time<Duration>
+sys_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_sys_time() const
 {
     return tp_;
