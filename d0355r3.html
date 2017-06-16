@@ -9975,11 +9975,11 @@ Add to [thread.req.paramname] 33.2.1 Template parameter names:
 1 Throughout this Clause, the names of template parameters are used to express type
 requirements. If a template parameter is named <code>Predicate</code>,
 <code>operator()</code> applied to the template argument shall return a value that is
-convertible to <code>bool</code>.  <ins>If a template parameter is named
-<code>Clock</code>, use of <code>Clock</code> with a type for which
-<code>chrono::is_clock&lt;Clock&gt;::value</code> is <code>false</code> shall be
-ill-formed. [<i>Note:</i> For example, use of <code>local_time</code> with
-<code>sleep_until</code> will result in a diagnostic. &mdash; <i>end note</i>]</ins>
+convertible to <code>bool</code>.  <ins>A program that instantiates a template with a
+template parameter named <code>Clock</code> with a type for which
+<code>chrono::is_clock&lt;Clock&gt;::value</code> is <code>false</code>, is ill-formed.
+[<i>Note:</i> For example, use of <code>local_time</code> with <code>sleep_until</code>
+will result in a diagnostic. &mdash; <i>end note</i>]</ins>
 </p>
 </blockquote>
 
