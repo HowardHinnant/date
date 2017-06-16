@@ -83,6 +83,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #      define MISSING_LEAP_SECONDS 0
 #    endif
 #  endif
+#else
+#  define MISSING_LEAP_SECONDS 0
 #endif
 
 #include "date.h"
