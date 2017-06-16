@@ -5222,7 +5222,7 @@ format(const std::locale& loc, const std::basic_string<CharT, Traits, Alloc>& fm
     -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt.c_str(), tp),
                 std::basic_string<CharT, Traits, Alloc>{})
 {
-    std::basic_ostringstream<CharT, Traits> os;
+    std::basic_ostringstream<CharT, Traits, Alloc> os;
     os.imbue(loc);
     to_stream(os, fmt.c_str(), tp);
     return os.str();
@@ -5234,7 +5234,7 @@ format(const std::basic_string<CharT, Traits, Alloc>& fmt, const Streamable& tp)
     -> decltype(to_stream(std::declval<std::basic_ostream<CharT, Traits>&>(), fmt.c_str(), tp),
                 std::basic_string<CharT, Traits, Alloc>{})
 {
-    std::basic_ostringstream<CharT, Traits> os;
+    std::basic_ostringstream<CharT, Traits, Alloc> os;
     to_stream(os, fmt.c_str(), tp);
     return os.str();
 }
