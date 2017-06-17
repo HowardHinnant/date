@@ -1617,7 +1617,7 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t)
 
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const zoned_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -1935,7 +1935,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const zoned_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -1945,6 +1945,9 @@ to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
 <i>Effects:</i> Constructs a copy of the <code>sys_info</code> object by calling
 <code>tp.get_info()</code> (stored in a local named <code>info</code> for example).
 Then calls <code>to_stream(os, fmt, tp.get_local_time(), &amp;info.abbrev, &amp;info.offset)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
 </p>
 </blockquote>
 
@@ -2205,7 +2208,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const utc_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -2220,11 +2223,14 @@ Time points representing leap second insertions which format seconds will show
 If <code>%Z</code> is in the formatting string <code>"UTC"</code> will be used.
 If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class CharT, class Traits&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             utc_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2240,6 +2246,9 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2355,7 +2364,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const tai_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -2368,11 +2377,14 @@ string <code>fmt</code> as specified by the
 If <code>%Z</code> is in the formatting string <code>"TAI"</code> will be used.
 If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class CharT, class Traits&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             tai_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2388,6 +2400,9 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2502,7 +2517,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const gps_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -2515,11 +2530,14 @@ string <code>fmt</code> as specified by the
 If <code>%Z</code> is in the formatting string <code>"GPS"</code> will be used.
 If <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class CharT, class Traits&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             gps_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2535,6 +2553,9 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 

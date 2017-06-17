@@ -814,12 +814,12 @@ template &lt;class charT, class traits, class Rep, class Period&gt;
                const duration&lt;Rep, Period&gt;&amp; d);
 
 template &lt;class charT, class traits, class Rep, class Period&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
           const duration&lt;Rep, Period&gt;&amp; d);
 
 template &lt;class Rep, class Period, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             duration&lt;Rep, Period&gt;&amp; d,
             basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -967,63 +967,63 @@ template &lt;class charT, class traits, class Duration&gt;
 
 // to_stream
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const sys_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const local_time&lt;Duration&gt;&amp; tp,
               const string* abbrev = nullptr, const seconds* offset_sec = nullptr);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const utc_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const tai_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const gps_time&lt;Duration&gt;&amp; tp);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const file_time&lt;Duration&gt;&amp; tp);
 
 // from_stream
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 sys_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 local_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 utc_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 tai_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 gps_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 file_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1051,11 +1051,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const day&amp; d);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1079,11 +1079,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month&amp; m);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1107,11 +1107,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year&amp; y);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1131,11 +1131,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday&amp; wd);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1172,11 +1172,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day&amp; md);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1234,11 +1234,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month&amp; ym);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1264,11 +1264,11 @@ template&lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day&amp; ymd);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -1449,7 +1449,7 @@ template &lt;class Duration&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const zoned_time&lt;Duration&gt;&amp; tp);
 
 // format
@@ -1673,7 +1673,7 @@ is encouraged.  The implementation may substitute other encodings, including
 
 <pre>
 template &lt;class charT, class traits, class Rep, class Period&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
           const duration&lt;Rep, Period&gt;&amp; d);
 </pre>
@@ -1684,11 +1684,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Rep, class Period, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             duration&lt;Rep, Period&gt;&amp; d,
             basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1711,6 +1714,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2033,7 +2039,7 @@ os &lt;&lt; year_month_day{dp};
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const sys_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -2045,11 +2051,14 @@ specified by [time.format].  If <code>%Z</code> is used, it will be replaced wit
 <code>"UTC"</code>.  If <code>%z</code> is used (or a modified form of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             sys_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2072,6 +2081,9 @@ If <code>%z</code> (or a modified variant) is used and successfully parsed, that
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2228,7 +2240,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const utc_time&lt;D
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const utc_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -2274,7 +2286,7 @@ Output:
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             utc_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2297,6 +2309,9 @@ If <code>%z</code> (or a modified variant) is used and successfully parsed, that
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2418,7 +2433,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const tai_time&lt;D
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const tai_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -2458,7 +2473,7 @@ Output:
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             tai_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2481,6 +2496,9 @@ If <code>%z</code> (or a modified variant) is used and successfully parsed, that
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2603,7 +2621,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const gps_time&lt;D
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const gps_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -2643,7 +2661,7 @@ Output:
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             gps_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2666,6 +2684,9 @@ If <code>%z</code> (or a modified variant) is used and successfully parsed, that
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2766,7 +2787,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const file_time&lt;
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const file_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -2786,7 +2807,7 @@ equivalent to that formatted by a <code>sys_time</code> initialized with <code>t
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             file_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2809,6 +2830,9 @@ If <code>%z</code> (or a modified variant) is used and successfully parsed, that
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2854,7 +2878,7 @@ os &lt;&lt; sys_time&lt;Duration&gt;{lt.time_since_epoch()};
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const local_time&lt;Duration&gt;&amp; tp,
           const string* abbrev = nullptr, const seconds* offset_sec = nullptr);
 </pre>
@@ -2872,11 +2896,14 @@ specified by [time.format].  If <code>%Z</code> is used, it will be replaced wit
 (or a modified form of <code>%z</code>) is used, and <code>offset_sec</code> is equal to
 <code>nullptr</code>, then <code>failbit</code> is set.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             local_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -2897,6 +2924,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -3743,11 +3773,11 @@ basic_ostream&lt;charT, traits&gt;&amp;
 operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -3987,7 +4017,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 </pre>
 
@@ -3997,11 +4027,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const da
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -4022,6 +4055,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -4087,11 +4123,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month&amp; m);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -4358,7 +4394,7 @@ output for the month field by <code>asctime</code>.  Otherwise outputs
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 </pre>
 
@@ -4368,11 +4404,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const mo
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -4393,6 +4432,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -4454,11 +4496,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year&amp; y);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -4750,7 +4792,7 @@ into <code>os</code>. If the year is in the range [-999, 999], prefixes the year
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 </pre>
 
@@ -4760,11 +4802,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -4785,6 +4830,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -4867,11 +4915,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday&amp; wd);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -5150,7 +5198,7 @@ output for the weekday field by <code>asctime</code>.  Otherwise outputs
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 </pre>
 
@@ -5160,11 +5208,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const we
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -5185,6 +5236,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -5460,11 +5514,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day&amp; md);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -5598,7 +5652,7 @@ return os &lt;&lt; md.month() &lt;&lt; '/' &lt;&lt; md.day();
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 </pre>
 
@@ -5608,11 +5662,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const mo
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -5633,6 +5690,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -6066,11 +6126,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month&amp; ym);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -6328,7 +6388,7 @@ return os &lt;&lt; ym.year() &lt;&lt; '/' &lt;&lt; ym.month();
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 </pre>
 
@@ -6338,11 +6398,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -6363,6 +6426,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -6426,11 +6492,11 @@ template &lt;class charT, class traits&gt;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day&amp; ymd);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-    void
+    basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
@@ -6786,7 +6852,7 @@ are prefixed with <code>'0'</code> if necessary.
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 </pre>
 
@@ -6796,11 +6862,14 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
-void
+basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
             minutes* offset = nullptr);
@@ -6821,6 +6890,9 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
 will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -9537,7 +9609,7 @@ template &lt;class Duration&gt;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
 template &lt;class charT, class traits, class Duration&gt;
-    void
+    basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const zoned_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -9860,7 +9932,7 @@ and the value returned from <code>t.get_local_time()</code>.
 
 <pre>
 template &lt;class charT, class traits, class Duration&gt;
-void
+basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const zoned_time&lt;Duration&gt;&amp; tp);
 </pre>
 
@@ -9869,6 +9941,9 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const zo
 <i>Effects:</i> First obtains a <code>sys_info</code> via <code>tp.get_info()</code>
 which for exposition purposes will be referred to as <code>info</code>.  Then calls
 <code>to_stream(os, fmt, tp.get_local_time(), &amp;info.abbrev, &amp;info.offset)</code>.
+</p>
+<p>
+<i>Returns:</i> <code>os</code>.
 </p>
 </blockquote>
 

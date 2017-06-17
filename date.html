@@ -1679,7 +1679,7 @@ using months = std::chrono::duration
 
 <pre>
 template &lt;class CharT, class Traits, class Rep, class Period&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const std::chrono::duration&lt;Rep, Period&gt;&amp; d);
 </pre>
@@ -1695,11 +1695,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%R</code>, <code>%S</code>, <code>%T</code>, <code>%X</code>, <code>%n</code>,
 <code>%t</code> or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Rep, class Period, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             std::chrono::duration&lt;Rep, Period&gt;&amp; d,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
@@ -1719,6 +1722,9 @@ flags): <code>%H</code>, <code>%I</code>, <code>%M</code>, <code>%p</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -1835,7 +1841,7 @@ using sys_seconds = sys_time&lt;std::chrono::seconds&gt;;
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const sys_time&lt;Duration&gt;&amp; tp);
 </pre>
@@ -1849,11 +1855,14 @@ string <code>fmt</code> as specified by the
 <code>%Z</code> is in the formatting string <code>"UTC"</code> will be used.  If
 <code>%z</code> is in the formatting string <code>"+0000"</code> will be used.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             sys_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -1871,6 +1880,9 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 <code>%z</code> (if present) will be placed in <code>*offset</code>.  If an invalid date
 is parsed, or a time of day which is outside of the conventional bounds, <code>failbit</code>
 will be set and <code>tp</code> will not be altered.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -1930,7 +1942,7 @@ using local_seconds = local_time&lt;std::chrono::seconds&gt;;
 
 <pre>
 template &lt;class CharT, class Traits, class Duration&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
           const local_time&lt;Duration&gt;&amp; tp, const std::string* abbrev = nullptr,
           const std::chrono::seconds* offset_sec = nullptr);
@@ -1951,11 +1963,15 @@ If <code>%Z</code> is in the formatting string and <code>abbrev == nullptr</code
 <code>%z</code> is in the formatting string and <code>offset_sec == nullptr</code>,
 <code>failbit</code> will be set for <code>os</code>.
 </p>
+
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class Duration, class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt,
             local_time&lt;Duration&gt;&amp; tp, std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -1972,6 +1988,9 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 <code>%z</code> (if present) will be placed in <code>*offset</code>.  If an invalid date
 is parsed, or a time of day which is outside of the conventional bounds, <code>failbit</code>
 will be set and <code>tp</code> will not be altered.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2038,12 +2057,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const day&amp; d);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const day&amp; d);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2313,7 +2332,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const day&amp; d);
 </pre>
@@ -2327,11 +2346,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%d</code>, <code>%e</code>, <code>%n</code>,  <code>%t</code>
 or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, day&amp; d,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2349,6 +2371,9 @@ flags): <code>%e</code>, <code>%e</code>, <code>%n</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2396,12 +2421,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month&amp; m);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const month&amp; m);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2699,7 +2724,7 @@ output for the month field by <code>asctime</code>.  Otherwise outputs
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const month&amp; m);
 </pre>
@@ -2713,11 +2738,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%b</code>, <code>%B</code>, <code>%h</code>,  <code>%m</code>,  <code>%n</code>,
 <code>%t</code> or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month&amp; m,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -2735,6 +2763,9 @@ flags): <code>%b</code>, <code>%B</code>, <code>%h</code>,  <code>%m</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -2790,12 +2821,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year&amp; y);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year&amp; y);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -3117,7 +3148,7 @@ into <code>os</code>. If the year is less than four decimal digits, pads the yea
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year&amp; y);
 </pre>
@@ -3131,11 +3162,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%C</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>,  <code>%t</code>
 or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year&amp; y,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -3153,6 +3187,9 @@ flags): <code>%C</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -3200,12 +3237,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const weekday&amp; wd);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const weekday&amp; wd);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -3525,7 +3562,7 @@ output for the weekday field by <code>asctime</code>.  Otherwise outputs
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const weekday&amp; wd);
 </pre>
@@ -3539,11 +3576,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%a</code>, <code>%A</code>, <code>%u</code>,  <code>%w</code>,  <code>%n</code>,
 <code>%t</code> or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, weekday&amp; wd,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -3561,6 +3601,9 @@ flags): <code>%a</code>, <code>%A</code>, <code>%u</code>, <code>%w</code>, <cod
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -3856,12 +3899,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const month_day&amp; md);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const month_day&amp; md);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -4009,7 +4052,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const month_day&amp; md);
 </pre>
@@ -4023,11 +4066,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%b</code>, <code>%B</code>, <code>%d</code>,  <code>%e</code>,  <code>%h</code>,
 <code>%m</code>, <code>%n</code>,  <code>%t</code> or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, month_day&amp; md,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -4046,6 +4092,9 @@ flags): <code>%b</code>, <code>%B</code>,  <code>%d</code>,  <code>%e</code>,
 placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
 <code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
 placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -4509,12 +4558,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month&amp; ym);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year_month&amp; ym);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -4787,7 +4836,7 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year_month&amp; ym);
 </pre>
@@ -4801,11 +4850,14 @@ is undefined except for the following flags (or modified versions of these flags
 <code>%b</code>, <code>%B</code>, <code>%C</code>, <code>%h</code>, <code>%m</code>,
 <code>%y</code>, <code>%Y</code>,  <code>%n</code>,  <code>%t</code> or <code>%%</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month&amp; ym,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -4824,6 +4876,9 @@ to <code>nullptr</code>, the information parsed by <code>%Z</code> (if present) 
 placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
 <code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
 placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
@@ -4881,12 +4936,12 @@ std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
 operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const year_month_day&amp; ymd);
 
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year_month_day&amp; ymd);
 
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month_day&amp; ymd,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -5260,7 +5315,7 @@ are prefixed with <code>'0'</code> if necessary..
 
 <pre>
 template&lt;class CharT, class Traits&gt;
-void
+std::basic_ostream&lt;CharT, Traits&gt;&amp;
 to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const CharT* fmt,
           const year_month_day&amp; ymd);
 </pre>
@@ -5275,11 +5330,14 @@ to_stream(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const Cha
 If <code>%z</code> or <code>%Z</code> is used in the <code>fmt</code> string
 <code>failbit</code> will be set for <code>os</code>.
 </p>
+<p>
+<i>Returns:</i> <code>os</code>.
+</p>
 </blockquote>
 
 <pre>
 template &lt;class CharT, class Traits, class Alloc = std::allocator&lt;CharT&gt;&gt;
-void
+std::basic_istream&lt;CharT, Traits&gt;&amp;
 from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, year_month_day&amp; ymd,
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
@@ -5294,6 +5352,9 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, y
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+</p>
+<p>
+<i>Returns:</i> <code>is</code>.
 </p>
 </blockquote>
 
