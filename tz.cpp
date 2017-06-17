@@ -125,7 +125,9 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
+#ifndef INSTALL
 #  include <wordexp.h>
+#endif //INSTALL
 #  include <limits.h>
 #  include <string.h>
 #  if !USE_SHELL_API
@@ -2984,6 +2986,7 @@ remote_install(const std::string& version)
 
 #endif  // HAS_REMOTE_API
 
+#ifdef _WIN32
 // Parse this XML file:
 // http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
 // The parsing method is designed to be simple and quick. It is not overly
@@ -3140,6 +3143,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
 	is.close();
 	return mappings;
 }
+#endif
 
 static
 std::string
