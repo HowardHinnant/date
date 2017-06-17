@@ -887,39 +887,39 @@ template &lt;class Duration&gt;
     to_utc_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
+    to_utc_time(const tai_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
+    to_utc_time(const gps_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+    to_utc_time(const file_time&lt;Duration&gt;&amp; t);
 
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
     to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
+    to_tai_time(const utc_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
+    to_tai_time(const gps_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+    to_tai_time(const file_time&lt;Duration&gt;&amp; t);
 
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
     to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
+    to_gps_time(const utc_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
+    to_gps_time(const tai_time&lt;Duration&gt;&amp; t);
 template &lt;class Duration&gt;
     gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+    to_gps_time(const file_time&lt;Duration&gt;&amp; t);
 
 template &lt;class Duration&gt;
     file_time&lt;Duration&gt;
@@ -2186,7 +2186,7 @@ assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
+to_utc_time(const tai_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2200,7 +2200,7 @@ to_utc_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
+to_utc_time(const gps_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2214,7 +2214,7 @@ to_utc_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+to_utc_time(const file_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2381,7 +2381,7 @@ to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
+to_tai_time(const utc_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2395,7 +2395,7 @@ to_tai_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
+to_tai_time(const gps_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2409,7 +2409,7 @@ to_tai_time(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+to_tai_time(const file_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2571,7 +2571,7 @@ to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
+to_gps_time(const utc_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2585,7 +2585,7 @@ to_gps_time(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
+to_gps_time(const tai_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2599,7 +2599,7 @@ to_gps_time(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 <pre>
 template &lt;class Duration&gt;
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const file_time&lt;Duration&gt;&amp; t) noexcept;
+to_gps_time(const file_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
