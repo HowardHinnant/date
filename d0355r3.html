@@ -2231,7 +2231,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const utc_time&lt;D
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
+<i>Effects:</i> Calls <code>to_stream(os, fmt, t)</code>, where <code>fmt</code> is a
+null-terminated array of <code>char_t</code> containing <code>"%F %T"</code> widened
+for <code>charT</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2424,7 +2426,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const tai_time&lt;D
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
+<i>Effects:</i> Calls <code>to_stream(os, fmt, t)</code>, where <code>fmt</code> is a
+null-terminated array of <code>char_t</code> containing <code>"%F %T"</code> widened
+for <code>charT</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2612,7 +2616,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const gps_time&lt;D
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
+<i>Effects:</i> Calls <code>to_stream(os, fmt, t)</code>, where <code>fmt</code> is a
+null-terminated array of <code>char_t</code> containing <code>"%F %T"</code> widened
+for <code>charT</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2778,7 +2784,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const file_time&lt;
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Calls <code>to_stream(os, "%F %T", t)</code>.
+<i>Effects:</i> Calls <code>to_stream(os, fmt, t)</code>, where <code>fmt</code> is a
+null-terminated array of <code>char_t</code> containing <code>"%F %T"</code> widened
+for <code>charT</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
