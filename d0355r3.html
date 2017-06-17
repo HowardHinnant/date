@@ -2716,7 +2716,7 @@ public:
     using time_point                = chrono::time_point&lt;file_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now();
+    static time_point now() noexcept;
 };
 </pre>
 
