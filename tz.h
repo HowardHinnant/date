@@ -1122,7 +1122,8 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration>& t)
 {
-    return to_stream(os, "%F %T %Z", t);
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 #if !MISSING_LEAP_SECONDS
@@ -1231,7 +1232,8 @@ template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
 {
-    return to_stream(os, "%F %T", t);
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
@@ -1347,7 +1349,8 @@ template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
 {
-    return to_stream(os, "%F %T", t);
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
@@ -1453,7 +1456,8 @@ template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
 {
-    return to_stream(os, detail::make_string<CharT, Traits>::from("%F %T").c_str(), t);
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
