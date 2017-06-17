@@ -10151,6 +10151,10 @@ Add a new section 23.17.12.11 link [time.timezone.link]:
 <pre>
 class link
 {
+private:
+    std::string name_;    // exposition only
+    std::string target_;  // exposition only
+
 public:
     link(const link&amp;)            = default;
     link&amp; operator=(const link&amp;) = default;
@@ -10174,6 +10178,78 @@ name is <code>name()</code>.  The name of the <code>time_zone</code> for which t
 an alternative name is <code>target()</code>.  <code>link</code>s will be constructed
 for you when the time zone database is initialized.
 </p>
+
+<pre>
+const string&amp; link::name() const
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>name_</code>.
+</p>
+</blockquote>
+
+<pre>
+const string&amp; link::target() const
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>target_</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator==(const link&amp; x, const link&amp; y)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.name() == y.name()</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator!=(const link&amp; x, const link&amp; y)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x == y)</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&lt; (const link&amp; x, const link&amp; y)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>x.name() &lt; y.name()</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&gt; (const link&amp; x, const link&amp; y)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>y &lt; x</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&lt;=(const link&amp; x, const link&amp; y)
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(y &lt; x)</code>.
+</p>
+</blockquote>
+
+<pre>
+bool operator&gt;=(const link&amp; x, const link&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>!(x &lt; y)</code>.
+</p>
+</blockquote>
 
 </blockquote>
 
