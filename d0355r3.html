@@ -37,7 +37,7 @@
 Document number: D0355R3<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-06-16<br/>
+2017-06-17<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -805,6 +805,7 @@ namespace chrono {
 // ...
 
 template &lt;class T&gt; struct is_clock;
+template &lt;class T&gt; inline constexpr bool is_clock_v = is_clock&lt;T&gt;::value;
 
 // duration I/O
 template &lt;class charT, class traits, class Rep, class Period&gt;
@@ -1571,21 +1572,28 @@ template &lt;class T&gt; struct is_clock;
 </pre>
 
 <p>
-<code>is_clock</code> is a type property query trait that publicly derives from
-<code>true_type</code> if <code>T</code> meets the Clock requirements ([time.clock.req]),
-else it derives from <code>false_type</code>.  For the purposes of the specification of
-this trait, <code>T</code> meets the clock requirements if it has all of the following
-properties:
+<code>is_clock</code> is a <code>UnaryTypeTrait</code> ([meta.rqmts]) with a base
+characteristic of <code>true_type</code> if <code>T</code> meets the <code>Clock</code>
+requirements ([time.clock.req]), otherwise <code>false_type</code>. For the purposes of
+the specification of this trait, the extent to which an implementation determines that a
+type cannot meet the clock requirements is unspecified, except that as a minimum a type
+<code>T</code> shall not qualify as a clock unless it satisfies all of the following
+conditions:
 </p>
 
 <ul>
-<li>Has a nested type named <code>rep</code>.</li>
-<li>Has a nested type named <code>period</code>.</li>
-<li>Has a nested type named <code>duration</code>.</li>
-<li>Has a nested type named <code>time_point</code>.</li>
-<li>Has a static data member named <code>is_steady</code>.</li>
-<li>Has a static member function named <code>now</code> with zero parameters.</li>
+<li>the <i>qualified-id</i>s <tt>T::rep</tt>, <tt>T::period</tt>,
+<tt>T::duration</tt>, and <tt>T::time_point</tt> are (all) valid and
+each denotes a type ([temp.deduct]),</li>
+<li>the expression <tt>T::is_steady</tt> is well-formed when treated as
+an unevaluated operand,</li>
+<li>the expression <tt>T::now()</tt> is well-formed when treated as an
+unevaluated operand.</li>
 </ul>
+
+<p>
+The behavior of a program that adds specializations for <code>is_clock</code> is undefined.
+</p>
 
 </blockquote>
 
@@ -10273,7 +10281,7 @@ requirements. If a template parameter is named <code>Predicate</code>,
 <code>operator()</code> applied to the template argument shall return a value that is
 convertible to <code>bool</code>.  <ins>A program that instantiates a template with a
 template parameter named <code>Clock</code> with a type for which
-<code>chrono::is_clock&lt;Clock&gt;::value</code> is <code>false</code>, is ill-formed.
+<code>chrono::is_clock_v&lt;Clock&gt;</code> is <code>false</code>, is ill-formed.
 </p>
 </blockquote>
 
