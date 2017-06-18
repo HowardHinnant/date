@@ -37,7 +37,7 @@
 Document number: D0355R3<br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-06-17<br/>
+2017-06-18<br/>
 </address>
 <hr/>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -2727,7 +2727,7 @@ used for <code>file_time_type</code> ([filesystems]).  It's epoch is unspecified
 
 <pre>
 template &lt;class Duration&gt;
-file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+file_time&lt;Duration&gt;
 to_file_time(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
