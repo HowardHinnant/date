@@ -1444,7 +1444,7 @@ template &lt;class Duration1, class Duration2&gt;
     bool
     operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
 
-template &lt;class Duration&gt;
+template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
@@ -9612,7 +9612,7 @@ template &lt;class Duration1, class Duration2&gt;
 bool
 operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
 
-template &lt;class Duration&gt;
+template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
