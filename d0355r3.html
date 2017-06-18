@@ -1047,8 +1047,8 @@ constexpr day  operator-(const day&amp;  x, const days&amp; y) noexcept;
 constexpr days operator-(const day&amp;  x, const day&amp;  y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const day&amp; d);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1075,8 +1075,8 @@ constexpr month  operator-(const month&amp;  x, const months&amp; y) noexcept;
 constexpr months operator-(const month&amp;  x,  const month&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month&amp; m);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month&amp; m);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1103,8 +1103,8 @@ constexpr year  operator-(const year&amp;  x, const years&amp; y) noexcept;
 constexpr years operator-(const year&amp;  x, const year&amp;  y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year&amp; y);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year&amp; y);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1127,8 +1127,8 @@ constexpr weekday operator-(const weekday&amp; x, const days&amp;    y) noexcept
 constexpr days    operator-(const weekday&amp; x, const weekday&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday&amp; wd);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday&amp; wd);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1146,8 +1146,8 @@ constexpr bool operator==(const weekday_indexed&amp; x, const weekday_indexed&am
 constexpr bool operator!=(const weekday_indexed&amp; x, const weekday_indexed&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday_indexed&amp; wdi);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_indexed&amp; wdi);
 
 class weekday_last;
 
@@ -1155,8 +1155,8 @@ constexpr bool operator==(const weekday_last&amp; x, const weekday_last&amp; y) 
 constexpr bool operator!=(const weekday_last&amp; x, const weekday_last&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday_last&amp; wdl);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday_last&amp; wdl);
 
 class month_day;
 
@@ -1168,8 +1168,8 @@ constexpr bool operator&lt;=(const month_day&amp; x, const month_day&amp; y) noe
 constexpr bool operator&gt;=(const month_day&amp; x, const month_day&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day&amp; md);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day&amp; md);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1191,8 +1191,8 @@ constexpr bool operator&lt;=(const month_day_last&amp; x, const month_day_last&a
 constexpr bool operator&gt;=(const month_day_last&amp; x, const month_day_last&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day_last&amp; mdl);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day_last&amp; mdl);
 
 class month_weekday;
 
@@ -1200,8 +1200,8 @@ constexpr bool operator==(const month_weekday&amp; x, const month_weekday&amp; y
 constexpr bool operator!=(const month_weekday&amp; x, const month_weekday&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_weekday&amp; mwd);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday&amp; mwd);
 
 class month_weekday_last;
 
@@ -1209,8 +1209,8 @@ constexpr bool operator==(const month_weekday_last&amp; x, const month_weekday_l
 constexpr bool operator!=(const month_weekday_last&amp; x, const month_weekday_last&amp; y) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_weekday_last&amp; mwdl);
 
 class year_month;
 
@@ -1230,8 +1230,8 @@ constexpr year_month operator+(const years&amp; dy, const year_month&amp; ym) no
 constexpr year_month operator-(const year_month&amp; ym, const years&amp; dy) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month&amp; ym);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month&amp; ym);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1260,8 +1260,8 @@ constexpr year_month_day operator-(const year_month_day&amp; ymd, const months&a
 constexpr year_month_day operator-(const year_month_day&amp; ymd, const years&amp; dy) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day&amp; ymd);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day&amp; ymd);
 
 template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -1290,8 +1290,8 @@ constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, con
 constexpr year_month_day_last operator-(const year_month_day_last&amp; ymdl, const years&amp; dy) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day_last&amp; ymdl);
 
 class year_month_weekday;
 
@@ -1306,8 +1306,8 @@ constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const
 constexpr year_month_weekday operator-(const year_month_weekday&amp; ymwd, const years&amp; dy) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday&amp; ymwdi);
 
 class year_month_weekday_last;
 
@@ -1322,8 +1322,8 @@ constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; y
 constexpr year_month_weekday_last operator-(const year_month_weekday_last&amp; ymwdl, const years&amp; dy) noexcept;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_weekday_last&amp; ymwdl);
 
 // civil calendar conventional syntax operators
 constexpr year_month operator/(const year&amp; y, const month&amp; m) noexcept;
@@ -1375,20 +1375,20 @@ template &lt;&gt; class time_of_day&lt;seconds&gt;;
 template &lt;class Rep, class Period&gt; class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;;
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;hours&gt;&amp; t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;hours&gt;&amp; t);
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;minutes&gt;&amp; t);
 
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;seconds&gt;&amp; t);
 
 template&lt;class charT, class traits, class Rep, class Period&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&lt;duration&lt;Rep, Period&gt;&gt;&amp; t);
 
 // time zone database
 
@@ -1411,13 +1411,13 @@ class ambiguous_local_time;
 // information classes
 struct sys_info;
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const sys_info&amp; si);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_info&amp; si);
 
 struct local_info;
 template&lt;class charT, class traits&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const local_info&amp; li);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const local_info&amp; li);
 
 // time_zone
 enum class choose {earliest, latest};
@@ -1445,8 +1445,8 @@ template &lt;class Duration1, class Duration2&gt;
     operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
 
 template &lt;class charT, class traits, class Duration&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
 template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
@@ -9613,8 +9613,8 @@ bool
 operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
 
 template &lt;class charT, class traits, class Duration&gt;
-    basic_ostream&lt;class charT, class traits&gt;&amp;
-    operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t);
 
 template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
