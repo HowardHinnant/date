@@ -1050,11 +1050,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const day&amp; d);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1078,11 +1078,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month&amp; m);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1106,11 +1106,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year&amp; y);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1130,11 +1130,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const weekday&amp; wd);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1171,11 +1171,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const month_day&amp; md);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1233,11 +1233,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month&amp; ym);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1263,11 +1263,11 @@ template&lt;class charT, class traits&gt;
     basic_ostream&lt;class charT, class traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;class charT, class traits&gt;&amp; os, const year_month_day&amp; ymd);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -3780,11 +3780,11 @@ template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4024,7 +4024,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const day&amp; d);
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const day&amp; d);
 </pre>
@@ -4041,7 +4041,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             day&amp; d, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4130,11 +4130,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month&amp; m);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4401,7 +4401,7 @@ output for the month field by <code>asctime</code>.  Otherwise outputs
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month&amp; m);
 </pre>
@@ -4418,7 +4418,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             month&amp; m, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4503,11 +4503,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year&amp; y);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4799,7 +4799,7 @@ into <code>os</code>. If the year is in the range [-999, 999], prefixes the year
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year&amp; y);
 </pre>
@@ -4816,7 +4816,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year&amp; y, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -4922,11 +4922,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const weekday&amp; wd);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -5205,7 +5205,7 @@ output for the weekday field by <code>asctime</code>.  Otherwise outputs
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const weekday&amp; wd);
 </pre>
@@ -5222,7 +5222,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             weekday&amp; wd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -5521,11 +5521,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const month_day&amp; md);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -5659,7 +5659,7 @@ return os &lt;&lt; md.month() &lt;&lt; '/' &lt;&lt; md.day();
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const month_day&amp; md);
 </pre>
@@ -5676,7 +5676,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             month_day&amp; md, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -6133,11 +6133,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month&amp; ym);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -6395,7 +6395,7 @@ return os &lt;&lt; ym.year() &lt;&lt; '/' &lt;&lt; ym.month();
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month&amp; ym);
 </pre>
@@ -6412,7 +6412,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year_month&amp; ym, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -6499,11 +6499,11 @@ template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const year_month_day&amp; ymd);
 
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -6859,7 +6859,7 @@ are prefixed with <code>'0'</code> if necessary.
 </blockquote>
 
 <pre>
-template &lt;class charT, class traits, class Duration&gt;
+template &lt;class charT, class traits&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const year_month_day&amp; ymd);
 </pre>
@@ -6876,7 +6876,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             year_month_day&amp; ymd, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
