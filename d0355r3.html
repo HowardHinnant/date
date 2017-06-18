@@ -3006,7 +3006,7 @@ format(const basic_string&lt;charT, traits, Alloc&gt;&amp; fmt, const Streamable
 <blockquote>
 <p>
 <i>Remarks:</i> This function shall not participate in overload resolution unless
-<code>to_stream(declval&lt;basic_ostream&lt;charT, traits, Alloc&gt;&amp;&gt;(), fmt.c_str(), s)</code>
+<code>to_stream(declval&lt;basic_ostringstream&lt;charT, traits, Alloc&gt;&amp;&gt;(), fmt.c_str(), s)</code>
 is a valid expression.
 </p>
 
@@ -3030,7 +3030,7 @@ format(const locale&amp; loc, const basic_string&lt;charT, traits, Alloc&gt;&amp
 <blockquote>
 <p>
 <i>Remarks:</i> This function shall not participate in overload resolution unless
-<code>to_stream(declval&lt;basic_ostream&lt;charT, traits, Alloc&gt;&amp;&gt;(), fmt.c_str(), s)</code>
+<code>to_stream(declval&lt;basic_ostringstream&lt;charT, traits, Alloc&gt;&amp;&gt;(), fmt.c_str(), s)</code>
 is a valid expression.
 </p>
 
