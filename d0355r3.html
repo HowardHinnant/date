@@ -818,7 +818,7 @@ basic_ostream&lt;charT, traits&gt;&amp;
 to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
           const duration&lt;Rep, Period&gt;&amp; d);
 
-template &lt;class Rep, class Period, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Rep, class Period, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             duration&lt;Rep, Period&gt;&amp; d,
@@ -992,37 +992,37 @@ template &lt;class charT, class traits, class Duration&gt;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const file_time&lt;Duration&gt;&amp; tp);
 
 // from_stream
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 sys_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 local_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 utc_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 tai_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 gps_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
                 minutes* offset = nullptr);
 
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
     basic_istream&lt;charT, traits&gt;&amp;
     from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
                 file_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -1472,21 +1472,21 @@ template &lt;class charT, class traits, class Alloc, class Streamable&gt;
 
 // parse
 
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
     <i>unspecified</i>
     parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; format, Parsable&amp; tp);
 
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
     <i>unspecified</i>
     parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; format, Parsable&amp; tp,
           basic_string&lt;charT, traits, Alloc&gt;&amp; abbrev);
 
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
     <i>unspecified</i>
     parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; format, Parsable&amp; tp,
           minutes&amp; offset);
 
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
     <i>unspecified</i>
     parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; format, Parsable&amp; tp,
           basic_string&lt;charT, traits, Alloc&gt;&amp; abbrev, minutes&amp; offset);
@@ -1690,7 +1690,7 @@ specified by [time.format].
 </blockquote>
 
 <pre>
-template &lt;class Rep, class Period, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Rep, class Period, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             duration&lt;Rep, Period&gt;&amp; d,
@@ -2057,7 +2057,7 @@ an offset of <code>0min</code> will be formatted.
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             sys_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -2287,7 +2287,7 @@ Output:
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             utc_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -2476,7 +2476,7 @@ Output:
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             tai_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -2666,7 +2666,7 @@ Output:
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             gps_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -2814,7 +2814,7 @@ equivalent to that formatted by a <code>sys_time</code> initialized with <code>t
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             file_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -2910,7 +2910,7 @@ specified by [time.format].  If <code>%Z</code> is used, it will be replaced wit
 </blockquote>
 
 <pre>
-template &lt;class Duration, class charT, class traits, class Alloc = allocator&lt;charT&gt;&gt;
+template &lt;class charT, class traits, class Duration, class Alloc = allocator&lt;charT&gt;&gt;
 basic_istream&lt;charT, traits&gt;&amp;
 from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
             local_time&lt;Duration&gt;&amp; tp, basic_string&lt;charT, traits, Alloc&gt;* abbrev = nullptr,
@@ -3327,7 +3327,7 @@ Add a new section 23.17.9 Parsing [time.parse]:
 <h3>23.17.9 Parsing [time.parse]</h3>
 
 <pre>
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
 <i>unspecified</i>
 parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; fmt, Parsable&amp; tp);
 </pre>
@@ -3347,7 +3347,7 @@ is a valid expression.
 </blockquote>
 
 <pre>
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
 <i>unspecified</i>
 parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; fmt, Parsable&amp; tp,
       basic_string&lt;charT, traits, Alloc&gt;&amp; abbrev);
@@ -3368,7 +3368,7 @@ is a valid expression.
 </blockquote>
 
 <pre>
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
 <i>unspecified</i>
 parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; fmt, Parsable&amp; tp,
       minutes&amp; offset);
@@ -3389,7 +3389,7 @@ is a valid expression.
 </blockquote>
 
 <pre>
-template &lt;class Parsable, class charT, class traits, class Alloc&gt;
+template &lt;class charT, class traits, class Alloc, class Parsable&gt;
 <i>unspecified</i>
 parse(const basic_string&lt;charT, traits, Alloc&gt;&amp; fmt, Parsable&amp; tp,
       basic_string&lt;charT, traits, Alloc&gt;&amp; abbrev, minutes&amp; offset);
