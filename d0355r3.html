@@ -2070,7 +2070,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -2300,7 +2300,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -2489,7 +2489,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -2679,7 +2679,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -2827,7 +2827,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -2898,11 +2898,11 @@ the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows t
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
 <code>*abbrev</code> if <code>abbrev</code> is not equal to <code>nullptr</code>.  If
 <code>abbrev</code> is equal to <code>nullptr</code> (and <code>%Z</code> is used),
-<code>failbit</code> will be set.  If <code>%z</code> is used (or a modified form of
+<code>ios_base::failbit</code> will be set.  If <code>%z</code> is used (or a modified form of
 <code>%z</code>), it will be formatted with the value of <code>*offset_sec</code> if
 <code>offset_sec</code> is not equal to <code>nullptr</code>.  If <code>%z</code>
 (or a modified form of <code>%z</code>) is used, and <code>offset_sec</code> is equal to
-<code>nullptr</code>, then <code>failbit</code> is set.
+<code>nullptr</code>, then <code>ios_base::failbit</code> is set.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2923,7 +2923,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>tp</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid date, <code>failbit</code> will be set.
+If the parse fails to decode a valid date, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -3076,7 +3076,7 @@ Unless explicitly specified, <code>Streamable</code> types will not contain time
 abbreviation and time zone offset information.  If available, the conversion specifiers
 <code>%Z</code> and <code>%z</code> will format this information (respectively).  If
 the information is not available, and <code>%Z</code> or <code>%z</code> are contained
-in <code>fmt</code>, <code>failbit</code> will be set on <code>os</code>.
+in <code>fmt</code>, <code>ios_base::failbit</code> will be set on <code>os</code>.
 </p>
 
 <blockquote>
@@ -3299,13 +3299,13 @@ left-padded with <code>0</code> to four digits.</td>
 4 hours 30 minutes behind UTC.  If the offset is zero, <code>+0000</code> is used.
 The modified commands <code>%Ez</code> and <code>%Oz</code> insert a <code>:</code>
 between the hours and minutes: <code>-04:30</code>.  If the offset information is not
-available, <code>failbit</code> will be set.</td>
+available, <code>ios_base::failbit</code> will be set.</td>
 </tr>
 
 <tr>
 <td><code>%Z</code></td>
 <td>The time zone abbreviation.  If the time zone abbreviation is not available,
-<code>failbit</code> will be set.</td>
+<code>ios_base::failbit</code> will be set.</td>
 </tr>
 
 <tr>
@@ -4054,7 +4054,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>day d</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid day, <code>failbit</code> will be set.
+If the parse fails to decode a valid day, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -4431,7 +4431,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>month m</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid month, <code>failbit</code> will be set.
+If the parse fails to decode a valid month, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -4829,7 +4829,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>year y</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid year, <code>failbit</code> will be set.
+If the parse fails to decode a valid year, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -5235,7 +5235,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>weekday wd</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid weekday, <code>failbit</code> will be set.
+If the parse fails to decode a valid weekday, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -5689,7 +5689,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>month_day md</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid <code>month_day</code>, <code>failbit</code> will be set.
+If the parse fails to decode a valid <code>month_day</code>, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -6425,7 +6425,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>year_month ym</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid <code>year_month</code>, <code>failbit</code> will be set.
+If the parse fails to decode a valid <code>year_month</code>, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
@@ -6889,7 +6889,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <code>year_month_day ymd</code> using the format flags as specified in [time.parse].
 </p>
 <p>
-If the parse fails to decode a valid <code>year_month_day</code>, <code>failbit</code> will be set.
+If the parse fails to decode a valid <code>year_month_day</code>, <code>ios_base::failbit</code> will be set.
 </p>
 <p>
 If <code>%Z</code> is used and successfully parsed, that value will be assigned to
