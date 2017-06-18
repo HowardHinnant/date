@@ -1529,28 +1529,28 @@ bool operator&gt;=(const link&amp; x, const link&amp; y);
 inline namespace literals {
 inline namespace chrono_literals {
 // ...
-constexpr chrono::last_spec last{};
+inline constexpr chrono::last_spec last{};
 
-constexpr chrono::weekday sun{0};
-constexpr chrono::weekday mon{1};
-constexpr chrono::weekday tue{2};
-constexpr chrono::weekday wed{3};
-constexpr chrono::weekday thu{4};
-constexpr chrono::weekday fri{5};
-constexpr chrono::weekday sat{6};
+inline constexpr chrono::weekday sun{0};
+inline constexpr chrono::weekday mon{1};
+inline constexpr chrono::weekday tue{2};
+inline constexpr chrono::weekday wed{3};
+inline constexpr chrono::weekday thu{4};
+inline constexpr chrono::weekday fri{5};
+inline constexpr chrono::weekday sat{6};
 
-constexpr chrono::month jan{1};
-constexpr chrono::month feb{2};
-constexpr chrono::month mar{3};
-constexpr chrono::month apr{4};
-constexpr chrono::month may{5};
-constexpr chrono::month jun{6};
-constexpr chrono::month jul{7};
-constexpr chrono::month aug{8};
-constexpr chrono::month sep{9};
-constexpr chrono::month oct{10};
-constexpr chrono::month nov{11};
-constexpr chrono::month dec{12};
+inline constexpr chrono::month jan{1};
+inline constexpr chrono::month feb{2};
+inline constexpr chrono::month mar{3};
+inline constexpr chrono::month apr{4};
+inline constexpr chrono::month may{5};
+inline constexpr chrono::month jun{6};
+inline constexpr chrono::month jul{7};
+inline constexpr chrono::month aug{8};
+inline constexpr chrono::month sep{9};
+inline constexpr chrono::month oct{10};
+inline constexpr chrono::month nov{11};
+inline constexpr chrono::month dec{12};
 
 constexpr chrono::day  operator "" d(unsigned long long d) noexcept;
 constexpr chrono::year operator "" y(unsigned long long y) noexcept;
