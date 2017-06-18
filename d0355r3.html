@@ -3421,6 +3421,11 @@ except for white space, are parsed unchanged from the stream. A white space char
 matches zero or more white space characters in the input stream.
 </p>
 
+<p>
+If the <code>from_stream</code> overload fails to parse everything specified by the
+format string, <code>ios_base::failbit</code> is set in the <code>basic_istream</code>.
+</p>
+
 <blockquote>
 <table cellspacing="10">
 
