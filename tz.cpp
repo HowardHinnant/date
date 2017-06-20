@@ -252,10 +252,10 @@ namespace date
     #ifdef ANDROID
     namespace AndroidUtils
     {
-        static std::string *app_private_path = nullptr;
+        static std::string *date::AndroidUtils::app_private_path = nullptr;
         void set_app_private_path(const std::string &src)
         {
-            app_private_path = new string(src);
+            app_private_path = new std::string(src);
         }
     }
     #endif // ANDROID
