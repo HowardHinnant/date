@@ -249,6 +249,17 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
+    #ifdef ANDROID
+    namespace AndroidUtils
+    {
+        static std::string *app_private_path = nullptr;
+        void set_app_private_path(const std::string &src)
+        {
+            app_private_path = new string(src);
+        }
+    }
+    #endif // ANDROID
+
 using namespace detail;
 
 #if !USE_OS_TZDB
@@ -270,6 +281,10 @@ access_install()
     = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
 
 #endif  // !INSTALL
+    #ifdef ANDROID
+    if (app_private_path)
+    install = *app_private_path;
+    #endif // ANDROID
 
     return install;
 }
