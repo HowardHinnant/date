@@ -3544,7 +3544,7 @@ current_zone()
         char sys_timezone[PROP_VALUE_MAX];
         if (__system_property_get("persist.sys.timezone", sys_timezone) >= 1)
         {
-            result = string(sys_timezone);
+            result = std::string(sys_timezone);
             return locate_zone(result);
         }
     }
