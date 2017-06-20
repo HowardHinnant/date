@@ -2,6 +2,6 @@
 #define android_hpp
 
 #if ANDROID
-#include <sys/system_properries.h>
+#include <sys/system_properties.h>
 #endif // ANDROID
 #endif // android_hpp
