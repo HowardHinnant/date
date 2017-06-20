@@ -282,7 +282,7 @@ access_install()
 
 #endif  // !INSTALL
     #ifdef ANDROID
-    if (app_private_path)
+    if (date::AndroidUtils::app_private_path)
     install = *date::AndroidUtils::app_private_path;
     #endif // ANDROID
 
