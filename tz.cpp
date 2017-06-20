@@ -84,6 +84,7 @@
 #endif  // _WIN32
 
 #include "tz_private.h"
+#include "android.h"
 #include "ios.h"
 
 #if USE_OS_TZDB
@@ -3537,6 +3538,17 @@ current_zone()
         }
         // Fall through to try other means.
     }
+    #ifdef ANDROID
+    {
+        std::string result;
+        char sys_timezone[PROP_VALUE_MAX];
+        if (__system_property_get("persist.sys.timezone", sys_timezone) >= 1)
+        {
+            result = string(sys_timezone);
+            return locate_zone(result);
+        }
+    }
+    #endif // ANDROID
     throw std::runtime_error("Could not get current timezone");
 }
 
