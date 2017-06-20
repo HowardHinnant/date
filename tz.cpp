@@ -283,7 +283,7 @@ access_install()
 #endif  // !INSTALL
     #ifdef ANDROID
     if (date::AndroidUtils::app_private_path)
-    install = *date::AndroidUtils::app_private_path;
+    install = *date::AndroidUtils::app_private_path + folder_delimiter + "tzdata";
     #endif // ANDROID
 
     return install;
