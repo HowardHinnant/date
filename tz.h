@@ -83,6 +83,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #      define MISSING_LEAP_SECONDS 0
 #    endif
 #  endif
+#else
+#  define MISSING_LEAP_SECONDS 0
 #endif
 
 #include "date.h"
@@ -273,8 +275,12 @@ class time_zone;
 template <class Duration>
 class zoned_time
 {
+public:
+    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
+
+private:
     const time_zone*   zone_;
-    sys_time<Duration> tp_;
+    sys_time<duration> tp_;
 
 public:
              zoned_time(const sys_time<Duration>& st);
@@ -310,12 +316,12 @@ public:
     zoned_time& operator=(const sys_time<Duration>& st);
     zoned_time& operator=(const local_time<Duration>& ut);
 
-             operator sys_time<Duration>() const;
-    explicit operator local_time<Duration>() const;
+             operator sys_time<duration>() const;
+    explicit operator local_time<duration>() const;
 
     const time_zone*     get_time_zone() const;
-    local_time<Duration> get_local_time() const;
-    sys_time<Duration>   get_sys_time() const;
+    local_time<duration> get_local_time() const;
+    sys_time<duration>   get_sys_time() const;
     sys_info             get_info() const;
 
     template <class Duration1, class Duration2>
@@ -330,9 +336,6 @@ public:
 
 private:
     template <class D> friend class zoned_time;
-
-    static_assert(std::is_convertible<std::chrono::seconds, Duration>::value,
-                  "zoned_time must have a precision of seconds or finer");
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
@@ -971,14 +974,14 @@ zoned_time<Duration>::operator=(const local_time<Duration>& ut)
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator local_time<Duration>() const
+zoned_time<Duration>::operator local_time<duration>() const
 {
     return get_local_time();
 }
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator sys_time<Duration>() const
+zoned_time<Duration>::operator sys_time<duration>() const
 {
     return get_sys_time();
 }
@@ -993,7 +996,7 @@ zoned_time<Duration>::get_time_zone() const
 
 template <class Duration>
 inline
-local_time<Duration>
+local_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_local_time() const
 {
     return zone_->to_local(tp_);
@@ -1001,7 +1004,7 @@ zoned_time<Duration>::get_local_time() const
 
 template <class Duration>
 inline
-sys_time<Duration>
+sys_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_sys_time() const
 {
     return tp_;
@@ -1106,12 +1109,12 @@ make_zoned(const std::string& name, const sys_time<Duration>& st)
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const zoned_time<Duration>& tp)
 {
     auto const info = tp.get_info();
-    to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
+    return to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
 }
 
 template <class CharT, class Traits, class Duration>
@@ -1119,8 +1122,8 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration>& t)
 {
-    to_stream(os, "%F %T %Z", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 #if !MISSING_LEAP_SECONDS
@@ -1206,7 +1209,7 @@ utc_clock::now()
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const utc_time<Duration>& t)
 {
@@ -1222,19 +1225,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     auto time = make_time(tp - sd);
     time.seconds() += seconds{ls.first};
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             utc_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
@@ -1259,10 +1262,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         if (is_60_sec != is_leap_second(tmp).first || !fds.tod.in_conventional_range())
         {
             is.setstate(ios::failbit);
-            return;
+            return is;
         }
         tp = time_point_cast<Duration>(tmp);
     }
+    return is;
 }
 
 // tai_clock
@@ -1323,7 +1327,7 @@ tai_clock::now() NOEXCEPT
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const tai_time<Duration>& t)
 {
@@ -1338,19 +1342,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     year_month_day ymd = sd;
     auto time = make_time(tp - sd);
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             tai_time<Duration>& tp,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
@@ -1369,6 +1373,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         tp = tai_time<Duration>{duration_cast<Duration>(
                 (sys_days(fds.ymd) + fds.tod.to_duration() + (sys_days(year{1970}/jan/1) -
                 sys_days(year{1958}/jan/1)) - *offptr).time_since_epoch())};
+    return is;
 }
 
 // gps_clock
@@ -1429,7 +1434,7 @@ gps_clock::now() NOEXCEPT
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const gps_time<Duration>& t)
 {
@@ -1444,19 +1449,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     year_month_day ymd = sd;
     auto time = make_time(tp - sd);
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             gps_time<Duration>& tp,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
@@ -1476,6 +1481,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 (sys_days(fds.ymd) + fds.tod.to_duration() -
                 (sys_days(year{1980}/jan/sun[1]) -
                 sys_days(year{1970}/jan/1)) - *offptr).time_since_epoch())};
+    return is;
 }
 
 template <class Duration>

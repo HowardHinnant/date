@@ -29,7 +29,7 @@ This is actually several separate C++11/C++14 libraries:
 
     * Documentation: http://howardhinnant.github.io/date/islamic.html
 
-`"date.h"` and `"tz.h"` are now being proposed for standardization: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r2.html
+`"date.h"` and `"tz.h"` are now being proposed for standardization: http://howardhinnant.github.io/date/d0355r3.html
 
 <hr/>
 

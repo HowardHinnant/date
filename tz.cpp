@@ -2349,13 +2349,14 @@ init_tzdb()
         while ((d = readdir(dir)) != nullptr)
         {
             // Ignore these files:
-            if (d->d_name[0]                     == '.' || // curdir, prevdir, hidden
-                memcmp(d->d_name, "posix", 5)    == 0   || // starts with posix
-                strcmp(d->d_name, "Factory")     == 0   ||
-                strcmp(d->d_name, "iso3166.tab") == 0   ||
-                strcmp(d->d_name, "right")       == 0   ||
-                strcmp(d->d_name, "+VERSION")    == 0   ||
-                strcmp(d->d_name, "zone.tab")    == 0     )
+            if (d->d_name[0]                      == '.' || // curdir, prevdir, hidden
+                memcmp(d->d_name, "posix", 5)     == 0   || // starts with posix
+                strcmp(d->d_name, "Factory")      == 0   ||
+                strcmp(d->d_name, "iso3166.tab")  == 0   ||
+                strcmp(d->d_name, "right")        == 0   ||
+                strcmp(d->d_name, "+VERSION")     == 0   ||
+                strcmp(d->d_name, "zone.tab")     == 0   ||
+                strcmp(d->d_name, "zone1970.tab") == 0     )
                 continue;
             auto subname = dirname + folder_delimiter + d->d_name;
             if(stat(subname.c_str(), &s) == 0)
