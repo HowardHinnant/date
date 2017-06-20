@@ -252,7 +252,7 @@ namespace date
     #ifdef ANDROID
     namespace AndroidUtils
     {
-        static std::string *date::AndroidUtils::app_private_path = nullptr;
+        static std::string *app_private_path = nullptr;
         void set_app_private_path(const std::string &src)
         {
             app_private_path = new std::string(src);
@@ -283,7 +283,7 @@ access_install()
 #endif  // !INSTALL
     #ifdef ANDROID
     if (app_private_path)
-    install = *app_private_path;
+    install = *date::AndroidUtils::app_private_path;
     #endif // ANDROID
 
     return install;
