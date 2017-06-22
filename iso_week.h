@@ -1017,7 +1017,7 @@ year_lastweek::weeknum() const NOEXCEPT
     const auto y = date::year{static_cast<int>(y_)};
     const auto s0 = sys_days((y-years{1})/12/date::thu[date::last]);
     const auto s1 = sys_days(y/12/date::thu[date::last]);
-    return iso_week::weeknum(date::trunc<weeks>(s1-s0).count());
+    return iso_week::weeknum(static_cast<unsigned>(date::trunc<weeks>(s1-s0).count()));
 }
 
 CONSTCD11 inline bool year_lastweek::ok() const NOEXCEPT {return y_.ok();}
@@ -1505,7 +1505,8 @@ year_weeknum_weekday::from_days(days d) NOEXCEPT
         --y;
         start = sys_days((y - date::years{1})/date::dec/date::thu[date::last]) + (mon-thu);
     }
-    const auto wn = iso_week::weeknum(date::trunc<weeks>(dp - start).count() + 1);
+    const auto wn = iso_week::weeknum(
+                       static_cast<unsigned>(date::trunc<weeks>(dp - start).count() + 1));
     return {iso_week::year(static_cast<int>(y)), wn, wd};
 }
 
@@ -1608,7 +1609,7 @@ inline
 year_weeknum
 operator/(const year& y, int wn) NOEXCEPT
 {
-    return y/weeknum(wn);
+    return y/weeknum(static_cast<unsigned>(wn));
 }
 
 CONSTCD11

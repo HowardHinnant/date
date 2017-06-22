@@ -5,6 +5,7 @@
 //
 // Copyright (c) 2015, 2016, 2017 Howard Hinnant
 // Copyright (c) 2017 Jiangang Zhuang
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,27 +42,24 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
-#ifdef _WIN32
-#  ifndef TIMEZONE_MAPPING
-#    define TIMEZONE_MAPPING 1
-#  endif
-#else
-#  ifdef TIMEZONE_MAPPING
-#    error "Timezone mapping is not required or not implemented for this platform."
-#  endif
-#endif
-
-#ifndef LAZY_INIT
-#  define LAZY_INIT 1
+#ifndef USE_OS_TZDB
+#  define USE_OS_TZDB 0
 #endif
 
 #ifndef HAS_REMOTE_API
-#  ifdef _WIN32
+#  if USE_OS_TZDB == 0
+#    ifdef _WIN32
+#      define HAS_REMOTE_API 0
+#    else
+#      define HAS_REMOTE_API 1
+#    endif
+#  else  // HAS_REMOTE_API makes no since when using the OS timezone database
 #    define HAS_REMOTE_API 0
-#  else
-#    define HAS_REMOTE_API 1
 #  endif
 #endif
+
+static_assert(!(USE_OS_TZDB && HAS_REMOTE_API),
+              "USE_OS_TZDB and HAS_REMOTE_API can not be used together");
 
 #ifndef AUTO_DOWNLOAD
 #  define AUTO_DOWNLOAD HAS_REMOTE_API
@@ -72,6 +70,21 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 
 #ifndef USE_SHELL_API
 #  define USE_SHELL_API 1
+#endif
+
+#if USE_OS_TZDB
+#  ifdef _WIN32
+#    error "USE_OS_TZDB can not be used on Windows"
+#  endif
+#  ifndef MISSING_LEAP_SECONDS
+#    ifdef __APPLE__
+#      define MISSING_LEAP_SECONDS 1
+#    else
+#      define MISSING_LEAP_SECONDS 0
+#    endif
+#  endif
+#else
+#  define MISSING_LEAP_SECONDS 0
 #endif
 
 #include "date.h"
@@ -85,10 +98,8 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <chrono>
 #include <istream>
 #include <locale>
-#if LAZY_INIT
-#  include <memory>
-#  include <mutex>
-#endif
+#include <memory>
+#include <mutex>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -214,8 +225,6 @@ ambiguous_local_time::make_msg(local_time<Duration> tp,
     return os.str();
 }
 
-namespace detail { class Rule; }
-
 struct sys_info
 {
     sys_seconds          begin;
@@ -266,8 +275,12 @@ class time_zone;
 template <class Duration>
 class zoned_time
 {
+public:
+    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
+
+private:
     const time_zone*   zone_;
-    sys_time<Duration> tp_;
+    sys_time<duration> tp_;
 
 public:
              zoned_time(const sys_time<Duration>& st);
@@ -303,12 +316,12 @@ public:
     zoned_time& operator=(const sys_time<Duration>& st);
     zoned_time& operator=(const local_time<Duration>& ut);
 
-             operator sys_time<Duration>() const;
-    explicit operator local_time<Duration>() const;
+             operator sys_time<duration>() const;
+    explicit operator local_time<duration>() const;
 
     const time_zone*     get_time_zone() const;
-    local_time<Duration> get_local_time() const;
-    sys_time<Duration>   get_sys_time() const;
+    local_time<duration> get_local_time() const;
+    sys_time<duration>   get_sys_time() const;
     sys_info             get_info() const;
 
     template <class Duration1, class Duration2>
@@ -323,9 +336,6 @@ public:
 
 private:
     template <class D> friend class zoned_time;
-
-    static_assert(std::is_convertible<std::chrono::seconds, Duration>::value,
-                  "zoned_time must have a precision of seconds or finer");
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
@@ -347,18 +357,31 @@ operator!=(const zoned_time<Duration1>& x, const zoned_time<Duration2>& y)
 }
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-namespace detail { struct zonelet; }
-#endif
+
+namespace detail
+{
+#  if USE_OS_TZDB
+    struct transition;
+    struct expanded_ttinfo;
+#  else  // !USE_OS_TZDB
+    struct zonelet;
+    class Rule;
+#  endif  // !USE_OS_TZDB
+}
+
+#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
 class time_zone
 {
 private:
-
-    std::string          name_;
-    std::vector<detail::zonelet> zonelets_;
-#if LAZY_INIT
-    std::unique_ptr<std::once_flag> adjusted_;
-#endif
+    std::string                          name_;
+#if USE_OS_TZDB
+    std::vector<detail::transition>      transitions_;
+    std::vector<detail::expanded_ttinfo> ttinfos_;
+#else  // !USE_OS_TZDB
+    std::vector<detail::zonelet>         zonelets_;
+#endif  // !USE_OS_TZDB
+    std::unique_ptr<std::once_flag>      adjusted_;
 
 public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -392,15 +415,13 @@ public:
     friend bool operator< (const time_zone& x, const time_zone& y) NOEXCEPT;
     friend DATE_API std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
+#if !USE_OS_TZDB
     DATE_API void add(const std::string& s);
-    DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
+#endif  // !USE_OS_TZDB
 
 private:
     DATE_API sys_info   get_info_impl(sys_seconds tp) const;
     DATE_API local_info get_info_impl(local_seconds tp) const;
-    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
-
-    void parse_info(std::istream& in);
 
     template <class Duration>
         sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -408,6 +429,22 @@ private:
     template <class Duration>
         sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
         to_sys_impl(local_time<Duration> tp, choose, std::true_type) const;
+
+#if USE_OS_TZDB
+    DATE_API void init() const;
+    DATE_API void init_impl();
+    DATE_API sys_info
+        load_sys_info(std::vector<detail::transition>::const_iterator i) const;
+
+    template <class TimeType>
+    DATE_API void
+    load_data(std::istream& inf, std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
+                                 std::int32_t tzh_typecnt, std::int32_t tzh_charcnt);
+#else  // !USE_OS_TZDB
+    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
+    DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
+    DATE_API void parse_info(std::istream& in);
+#endif  // !USE_OS_TZDB
 };
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -416,9 +453,7 @@ inline
 time_zone::time_zone(time_zone&& src)
     : name_(std::move(src.name_))
     , zonelets_(std::move(src.zonelets_))
-#if LAZY_INIT
     , adjusted_(std::move(src.adjusted_))
-#endif
     {}
 
 inline
@@ -427,9 +462,7 @@ time_zone::operator=(time_zone&& src)
 {
     name_ = std::move(src.name_);
     zonelets_ = std::move(src.zonelets_);
-#if LAZY_INIT
     adjusted_ = std::move(src.adjusted_);
-#endif
     return *this;
 }
 
@@ -537,6 +570,8 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
 
+#if !USE_OS_TZDB
+
 class link
 {
 private:
@@ -559,13 +594,21 @@ inline bool operator> (const link& x, const link& y) {return   y < x;}
 inline bool operator<=(const link& x, const link& y) {return !(y < x);}
 inline bool operator>=(const link& x, const link& y) {return !(x < y);}
 
+#endif  // !USE_OS_TZDB
+
+#if !MISSING_LEAP_SECONDS
+
 class leap
 {
 private:
     sys_seconds date_;
 
 public:
+#if USE_OS_TZDB
+    DATE_API explicit leap(const sys_seconds& s, detail::undocumented);
+#else
     DATE_API explicit leap(const std::string& s, detail::undocumented);
+#endif
 
     sys_seconds date() const {return date_;}
 
@@ -676,7 +719,9 @@ operator>=(const sys_time<Duration>& x, const leap& y)
     return !(x < y);
 }
 
-#ifdef TIMEZONE_MAPPING
+#endif  // !MISSING_LEAP_SECONDS
+
+#ifdef _WIN32
 
 namespace detail
 {
@@ -712,17 +757,22 @@ struct timezone_mapping
 
 }  // detail
 
-#endif  // TIMEZONE_MAPPING
+#endif  // _WIN32
 
 struct TZ_DB
 {
-    std::string               version;
+    std::string               version = "unknown";
     std::vector<time_zone>    zones;
+#if !USE_OS_TZDB
     std::vector<link>         links;
+#endif
+#if !MISSING_LEAP_SECONDS
     std::vector<leap>         leaps;
+#endif
+#if !USE_OS_TZDB
     std::vector<detail::Rule> rules;
-#ifdef TIMEZONE_MAPPING
-    // TODO! These need some protection.
+#endif
+#ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
 #endif
 
@@ -730,16 +780,14 @@ struct TZ_DB
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
     TZ_DB(TZ_DB&&) = default;
     TZ_DB& operator=(TZ_DB&&) = default;
-#else  // defined(_MSC_VER) || (_MSC_VER >= 1900)
+#else  // defined(_MSC_VER) && (_MSC_VER < 1900)
     TZ_DB(TZ_DB&& src)
         : version(std::move(src.version))
         , zones(std::move(src.zones))
         , links(std::move(src.links))
         , leaps(std::move(src.leaps))
         , rules(std::move(src.rules))
-#ifdef TIMEZONE_MAPPING
         , mappings(std::move(src.mappings))
-#endif
     {}
 
     TZ_DB& operator=(TZ_DB&& src)
@@ -749,33 +797,33 @@ struct TZ_DB
         links = std::move(src.links);
         leaps = std::move(src.leaps);
         rules = std::move(src.rules);
-#ifdef TIMEZONE_MAPPING
         mappings = std::move(src.mappings);
-#endif
         return *this;
     }
-#endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+#endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 };
 
 DATE_API std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db);
 
 DATE_API const TZ_DB& get_tzdb();
+
+#if !USE_OS_TZDB
+
 DATE_API const TZ_DB& reload_tzdb();
 DATE_API void         set_install(const std::string& install);
 
+#endif  // !USE_OS_TZDB
+
 #if HAS_REMOTE_API
+
 DATE_API std::string remote_version();
 DATE_API bool        remote_download(const std::string& version);
 DATE_API bool        remote_install(const std::string& version);
+
 #endif
 
 DATE_API const time_zone* locate_zone(const std::string& tz_name);
-#ifdef TZ_TEST
-#  if _WIN32
-DATE_API const time_zone* locate_native_zone(const std::string& native_tz_name);
-#  endif // _WIN32
-#endif // TZ_TEST
 DATE_API const time_zone* current_zone();
 
 // zoned_time
@@ -926,14 +974,14 @@ zoned_time<Duration>::operator=(const local_time<Duration>& ut)
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator local_time<Duration>() const
+zoned_time<Duration>::operator local_time<duration>() const
 {
     return get_local_time();
 }
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator sys_time<Duration>() const
+zoned_time<Duration>::operator sys_time<duration>() const
 {
     return get_sys_time();
 }
@@ -948,7 +996,7 @@ zoned_time<Duration>::get_time_zone() const
 
 template <class Duration>
 inline
-local_time<Duration>
+local_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_local_time() const
 {
     return zone_->to_local(tp_);
@@ -956,7 +1004,7 @@ zoned_time<Duration>::get_local_time() const
 
 template <class Duration>
 inline
-sys_time<Duration>
+sys_time<typename zoned_time<Duration>::duration>
 zoned_time<Duration>::get_sys_time() const
 {
     return tp_;
@@ -1061,12 +1109,12 @@ make_zoned(const std::string& name, const sys_time<Duration>& st)
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const zoned_time<Duration>& tp)
 {
     auto const info = tp.get_info();
-    to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
+    return to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
 }
 
 template <class CharT, class Traits, class Duration>
@@ -1074,9 +1122,11 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration>& t)
 {
-    to_stream(os, "%F %T %Z", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
+
+#if !MISSING_LEAP_SECONDS
 
 class utc_clock
 {
@@ -1159,7 +1209,7 @@ utc_clock::now()
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const utc_time<Duration>& t)
 {
@@ -1175,19 +1225,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     auto time = make_time(tp - sd);
     time.seconds() += seconds{ls.first};
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const utc_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             utc_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
@@ -1212,10 +1262,11 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         if (is_60_sec != is_leap_second(tmp).first || !fds.tod.in_conventional_range())
         {
             is.setstate(ios::failbit);
-            return;
+            return is;
         }
         tp = time_point_cast<Duration>(tmp);
     }
+    return is;
 }
 
 // tai_clock
@@ -1276,7 +1327,7 @@ tai_clock::now() NOEXCEPT
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const tai_time<Duration>& t)
 {
@@ -1291,19 +1342,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     year_month_day ymd = sd;
     auto time = make_time(tp - sd);
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const tai_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             tai_time<Duration>& tp,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
@@ -1322,6 +1373,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         tp = tai_time<Duration>{duration_cast<Duration>(
                 (sys_days(fds.ymd) + fds.tod.to_duration() + (sys_days(year{1970}/jan/1) -
                 sys_days(year{1958}/jan/1)) - *offptr).time_since_epoch())};
+    return is;
 }
 
 // gps_clock
@@ -1382,7 +1434,7 @@ gps_clock::now() NOEXCEPT
 }
 
 template <class CharT, class Traits, class Duration>
-void
+std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const gps_time<Duration>& t)
 {
@@ -1397,19 +1449,19 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     year_month_day ymd = sd;
     auto time = make_time(tp - sd);
     fields<CT> fds{ymd, time};
-    to_stream(os, fmt, fds, &abbrev, &offset);
+    return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const gps_time<Duration>& t)
 {
-    to_stream(os, "%F %T", t);
-    return os;
+    const CharT fmt[] = {'%', 'F', ' ', '%', 'T', CharT{}};
+    return to_stream(os, fmt, t);
 }
 
 template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
-void
+std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             gps_time<Duration>& tp,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
@@ -1429,6 +1481,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 (sys_days(fds.ymd) + fds.tod.to_duration() -
                 (sys_days(year{1980}/jan/sun[1]) -
                 sys_days(year{1970}/jan/1)) - *offptr).time_since_epoch())};
+    return is;
 }
 
 template <class Duration>
@@ -1468,6 +1521,8 @@ to_gps_time(const tai_time<Duration>& t) NOEXCEPT
     return gps_time<duration>{t.time_since_epoch()} -
             (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1958}/jan/1) + seconds{19});
 }
+
+#endif  // !MISSING_LEAP_SECONDS
 
 }  // namespace date
 
