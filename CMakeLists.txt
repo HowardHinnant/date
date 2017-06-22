@@ -70,19 +70,6 @@ if(NOT DATE_NO_TZ)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-find_package(LIBCXX)
-
-message(STATUS "Using ${CMAKE_CXX_COMPILER} (compiler id: ${CMAKE_CXX_COMPILER_ID})")
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
-	if(NOT "${CMAKE_CXX_FLAGS}" MATCHES "-stdlib")
-		set(CMAKE_CXX_FLAGS "-std=c++14 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
-	endif()
-endif ()
-if(NOT NEED_PARENT)
-	if("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gnu")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
-	endif()
-endif()
 
 if(NEED_PARENT)
 	set(DATE_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
@@ -121,16 +108,28 @@ if(NOT DATE_NO_TZ)
 
 	add_library(date-tz STATIC tz.cpp)
 
-	target_link_libraries(date-tz ${TZLINKS})
+    find_package(LIBCXX)
 
-	set_property(TARGET date-tz PROPERTY CXX_STADARD 14)
+    if (LIBCXX_LIBRARY)
+        target_include_directories(date-tz PUBLIC "$<$<CXX_COMPILER_ID:Clang>:${LIBCXX_INCLUDE_DIR}>")
+        target_compile_options(date-tz PUBLIC "$<$<CXX_COMPILER_ID:Clang>:${LIBCXX_OPTIONS}>")
+        target_link_libraries(date-tz PUBLIC "$<$<CXX_COMPILER_ID:Clang>:${CXXABI_LIBRARY} -L${LIBCXX_LIB_PATH}>")
+    endif()
 
-	if(NEED_PARENT)
-		set(DATE_TZ_INCLUDES ${DATE_INC} PARENT_SCOPE)
-		set(DATE_TZ_LIBS ${TZLINKS} date-tz PARENT_SCOPE)
-	else()
-		set(DATE_TZ_LIBS ${TZLINKS} date-tz)
-	endif()
+    target_link_libraries(date-tz PUBLIC ${TZLINKS})
+
+    set_target_properties(date-tz
+        PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO)
+
+    # if(NEED_PARENT)
+	# 	set(DATE_TZ_INCLUDES ${DATE_INC} PARENT_SCOPE)
+	# 	set(DATE_TZ_LIBS ${TZLINKS} date-tz PARENT_SCOPE)
+	# else()
+	# 	set(DATE_TZ_LIBS ${TZLINKS} date-tz)
+	# endif()
 
 	if(DATE_ENABLE_TESTS)	
 		enable_testing()
