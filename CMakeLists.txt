@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2017 Aaron Bishop
+# Copyright (c) 2017 Aaron Bishop, Tommy Nguyen
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -68,6 +68,9 @@ if(NOT DATE_NO_TZ)
 		option(DATE_TZ_NO_DATE_TZ_SHELL  "Disable using shell programs to manage IANA Time Zone rules" On)
 	endif()
 endif()
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+find_package(LIBCXX)
 
 message(STATUS "Using ${CMAKE_CXX_COMPILER} (compiler id: ${CMAKE_CXX_COMPILER_ID})")
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
