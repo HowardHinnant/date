@@ -271,6 +271,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_info& r)
 }
 
 class time_zone;
+DATE_API const time_zone* locate_zone(const std::string& tz_name);
+DATE_API const time_zone* current_zone();
 
 template <class Duration>
 class zoned_time
@@ -283,6 +285,7 @@ private:
     sys_time<duration> tp_;
 
 public:
+             zoned_time();
              zoned_time(const sys_time<Duration>& st);
     explicit zoned_time(const time_zone* z);
     explicit zoned_time(const std::string& name);
@@ -827,6 +830,12 @@ DATE_API const time_zone* locate_zone(const std::string& tz_name);
 DATE_API const time_zone* current_zone();
 
 // zoned_time
+
+template <class Duration>
+inline
+zoned_time<Duration>::zoned_time()
+    : zone_(locate_zone("UTC"))
+    {}
 
 template <class Duration>
 inline
