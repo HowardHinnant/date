@@ -983,14 +983,14 @@ zoned_time<Duration>::operator=(const local_time<Duration>& ut)
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator local_time<duration>() const
+zoned_time<Duration>::operator local_time<zoned_time::duration>() const
 {
     return get_local_time();
 }
 
 template <class Duration>
 inline
-zoned_time<Duration>::operator sys_time<duration>() const
+zoned_time<Duration>::operator sys_time<zoned_time::duration>() const
 {
     return get_sys_time();
 }
