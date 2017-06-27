@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-06-19<br>
+2017-06-27<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,6 +59,8 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li><ins>Improve spec for operator-(const year_month& x, const year_month& y).</ins></li>
+<li><ins>Refine constraints on conversions from calendar types to sys_days.</ins></li>
 <li>Added issue concerning <code>zoned_time</code> default constructor.</li>
 <li>Correct minor type-o's.</li>
 <li>Correct html bugs.</li>
@@ -4716,8 +4718,7 @@ constexpr bool year::is_leap() const noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>true</code> if <code>*this</code> represents a leap year, else
-returns <code>false</code>.
+<i>Effects:</i> Equivalent to: <code>return y_ % 4 == 0 &amp;&amp; (y_ % 100 != 0 || y_ % 400 == 0);</code>
 </p>
 </blockquote>
 
@@ -4737,7 +4738,7 @@ constexpr bool year::ok() const noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>true</code>.
+<i>Returns:</i> <code>min() &lt;= y_ &amp;&amp; y_ &lt;= max()</code>.
 </p>
 </blockquote>
 
@@ -4747,7 +4748,7 @@ static constexpr year year::min() noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>year{numeric_limits&lt;decltype(y_)&gt;::min()}</code>.
+<i>Returns:</i> <code>-32767</code>.
 </p>
 </blockquote>
 
@@ -4757,7 +4758,7 @@ static constexpr year year::max() noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>year{numeric_limits&lt;decltype(y_)&gt;::max()}</code>.
+<i>Returns:</i> <code>32767</code>.
 </p>
 </blockquote>
 
@@ -10491,7 +10492,8 @@ I would also like to thank Jiangang Zhuang and Bjarne Stroustrup for invaluable
 feedback for the timezone portion of this library, which ended up also
 influencing the date.h library.  Thanks also to Jonathan Wakely for agreeing to
 present this paper in Oulu for me.  Thank you Daniel Kr&uuml;gler for the
-incredibly thorough review.
+incredibly thorough review.  Thank you Tomasz Kami&nacute;ski for the very helpful
+changes to the proposed wording.
 </p>
 <p>
 And I would also especially like to thank the
