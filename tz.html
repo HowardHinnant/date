@@ -1565,6 +1565,7 @@ public:
     zoned_time(const zoned_time&amp;) = default;
     zoned_time&amp; operator=(const zoned_time&amp;) = default;
 
+             zoned_time();
              zoned_time(sys_time&lt;Duration&gt; st);
     explicit zoned_time(const time_zone* z);
     explicit zoned_time(const std::string&amp; name);
@@ -1639,6 +1640,17 @@ to the destination.  After copying, source and destination compare equal.  If
 <code>Duration</code> has <code>noexcept</code> copy members, then
 <code>zoned_time&lt;Duration&gt;</code> has <code>noexcept</code> copy
 members.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time();
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt;name() == "UTC"</code>, and
+<code>zt.get_sys_time() == sys_seconds{}</code>.
 </p>
 </blockquote>
 
