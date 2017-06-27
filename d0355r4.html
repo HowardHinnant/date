@@ -6744,16 +6744,30 @@ constexpr year_month_day::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Requires:</i> <code>y_.ok() &amp;&amp; m_.ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Returns:</i>  If <code>ok()</code>, returns a <code>sys_days</code>
+holding a count of <code>days</code> before or since the
+<code>sys_days</code> epoch.  Otherwise returns a
+<code>sys_days</code> which is offset from
+<code>sys_days{y_/m_/last}</code> by the number of <code>days</code>
+<code>d_</code> is offset from <code>sys_days{y_/m_/last}.day()</code>.
 </p>
 <p>
 <i>Remarks:</i> A <code>sys_days</code> which is converted to a <code>year_month_day</code>,
-shall have the same value when converted back to a <code>sys_days</code>.  The round
-trip conversion sequence shall be <i>loss-less</i>.
+shall have the same value when converted back to a <code>sys_days</code>.
+</p>
+<p>
+[<i>Example</i>:
+</p>
+<blockquote><pre>
+static_assert(year_month_day{sys_days{2017y/jan/0}}  == 2016y/dec/31);
+static_assert(year_month_day{sys_days{2017y/jan/31}} == 2017y/jan/31);
+static_assert(year_month_day{sys_days{2017y/jan/32}} == 2017y/feb/1);
+</pre></blockquote>
+<p>
+&mdash;<i>end example</i>]
 </p>
 </blockquote>
 
