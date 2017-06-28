@@ -60,8 +60,8 @@ Document number: D0355R4<br>
 
 <ul>
 <li><ins>Improve spec for operator-(const year_month& x, const year_month& y).</ins></li>
-<li><ins>Refine constraints on conversions from calendar types to sys_days.</ins></li>
-<li>Added issue concerning <code>zoned_time</code> default constructor.</li>
+<li>Refine constraints on conversions from calendar types to sys_days.</li>
+<li>Added <code>zoned_time</code> default constructor.</li>
 <li>Correct minor type-o's.</li>
 <li>Correct html bugs.</li>
 </ul>
@@ -718,12 +718,6 @@ which is equal to <code>nullptr</code>.
 </p>
 </li>
 
-<li>
-<p>
-Should <code>zoned_time</code> have a default constructor, and if so, what should its
-value be?
-</p>
-</li>
 </ol>
 
 <a name="Wording"></a><h2>Proposed Wording</h2>
@@ -6748,15 +6742,18 @@ constexpr year_month_day::operator sys_days() const noexcept;
 </p>
 <p>
 <i>Returns:</i>  If <code>ok()</code>, returns a <code>sys_days</code>
-holding a count of <code>days</code> before or since the
-<code>sys_days</code> epoch.  Otherwise returns a
+holding a count of <code>days</code> from the <code>sys_days</code> epoch to
+<code>*this</code> (a negative value if <code>*this</code> represents a date
+prior to the <code>sys_days</code> epoch).  Otherwise returns a
 <code>sys_days</code> which is offset from
 <code>sys_days{y_/m_/last}</code> by the number of <code>days</code>
 <code>d_</code> is offset from <code>sys_days{y_/m_/last}.day()</code>.
 </p>
 <p>
-<i>Remarks:</i> A <code>sys_days</code> which is converted to a <code>year_month_day</code>,
-shall have the same value when converted back to a <code>sys_days</code>.
+<i>Remarks:</i> A <code>sys_days</code> in the range
+<code>[days{-12687428}, days{11248737}]</code> which is converted to a
+<code>year_month_day</code>, shall have the same value when converted
+back to a <code>sys_days</code>.
 </p>
 <p>
 [<i>Example</i>:
@@ -6777,13 +6774,13 @@ constexpr explicit year_month_day::operator local_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Requires:</i> <code>y_.ok() &amp;&amp; m_.ok() == true</code>.
 </p>
 <p>
 <i>Effects:</i> Equivalent to:
 </p>
 <blockquote><pre>
-return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
+return local_days{sys_days{*this}.time_since_epoch()};
 </pre></blockquote>
 </blockquote>
 
@@ -7177,8 +7174,7 @@ constexpr year_month_day_last::operator sys_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to: <code>return sys_days{year()/month()/day()};</code>
 </p>
 </blockquote>
 
@@ -7191,11 +7187,8 @@ constexpr explicit year_month_day_last::operator local_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Effects:</i> Equivalent to:
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
-<blockquote><pre>
-return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
-</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -7586,11 +7579,8 @@ constexpr explicit year_month_weekday::operator local_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Effects:</i> Equivalent to:
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
-<blockquote><pre>
-return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
-</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -7920,11 +7910,8 @@ constexpr explicit year_month_weekday_last::operator local_days() const noexcept
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Effects:</i> Equivalent to:
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
-<blockquote><pre>
-return local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()};
-</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -9671,6 +9658,7 @@ private:
     sys_time&lt;duration&gt; tp_;    // exposition only
 
 public:
+    zoned_time();
     zoned_time(const zoned_time&amp;) = default;
     zoned_time&amp; operator=(const zoned_time&amp;) = default;
 
@@ -9733,6 +9721,17 @@ An invariant of <code>zoned_time&lt;Duration&gt;</code> is that it always refers
 to a valid <code>time_zone</code>, and represents a point in time that exists
 and is not ambiguous.
 </p>
+
+<pre>
+zoned_time&lt;Duration&gt;::zoned_time();
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
+<code>zt.get_time_zone()-&gt;name() == "UTC"</code>, and
+<code>zt.get_sys_time() == sys_seconds{}</code>.
+</p>
+</blockquote>
 
 <pre>
 zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&amp;) = default;
