@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-06-29<br>
+2017-06-30<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -1405,15 +1405,15 @@ template&lt;class charT, class traits, class Rep, class Period&gt;
 
 struct tzdb;
 const tzdb&amp; get_tzdb();
-const time_zone* locate_zone(const string_view&amp; tz_name);
+const time_zone* locate_zone(string_view tz_name);
 const time_zone* current_zone();
 
 // Remote time zone database -- Needs discussion
 
 const tzdb&amp;  reload_tzdb();
 string       remote_version();
-bool         remote_download(const string_view&amp; version);
-bool         remote_install(const string_view&amp; version);
+bool         remote_download(string_view version);
+bool         remote_install(string_view version);
 
 // exception classes
 class nonexistent_local_time;
@@ -9114,7 +9114,7 @@ be returned to a valid <code>tzdb</code>.
 </blockquote>
 
 <pre>
-const time_zone* locate_zone(const string_view&amp; tz_name);
+const time_zone* locate_zone(string_view tz_name);
 </pre>
 <blockquote>
 <p>
@@ -9214,7 +9214,7 @@ discover if you have the latest database installed.
 </blockquote>
 
 <pre>
-bool remote_download(const string_view&amp; version);
+bool remote_download(string_view version);
 </pre>
 <blockquote>
 <p>
@@ -9234,7 +9234,7 @@ creation of the tar file.
 </blockquote>
 
 <pre>
-bool remote_install(const string_view&amp; version);
+bool remote_install(string_view version);
 </pre>
 <blockquote>
 <p>
@@ -9667,23 +9667,23 @@ public:
 
              zoned_time(const sys_time&lt;Duration&gt;&amp; st);
     explicit zoned_time(const time_zone* z);
-    explicit zoned_time(const string_view&amp; name);
+    explicit zoned_time(string_view name);
 
     template &lt;class Duration2&gt;
         zoned_time(const zoned_time&lt;Duration2&gt;&amp; zt) noexcept;
 
     zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp);
-    zoned_time(const string_view&amp; name, const local_time&lt;Duration&gt;&amp; tp);
+    zoned_time(string_view   name, const local_time&lt;Duration&gt;&amp; tp);
     zoned_time(const time_zone* z, const local_time&lt;Duration&gt;&amp; tp, choose c);
-    zoned_time(const string_view&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c);
+    zoned_time(string_view   name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
     zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; zt);
-    zoned_time(const string_view&amp; name, const zoned_time&lt;Duration&gt;&amp; zt);
+    zoned_time(string_view   name, const zoned_time&lt;Duration&gt;&amp; zt);
     zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; zt, choose);
-    zoned_time(const string_view&amp; name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
+    zoned_time(string_view   name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
 
     zoned_time(const time_zone* z, const sys_time&lt;Duration&gt;&amp; st);
-    zoned_time(const string_view&amp; name, const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time(string_view   name, const sys_time&lt;Duration&gt;&amp; st);
 
     zoned_time&amp; operator=(const sys_time&lt;Duration&gt;&amp; st);
     zoned_time&amp; operator=(const local_time&lt;Duration&gt;&amp; ut);
@@ -9771,7 +9771,7 @@ explicit zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z);
 </blockquote>
 
 <pre>
-explicit zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name);
+explicit zoned_time&lt;Duration&gt;::zoned_time(string_view name);
 </pre>
 <blockquote>
 <p>
@@ -9815,7 +9815,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const local_time&lt;D
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name, const local_time&lt;Duration&gt;&amp; tp);
+zoned_time&lt;Duration&gt;::zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
@@ -9838,7 +9838,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const local_time&lt;D
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name, const local_time&lt;Duration&gt;&amp; tp, choose c);
+zoned_time&lt;Duration&gt;::zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 </pre>
 <blockquote>
 <p>
@@ -9861,7 +9861,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;D
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name, const zoned_time&lt;Duration&gt;&amp; y);
+zoned_time&lt;Duration&gt;::zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; y);
 </pre>
 <blockquote>
 <p>
@@ -9887,7 +9887,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;D
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name, const zoned_time&lt;Duration&gt;&amp; y, choose);
+zoned_time&lt;Duration&gt;::zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; y, choose);
 </pre>
 <blockquote>
 <p>
@@ -9912,7 +9912,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const sys_time&lt;Dur
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const string_view&amp; name, const sys_time&lt;Duration&gt;&amp; st);
+zoned_time&lt;Duration&gt;::zoned_time(string_view name, const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
