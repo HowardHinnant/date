@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-06-27<br>
+2017-06-29<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,6 +59,8 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li><ins>Rewrite in terms of <code>string_view</code>
+without compromising constructor deduction functionality.</ins></li>
 <li><ins>Improve spec for operator-(const year_month& x, const year_month& y).</ins></li>
 <li>Refine constraints on conversions from calendar types to sys_days.</li>
 <li>Added <code>zoned_time</code> default constructor.</li>
@@ -91,8 +93,7 @@ Document number: D0355R4<br>
 implicit deduction guides.</li>
 
 <li>Create <code>zoned_time(const char* name,  ...)</code> overloads to enable
-implicit deduction guides.  Still to do:  Rewrite in terms of <code>string_view</code>
-without compromising constructor deduction functionality.</li>
+implicit deduction guides.</li>
 
 <li>Give <code>time_of_day</code> default constructor.</li>
 
@@ -7562,11 +7563,14 @@ constexpr year_month_weekday::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Requires:</i> <code>y_.ok() &amp;&amp; m_.ok() &amp;&amp; wdi_.weekday().ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Returns:</i> A <code>sys_days</code> which represents the date
+<code>(index() - 1)*7</code> days after the first
+<code>weekday()</code> of <code>year()/month()</code>.  If <code>index()</code> is
+<code>0</code> the returned <code>sys_days</code> represents the date 7 days prior
+to the first <code>weekday()</code> of <code>year()/month()</code>.
 </p>
 </blockquote>
 
@@ -7576,7 +7580,7 @@ constexpr explicit year_month_weekday::operator local_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Requires:</i> <code>y_.ok() &amp;&amp; m_.ok() &amp;&amp; wdi_.weekday().ok() == true</code>.
 </p>
 <p>
 <i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
@@ -7896,8 +7900,8 @@ constexpr year_month_weekday_last::operator sys_days() const noexcept;
 <i>Requires:</i> <code>ok() == true</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Returns:</i> A <code>sys_days</code> which represents the last
+<code>weekday()</code> of <code>year()/month()</code>.
 </p>
 </blockquote>
 
