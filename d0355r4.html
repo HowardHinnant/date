@@ -60,7 +60,7 @@ Document number: D0355R4<br>
 
 <ul>
 <li>Rewrite in terms of <code>string_view</code>.</li>
-<li><ins>Improve spec for operator-(const year_month& x, const year_month& y).</ins></li>
+<li>Improve spec for operator-(const year_month&amp; x, const year_month&amp; y).</li>
 <li>Refine constraints on conversions from calendar types to sys_days.</li>
 <li>Added <code>zoned_time</code> default constructor.</li>
 <li>Correct minor type-o's.</li>
@@ -6419,8 +6419,8 @@ constexpr months operator-(const year_month&amp; x, const year_month&amp; y) noe
 
 <blockquote>
 <p>
-<i>Returns:</i> The number of <code>months</code> one must add to <code>y</code> to get
-<code>x</code>.
+<i>Returns:</i> <code>x.year() - y.year() + months{static_cast&lt;int&gt;(unsigned{x.month()}) -
+                                     static_cast&lt;int&gt;(unsigned{y.month()})}</code>.
 </p>
 </blockquote>
 
