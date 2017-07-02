@@ -307,7 +307,6 @@ CONSTDATA auto max_day = date::dec/31;
 #if USE_OS_TZDB
 
 CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
-CONSTCD14 const sys_seconds max_seconds = sys_days(max_year/max_day);
 
 #endif  // USE_OS_TZDB
 
@@ -1657,10 +1656,17 @@ load_header(std::istream& inf)
     auto z = inf.get();
     auto i = inf.get();
     auto f = inf.get();
+#ifndef NDEBUG
     assert(t == 'T');
     assert(z == 'Z');
     assert(i == 'i');
     assert(f == 'f');
+#else
+    (void)t;
+    (void)z;
+    (void)i;
+    (void)f;
+#endif
 }
 
 static
@@ -1933,7 +1939,7 @@ time_zone::init_impl()
             {
                 ++leap_count;
                 if (++itr == leap_seconds.end())
-                    l = max_seconds;
+                    l = sys_days(max_year/max_day);
                 else
                     l = itr->date() + leap_count;
             }
