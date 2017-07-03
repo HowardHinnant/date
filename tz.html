@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-06-04<br/>
+2017-07-03<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2932,6 +2932,19 @@ If you do not enable <code>HAS_REMOTE_API</code>, you will need to also install
 http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a> into your
 <code>install</code> location.  This will be done for you if you have enabled
 <code>HAS_REMOTE_API</code> and let <code>AUTO_DOWNLOAD</code> default to 1.
+</p>
+
+<p>
+When <code>_WIN32</code> is defined the library assumes that you are
+consuming the library from another DLL and defines <code>#define DATE_API
+__declspec(dllimport)</code>. If you are including the cpp file directly into
+your project you can just define <code>DATE_BUILD_LIB</code> for not using any of
+the dllimport/dllexport definitions.
+</p>
+
+<p>
+Define <code>NOMINMAX</code> to disable the Windows <code>min</code> and <code>max</code>
+macros.
 </p>
 
 <p>
