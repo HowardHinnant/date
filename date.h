@@ -4081,7 +4081,6 @@ class time_of_day
 {
     using base = detail::time_of_day_storage<Duration>;
 public:
-#if !(defined(_MSC_VER) && !defined(__clang__))
     CONSTCD11 time_of_day() NOEXCEPT = default;
 
     CONSTCD11 explicit time_of_day(Duration since_midnight) NOEXCEPT
@@ -4093,14 +4092,6 @@ public:
     explicit time_of_day(Arg0&& arg0, Arg1&& arg1, Args&& ...args) NOEXCEPT
         : base(std::forward<Arg0>(arg0), std::forward<Arg1>(arg1), std::forward<Args>(args)...)
         {}
-#else
-    // MS cl compiler workaround.
-    template <class ...Args>
-    CONSTCD11
-    explicit time_of_day(Args&& ...args) NOEXCEPT
-        : base(std::forward<Args>(args)...)
-        {}
-#endif
 };
 
 template <class Rep, class Period,
