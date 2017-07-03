@@ -191,14 +191,6 @@ get_known_folder(const GUID& folderid)
     return folder;
 }
 
-// Usually something like "c:\Program Files".
-static
-std::string
-get_program_folder()
-{
-    return get_known_folder(FOLDERID_ProgramFiles);
-}
-
 // Usually something like "c:\Users\username\Downloads".
 static
 std::string
@@ -2861,6 +2853,14 @@ move_file(const std::string& from, const std::string& to)
 #    else  // !USE_SHELL_API
     return !!::MoveFile(from.c_str(), to.c_str());
 #    endif // !USE_SHELL_API
+}
+
+// Usually something like "c:\Program Files".
+static
+std::string
+get_program_folder()
+{
+    return get_known_folder(FOLDERID_ProgramFiles);
 }
 
 // Note folder can and usually does contain spaces.
