@@ -201,8 +201,6 @@ get_download_folder()
 
 #  else // !_WIN32
 
-#    ifndef INSTALL
-
 static
 std::string
 expand_path(std::string path)
@@ -218,8 +216,6 @@ expand_path(std::string path)
     return path;
 #      endif  // !TARGET_OS_IPHONE
 }
-
-#    endif  // !INSTALL
 
 static
 std::string
