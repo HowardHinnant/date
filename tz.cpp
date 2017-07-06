@@ -281,7 +281,7 @@ get_download_gz_file(const std::string& version)
     auto file = get_install() + version + ".tar.gz";
     return file;
 }
-#endif  // HAS_REMOTE_API
+#endif // HAS_REMOTE_API
 
 #endif  // !USE_OS_TZDB
 

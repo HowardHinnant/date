@@ -1,6 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +24,12 @@
 // weeknum + weeknum not allowed
 
 #include "iso_week.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace iso_week;
-    auto x = 3_w + 4_w;
+    static_assert(!test::test_can_add(3_w, 4_w), "weeknum + weeknum not allowed");
+    return 0;
 }

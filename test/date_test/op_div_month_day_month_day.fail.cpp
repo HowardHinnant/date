@@ -1,6 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2015, 2016 Howard Hinnant
+// Copyright (c) 2017 Aaron Bishop
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +24,12 @@
 // month_day / month_day not allowed
 
 #include "date.h"
+#include "test_type_traits.h"
 
 int
 main()
 {
     using namespace date;
-
-    auto x = (aug/14_d)/(aug/14_d);
+    static_assert(!test::test_can_divide(aug/14_d,aug/14_d), "month_day / month_day not allowed");
+    return 0;
 }
