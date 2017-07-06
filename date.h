@@ -5334,7 +5334,10 @@ read_long_double(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned
             break;
     }
     if (count < m)
+    {
         is.setstate(std::ios::failbit);
+        return 0;
+    }
     return std::stold(buf);
 }
 
