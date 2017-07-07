@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-06-30<br>
+2017-07-06<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -9712,6 +9712,22 @@ template &lt;class charT, class traits, class Duration&gt;
 template &lt;class charT, class traits, class Duration&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const zoned_time&lt;Duration&gt;&amp; tp);
+
+template &lt;class Duration&gt;
+    zoned_time(sys_time&lt;Duration&gt;)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class Zone, class Duration&gt;
+    zoned_time(Zone, sys_time&lt;Duration&gt;)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class Zone, class Duration&gt;
+    zoned_time(Zone, local_time&lt;Duration&gt;, choose = choose::earliest)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class Zone, class Duration&gt;
+    zoned_time(Zone, zoned_time&lt;Duration&gt;, choose = choose::earliest)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
 </pre>
 
 <p>
