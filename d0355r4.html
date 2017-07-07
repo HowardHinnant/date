@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-07-06<br>
+2017-07-07<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -9782,7 +9782,7 @@ explicit zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z);
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and
+<code>zt.get_time_zone() == z</code>, and
 <code>zt.get_sys_time() == sys_seconds{}</code>.
 </p>
 </blockquote>
