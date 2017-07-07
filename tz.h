@@ -87,6 +87,14 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  define MISSING_LEAP_SECONDS 0
 #endif
 
+#ifndef HAS_DEDUCTION_GUIDES
+#  if __cplusplus >= 201703
+#    define HAS_DEDUCTION_GUIDES 1
+#  else
+#    define HAS_DEDUCTION_GUIDES 0
+#  endif
+#endif  // HAS_DEDUCTION_GUIDES
+
 #include "date.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -319,7 +327,7 @@ public:
     zoned_time& operator=(const sys_time<Duration>& st);
     zoned_time& operator=(const local_time<Duration>& ut);
 
-             operator sys_time<duration>() const;
+    explicit operator sys_time<duration>() const;
     explicit operator local_time<duration>() const;
 
     const time_zone*     get_time_zone() const;
@@ -342,6 +350,26 @@ private:
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
+
+#if HAS_DEDUCTION_GUIDES
+
+template <class Duration>
+zoned_time(sys_time<Duration>)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
+
+template <class Zone, class Duration>
+zoned_time(Zone, sys_time<Duration>)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
+
+template <class Zone, class Duration>
+zoned_time(Zone, local_time<Duration>, choose = choose::earliest)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
+
+template <class Zone, class Duration>
+zoned_time(Zone, zoned_time<Duration>, choose = choose::earliest)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
+
+#endif  // HAS_DEDUCTION_GUIDES
 
 template <class Duration1, class Duration2>
 inline
