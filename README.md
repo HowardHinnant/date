@@ -34,3 +34,9 @@ This is actually several separate C++11/C++14 libraries:
    * Current proposal:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html
 
    * Revision 4 draft:  http://howardhinnant.github.io/date/d0355r4.html
+
+List of projects using this library:
+
+   * www.safe.com
+
+If you would like your project (or product) on this list, just let me know.
