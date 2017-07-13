@@ -201,6 +201,8 @@ get_download_folder()
 
 #  else // !_WIN32
 
+# ifndef INSTALL
+
 static
 std::string
 expand_path(std::string path)
@@ -223,6 +225,8 @@ get_download_folder()
 {
     return expand_path("~/Downloads");
 }
+
+#endif // !INSTALL
 
 #  endif  // !_WIN32
 
