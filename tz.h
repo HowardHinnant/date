@@ -105,6 +105,7 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #include <cassert>
 #include <chrono>
 #include <istream>
+#include <list>
 #include <locale>
 #include <memory>
 #include <mutex>
@@ -832,12 +833,16 @@ struct TZ_DB
         return *this;
     }
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
+
+    const time_zone* locate_zone(const std::string& tz_name) const;
+    const time_zone* current_zone() const;
 };
 
 DATE_API std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db);
 
 DATE_API const TZ_DB& get_tzdb();
+DATE_API std::list<TZ_DB>& get_tzdb_list();
 
 #if !USE_OS_TZDB
 

@@ -96,6 +96,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <memory>
 #if USE_OS_TZDB
 #  include <queue>
@@ -319,11 +320,21 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
+static TZ_DB init_tzdb();
+
 static
-TZ_DB&
-access_tzdb()
+std::list<TZ_DB>
+create_tzdb()
 {
-    static TZ_DB tz_db;
+    std::list<TZ_DB> tz_db;
+    tz_db.push_back(init_tzdb());
+    return tz_db;
+}
+
+std::list<TZ_DB>&
+get_tzdb_list()
+{
+    static std::list<TZ_DB> tz_db = create_tzdb();
     return tz_db;
 }
 
@@ -1846,7 +1857,7 @@ time_zone::load_data(std::istream& inf,
     auto infos = load_ttinfo(inf, tzh_typecnt);
     auto abbrev = load_abbreviations(inf, tzh_charcnt);
 #if !MISSING_LEAP_SECONDS
-    auto& leap_seconds = access_tzdb().leaps;
+    auto& leap_seconds = get_tzdb_list().front().leaps;
     if (leap_seconds.empty() && tzh_leapcnt > 0)
         leap_seconds = load_leaps<TimeType>(inf, tzh_leapcnt);
 #endif
@@ -1914,7 +1925,7 @@ time_zone::init_impl()
 #if !MISSING_LEAP_SECONDS
     if (tzh_leapcnt > 0)
     {
-        auto& leap_seconds = access_tzdb().leaps;
+        auto& leap_seconds = get_tzdb_list().front().leaps;
         auto itr = leap_seconds.begin();
         auto l = itr->date();
         seconds leap_count{0};
@@ -3318,11 +3329,12 @@ const TZ_DB&
 reload_tzdb()
 {
 #if AUTO_DOWNLOAD
-    auto const& v = access_tzdb().version;
+    auto const& v = get_tzdb_list().front().version;
     if (!v.empty() && v == remote_version())
-        return access_tzdb();
+        return get_tzdb_list().front();
 #endif  // AUTO_DOWNLOAD
-    return access_tzdb() = init_tzdb();
+    get_tzdb_list().push_front(init_tzdb());
+    return get_tzdb_list().front();
 }
 
 #endif  // !USE_OS_TZDB
@@ -3330,41 +3342,45 @@ reload_tzdb()
 const TZ_DB&
 get_tzdb()
 {
-    static const TZ_DB& ref = access_tzdb() = init_tzdb();
-    return ref;
+    return get_tzdb_list().front();
 }
 
 const time_zone*
-locate_zone(const std::string& tz_name)
+TZ_DB::locate_zone(const std::string& tz_name) const
 {
-    const auto& db = get_tzdb();
-    auto zi = std::lower_bound(db.zones.begin(), db.zones.end(), tz_name,
+    auto zi = std::lower_bound(zones.begin(), zones.end(), tz_name,
         [](const time_zone& z, const std::string& nm)
         {
             return z.name() < nm;
         });
-    if (zi == db.zones.end() || zi->name() != tz_name)
+    if (zi == zones.end() || zi->name() != tz_name)
     {
 #if !USE_OS_TZDB
-        auto li = std::lower_bound(db.links.begin(), db.links.end(), tz_name,
+        auto li = std::lower_bound(links.begin(), links.end(), tz_name,
         [](const link& z, const std::string& nm)
         {
             return z.name() < nm;
         });
-        if (li != db.links.end() && li->name() == tz_name)
+        if (li != links.end() && li->name() == tz_name)
         {
-            zi = std::lower_bound(db.zones.begin(), db.zones.end(), li->target(),
+            zi = std::lower_bound(zones.begin(), zones.end(), li->target(),
                 [](const time_zone& z, const std::string& nm)
                 {
                     return z.name() < nm;
                 });
-            if (zi != db.zones.end() && zi->name() == li->target())
+            if (zi != zones.end() && zi->name() == li->target())
                 return &*zi;
         }
 #endif  // !USE_OS_TZDB
         throw std::runtime_error(tz_name + " not found in timezone database");
     }
     return &*zi;
+}
+
+const time_zone*
+locate_zone(const std::string& tz_name)
+{
+    return get_tzdb().locate_zone(tz_name);
 }
 
 #if USE_OS_TZDB
@@ -3467,7 +3483,7 @@ getTimeZoneKeyName()
 }
 
 const time_zone*
-current_zone()
+TZ_DB::current_zone() const
 {
     std::string win_tzid = getTimeZoneKeyName();
     std::string standard_tzid;
@@ -3485,7 +3501,7 @@ current_zone()
 #else  // !_WIN32
 
 const time_zone*
-current_zone()
+TZ_DB::current_zone() const
 {
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
@@ -3555,6 +3571,12 @@ current_zone()
 }
 
 #endif  // !_WIN32
+
+const time_zone*
+current_zone()
+{
+    return get_tzdb().current_zone();
+}
 
 }  // namespace date
 
