@@ -3346,10 +3346,18 @@ get_tzdb()
 }
 
 const time_zone*
+#if HAS_STRING_VIEW
+TZ_DB::locate_zone(std::string_view tz_name) const
+#else
 TZ_DB::locate_zone(const std::string& tz_name) const
+#endif
 {
     auto zi = std::lower_bound(zones.begin(), zones.end(), tz_name,
+#if HAS_STRING_VIEW
+        [](const time_zone& z, const std::string_view& nm)
+#else
         [](const time_zone& z, const std::string& nm)
+#endif
         {
             return z.name() < nm;
         });
@@ -3357,7 +3365,11 @@ TZ_DB::locate_zone(const std::string& tz_name) const
     {
 #if !USE_OS_TZDB
         auto li = std::lower_bound(links.begin(), links.end(), tz_name,
+#if HAS_STRING_VIEW
+        [](const link& z, const std::string_view& nm)
+#else
         [](const link& z, const std::string& nm)
+#endif
         {
             return z.name() < nm;
         });
@@ -3372,13 +3384,17 @@ TZ_DB::locate_zone(const std::string& tz_name) const
                 return &*zi;
         }
 #endif  // !USE_OS_TZDB
-        throw std::runtime_error(tz_name + " not found in timezone database");
+        throw std::runtime_error(std::string(tz_name) + " not found in timezone database");
     }
     return &*zi;
 }
 
 const time_zone*
+#if HAS_STRING_VIEW
+locate_zone(std::string_view tz_name)
+#else
 locate_zone(const std::string& tz_name)
+#endif
 {
     return get_tzdb().locate_zone(tz_name);
 }
