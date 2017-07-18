@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-07-07<br>
+2017-07-17<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,6 +59,7 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li>Make the database singleton a <code>list&lt;tzdb&gt;</code> instead of a single <code>tzdb</code>.</li>
 <li>Rewrite in terms of <code>string_view</code>.</li>
 <li>Improve spec for operator-(const year_month&amp; x, const year_month&amp; y).</li>
 <li>Refine constraints on conversions from calendar types to sys_days.</li>
@@ -1406,6 +1407,7 @@ template&lt;class charT, class traits, class Rep, class Period&gt;
 
 struct tzdb;
 const tzdb&amp; get_tzdb();
+list&lt;TZ_DB*gt;&amp; get_tzdb_list();
 const time_zone* locate_zone(string_view tz_name);
 const time_zone* current_zone();
 
@@ -9083,45 +9085,33 @@ struct tzdb
     vector&lt;time_zone&gt; zones;
     vector&lt;link&gt;      links;
     vector&lt;leap&gt;      leaps;
+
+    const time_zone* locate_zone(string_view tz_name) const;
+    const time_zone* current_zone() const;
 };
+
+list&lt;tzdb&gt;
 </pre>
 
 <p>
-The <code>tzdb</code> database is a singleton.  And access to it is
-<i>read-only</i>, except for <code>reload_tzdb()</code> which re-initializes it.
-Each <code>vector</code> is sorted to enable fast lookup.  You can iterate over
-and inspect this database.
+The <code>list&lt;tzdb&gt;</code> database is a singleton.  Access is
+granted to it via the <code>get_tzdb_list()</code> function which
+returns a reference to it. However this access is only needed for
+those applications which need to have long uptimes and have a need to
+update the time zone database while running.  Other applications can
+implicitly access the <code>front()</code> of this list via the
+<i>read-only</i> namespace scope functions <code>get_tzdb()</code>,
+<code>locate_zone()</code> and <code>current_zone()</code>. Each
+<code>vector</code> in <code>tzdb</code> is sorted to enable fast
+lookup.  You can iterate over and inspect this database.  And even
+hold multiple versions of the database at once, via the
+<code>list&lt;tzdb&gt;</code>.
 </p>
-
-<pre>
-const tzdb&amp; get_tzdb();
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i>  If this is the first access to the database, will initialize
-the database.
-</p>
-<p>
-<i>Returns:</i> A <code>const</code> reference to the database.
-</p>
-<p>
-<i>Thread Safety:</i>  It is safe to call this function from multiple threads at
-one time.
-</p>
-<p>
-<i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
-be returned to a valid <code>tzdb</code>.
-</p>
-</blockquote>
 
 <pre>
-const time_zone* locate_zone(string_view tz_name);
+const time_zone* tzdb::locate_zone(string_view tz_name) const;
 </pre>
 <blockquote>
-<p>
-<i>Effects:</i>  Calls <code>get_tzdb()</code> which will initialize the timezone
-database if this is the first reference to the database.
-</p>
 <p>
 <i>Returns:</i> If a <code>time_zone</code> is found for which
 <code>name() == tz_name</code>, returns a pointer to that <code>time_zone</code>.
@@ -9131,11 +9121,66 @@ then a pointer is returned to the <code>time_zone</code> for which
 alternative name for a <code>time_zone</code>. <i>&mdash; end note</i>]
 </p>
 <p>
-<i>Throws:</i> Any exception propagated from <code>get_tzdb()</code>.  If a
-<code>const time_zone*</code> can not be found as described in the
-<i>Returns</i> clause, throws a <code>runtime_error</code>. [<i>Note:</i>
-On non-exceptional return, the return value is <i>always</i> a pointer to a
-valid <code>time_zone</code>. <i>&mdash; end note</i>]
+<i>Throws:</i> If a <code>const time_zone*</code> can not be found as
+described in the <i>Returns</i> clause, throws a
+<code>runtime_error</code>. [<i>Note:</i> On non-exceptional return,
+the return value is <i>always</i> a pointer to a valid
+<code>time_zone</code>. <i>&mdash; end note</i>]
+</p>
+</blockquote>
+
+<pre>
+const time_zone* tzdb::current_zone() const;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>const time_zone*</code> referring to the time zone which your
+computer has set as its local time zone.
+</p>
+</blockquote>
+
+<pre>
+list&lt;tzdb&gt;&amp; get_tzdb_list();
+</pre>
+<blockquote>
+<p>
+<i>Effects:</i>  If this is the first access to the database, will
+initialize the database.  If this call initializes the database, the
+resulting database will be a <code>list&lt;tzdb&gt;</code> with
+<code>size() == 1</code>. 
+</p>
+<p>
+<i>Returns:</i> A reference to the database.
+</p>
+<p>
+<i>Thread Safety:</i>  It is safe to call this function from multiple threads at
+one time.
+</p>
+<p>
+<i>Throws:</i> <code>runtime_error</code> if for any reason a
+reference can not be returned to a valid
+<code>list&lt;tzdb&gt;&amp;</code> containing one or more valid
+<code>tzdb</code>.
+</p>
+</blockquote>
+
+<pre>
+const tzdb&amp; get_tzdb();
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>get_tzdb_list().front()</code>.
+</p>
+</blockquote>
+
+<pre>
+const time_zone* locate_zone(string_view tz_name);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i>  <code>get_tzdb().locate_zone(tz_name)</code> which
+will initialize the timezone database if this is the first reference
+to the database.
 </p>
 </blockquote>
 
@@ -9144,23 +9189,13 @@ const time_zone* current_zone();
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i>  Calls <code>locate_zone()</code> which will initialize the timezone
-database if this is the first reference to the database.
+<i>Returns:</i> <code>get_tzdb().current_zone()</code>.
 </p>
-<p>
-<i>Returns:</i> A <code>const time_zone*</code> referring to the time zone which your
-computer has set as its local time zone.
-</p>
-<p>
-<i>Throws:</i> Any exception propagated from <code>locate_zone()</code>.
-[<i>Note:</i> On non-exceptional return, the return value is <i>always</i> a
-pointer to a valid <code>time_zone</code>. <i>&mdash; end note</i>]
-</p>
+</blockquote>
 
 <p>
 <a href="#Wording">Back to TOC</a>
 </p>
-</blockquote>
 
 <a name="time.timezone.database.remote"></a><h3>23.17.12.1.1 Remote time zone database support [time.timezone.database.remote]</h3>
 <p class = note>
@@ -9177,19 +9212,17 @@ const tzdb&amp; reload_tzdb();
 <a href="http://www.iana.org/time-zones">IANA website</a>.  If the
 <a href="http://www.iana.org/time-zones">IANA website</a> is unavailable, or if the
 latest version is already installed, there are no effects.  Otherwise, a new version
-is available.  It is downloaded and installed, and then the program re-initializes
-the <code>tzdb</code> singleton from the new disk files.
+is available.  It is downloaded and installed, and then the program initializes
+a new <code>tzdb</code> from the new disk files and pushes it to the front of
+the <code>list&lt;tzdb&gt;&amp;</code> accessed by <code>get_tzdb_list()</code>.
 </p>
 <p>
-<i>Returns:</i> A <code>const</code> reference to the database.
+<i>Returns:</i> <code>get_tzdb_list().front()</code>.
 </p>
 <p>
 <i>Thread Safety:</i>  This function is <i>not</i> thread safe.  You must
 provide your own synchronization among threads accessing the time zone database
-to safely use this function.  If this function re-initializes the database, all outstanding
-<code>const time_zone*</code> are invalidated (including those held within
-<code>zoned_time</code> objects).  And afterwards, all outstanding
-<code>sys_info</code> may hold obsolete data.
+to safely use this function.
 </p>
 <p>
 <i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
