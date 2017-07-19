@@ -3537,7 +3537,7 @@ private:
     std::chrono::seconds s_;
 
 public:
-    CONSTCD11 decimal_format_seconds() : s_() {};
+    CONSTCD11 decimal_format_seconds() : s_() {}
     CONSTCD11 explicit decimal_format_seconds(const precision& s) NOEXCEPT
         : s_(s)
         {}
@@ -6175,10 +6175,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                     is.setstate(ios::eofbit);
                                     break;
                                 }
-                                auto C = Traits::to_char_type(i);
-                                auto c = static_cast<char>(C);
+                                auto wc = Traits::to_char_type(i);
+                                auto c = static_cast<char>(wc);
                                 // is c a valid time zone name or abbreviation character?
-                                if (!(CharT{1} < C && C < CharT{127}) || !(isalnum(c) ||
+                                if (!(CharT{1} < wc && wc < CharT{127}) || !(isalnum(c) ||
                                         c == '_' || c == '/' || c == '-' || c == '+'))
                                     break;
                                 temp_abbrev.push_back(c);
