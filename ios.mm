@@ -204,6 +204,7 @@ bool extractTzdata(CFURLRef homeUrl, CFURLRef archiveUrl, std::string destPath)
 
     if (!success)
     {
+        CFRelease(tarUrl);
         CFRelease(tzdataPathUrl);
         CFRelease(writeStream);
         return false;
@@ -256,6 +257,7 @@ bool extractTzdata(CFURLRef homeUrl, CFURLRef archiveUrl, std::string destPath)
 
     if (!success)
     {
+        CFRelease(tarUrl);
         CFRelease(tzdataPathUrl);
         return false;
     }
@@ -270,6 +272,7 @@ bool extractTzdata(CFURLRef homeUrl, CFURLRef archiveUrl, std::string destPath)
     if (res != 0)
     {
         printf("error file size\n");
+        CFRelease(tarUrl);
         CFRelease(tzdataPathUrl);
         return false;
     }
