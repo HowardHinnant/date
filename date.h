@@ -5845,14 +5845,14 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         if (I == not_a_hour_12_value)
                             goto broken;
+                        tm = std::tm{};
                         tm.tm_hour = I;
                         ios_base::iostate err = ios_base::goodbit;
                         f.get(is, 0, is, err, &tm, command, fmt+1);
-                        if (!(err & ios::failbit))
-                        {
-                            h = hours{tm.tm_hour};
-                            I = not_a_hour_12_value;
-                        }
+                        if (err & ios::failbit)
+                            goto broken;
+                        h = hours{tm.tm_hour};
+                        I = not_a_hour_12_value;
                     }
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
