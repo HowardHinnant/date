@@ -77,7 +77,7 @@ namespace date
 #    define CONSTCD14
 #    define NOEXCEPT _NOEXCEPT
 #  else
-//   VS2017 and later 
+//   VS2017 and later
 #    define CONSTDATA constexpr const
 #    define CONSTCD11 constexpr
 #    define CONSTCD14 constexpr
@@ -4179,7 +4179,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut
 template <class Duration>
 struct fields
 {
-    year_month_day        ymd{0_y/0/0};
+    year_month_day        ymd{year{0}/0/0};
     weekday               wd{7u};
     time_of_day<Duration> tod{};
 
