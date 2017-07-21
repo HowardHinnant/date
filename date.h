@@ -3713,7 +3713,11 @@ class time_of_day_storage<std::chrono::duration<Rep, Period>, detail::classify::
 public:
     using precision = std::chrono::hours;
 
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
     CONSTCD11 time_of_day_storage() NOEXCEPT = default;
+#else
+    CONSTCD11 time_of_day_storage() = default;
+#endif /* !defined(_MSC_VER) || _MSC_VER >= 1900 */
 
     CONSTCD11 explicit time_of_day_storage(std::chrono::hours since_midnight) NOEXCEPT
         : base(since_midnight, since_midnight < std::chrono::hours{0}, is24hr)
@@ -4081,7 +4085,11 @@ class time_of_day
 {
     using base = detail::time_of_day_storage<Duration>;
 public:
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
     CONSTCD11 time_of_day() NOEXCEPT = default;
+#else
+    CONSTCD11 time_of_day() = default;
+#endif /* !defined(_MSC_VER) || _MSC_VER >= 1900 */
 
     CONSTCD11 explicit time_of_day(Duration since_midnight) NOEXCEPT
         : base(since_midnight)
