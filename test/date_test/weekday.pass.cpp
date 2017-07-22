@@ -69,7 +69,7 @@
 #include <type_traits>
 
 static_assert( std::is_trivially_destructible<date::weekday>{}, "");
-static_assert(!std::is_default_constructible<date::weekday>{}, "");
+static_assert( std::is_default_constructible<date::weekday>{}, "");
 static_assert( std::is_trivially_copy_constructible<date::weekday>{}, "");
 static_assert( std::is_trivially_copy_assignable<date::weekday>{}, "");
 static_assert( std::is_trivially_move_constructible<date::weekday>{}, "");

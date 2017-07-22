@@ -1,9 +1,6 @@
-#ifndef CHRONO_IO_H
-#define CHRONO_IO_H
-
 // The MIT License (MIT)
 //
-// Copyright (c) 2016, 2017 Howard Hinnant
+// Copyright (c) 2017 Howard Hinnant
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +19,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-//
-// Our apologies.  When the previous paragraph was written, lowercase had not yet
-// been invented (that would involve another several millennia of evolution).
-// We did not mean to shout.
 
-// This functionality has moved to "date.h"
+// template <unsigned exp>
+// struct static_pow10
+// {
+//     static constepxr std::uint64_t value = ...;
+// };
 
 #include "date.h"
 
-#endif  // CHRONO_IO_H
+#include <cassert>
+#include <sstream>
+#include <type_traits>
+
+int
+main()
+{
+    using namespace date::detail;
+    static_assert(static_pow10<0>::value ==  1, "");
+    static_assert(static_pow10<1>::value ==  10, "");
+    static_assert(static_pow10<2>::value ==  100, "");
+    static_assert(static_pow10<3>::value ==  1000, "");
+    static_assert(static_pow10<4>::value ==  10000, "");
+    static_assert(static_pow10<5>::value ==  100000, "");
+    static_assert(static_pow10<6>::value ==  1000000, "");
+    static_assert(static_pow10<7>::value ==  10000000, "");
+    static_assert(static_pow10<8>::value ==  100000000, "");
+    static_assert(static_pow10<9>::value ==  1000000000, "");
+    static_assert(static_pow10<10>::value == 10000000000, "");
+}

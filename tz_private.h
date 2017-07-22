@@ -24,15 +24,31 @@
 // SOFTWARE.
 //
 // Our apologies.  When the previous paragraph was written, lowercase had not yet
-// been invented (that woud involve another several millennia of evolution).
+// been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 #include "tz.h"
+#else
+#include "date.h"
+#include <vector>
+#endif
 
 namespace date
 {
 
+namespace detail
+{
+
+#if !USE_OS_TZDB
+
 enum class tz {utc, local, standard};
+
+//forward declare to avoid warnings in gcc 6.2
+class MonthDayTime;
+std::istream& operator>>(std::istream& is, MonthDayTime& x);
+std::ostream& operator<<(std::ostream& os, const MonthDayTime& x);
+
 
 class MonthDayTime
 {
@@ -110,10 +126,24 @@ public:
 // A Rule specifies one or more set of datetimes without using an offset.
 // Multiple dates are specified with multiple years.  The years in effect
 // go from starting_year_ to ending_year_, inclusive.  starting_year_ <=
-// ending_year_. save_ is ineffect for times from the specified time
+// ending_year_. save_ is in effect for times from the specified time
 // onward, including the specified time. When the specified time is
 // local, it uses the save_ from the chronologically previous Rule, or if
 // there is none, 0.
+
+//forward declare to avoid warnings in gcc 6.2
+class Rule;
+bool operator==(const Rule& x, const Rule& y);
+bool operator<(const Rule& x, const Rule& y);
+bool operator==(const Rule& x, const date::year& y);
+bool operator<(const Rule& x, const date::year& y);
+bool operator==(const date::year& x, const Rule& y);
+bool operator<(const date::year& x, const Rule& y);
+bool operator==(const Rule& x, const std::string& y);
+bool operator<(const Rule& x, const std::string& y);
+bool operator==(const std::string& x, const Rule& y);
+bool operator<(const std::string& x, const Rule& y);
+std::ostream& operator<<(std::ostream& os, const Rule& r);
 
 class Rule
 {
@@ -187,7 +217,7 @@ inline bool operator> (const std::string& x, const Rule& y) {return   y < x;}
 inline bool operator<=(const std::string& x, const Rule& y) {return !(y < x);}
 inline bool operator>=(const std::string& x, const Rule& y) {return !(x < y);}
 
-struct time_zone::zonelet
+struct zonelet
 {
     enum tag {has_rule, has_save, is_empty};
 
@@ -226,6 +256,62 @@ struct time_zone::zonelet
     zonelet& operator=(const zonelet&) = delete;
 };
 
+#else  // USE_OS_TZDB
+
+struct ttinfo
+{
+    std::int32_t  tt_gmtoff;
+    unsigned char tt_isdst;
+    unsigned char tt_abbrind;
+    unsigned char pad[2];
+};
+
+static_assert(sizeof(ttinfo) == 8, "");
+
+struct expanded_ttinfo
+{
+    std::chrono::seconds offset;
+    std::string          abbrev;
+    bool                 is_dst;
+};
+
+struct transition
+{
+    sys_seconds            timepoint;
+    const expanded_ttinfo* info;
+
+    transition(sys_seconds tp, const expanded_ttinfo* i = nullptr)
+        : timepoint(tp)
+        , info(i)
+        {}
+
+    friend
+    std::ostream&
+    operator<<(std::ostream& os, const transition& t)
+    {
+        using namespace date;
+        using namespace std::chrono;
+        os << t.timepoint << "Z ";
+        if (t.info->offset >= seconds{0})
+            os << '+';
+        os << make_time(t.info->offset);
+        if (t.info->is_dst > 0)
+            os << " daylight ";
+        else
+            os << " standard ";
+        os << t.info->abbrev;
+        return os;
+    }
+};
+
+#endif  // USE_OS_TZDB
+
+}  // namespace detail
+
 }  // namespace date
+
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#include "tz.h"
+#endif
 
 #endif  // TZ_PRIVATE_H
