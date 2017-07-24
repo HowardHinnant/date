@@ -5297,7 +5297,7 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
         {
             if (c == '-' || c == '+')
                 (void)is.get();
-            auto x = static_cast<int>(read_unsigned(is, m, M));
+            auto x = static_cast<int>(read_unsigned(is, std::max(m, 1u), M));
             if (!is.fail())
             {
                 if (c == '-')
@@ -5306,7 +5306,8 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
             }
         }
     }
-    is.setstate(std::ios::failbit);
+    if (m > 0)
+        is.setstate(std::ios::failbit);
     return 0;
 }
 
