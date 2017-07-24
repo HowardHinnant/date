@@ -69,7 +69,7 @@ namespace date
 // Configuration |
 //---------------+
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && (!defined(__clang__) || (_MSC_VER < 1910))
 // MSVC
 #  if _MSC_VER < 1910
 //   before VS2017
