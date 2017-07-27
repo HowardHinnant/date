@@ -418,6 +418,7 @@ class weekday_indexed
     unsigned char index_ : 4;
 
 public:
+    weekday_indexed() = default;
     CONSTCD11 weekday_indexed(const date::weekday& wd, unsigned index) NOEXCEPT;
 
     CONSTCD11 date::weekday weekday() const NOEXCEPT;
@@ -6099,6 +6100,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         {
                             if (wd == 7)
                                 wd = 0;
+                            else if (wd == 0)
+                                wd = 7;
                         }
                     }
                     else if (modified == CharT{'O'})
