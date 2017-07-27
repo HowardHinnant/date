@@ -418,6 +418,7 @@ class weekday_indexed
     unsigned char index_ : 4;
 
 public:
+    weekday_indexed() = default;
     CONSTCD11 weekday_indexed(const date::weekday& wd, unsigned index) NOEXCEPT;
 
     CONSTCD11 date::weekday weekday() const NOEXCEPT;
