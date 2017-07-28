@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-07-17<br>
+2017-07-27<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,7 +59,9 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
-<li>Make the database singleton a <code>list&lt;tzdb&gt;</code> instead of a single <code>tzdb</code>.</li>
+<li>Make <code>from_stream</code> and <code>to_stream</code> customization points.</li>
+<li>Make the database singleton a <code>list&lt;tzdb&gt;</code>
+instead of a single <code>tzdb</code>.</li>
 <li>Rewrite in terms of <code>string_view</code>.</li>
 <li>Improve spec for operator-(const year_month&amp; x, const year_month&amp; y).</li>
 <li>Refine constraints on conversions from calendar types to sys_days.</li>
@@ -3016,6 +3018,12 @@ Add a new section 23.17.8 Formatting [time.format]:
 
 <h3>23.17.8 Formatting [time.format]</h3>
 
+<p>
+Each <code>format</code> overload specified in this section calls <code>to_stream</code>
+unqualified, so as to enable argument dependent lookup ([basic.lookup.argdep]).
+</p>
+
+
 <pre>
 template &lt;class charT, class Streamable&gt;
 basic_string&lt;charT&gt;
@@ -3397,6 +3405,11 @@ Add a new section 23.17.9 Parsing [time.parse]:
 
 <h3>23.17.9 Parsing [time.parse]</h3>
 
+<p>
+Each <code>parse</code> overload specified in this section calls <code>from_stream</code>
+unqualified, so as to enable argument dependent lookup ([basic.lookup.argdep]).
+</p>
+
 <pre>
 template &lt;class charT, class traits, class Alloc, class Parsable&gt;
 <i>unspecified</i>
@@ -3493,8 +3506,11 @@ matches zero or more white space characters in the input stream.
 </p>
 
 <p>
-If the <code>from_stream</code> overload fails to parse everything specified by the
-format string, <code>ios_base::failbit</code> is set in the <code>basic_istream</code>.
+If the <code>from_stream</code> overload fails to parse everything
+specified by the format string, or if insufficient information is
+parsed to specify a complete duration, time point, or calendrical data
+structure, <code>ios_base::failbit</code> is set in the
+<code>basic_istream</code>.
 </p>
 
 <blockquote>
@@ -3702,7 +3718,7 @@ permitted but not required.</td>
 <td>The weekday as a decimal number (0-6), where Sunday is 0.  The modified command
 <code>%Nw</code> where <code>N</code> is a positive decimal integer specifies the maximum
 number of characters to read.  If not specified, the default is 1. Leading zeroes are
-permitted but not required.  The modified command <code>%Ou</code> interprets the locale's
+permitted but not required.  The modified command <code>%Ow</code> interprets the locale's
 alternative representation.</td>
 </tr>
 
