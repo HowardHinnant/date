@@ -59,6 +59,7 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li>Give <code>weekday_indexed</code> a defaulted default constructor.</li>
 <li>Make <code>from_stream</code> and <code>to_stream</code> customization points.</li>
 <li>Make the database singleton a <code>list&lt;tzdb&gt;</code>
 instead of a single <code>tzdb</code>.</li>
@@ -5373,6 +5374,7 @@ class weekday_indexed
     unsigned char    index_;  // exposition only
 
 public:
+    weekday_indexed() = default;
     constexpr weekday_indexed(const chrono::weekday&amp; wd, unsigned index) noexcept;
 
     constexpr chrono::weekday weekday() const noexcept;
