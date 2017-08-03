@@ -1410,7 +1410,7 @@ template&lt;class charT, class traits, class Rep, class Period&gt;
 
 struct tzdb;
 const tzdb&amp; get_tzdb();
-list&lt;TZ_DB*gt;&amp; get_tzdb_list();
+list&lt;tzdb&gt;&amp; get_tzdb_list();
 const time_zone* locate_zone(string_view tz_name);
 const time_zone* current_zone();
 
