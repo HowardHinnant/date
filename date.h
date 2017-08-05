@@ -85,6 +85,13 @@ namespace date
 #    define NOEXCEPT noexcept
 #  endif
 
+#elif defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5150
+// Oracle Developer Studio 12.6 and earlier
+#  define CONSTDATA constexpr const
+#  define CONSTCD11 constexpr
+#  define CONSTCD14
+#  define NOEXCEPT noexcept
+
 #elif __cplusplus >= 201402
 // C++14
 #  define CONSTDATA constexpr const
