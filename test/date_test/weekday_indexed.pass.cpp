@@ -23,6 +23,7 @@
 // class weekday_indexed
 // {
 // public:
+//     weekday_indexed() = default;
 //     constexpr weekday_indexed(const date::weekday& wd, unsigned index) noexcept;
 //
 //     constexpr date::weekday weekday() const noexcept;
@@ -42,7 +43,7 @@
 #include <type_traits>
 
 static_assert( std::is_trivially_destructible<date::weekday_indexed>{}, "");
-static_assert(!std::is_default_constructible<date::weekday_indexed>{}, "");
+static_assert( std::is_default_constructible<date::weekday_indexed>{}, "");
 static_assert( std::is_trivially_copy_constructible<date::weekday_indexed>{}, "");
 static_assert( std::is_trivially_copy_assignable<date::weekday_indexed>{}, "");
 static_assert( std::is_trivially_move_constructible<date::weekday_indexed>{}, "");
