@@ -106,6 +106,11 @@ namespace date
 #  define NOEXCEPT noexcept
 #endif
 
+// Protect from Oracle sun macro
+#ifdef sun
+#  undef sun
+#endif
+
 //-----------+
 // Interface |
 //-----------+
