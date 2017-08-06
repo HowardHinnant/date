@@ -6724,7 +6724,8 @@ parse(const CharT* format, Parsable& tp,
 namespace detail
 {
 
-#if __cplusplus >= 201402  && (!defined(__EDG_VERSION__) || __EDG_VERSION__ > 411)
+#if __cplusplus >= 201402  && (!defined(__EDG_VERSION__) || __EDG_VERSION__ > 411) \
+                           && (!defined(__SUNPRO_CC) || __SUNPRO_CC > 0x5150)
 
 template <class CharT, std::size_t N>
 class string_literal

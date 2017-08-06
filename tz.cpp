@@ -2617,15 +2617,26 @@ curl_global()
     return 0;
 }
 
-static const auto curl_delete = [](CURL* p) {::curl_easy_cleanup(p);};
+namespace
+{
+
+struct curl_deleter
+{
+    void operator()(CURL* p) const
+    {
+        ::curl_easy_cleanup(p);
+    }
+};
+
+}  // unnamed namespace
 
 static
-std::unique_ptr<CURL, decltype(curl_delete)>
+std::unique_ptr<CURL, curl_deleter>
 curl_init()
 {
     static const auto curl_is_now_initiailized = curl_global();
     (void)curl_is_now_initiailized;
-    return std::unique_ptr<CURL, decltype(curl_delete)>{::curl_easy_init(), curl_delete};
+    return std::unique_ptr<CURL, curl_deleter>{::curl_easy_init()};
 }
 
 static
