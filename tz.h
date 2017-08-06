@@ -110,10 +110,10 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #endif
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <istream>
-#include <list>
 #include <locale>
 #include <memory>
 #include <mutex>
@@ -1144,6 +1144,7 @@ struct TZ_DB
 #ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
 #endif
+    TZ_DB* next = nullptr;
 
     TZ_DB() = default;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -1183,7 +1184,92 @@ DATE_API std::ostream&
 operator<<(std::ostream& os, const TZ_DB& db);
 
 DATE_API const TZ_DB& get_tzdb();
-DATE_API std::list<TZ_DB>& get_tzdb_list();
+
+class tzdb_list
+{
+    std::atomic<TZ_DB*> head_{nullptr};
+
+public:
+    ~tzdb_list();
+    tzdb_list() = default;
+    tzdb_list(tzdb_list&& x) noexcept;
+
+    void push_front(TZ_DB* tzdb) noexcept;
+    const TZ_DB& front() const noexcept {return *head_;}
+
+    class const_iterator;
+
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
+
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
+
+    const_iterator erase_after(const_iterator p) noexcept;
+};
+
+class tzdb_list::const_iterator
+{
+    TZ_DB* p_ = nullptr;
+
+    explicit const_iterator(TZ_DB* p) noexcept : p_{p} {}
+public:
+    const_iterator() = default;
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type        = TZ_DB;
+    using reference         = const value_type&;
+    using pointer           = const value_type*;
+    using difference_type   = std::ptrdiff_t;
+
+    reference operator*() const noexcept {return *p_;}
+    pointer  operator->() const noexcept {return p_;}
+
+    const_iterator& operator++() noexcept {p_ = p_->next; return *this;}
+    const_iterator  operator++(int) noexcept {auto t = *this; ++(*this); return t;}
+
+    friend
+    bool
+    operator==(const const_iterator& x, const const_iterator& y) noexcept
+        {return x.p_ == y.p_;}
+
+    friend
+    bool
+    operator!=(const const_iterator& x, const const_iterator& y) noexcept
+        {return !(x == y);}
+
+    friend class tzdb_list;
+};
+
+inline
+tzdb_list::const_iterator
+tzdb_list::begin() const noexcept
+{
+    return const_iterator{head_};
+}
+
+inline
+tzdb_list::const_iterator
+tzdb_list::end() const noexcept
+{
+    return const_iterator{nullptr};
+}
+
+inline
+tzdb_list::const_iterator
+tzdb_list::cbegin() const noexcept
+{
+    return begin();
+}
+
+inline
+tzdb_list::const_iterator
+tzdb_list::cend() const noexcept
+{
+    return end();
+}
+
+DATE_API tzdb_list& get_tzdb_list();
 
 #if !USE_OS_TZDB
 
