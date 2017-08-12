@@ -1614,7 +1614,7 @@ template <class T>
 static
 inline
 void
-maybe_reverse_bytes(T& t, std::false_type)
+maybe_reverse_bytes(T&, std::false_type)
 {
 }
 
@@ -1919,9 +1919,9 @@ time_zone::init_impl()
         auto l = itr->date();
         seconds leap_count{0};
         for (auto t = std::upper_bound(transitions_.begin(), transitions_.end(), l,
-                                       [](const sys_seconds& x, const transition& t)
+                                       [](const sys_seconds& x, const transition& ct)
                                        {
-                                           return x < t.timepoint;
+                                           return x < ct.timepoint;
                                        });
                   t != transitions_.end(); ++t)
         {
@@ -2465,6 +2465,7 @@ operator<<(std::ostream& os, const leap& x)
 
 #if USE_OS_TZDB
 
+# ifdef __APPLE__
 static
 std::string
 get_version()
@@ -2478,6 +2479,7 @@ get_version()
         throw std::runtime_error("Unable to get Timezone database version from " + path);
     return version;
 }
+# endif
 
 static
 TZ_DB
