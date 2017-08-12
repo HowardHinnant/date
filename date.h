@@ -6562,7 +6562,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
-        tp = sys_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration() - *offptr);
+        tp = round<Duration>(sys_days(fds.ymd) + fds.tod.to_duration() - *offptr);
     return is;
 }
 
@@ -6580,7 +6580,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
-        tp = local_days(fds.ymd) + duration_cast<Duration>(fds.tod.to_duration());
+        tp = round<Duration>(local_days(fds.ymd) + fds.tod.to_duration());
     return is;
 }
 
