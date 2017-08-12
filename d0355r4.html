@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-07-27<br>
+2017-08-12<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -61,8 +61,8 @@ Document number: D0355R4<br>
 <ul>
 <li>Give <code>weekday_indexed</code> a defaulted default constructor.</li>
 <li>Make <code>from_stream</code> and <code>to_stream</code> customization points.</li>
-<li>Make the database singleton a <code>list&lt;tzdb&gt;</code>
-instead of a single <code>tzdb</code>.</li>
+<li>Make the database singleton a singly linked list of <code>tzdb</code> with
+an atomic head pointer, instead of a single <code>tzdb</code>.</li>
 <li>Rewrite in terms of <code>string_view</code>.</li>
 <li>Improve spec for operator-(const year_month&amp; x, const year_month&amp; y).</li>
 <li>Refine constraints on conversions from calendar types to sys_days.</li>
@@ -1409,8 +1409,9 @@ template&lt;class charT, class traits, class Rep, class Period&gt;
 // time zone database
 
 struct tzdb;
+class tzdb_list;
 const tzdb&amp; get_tzdb();
-list&lt;tzdb&gt;&amp; get_tzdb_list();
+tzdb_list&amp; get_tzdb_list();
 const time_zone* locate_zone(string_view tz_name);
 const time_zone* current_zone();
 
@@ -9108,11 +9109,27 @@ struct tzdb
     const time_zone* current_zone() const;
 };
 
-list&lt;tzdb&gt;
+class tzdb_list
+{
+    std::atomic<tzdb*> head_{nullptr};  // exposition only
+
+public:
+    class const_iterator;
+
+    const tzdb& front() const noexcept;
+
+    const_iterator erase_after(const_iterator p) noexcept;
+
+    const_iterator begin() const noexcept;
+    const_iterator end()   const noexcept;
+
+    const_iterator cbegin() const noexcept;
+    const_iterator cend()   const noexcept;
+};
 </pre>
 
 <p>
-The <code>list&lt;tzdb&gt;</code> database is a singleton.  Access is
+The <code>tzdb_list</code> database is a singleton.  Access is
 granted to it via the <code>get_tzdb_list()</code> function which
 returns a reference to it. However this access is only needed for
 those applications which need to have long uptimes and have a need to
@@ -9121,9 +9138,9 @@ implicitly access the <code>front()</code> of this list via the
 <i>read-only</i> namespace scope functions <code>get_tzdb()</code>,
 <code>locate_zone()</code> and <code>current_zone()</code>. Each
 <code>vector</code> in <code>tzdb</code> is sorted to enable fast
-lookup.  You can iterate over and inspect this database.  And even
-hold multiple versions of the database at once, via the
-<code>list&lt;tzdb&gt;</code>.
+lookup.  One can iterate over and inspect this database.  And 
+multiple versions of the database can be used at once, via the
+<code>tzdb_list</code>.
 </p>
 
 <pre>
@@ -9164,8 +9181,8 @@ list&lt;tzdb&gt;&amp; get_tzdb_list();
 <p>
 <i>Effects:</i>  If this is the first access to the database, will
 initialize the database.  If this call initializes the database, the
-resulting database will be a <code>list&lt;tzdb&gt;</code> with
-<code>size() == 1</code>. 
+resulting database will be a <code>tzdb_list</code> which holds a
+single initialized <code>tzdb</code>. 
 </p>
 <p>
 <i>Returns:</i> A reference to the database.
@@ -9211,6 +9228,77 @@ const time_zone* current_zone();
 </p>
 </blockquote>
 
+<code>tzdb_list::const_iterator</code> is a non-mutating iterator which meets the
+forward iterator requirements.
+
+<pre>
+const tzdb&amp; tzdb_list::front() const noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>*head_</code>.
+</p>
+<p>
+<i>Remarks:</i> this operation is thread safe with respect to <code>reload_tzdb()</code>.
+[<i>Note:</i> <code>reload_tzdb()</code> pushes a new <code>tzdb</code> onto the front
+of this container. &mdash; <i>end note</i>]
+</p>
+</blockquote>
+
+<pre>
+tzdb::const_iterator tzdb::erase_after(const_iterator p) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> The iterator following <code>p</code> is dereferenceable.
+</p>
+<p>
+<i>Effects:</i> Erases the <code>tzdb</code> referred to by the iterator following
+<code>p</code>.
+</p>
+<p>
+<i>Returns:</i> An iterator pointing to the element following the one that was erased,
+or <code>end()</code> if no such element exists.
+</p>
+<p>
+<i>Remarks:</i> No pointers, references or iterators are invalidated except those referring
+to the erased <code>tzdb</code>.
+</p>
+<p>
+<i>Note:</i> It is not possible to erase the <code>tzdb</code> referred to by
+<code>begin()</code>.
+</p>
+</blockquote>
+
+<pre>
+tzdb::const_iterator tzdb::begin() const noexcept;
+</pre>
+<blockquote>
+<i>Returns:</i> An iterator referring to the first <code>tzdb</code> in the container.
+</blockquote>
+
+<pre>
+tzdb::const_iterator tzdb::end() const noexcept;
+</pre>
+<blockquote>
+<i>Returns:</i> An iterator referring to the position one past the
+last <code>tzdb</code> in the container.
+</blockquote>
+
+<pre>
+tzdb::const_iterator tzdb::cbegin() const noexcept;
+</pre>
+<blockquote>
+<i>Returns:</i> <code>begin()</code>.
+</blockquote>
+
+<pre>
+tzdb::const_iterator tzdb::cend() const noexcept;
+</pre>
+<blockquote>
+<i>Returns:</i> <code>end()</code>.
+</blockquote>
+
 <p>
 <a href="#Wording">Back to TOC</a>
 </p>
@@ -9232,15 +9320,17 @@ const tzdb&amp; reload_tzdb();
 latest version is already installed, there are no effects.  Otherwise, a new version
 is available.  It is downloaded and installed, and then the program initializes
 a new <code>tzdb</code> from the new disk files and pushes it to the front of
-the <code>list&lt;tzdb&gt;&amp;</code> accessed by <code>get_tzdb_list()</code>.
+the <code>tzdb_list</code> accessed by <code>get_tzdb_list()</code>.
 </p>
 <p>
 <i>Returns:</i> <code>get_tzdb_list().front()</code>.
 </p>
 <p>
-<i>Thread Safety:</i>  This function is <i>not</i> thread safe.  You must
-provide your own synchronization among threads accessing the time zone database
-to safely use this function.
+<i>Remarks:</i> No pointers, references or iterators are invalidated.
+</p>
+<p>
+<i>Thread Safety:</i>  This function is thread safe with respect to <code>front()</code>
+and <code>erase_after()</code>.
 </p>
 <p>
 <i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
