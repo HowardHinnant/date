@@ -354,12 +354,20 @@ tzdb_list::erase_after(const_iterator p) noexcept
     return ++p;
 }
 
+struct tzdb_list::undocumented_helper
+{
+    static void push_front(tzdb_list& db_list, TZ_DB* tzdb) noexcept
+    {
+        db_list.push_front(tzdb);
+    }
+};
+
 static
 tzdb_list
 create_tzdb()
 {
     tzdb_list tz_db;
-    tz_db.push_front(init_tzdb().release());
+    tzdb_list::undocumented_helper::push_front(tz_db, init_tzdb().release());
     return tz_db;
 }
 
@@ -3365,7 +3373,7 @@ reload_tzdb()
     if (!v.empty() && v == remote_version())
         return get_tzdb_list().front();
 #endif  // AUTO_DOWNLOAD
-    get_tzdb_list().push_front(init_tzdb().release());
+    tzdb_list::undocumented_helper::push_front(get_tzdb_list(), init_tzdb().release());
     return get_tzdb_list().front();
 }
 

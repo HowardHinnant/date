@@ -1194,7 +1194,6 @@ public:
     tzdb_list() = default;
     tzdb_list(tzdb_list&& x) noexcept;
 
-    void push_front(TZ_DB* tzdb) noexcept;
     const TZ_DB& front() const noexcept {return *head_;}
 
     class const_iterator;
@@ -1206,6 +1205,10 @@ public:
     const_iterator cend() const noexcept;
 
     const_iterator erase_after(const_iterator p) noexcept;
+
+    struct undocumented_helper;
+private:
+    void push_front(TZ_DB* tzdb) noexcept;
 };
 
 class tzdb_list::const_iterator
