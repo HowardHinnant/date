@@ -106,6 +106,14 @@ namespace date
 #  define NOEXCEPT noexcept
 #endif
 
+#ifndef HAS_VOID_T
+#  if __cplusplus >= 201703
+#    define HAS_VOID_T 1
+#  else
+#    define HAS_VOID_T 0
+#  endif
+#endif  // HAS_VOID_T
+
 // Protect from Oracle sun macro
 #ifdef sun
 #  undef sun
@@ -892,6 +900,22 @@ CONSTCD11 date::year operator "" _y(unsigned long long y) NOEXCEPT;
 
 }  // inline namespace literals
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+
+#if HAS_VOID_T
+
+template <class T, class = std::void_t<>>
+struct is_clock
+    : std::false_type
+{};
+
+template <class T>
+struct is_clock<T, std::void_t<decltype(T::now()), typename T::rep, typename T::period,
+                               typename T::duration, typename T::time_point,
+                               decltype(T::is_steady)>>
+    : std::true_type
+{};
+
+#endif  // HAS_VOID_T
 
 //----------------+
 // Implementation |
