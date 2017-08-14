@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-08-12<br>
+2017-08-13<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -216,10 +216,9 @@ Everything proposed herein has been fully implemented here:
 </blockquote>
 
 <p>
-The implementation includes full documentation, and an
-<a href="http://www.timqian.com/star-history/#HowardHinnant/date&google/cctz">active
-community of users with positive field experience.</a>  The implementation has been ported
-to Windows, Linux, Android, macOS and iOS.
+The implementation includes full documentation, and an active community of users with
+positive field experience. The implementation has been ported to Windows, Linux, Android,
+macOS and iOS.
 </p>
 
 <p>
@@ -651,80 +650,6 @@ please see:
 <blockquote>
 <a href="http://howardhinnant.github.io/date/iso_week.html">http://howardhinnant.github.io/date/iso_week.html</a>
 </blockquote>
-
-<a name="Issues"></a><h2>Issues</h2>
-
-<p>
-This is a collection of issues that could be changed one way or the other with this
-proposal.
-</p>
-
-<ol>
-<li>
-<p>
-Can the database be updated by the program while the program is running?
-</p>
-<p>
-This is probably the most important issue to be decided.  This decision, one way or
-the other, leads (or doesn't) to many other decisions.  If the database can be updated
-while the program is running:
-</p>
-<ol type="a">
-<li>Is the client responsible for thread safety issues? This proposal says yes.</li>
-<li>What is the format of the database?  This proposal says it is the text format
-of the IANA database.</li>
-<li>Can the database be updated to the latest version at a remote server on application
-startup?  This proposal says yes.  This means Egypt-like time-zone changes (3 days
-notice) can be handled seamlessly.</li>
-</ol>
-<p>
-Not allowing the database to be dynamically updated is by far the simpler solution.
-This proposal shows you what dynamic updating could look like.  It is far easier to
-remove this feature from a proposal than to add it.  This proposal is designed in such
-a way that it is trivial to remove this functionality.
-</p>
-</li>
-
-<li>
-<p>
-Currently this library passes <code>time_zone</code>s around with
-<code>const time_zone*</code>.  Each <code>time_zone</code> is a non-copyable
-<code>const</code> singleton in the application (much like a
-<code>type_info</code>).  Passing them around by pointers allows syntax such as:
-</p>
-<blockquote><pre>
-auto tz = current_zone();
-cout &lt;&lt; tz-&gt;name() &lt;&lt; '\n';
-</pre></blockquote>
-<p>
-But source functions such as <code>current_zone</code> and <code>locate_zone</code>
-<i>never</i> return <code>nullptr</code>.  So it has been suggested that the library
-traffic in <code>const time_zone&amp;</code> instead.  This would change the above
-code snippet to:
-</p>
-<blockquote><pre>
-auto&amp; tz = current_zone();
-cout &lt;&lt; tz.name() &lt;&lt; '\n';
-</pre></blockquote>
-<p>
-Either solution is workable.  And whichever we choose, the client can get the other
-with <code>*current_zone()</code> or <code>&amp;current_zone()</code>.  And whichever
-we choose, we <i>will</i> make the library API self-consistent so that things like
-the following work no matter what with this syntax:
-</p>
-<blockquote><pre>
-cout &lt;&lt; zoned_time{current_zone(), system_clock::now()} &lt;&lt; '\n';
-</pre></blockquote>
-<p>
-We simply need to decide if the default style guide for passing <code>time_zone</code>s
-around is <code>const time_zone*</code> or <code>const time_zone&amp;</code>.  And yes,
-it is ok for a client to have a <code>const time_zone*</code> which equals
-<code>nullptr</code>.  And no, the library never provides a <code>const time_zone*</code>
-which is equal to <code>nullptr</code>.
-</p>
-</li>
-
-</ol>
 
 <a name="Wording"></a><h2>Proposed Wording</h2>
 
@@ -9117,7 +9042,7 @@ struct tzdb
 
 class tzdb_list
 {
-    std::atomic<tzdb*> head_{nullptr};  // exposition only
+    std::atomic&lt;tzdb*&gt; head_{nullptr};  // exposition only
 
 public:
     class const_iterator;
@@ -9234,8 +9159,8 @@ const time_zone* current_zone();
 </p>
 </blockquote>
 
-<code>tzdb_list::const_iterator</code> is a non-mutating iterator which meets the
-forward iterator requirements.
+<code>tzdb_list::const_iterator</code> is a constant iterator which meets the
+forward iterator requirements and has a value type of <code>tzdb</code>.
 
 <pre>
 const tzdb&amp; tzdb_list::front() const noexcept;
