@@ -396,7 +396,6 @@ class weekday
 public:
     weekday() = default;
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
-    explicit weekday(int) = delete;
     CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
     CONSTCD11 explicit weekday(const local_days& dp) NOEXCEPT;
 
