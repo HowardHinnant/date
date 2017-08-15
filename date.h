@@ -1455,7 +1455,7 @@ inline
 year
 year::min() NOEXCEPT
 {
-    return year{std::numeric_limits<short>::min()+1};
+    return year{-32767};
 }
 
 CONSTCD11
@@ -1463,7 +1463,7 @@ inline
 year
 year::max() NOEXCEPT
 {
-    return year{std::numeric_limits<short>::max()};
+    return year{32767};
 }
 
 CONSTCD11
