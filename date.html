@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-08-15<br/>
+2017-08-18<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -40,6 +40,7 @@
 <li><a href="#Overview">Overview</a></li>
 <li><a href="#range">Range of Validity</a></li>
 <li><a href="#Reference">Reference</a></li>
+<li><a href="#Installation">Installation</a></li>
 </ul>
 
 <a name="Introduction"></a><h2>Introduction</h2>
@@ -8442,6 +8443,18 @@ extraction from a <code>basic_istream&lt;CharT, Traits&gt; is</code> calls
 <code>from_stream(is, format, tp, &amp;abbrev, &amp;offset)</code>.
 </p>
 </blockquote>
+
+<a name="Installation"></a><h2>Installation</h2>
+
+<p>
+Some of the parsing and formatting flags require help from your std::lib's
+<code>time_get</code> and <code>time_put</code> facets for localization help.  If you are
+happy with being restricted to the <code>"C"</code> locale, and/or need to port this to an
+older platform that doesn't support the <code>time_get</code> and <code>time_put</code>
+facets, compile with <code>-DONLY_C_LOCALE=1</code>.  This enables all of the streaming
+and parsing flags, but makes all of them assume the <code>"C"</code> locale, and removes
+the dependency on the <code>time_get</code> and <code>time_put</code> facets.
+</p>
 
 </body>
 </html>
