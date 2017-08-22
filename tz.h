@@ -1656,7 +1656,7 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const sys_time<Duration>& tp)
 {
-    return (tp);
+    return zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>(tp);
 }
 
 template <class TimeZonePtr,
@@ -1695,7 +1695,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
 make_zoned(TimeZonePtr zone, const local_time<Duration>& tp)
 {
-    return (std::move(zone), tp);
+    return zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,
+                      TimeZonePtr>(std::move(zone), tp);
 }
 
 template <class Duration, class TimeZonePtr,
@@ -1708,7 +1709,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
 make_zoned(TimeZonePtr zone, const local_time<Duration>& tp, choose c)
 {
-    return (std::move(zone), tp, c);
+    return zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,
+                      TimeZonePtr>(std::move(zone), tp, c);
 }
 
 template <class Duration>
@@ -1716,7 +1718,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const local_time<Duration>& tp)
 {
-    return (name, tp);
+    return zoned_time<typename std::common_type<Duration,
+                      std::chrono::seconds>::type>(name, tp);
 }
 
 template <class Duration>
@@ -1724,7 +1727,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
 {
-    return (name, tp, c);
+    return zoned_time<typename std::common_type<Duration,
+                      std::chrono::seconds>::type>(name, tp, c);
 }
 
 template <class Duration, class TimeZonePtr>
@@ -1732,7 +1736,7 @@ inline
 zoned_time<Duration, TimeZonePtr>
 make_zoned(TimeZonePtr zone, const zoned_time<Duration, TimeZonePtr>& zt)
 {
-    return (std::move(zone), zt);
+    return zoned_time<Duration, TimeZonePtr>(std::move(zone), zt);
 }
 
 template <class Duration, class TimeZonePtr>
@@ -1740,7 +1744,7 @@ inline
 zoned_time<Duration, TimeZonePtr>
 make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt)
 {
-    return (name, zt);
+    return zoned_time<Duration, TimeZonePtr>(name, zt);
 }
 
 template <class Duration, class TimeZonePtr>
@@ -1748,7 +1752,7 @@ inline
 zoned_time<Duration, TimeZonePtr>
 make_zoned(TimeZonePtr zone, const zoned_time<Duration, TimeZonePtr>& zt, choose c)
 {
-    return (std::move(zone), zt, c);
+    return zoned_time<Duration, TimeZonePtr>(std::move(zone), zt, c);
 }
 
 template <class Duration, class TimeZonePtr>
@@ -1756,7 +1760,7 @@ inline
 zoned_time<Duration, TimeZonePtr>
 make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt, choose c)
 {
-    return (name, zt, c);
+    return zoned_time<Duration, TimeZonePtr>(name, zt, c);
 }
 
 template <class Duration, class TimeZonePtr,
@@ -1769,7 +1773,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
 make_zoned(TimeZonePtr zone, const sys_time<Duration>& st)
 {
-    return (std::move(zone), st);
+    return zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type,
+                      TimeZonePtr>(std::move(zone), st);
 }
 
 template <class Duration>
@@ -1777,7 +1782,8 @@ inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 make_zoned(const std::string& name, const sys_time<Duration>& st)
 {
-    return (name, st);
+    return zoned_time<typename std::common_type<Duration,
+                      std::chrono::seconds>::type>(name, st);
 }
 
 template <class CharT, class Traits, class Duration, class TimeZonePtr>
