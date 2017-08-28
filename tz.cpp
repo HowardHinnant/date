@@ -258,6 +258,8 @@ access_install()
 
     = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
 
+    #undef STRINGIZEIMP
+    #undef STRINGIZE
 #endif  // !INSTALL
 
     return install;
