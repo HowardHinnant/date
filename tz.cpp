@@ -211,10 +211,11 @@ expand_path(std::string path)
     return date::iOSUtils::get_tzdata_path();
 #      else  // !TARGET_OS_IPHONE
     ::wordexp_t w{};
+    std::unique_ptr<::wordexp_t, void(*)(::wordexp_t*)> hold{&w, ::wordfree}; 
     ::wordexp(path.c_str(), &w, 0);
-    assert(w.we_wordc == 1);
+    if (w.we_wordc != 1)  
+        throw std::runtime_error("Cannot expand path: " + path);  
     path = w.we_wordv[0];
-    ::wordfree(&w);
     return path;
 #      endif  // !TARGET_OS_IPHONE
 }
