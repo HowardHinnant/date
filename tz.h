@@ -408,23 +408,21 @@ public:
 
     zoned_time(TimeZonePtr z, const sys_time<Duration>& st);
 
-    template <class T = TimeZonePtr,
-              class = typename std::enable_if
+    template <class = typename std::enable_if
               <
                   std::is_convertible
                   <
-                      decltype(std::declval<T&>()->to_sys(local_time<Duration>{})),
+                      decltype(std::declval<TimeZonePtr>()->to_sys(local_time<Duration>{})),
                       sys_time<duration>
                   >::value
               >::type>
         zoned_time(TimeZonePtr z, const local_time<Duration>& tp);
 
-    template <class T = TimeZonePtr,
-              class = typename std::enable_if
+    template <class = typename std::enable_if
               <
                   std::is_convertible
                   <
-                      decltype(std::declval<T&>()->to_sys(local_time<Duration>{},
+                      decltype(std::declval<TimeZonePtr>()->to_sys(local_time<Duration>{},
                                                           choose::earliest)),
                       sys_time<duration>
                   >::value
@@ -1403,7 +1401,7 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const sys_time<Dura
     {}
 
 template <class Duration, class TimeZonePtr>
-template <class, class>
+template <class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Duration>& t)
     : zone_(std::move(z))
@@ -1411,7 +1409,7 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Du
     {}
 
 template <class Duration, class TimeZonePtr>
-template <class, class>
+template <class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Duration>& t,
                                               choose c)
@@ -1596,14 +1594,14 @@ zoned_time<Duration, TimeZonePtr>::operator=(const local_time<Duration>& ut)
     return *this;
 }
 
-template <class Duration, class TimeZonePtr>
+template<class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>::operator local_time<typename zoned_time<Duration, TimeZonePtr>::duration>() const
 {
     return get_local_time();
 }
 
-template <class Duration, class TimeZonePtr>
+template<class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>::operator sys_time<typename zoned_time<Duration, TimeZonePtr>::duration>() const
 {
