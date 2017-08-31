@@ -1222,6 +1222,7 @@ public:
     tzdb_list(tzdb_list&& x) noexcept;
 
     const TZ_DB& front() const noexcept {return *head_;}
+          TZ_DB& front()       noexcept {return *head_;}
 
     class const_iterator;
 
