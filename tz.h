@@ -134,7 +134,11 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #    define DATE_API
 #  endif
 #else
-#  define DATE_API
+#  ifdef DATE_BUILD_DLL
+#    define DATE_API __attribute__ ((visibility ("default")))
+#  else
+#    define DATE_API
+#  endif
 #endif
 
 namespace date
