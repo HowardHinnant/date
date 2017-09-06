@@ -142,7 +142,7 @@
 #if HAS_REMOTE_API
    // Note curl includes windows.h so we must include curl AFTER definitions of things
    // that effect windows.h such as NOMINMAX.
-#if defined(_MSC_BUILD) && defined(SHORTENED_CURL_INCLUDE)
+#if defined(_MSC_VER) && defined(SHORTENED_CURL_INCLUDE)
    // For rmt_curl nuget package
 #  include <curl.h>
 #else
