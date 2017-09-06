@@ -142,7 +142,12 @@
 #if HAS_REMOTE_API
    // Note curl includes windows.h so we must include curl AFTER definitions of things
    // that effect windows.h such as NOMINMAX.
+#if defined(_MSC_VER) && defined(SHORTENED_CURL_INCLUDE)
+   // For rmt_curl nuget package
+#  include <curl.h>
+#else
 #  include <curl/curl.h>
+#endif
 #endif
 
 #ifdef _WIN32
@@ -211,10 +216,10 @@ expand_path(std::string path)
     return date::iOSUtils::get_tzdata_path();
 #      else  // !TARGET_OS_IPHONE
     ::wordexp_t w{};
-    std::unique_ptr<::wordexp_t, void(*)(::wordexp_t*)> hold{&w, ::wordfree}; 
+    std::unique_ptr<::wordexp_t, void(*)(::wordexp_t*)> hold{&w, ::wordfree};
     ::wordexp(path.c_str(), &w, 0);
-    if (w.we_wordc != 1)  
-        throw std::runtime_error("Cannot expand path: " + path);  
+    if (w.we_wordc != 1)
+        throw std::runtime_error("Cannot expand path: " + path);
     path = w.we_wordv[0];
     return path;
 #      endif  // !TARGET_OS_IPHONE
@@ -247,7 +252,7 @@ static
 std::string&
 access_install()
 {
-    static std::string install 
+    static std::string install
 #ifndef INSTALL
 
     = get_download_folder() + folder_delimiter + "tzdata";
@@ -3161,7 +3166,7 @@ remote_download(const std::string& version)
 #  else  // !_WIN32
     // Create download folder if it does not exist on UNIX system
     auto download_folder = get_download_folder();
-    if (!file_exists(download_folder)) 
+    if (!file_exists(download_folder))
     {
         make_directory(download_folder);
     }
