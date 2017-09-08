@@ -3612,6 +3612,20 @@ TZ_DB::current_zone() const
         // Fall through to try other means.
     }
     {
+    // On some versions of some bsd distro's (e.g. FreeBSD),
+    // the current timezone might be in the first line of
+    // the /var/db/zoneinfo file.
+        std::ifstream timezone_file("/var/db/zoneinfo");
+        if (timezone_file.is_open())
+        {
+            std::string result;
+            std::getline(timezone_file, result);
+            if (!result.empty())
+                return locate_zone(result);
+        }
+        // Fall through to try other means.
+    }
+    {
     // On some versions of some linux distro's (e.g. Red Hat),
     // the current timezone might be in the first line of
     // the /etc/sysconfig/clock file as:
