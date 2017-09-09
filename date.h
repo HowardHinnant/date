@@ -1014,16 +1014,84 @@ trunc(T t) NOEXCEPT
     return t;
 }
 
+template <std::intmax_t Xp, std::intmax_t Yp>
+struct static_gcd
+{
+    static const std::intmax_t value = static_gcd<Yp, Xp % Yp>::value;
+};
+
+template <std::intmax_t Xp>
+struct static_gcd<Xp, 0>
+{
+    static const std::intmax_t value = Xp;
+};
+
+template <>
+struct static_gcd<0, 0>
+{
+    static const std::intmax_t value = 1;
+};
+
+template <class R1, class R2>
+struct no_overflow
+{
+private:
+    static const std::intmax_t gcd_n1_n2 = static_gcd<R1::num, R2::num>::value;
+    static const std::intmax_t gcd_d1_d2 = static_gcd<R1::den, R2::den>::value;
+    static const std::intmax_t n1 = R1::num / gcd_n1_n2;
+    static const std::intmax_t d1 = R1::den / gcd_d1_d2;
+    static const std::intmax_t n2 = R2::num / gcd_n1_n2;
+    static const std::intmax_t d2 = R2::den / gcd_d1_d2;
+    static const std::intmax_t max = -((std::intmax_t(1) <<
+                                       (sizeof(std::intmax_t) * CHAR_BIT - 1)) + 1);
+
+    template <std::intmax_t Xp, std::intmax_t Yp, bool overflow>
+    struct mul    // overflow == false
+    {
+        static const std::intmax_t value = Xp * Yp;
+    };
+
+    template <std::intmax_t Xp, std::intmax_t Yp>
+    struct mul<Xp, Yp, true>
+    {
+        static const std::intmax_t value = 1;
+    };
+
+public:
+    static const bool value = (n1 <= max / d2) && (n2 <= max / d1);
+    typedef std::ratio<mul<n1, d2, !value>::value,
+                       mul<n2, d1, !value>::value> type;
+};
+
 }  // detail
 
 // trunc towards zero
 template <class To, class Rep, class Period>
 CONSTCD11
 inline
-To
+typename std::enable_if
+<
+    detail::no_overflow<Period, typename To::period>::value,
+    To
+>::type
 trunc(const std::chrono::duration<Rep, Period>& d)
 {
     return To{detail::trunc(std::chrono::duration_cast<To>(d).count())};
+}
+
+template <class To, class Rep, class Period>
+CONSTCD11
+inline
+typename std::enable_if
+<
+    !detail::no_overflow<Period, typename To::period>::value,
+    To
+>::type
+trunc(const std::chrono::duration<Rep, Period>& d)
+{
+    using namespace std::chrono;
+    using rep = typename std::common_type<Rep, typename To::rep>::type;
+    return To{detail::trunc(duration_cast<To>(duration_cast<duration<rep>>(d)).count())};
 }
 
 #ifndef HAS_CHRONO_ROUNDING
@@ -1044,13 +1112,32 @@ trunc(const std::chrono::duration<Rep, Period>& d)
 template <class To, class Rep, class Period>
 CONSTCD14
 inline
-To
+typename std::enable_if
+<
+    detail::no_overflow<Period, typename To::period>::value,
+    To
+>::type
 floor(const std::chrono::duration<Rep, Period>& d)
 {
     auto t = trunc<To>(d);
     if (t > d)
         return t - To{1};
     return t;
+}
+
+template <class To, class Rep, class Period>
+CONSTCD14
+inline
+typename std::enable_if
+<
+    !detail::no_overflow<Period, typename To::period>::value,
+    To
+>::type
+floor(const std::chrono::duration<Rep, Period>& d)
+{
+    using namespace std::chrono;
+    using rep = typename std::common_type<Rep, typename To::rep>::type;
+    return floor<To>(floor<duration<rep>>(d));
 }
 
 // round to nearest, to even on tie
@@ -3494,18 +3581,18 @@ struct static_pow10<0>
     static CONSTDATA std::uint64_t value = 1;
 };
 
-template <unsigned w, bool in_range = (w < 19)>
+template <class Rep, unsigned w, bool in_range = (w < 19)>
 struct make_precision
 {
-    using type = std::chrono::duration<std::int64_t,
+    using type = std::chrono::duration<Rep,
                                        std::ratio<1, static_pow10<w>::value>>;
     static CONSTDATA unsigned width = w;
 };
 
-template <unsigned w>
-struct make_precision<w, false>
+template <class Rep, unsigned w>
+struct make_precision<Rep, w, false>
 {
-    using type = std::chrono::microseconds;
+    using type = std::chrono::duration<Rep, std::micro>;
     static CONSTDATA unsigned width = 6;
 };
 
@@ -3516,8 +3603,9 @@ template <class Duration,
 class decimal_format_seconds
 {
 public:
-    using precision = typename make_precision<w>::type;
-    static auto CONSTDATA width = make_precision<w>::width;
+    using rep = typename std::common_type<Duration, std::chrono::seconds>::type::rep;
+    using precision = typename make_precision<rep, w>::type;
+    static auto CONSTDATA width = make_precision<rep, w>::width;
 
 private:
     std::chrono::seconds s_;
@@ -3561,7 +3649,7 @@ public:
         os << x.s_.count() <<
               std::use_facet<std::numpunct<char>>(os.getloc()).decimal_point();
         os.width(width);
-        os << x.sub_s_.count();
+        os << static_cast<std::int64_t>(x.sub_s_.count());
         return os;
     }
 };
@@ -3571,8 +3659,9 @@ class decimal_format_seconds<Duration, 0>
 {
     static CONSTDATA unsigned w = 0;
 public:
-    using precision = std::chrono::seconds;
-    static auto CONSTDATA width = make_precision<w>::width;
+    using rep = typename std::common_type<Duration, std::chrono::seconds>::type::rep;
+    using precision = std::chrono::duration<rep>;
+    static auto CONSTDATA width = make_precision<rep, w>::width;
 private:
 
     std::chrono::seconds s_;
@@ -4032,9 +4121,9 @@ public:
         {}
 
     CONSTCD11 explicit time_of_day_storage(Duration since_midnight) NOEXCEPT
-        : base(std::chrono::duration_cast<std::chrono::hours>(since_midnight),
+        : base(date::trunc<std::chrono::hours>(since_midnight),
                since_midnight < Duration{0}, is24hr)
-        , m_(std::chrono::duration_cast<std::chrono::minutes>(detail::abs(since_midnight) - h_))
+        , m_(date::trunc<std::chrono::minutes>(detail::abs(since_midnight) - h_))
         , s_(detail::abs(since_midnight) - h_ - m_)
         {}
 
@@ -5513,7 +5602,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
     auto ld = floor<days>(tp);
-    fields<CT> fds{year_month_day{ld}, time_of_day<CT>{tp-ld}};
+    fields<CT> fds{year_month_day{ld}, time_of_day<CT>{tp-local_seconds{ld}}};
     return to_stream(os, fmt, fds, abbrev, offset_sec);
 }
 
@@ -5522,11 +5611,12 @@ std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const sys_time<Duration>& tp)
 {
-    using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+    using namespace std::chrono;
+    using CT = typename std::common_type<Duration, seconds>::type;
     const std::string abbrev("UTC");
-    CONSTDATA std::chrono::seconds offset{0};
+    CONSTDATA seconds offset{0};
     auto sd = floor<days>(tp);
-    fields<CT> fds{year_month_day{sd}, time_of_day<CT>{tp-sd}};
+    fields<CT> fds{year_month_day{sd}, time_of_day<CT>{tp-sys_seconds{sd}}};
     return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
@@ -7033,7 +7123,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
-        tp = round<Duration>(sys_days(fds.ymd) + fds.tod.to_duration() - *offptr);
+        tp = round<Duration>(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
     return is;
 }
 
@@ -7051,7 +7141,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
     if (!is.fail())
-        tp = round<Duration>(local_days(fds.ymd) + fds.tod.to_duration());
+        tp = round<Duration>(local_seconds{local_days(fds.ymd)} + fds.tod.to_duration());
     return is;
 }
 

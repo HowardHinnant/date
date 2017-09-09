@@ -40,24 +40,24 @@ main()
     using namespace std;
     using namespace std::chrono;
 
-    static_assert(make_precision<0>::width ==  0, "");
-    static_assert(is_same<make_precision<0>::type, duration<int64_t, ratio<1, 1>>>{}, "");
+    static_assert(make_precision<int64_t, 0>::width ==  0, "");
+    static_assert(is_same<make_precision<int64_t, 0>::type, duration<int64_t, ratio<1, 1>>>{}, "");
 
-    static_assert(make_precision<1>::width ==  1, "");
-    static_assert(is_same<make_precision<1>::type, duration<int64_t, ratio<1, 10>>>{}, "");
+    static_assert(make_precision<int64_t, 1>::width ==  1, "");
+    static_assert(is_same<make_precision<int64_t, 1>::type, duration<int64_t, ratio<1, 10>>>{}, "");
 
-    static_assert(make_precision<2>::width ==  2, "");
-    static_assert(is_same<make_precision<2>::type, duration<int64_t, ratio<1, 100>>>{}, "");
+    static_assert(make_precision<int64_t, 2>::width ==  2, "");
+    static_assert(is_same<make_precision<int64_t, 2>::type, duration<int64_t, ratio<1, 100>>>{}, "");
 
-    static_assert(make_precision<3>::width ==  3, "");
-    static_assert(is_same<make_precision<3>::type, duration<int64_t, ratio<1, 1000>>>{}, "");
+    static_assert(make_precision<int64_t, 3>::width ==  3, "");
+    static_assert(is_same<make_precision<int64_t, 3>::type, duration<int64_t, ratio<1, 1000>>>{}, "");
 
-    static_assert(make_precision<18>::width ==  18, "");
-    static_assert(is_same<make_precision<18>::type, duration<int64_t, ratio<1, 1000000000000000000>>>{}, "");
+    static_assert(make_precision<int64_t, 18>::width ==  18, "");
+    static_assert(is_same<make_precision<int64_t, 18>::type, duration<int64_t, ratio<1, 1000000000000000000>>>{}, "");
 
-    static_assert(make_precision<19>::width ==  6, "");
-    static_assert(is_same<make_precision<19>::type, microseconds>{}, "");
+    static_assert(make_precision<int64_t, 19>::width ==  6, "");
+    static_assert(is_same<make_precision<int64_t, 19>::type, microseconds>{}, "");
 
-    static_assert(make_precision<20>::width ==  6, "");
-    static_assert(is_same<make_precision<20>::type, microseconds>{}, "");
+    static_assert(make_precision<int64_t, 20>::width ==  6, "");
+    static_assert(is_same<make_precision<int64_t, 20>::type, microseconds>{}, "");
 }
