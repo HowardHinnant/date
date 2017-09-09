@@ -41,6 +41,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <climits>
 #include <ios>
 #include <istream>
 #include <iterator>
