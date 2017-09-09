@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <climits>
 #if !(__cplusplus >= 201402)
 #  include <cmath>
 #endif
@@ -4665,10 +4666,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         auto d = static_cast<int>(static_cast<unsigned>(fds.ymd.day()));
                         if (d < 10)
                             os << ' ';
-                        os << d << ' ' 
+                        os << d << ' '
                            << make_time(duration_cast<seconds>(fds.tod.to_duration()))
                            << ' ' << fds.ymd.year();
-                        
+
                     }
                     else  // *fmt == 'x'
                     {
