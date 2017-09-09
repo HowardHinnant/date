@@ -5767,9 +5767,8 @@ read_long_double(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned
                 break;
             buf += c;
             (void)is.get();
-            ++count;
         }
-        if (count == M)
+        if (++count == M)
             break;
     }
     if (count < m)
