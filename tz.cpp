@@ -125,7 +125,9 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  include <wordexp.h>
+#  if !USE_OS_TZDB
+#    include <wordexp.h>
+#  endif
 #  include <limits.h>
 #  include <string.h>
 #  if !USE_SHELL_API
