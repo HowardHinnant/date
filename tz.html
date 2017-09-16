@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-07-03<br/>
+2017-09-16<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -55,6 +55,7 @@
     <li><a href="#sys_info"><code>sys_info</code></a></li>
     <li><a href="#local_info"><code>local_info</code></a></li>
     <li><a href="#time_zone"><code>time_zone</code></a></li>
+    <li><a href="#zoned_traits"><code>zoned_traits</code></a></li>
     <li><a href="#zoned_time"><code>zoned_time</code></a></li>
     <li><a href="#make_zoned"><code>make_zoned</code></a></li>
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
@@ -558,6 +559,8 @@ formatting strings.
 
 <a name="Examples"><h3>Examples</h3>
 
+<h4>Flight time</h4>
+
 <p>
 Interesting things can happen to the apparent time when you travel across the globe
 at high speeds.  So departure and arrival times of airplane flights make for good
@@ -674,6 +677,8 @@ flight time is       14:44
 arrival Tehran time: 1979-01-01 11:<b>14:59</b> IRST
 </pre></blockquote>
 
+<h4>Format conversion</h4>
+
 <p>
 A common task in dealing with dates and times is converting from one string format
 to another.  This library is extremely flexible in handling this task.  As an
@@ -754,6 +759,247 @@ sensitive to the precision of the time point argument, and so there is no need
 for extension formatting flags to indicate fractional seconds.  <code>%S</code>
 and <code>%T</code> just work.
 </p>
+
+<h4>Custom time zone</h4>
+
+<p>
+Occasionally the IANA time zone database doesn't quite do <i>everything</i> you want.
+This library allows you to use <code>zoned_time</code> with a time zone and/or pointer
+to time zone of your own making.  One common example is the need to have a time zone
+that has a fixed offset from UTC, but for which that offset isn't known until run time.
+Below is an example which supplies a custom time zone called <code>OffsetZone</code>
+which can hold a UTC offset with minutes precision.
+</p>
+
+<blockquote><pre>
+#include "tz.h"
+#include &lt;iostream&gt;
+#include &lt;type_traits&gt;
+
+class OffsetZone
+{
+    std::chrono::minutes offset_;
+
+public:
+    explicit OffsetZone(std::chrono::minutes offset)
+        : offset_{offset}
+        {}
+
+    template &lt;class Duration&gt;
+        auto
+        to_local(date::sys_time&lt;Duration&gt; tp) const
+        {
+            using namespace date;
+            using namespace std;
+            using namespace std::chrono;
+            using LT = local_time&lt;common_type_t&lt;Duration, minutes&gt;&gt;;
+            return LT{(tp + offset_).time_since_epoch()};
+        }
+
+    template &lt;class Duration&gt;
+        auto
+        to_sys(date::local_time&lt;Duration&gt; tp) const
+        {
+            using namespace date;
+            using namespace std;
+            using namespace std::chrono;
+            using ST = sys_time&lt;common_type_t&lt;Duration, minutes&gt;&gt;;
+            return ST{(tp - offset_).time_since_epoch()};
+        }
+};
+
+int
+main()
+{
+    using namespace date;
+    using namespace std::chrono;
+    OffsetZone p3_45{3h + 45min};
+    zoned_time&lt;milliseconds, OffsetZone*&gt; zt{&amp;p3_45, floor&lt;milliseconds&gt;(system_clock::now())};
+    std::cout &lt;&lt; zt.get_sys_time() &lt;&lt; '\n';
+    std::cout &lt;&lt; zt.get_local_time() &lt;&lt; '\n';
+}
+</pre></blockquote>
+
+<p>
+This just output for me:
+</p>
+
+<blockquote><pre>
+2017-09-16 17:34:47.560
+2017-09-16 21:19:47.560
+</pre></blockquote>
+
+<p>
+The second template parameter to <code>zoned_time</code> is a pointer to a time zone.
+This example simply creates a <code>OffsetZone</code> with a UTC offset of 3:45, and
+constructs a <code>OffsetZone</code> which points to that custom time zone and
+supplies the current time to the desired precision (whatever that may be).
+</p>
+
+<p>
+You don't have to use a built-in pointer to your time zone.  You could just as easily use
+<code>unique_ptr</code>, <code>shared_ptr</code>, or whatever smart pointer is right for
+your application.  And in C++17, you won't need to supply the template parameters for
+<code>zoned_time</code> (though you still can if you want to).  That is, the construction
+of <code>zt</code> above could be simplified down to just this:
+</p>
+
+<blockquote><pre>
+zoned_time zt{&amp;p3_45, floor&lt;milliseconds&gt;(system_clock::now())};
+</pre></blockquote>
+
+<p>
+One can <i>even</i> have <code>OffsetZone</code> serve as its <i>own</i> smart pointer by
+giving it a member <code>operator-&gt;()</code> that returns itself:
+</p>
+
+<blockquote><pre>
+const OffsetZone* operator-&gt;() const {return this;}
+</pre></blockquote>
+
+<p>
+This allows you to embed the <code>OffsetZone</code> <i>directly</i> into the
+<code>zoned_time</code> instead of pointing to an externally held <code>OffsetZone</code>:
+</p>
+
+<blockquote><pre>
+zoned_time&lt;milliseconds, OffsetZone&gt; zt{OffsetZone{3h + 45min}, floor&lt;milliseconds&gt;(system_clock::now())};
+</pre></blockquote>
+
+<p>
+As it stands, <code>zoned&lt;Duration, OffsetZone&gt;</code> can't be streamed with
+<code>operator&lt;&lt;</code> or formatted with <code>format</code>.  But that can be
+fixed too:  Just give <code>OffsetZone</code> a member <code>get_info</code> which
+takes a <code>sys_time</code> and returns a
+<a href="#sys_info"><code>sys_info</code></a>:
+</p>
+
+<blockquote><pre>
+template &lt;class Duration&gt;
+    date::sys_info
+    get_info(date::sys_time&lt;Duration&gt;) const
+    {
+        using namespace date;
+        using namespace std::chrono;
+        return {sys_seconds::min(), sys_seconds::max(), offset_,
+                minutes{0}, offset_ &gt;= minutes{0}
+                                ? "+" + date::format("%H%M", offset_)
+                                : "-" + date::format("%H%M", -offset_)};
+    }
+</pre></blockquote>
+
+<p>
+Above I've chosen to make the abbreviation for <code>OffsetZone</code> equivalent to
+<code>%z</code>, but I could have installed any <code>std::string</code> I wanted to.
+This allows me to say:
+</p>
+
+<blockquote><pre>
+std::cout &lt;&lt; zt &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+which just output for me:
+</p>
+
+<blockquote><pre>
+2017-09-16 21:36:10.913 +0345
+</pre></blockquote>
+
+<p>
+If I want to make <code>zoned_time&lt;Duration, OffsetZone&gt;</code> default constructible,
+then I need to specialize <code>zoned_traits&lt;OffsetZone&gt;</code> with
+<code>default_zone()</code>:
+</p>
+
+<blockquote><pre>
+namespace date
+{
+
+template &lt;&gt;
+struct zoned_traits&lt;OffsetZone&gt;
+{
+    static
+    OffsetZone
+    default_zone()
+    {
+        using namespace std::chrono;
+        return OffsetZone{minutes{0}};
+    }
+};
+
+}  // namespace date
+</pre></blockquote>
+
+<p>
+Now this:
+</p>
+
+<blockquote><pre>
+zoned_time&lt;milliseconds, OffsetZone&gt; zt;
+std::cout &lt;&lt; zt &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+outputs:
+</p>
+
+<blockquote><pre>
+1970-01-01 00:00:00.000 +0000
+</pre></blockquote>
+
+<p>
+And if I wanted to construct a  <code>zoned_time&lt;Duration, OffsetZone&gt;</code> from
+a <code>string</code>, I need to add
+<code>static OffsetZone locate_zone(string name)</code> to my <code>zoned_traits</code>
+specialization.
+</p>
+
+<blockquote><pre>
+namespace date
+{
+
+template &lt;&gt;
+struct zoned_traits&lt;OffsetZone&gt;
+{
+    static
+    OffsetZone
+    default_zone()
+    {
+        using namespace std::chrono;
+        return OffsetZone{minutes{0}};
+    }
+
+    static
+    OffsetZone
+    locate_zone(const std::string&amp; name)
+    {
+        using namespace std::chrono;
+        if (name == "UTC")
+            return OffsetZone{minutes{0}};
+        throw std::runtime_error{"OffsetZone can't handle anything but " + name};
+    }
+};
+
+}  // namespace date
+</pre></blockquote>
+
+<p>
+Now this:
+</p>
+
+<blockquote><pre>
+zoned_time&lt;seconds, OffsetZone&gt; zt{"UTC", floor&lt;seconds&gt;(system_clock::now())};
+std::cout &lt;&lt; zt &lt;&lt; '\n';
+</pre></blockquote>
+
+<p>
+outputs:
+</p>
+
+<blockquote><pre>
+2017-09-16 18:09:22 +0000
+</pre></blockquote>
 
 <a name="Reference"></a><h2>Reference</h2>
 
@@ -1543,84 +1789,125 @@ useful for debugging this library.
 
 </blockquote>
 
+<a name="zoned_traits"></a><h3><code>zoned_traits</code></h3>
+
+<blockquote>
+<p>
+<code>zoned_traits</code> provides a means for customizing the behavior of
+<code>zoned_time&lt;Duration, TimeZonePtr&gt;</code> for the
+<code>zoned_time</code> default constructor, and constructors taking
+<code>string_view</code>.  A specialization for <code>const time_zone*</code>
+is provided by the implementation.
+</p>
+
+<pre>
+template &lt;class T&gt; struct zoned_traits {};
+
+template &lt;&gt;
+struct zoned_traits&lt;const time_zone*&gt;
+{
+    static const time_zone* default_zone();
+    static const time_zone* locate_zone(string_view name);
+};
+</pre>
+
+<pre>
+static const time_zone* zoned_traits&lt;const time_zone*&gt;::default_zone();
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>date::locate_zone("UTC")</code>.
+</p>
+</blockquote>
+
+<pre>
+static const time_zone* zoned_traits&lt;const time_zone*&gt;::locate_zone(string_view name);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>date::locate_zone(name)</code>.
+</p>
+</blockquote>
+
+</blockquote>
+
 <a name="zoned_time"></a><h3><code>zoned_time</code></h3>
 
 <blockquote>
 <p>
 <code>zoned_time</code> represents a logical paring of <code>time_zone</code> and a
-<code>time_point</code> with precision <code>Duration</code>.  If <code>seconds</code>
-is not implicitly convertible to <code>Duration</code>, the instantiation is ill-formed.
-[<i>Note:</i> There exist <code>time_zone</code>s with UTC offsets that require a
-precision of <code>seconds</code>. <i>&mdash; end note:</i>]
+<code>time_point</code> with precision <code>Duration</code>.
 </p>
 
 <pre>
-template &lt;class Duration&gt;
+template &lt;class Duration, class TimeZonePtr = const time_zone*&gt;
 class zoned_time
 {
-    const time_zone*   zone_;  // exposition only
-    sys_time&lt;Duration&gt; tp_;    // exposition only
+public:
+    using duration = common_type_t&lt;Duration, seconds&gt;;
+
+private:
+    TimeZonePtr        zone_;  // exposition only
+    sys_time&lt;duration&gt; tp_;    // exposition only
 
 public:
+    zoned_time();
     zoned_time(const zoned_time&amp;) = default;
     zoned_time&amp; operator=(const zoned_time&amp;) = default;
 
-             zoned_time();
-             zoned_time(sys_time&lt;Duration&gt; st);
-    explicit zoned_time(const time_zone* z);
-    explicit zoned_time(const std::string&amp; name);
+             zoned_time(const sys_time&lt;Duration&gt;&amp; st);
+    explicit zoned_time(TimeZonePtr z);
+    explicit zoned_time(string_view name);
 
-    template &lt;class Duration2,
-              class = std::enable_if_t
-                      &lt;
-                          std::is_convertible&lt;sys_time&lt;Duration2&gt;,
-                                              sys_time&lt;Duration&gt;&gt;{}
-                      &gt;&gt;
+    template &lt;class Duration2&gt;
         zoned_time(const zoned_time&lt;Duration2&gt;&amp; zt) noexcept;
 
-    zoned_time(const time_zone* z,      local_time&lt;Duration&gt; tp);
-    zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp);
-    zoned_time(const time_zone* z,      local_time&lt;Duration&gt; tp, choose c);
-    zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp, choose c);
+    zoned_time(TimeZonePtr z,    const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time(string_view name, const sys_time&lt;Duration&gt;&amp; st);
 
-    zoned_time(const time_zone* z,      const zoned_time&lt;Duration&gt;&amp; zt);
-    zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt);
-    zoned_time(const time_zone* z,      const zoned_time&lt;Duration&gt;&amp; zt, choose);
-    zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
+    zoned_time(TimeZonePtr z,    const local_time&lt;Duration&gt;&amp; tp);
+    zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp);
+    zoned_time(TimeZonePtr z,    const local_time&lt;Duration&gt;&amp; tp, choose c);
+    zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
-    zoned_time(const time_zone* z,      const sys_time&lt;Duration&gt;&amp; st);
-    zoned_time(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time(TimeZonePtr z,    const zoned_time&lt;Duration&gt;&amp; zt);
+    zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; zt);
+    zoned_time(TimeZonePtr z,    const zoned_time&lt;Duration&gt;&amp; zt, choose);
+    zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
 
-    zoned_time&amp; operator=(sys_time&lt;Duration&gt; st);
-    zoned_time&amp; operator=(local_time&lt;Duration&gt; ut);
+    zoned_time&amp; operator=(const sys_time&lt;Duration&gt;&amp; st);
+    zoned_time&amp; operator=(const local_time&lt;Duration&gt;&amp; ut);
 
-             operator sys_time&lt;Duration&gt;() const;
-    explicit operator local_time&lt;Duration&gt;() const;
+             operator sys_time&lt;duration&gt;()   const;
+    explicit operator local_time&lt;duration&gt;() const;
 
-    const time_zone*     get_time_zone() const;
-    local_time&lt;Duration&gt; get_local_time() const;
-    sys_time&lt;Duration&gt;   get_sys_time() const;
-    sys_info             get_info() const;
+    TimeZonePtr          get_time_zone()  const;
+    local_time&lt;duration&gt; get_local_time() const;
+    sys_time&lt;duration&gt;   get_sys_time()   const;
+    sys_info             get_info()       const;
 };
 
 using zoned_seconds = zoned_time&lt;std::chrono::seconds&gt;;
 
-template &lt;class Duration1, class Duration2&gt;
+template &lt;class Duration1, class Duration2, class TimeZonePtr&gt;
 bool
-operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+operator==(const zoned_time&lt;Duration1, TimeZonePtr&gt;&amp; x,
+           const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y);
 
-template &lt;class Duration1, class Duration2&gt;
+template &lt;class Duration1, class Duration2, class TimeZonePtr&gt;
 bool
-operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+operator!=(const zoned_time&lt;Duration1, TimeZonePtr&gt;&amp; x,
+           const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
-operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t)
+template &lt;class charT, class traits, class Duration, class TimeZonePtr&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os,
+               const zoned_time&lt;Duration, TimeZonePtr&gt;& t);
 
-template &lt;class CharT, class Traits, class Duration&gt;
-std::basic_ostream&lt;CharT, Traits&gt;&amp;
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration, class TimeZonePtr&gt;
+    basic_ostream&lt;charT, traits&gt;&amp;
+    to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
+              const zoned_time&lt;Duration, TimeZonePtr&gt;&amp; tp);
 </pre>
 
 <p>
@@ -1630,8 +1917,23 @@ and is not ambiguous.
 </p>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&amp;) = default;
-zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(const zoned_time&amp;) = default;
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time();
+</pre>
+<blockquote>
+<p>
+<i>Remarks:</i>  This constructor does not participate in overload resolution unless
+the expression <code>zoned_traits&lt;TimeZonePtr&gt;::default_zone()</code> is well formed.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing
+<code>zone_</code> with <code>zoned_traits&lt;TimeZonePtr&gt;::default_zone()</code> and
+default constructing <code>tp_</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(const zoned_time&amp;) = default;
+zoned_time&lt;Duration, TimeZonePtr&gt;&amp; zoned_time&lt;Duration&gt;::operator=(const zoned_time&amp;) = default;
 </pre>
 <blockquote>
 <p>
@@ -1644,63 +1946,60 @@ members.
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time();
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt;name() == "UTC"</code>, and
-<code>zt.get_sys_time() == sys_seconds{}</code>.
+<i>Remarks:</i>  This constructor does not participate in overload resolution unless
+the expression <code>zoned_traits&lt;TimeZonePtr&gt;::default_zone()</code> is well formed.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing
+<code>zone_</code> with <code>zoned_traits&lt;TimeZonePtr&gt;::default_zone()</code> and
+<code>tp_</code> with <code>st</code>.
 </p>
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(sys_time&lt;Duration&gt; st);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt;name() == "UTC"</code>, and
-<code>zt.get_sys_time() == st</code>.
-</p>
-</blockquote>
-
-<pre>
-explicit zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z);
+explicit zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z);
 </pre>
 <blockquote>
 <p>
 <i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
 </p>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and
-<code>zt.get_sys_time() == sys_seconds{}</code>.
+<i>Effects:</i> Constructs a <code>zoned_time</code> initializing <code>zone_</code>
+with <code>std::move(z)</code>.
 </p>
 </blockquote>
 
 <pre>
-explicit zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name);
+explicit zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name);
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Equivalent to construction with <code>locate_zone(name)</code>.
+<i>Remarks:</i>  This constructor does not participate in overload resolution unless
+the expression <code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(string_view{})</code>
+is well formed and <code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(string_view{})</code>.
 </p>
 <p>
-<i>Throws:</i> Any exception propagating out of <code>locate_zone(name)</code>.
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing
+<code>zone_</code> with <code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code>
+and default constructing <code>tp_</code>.
 </p>
 </blockquote>
 
 <pre>
-template &lt;class Duration2,
-          class = std::enable_if_t
-                  &lt;
-                      std::is_convertible&lt;sys_time&lt;Duration2&gt;,
-                                          sys_time&lt;Duration&gt;&gt;{}
-                  &gt;&gt;
-    zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&lt;Duration2&gt;&amp; y) noexcept;
+template &lt;class Duration2, TimeZonePtr&gt;
+    zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y) noexcept;
 </pre>
 <blockquote>
+<p>
+<i>Remarks:</i> Does not participate in overload resolution unless
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration&gt;</code>.
+</p>
 <p>
 <i>Effects:</i> Constructs a <code>zoned_time</code> <code>x</code> such that
 <code>x == y</code>.
@@ -1708,87 +2007,153 @@ template &lt;class Duration2,
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp);
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
 <i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
 </p>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and <code>zt.get_local_time() == tp</code>.
-</p>
-<p>
-<i>Throws:</i> Any exception that <code>z-&gt;to_sys(tp)</code> would throw.
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
+with <code>std::move(z)</code> and <code>tp_</code> with <code>st</code>.
 </p>
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp);
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), tp}</code>.
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code> and <code>st</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name), st}</code>.
 </p>
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, local_time&lt;Duration&gt; tp, choose c);
-</pre>
-<blockquote>
-<p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and
-<code>zt.get_sys_time() == z-&gt;to_sys(tp, c)</code>.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, local_time&lt;Duration&gt; tp, choose c);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), tp, c}</code>.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; y);
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const local_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
 <i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
 </p>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and
-<code>zt.get_sys_time() == y.get_sys_time()</code>.
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>declval&lt;TimeZonePtr&amp;&gt;()-&gt;to_sys(local_time&lt;Duration&gt;{})</code>
+is convertible to <code>sys_time&lt;duration&gt;</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
+with <code>std::move(z)</code> and <code>tp_</code> with <code>zone_-&gt;to_sys(t)</code>.
 </p>
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; y);
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp);
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y}</code>.
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code> and <code>tp</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name), tp}</code>.
 </p>
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;Duration&gt;&amp; y, choose);
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const local_time&lt;Duration&gt;&amp; tp, choose c);
 </pre>
 <blockquote>
 <p>
 <i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
 </p>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and
-<code>zt.get_sys_time() == y.get_sys_time()</code>.
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>decltype(declval&lt;TimeZonePtr&amp;&gt;()-&gt;to_sys(local_time&lt;Duration&gt;{}, choose::earliest))</code>
+is convertible to <code>sys_time&lt;duration&gt;</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
+with <code>std::move(z)</code> and <code>tp_</code> with <code>zone_-&gt;to_sys(t, c)</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp, choose c);
+</pre>
+<blockquote>
+<p>
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code>,
+<code>local_time&lt;Duration&gt;</code> and <code>choose</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with
+<code>{zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name), tp, c}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
+with <code>std::move(z)</code> and <code>tp_</code> with <code>z.tp_</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; y);
+</pre>
+<blockquote>
+<p>
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code>
+and <code>zoned_time</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with
+<code>{zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name), y}</code>.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration&gt;&amp; y, choose);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{z, y}</code>.
+</p>
+<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
+</p>
+</blockquote>
+
+<pre>
+zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; y, choose c);
+</pre>
+<blockquote>
+<p>
+<i>Remarks:</i> This constructor does not participate in overload resolution unless
+<code>zoned_time</code> is constructible from the return type of
+<code>zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name)</code>, <code>zoned_time</code>,
+and <code>choose</code>.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y, c}</code>.
 </p>
 <p>
 <i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
@@ -1796,41 +2161,7 @@ zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const zoned_time&lt;D
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const zoned_time&lt;Duration&gt;&amp; y, choose);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y}</code>.
-</p>
-<p>
-<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration&gt;::zoned_time(const time_zone* z, const sys_time&lt;Duration&gt;&amp; st);
-</pre>
-<blockquote>
-<p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
-</p>
-<p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>zt</code> such that
-<code>zt.get_time_zone()-&gt; == z</code>, and <code>zt.get_sys_time() == st</code>.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration&gt;::zoned_time(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), st}</code>.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(sys_time&lt;Duration&gt; st);
+zoned_time&lt;Duration, TimeZonePtr&gt;&amp; zoned_time&lt;Duration, TimeZonePtr&gt;::operator=(const sys_time&lt;Duration&gt;&amp; st);
 </pre>
 <blockquote>
 <p>
@@ -1843,7 +2174,7 @@ no effect on the return value of <code>get_time_zone()</code>.
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;&amp; zoned_time&lt;Duration&gt;::operator=(local_time&lt;Duration&gt; lt);
+zoned_time&lt;Duration, TimeZonePtr&gt;&amp; zoned_time&lt;Duration, TimeZonePtr&gt;::operator=(const local_time&lt;Duration&gt;&amp; lt);
 </pre>
 <blockquote>
 <p>
@@ -1856,7 +2187,7 @@ no effect on the return value of <code>get_time_zone()</code>.
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration&gt;::operator sys_time&lt;Duration&gt;() const;
+zoned_time&lt;Duration, TimeZonePtr&gt;::operator sys_time&lt;duration&gt;() const;
 </pre>
 <blockquote>
 <p>
@@ -1865,7 +2196,7 @@ zoned_time&lt;Duration&gt;::operator sys_time&lt;Duration&gt;() const;
 </blockquote>
 
 <pre>
-explicit zoned_time&lt;Duration&gt;::operator local_time&lt;Duration&gt;() const;
+explicit zoned_time&lt;Duration, TimeZonePtr&gt;::operator local_time&lt;duration&gt;() const;
 </pre>
 <blockquote>
 <p>
@@ -1874,7 +2205,7 @@ explicit zoned_time&lt;Duration&gt;::operator local_time&lt;Duration&gt;() const
 </blockquote>
 
 <pre>
-const time_zone* zoned_time&lt;Duration&gt;::get_time_zone() const;
+TimeZonePtr zoned_time&lt;Duration, TimeZonePtr&gt;::get_time_zone() const;
 </pre>
 <blockquote>
 <p>
@@ -1883,7 +2214,7 @@ const time_zone* zoned_time&lt;Duration&gt;::get_time_zone() const;
 </blockquote>
 
 <pre>
-local_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_local_time() const;
+local_time&lt;typename zoned_time&lt;Duration, TimeZonePtr&gt;::duration&gt; zoned_time&lt;Duration, TimeZonePtr&gt;::get_local_time() const;
 </pre>
 <blockquote>
 <p>
@@ -1892,7 +2223,7 @@ local_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_local_time() const;
 </blockquote>
 
 <pre>
-sys_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_sys_time() const;
+sys_time&lt;typename zoned_time&lt;Duration, TimeZonePtr&gt;::duration&gt; zoned_time&lt;Duration, TimeZonePtr&gt;::get_sys_time() const;
 </pre>
 <blockquote>
 <p>
@@ -1901,7 +2232,7 @@ sys_time&lt;Duration&gt; zoned_time&lt;Duration&gt;::get_sys_time() const;
 </blockquote>
 
 <pre>
-sys_info zoned_time&lt;Duration&gt;::get_info() const;
+sys_info zoned_time&lt;Duration, TimeZonePtr&gt;::get_info() const;
 </pre>
 <blockquote>
 <p>
@@ -1910,9 +2241,10 @@ sys_info zoned_time&lt;Duration&gt;::get_info() const;
 </blockquote>
 
 <pre>
-template &lt;class Duration1, class Duration2&gt;
+template &lt;class Duration1, class Duration2, class TimeZonePtr&gt;
 bool
-operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+operator==(const zoned_time&lt;Duration1, TimeZonePtr&gt;&amp; x,
+           const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y);
 </pre>
 <blockquote>
 <p>
@@ -1921,9 +2253,10 @@ operator==(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duratio
 </blockquote>
 
 <pre>
-template &lt;class Duration1, class Duration2&gt;
+template &lt;class Duration1, class Duration2, class TimeZonePtr&gt;
 bool
-operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duration2&gt;&amp; y);
+operator!=(const zoned_time&lt;Duration1, TimeZonePtr&gt;&amp; x,
+           const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y);
 </pre>
 <blockquote>
 <p>
@@ -1932,13 +2265,15 @@ operator!=(const zoned_time&lt;Duration1&gt;&amp; x, const zoned_time&lt;Duratio
 </blockquote>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-std::basic_ostream&lt;class CharT, class Traits&gt;&amp;
-operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, const zoned_time&lt;Duration&gt;& t)
+template &lt;class charT, class traits, class Duration, class TimeZonePtr&gt;
+basic_ostream&lt;charT, traits&gt;&
+operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;& os,
+           const zoned_time&lt;Duration, TimeZonePtr&gt;&amp; t)
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Calls <code>to_stream(os, "%F %T %Z", t)</code>.
+<i>Effects:</i> Streams <code>t</code> to <code>os</code> using the format "%F %T %Z"
+and the value returned from <code>t.get_local_time()</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -1946,17 +2281,17 @@ operator&lt;&lt;(std::basic_ostream&lt;class CharT, class Traits&gt;&amp; os, co
 </blockquote>
 
 <pre>
-template &lt;class CharT, class Traits, class Duration&gt;
-std::basic_ostream&lt;CharT, Traits&gt;&amp;
-to_stream(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const CharT* fmt,
-          const zoned_time&lt;Duration&gt;&amp; tp);
+template &lt;class charT, class traits, class Duration, class TimeZonePtr&gt;
+basic_ostream&lt;charT, traits&gt;&amp;
+to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
+          const zoned_time&lt;Duration, TimeZonePtr&gt;&amp; tp);
 </pre>
 
 <blockquote>
 <p>
-<i>Effects:</i> Constructs a copy of the <code>sys_info</code> object by calling
-<code>tp.get_info()</code> (stored in a local named <code>info</code> for example).
-Then calls <code>to_stream(os, fmt, tp.get_local_time(), &amp;info.abbrev, &amp;info.offset)</code>.
+<i>Effects:</i> First obtains a <code>sys_info</code> via <code>tp.get_info()</code>
+which for exposition purposes will be referred to as <code>info</code>.  Then calls
+<code>to_stream(os, fmt, tp.get_local_time(), &amp;info.abbrev, &amp;info.offset)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
