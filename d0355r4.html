@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-08-13<br>
+2017-09-16<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -9719,7 +9719,7 @@ bool operator&gt;=(const time_zone&amp; x, const time_zone&amp; y) noexcept;
 
 <p>
 <code>zoned_traits</code> provides a means for customizing the behavior of
-<code>zoned_time&lt;Duration, TimeZonePtr</code> for the
+<code>zoned_time&lt;Duration, TimeZonePtr&gt;</code> for the
 <code>zoned_time</code> default constructor, and constructors taking
 <code>string_view</code>.  A specialization for <code>const time_zone*</code>
 is provided by the implementation.
@@ -9741,7 +9741,7 @@ static const time_zone* zoned_traits&lt;const time_zone*&gt;::default_zone();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>date::locate_zone("UTC")</code>.
+<i>Returns:</i> <code>std::chrono::locate_zone("UTC")</code>.
 </p>
 </blockquote>
 
@@ -9750,7 +9750,7 @@ static const time_zone* zoned_traits&lt;const time_zone*&gt;::locate_zone(string
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>date::locate_zone(name)</code>.
+<i>Returns:</i> <code>std::chrono::locate_zone(name)</code>.
 </p>
 </blockquote>
 
