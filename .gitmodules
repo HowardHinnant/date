@@ -1,0 +1,4 @@
+[submodule "cmake-helper/DownloadProject"]
+	path = cmake-helper/DownloadProject
+	url = https://github.com/Crascit/DownloadProject
+	branch = master
