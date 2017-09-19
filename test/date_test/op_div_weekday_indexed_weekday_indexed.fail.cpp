@@ -22,7 +22,7 @@
 
 // weekday_indexed / weekday_indexed not allowed
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

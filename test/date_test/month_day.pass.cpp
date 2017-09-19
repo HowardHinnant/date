@@ -40,7 +40,7 @@
 
 // std::ostream& operator<<(std::ostream& os, const month_day& md);
 
-#include "date.h"
+#include "date/date.h"
 
 #include <cassert>
 #include <sstream>

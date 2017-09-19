@@ -22,7 +22,7 @@
 
 // weekday_last / weekday_last not allowed
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

@@ -34,7 +34,7 @@
 //
 // std::ostream& operator<<(std::ostream& os, const weekday_last& wdl);
 
-#include "date.h"
+#include "date/date.h"
 
 #include <cassert>
 #include <sstream>

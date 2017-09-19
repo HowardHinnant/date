@@ -22,7 +22,7 @@
 
 // month_day / month_day not allowed
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

@@ -38,7 +38,7 @@
 
 // std::ostream& operator<<(std::ostream& os, const month_day_last& mdl);
 
-#include "date.h"
+#include "date/date.h"
 
 #include <cassert>
 #include <sstream>

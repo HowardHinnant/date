@@ -22,7 +22,7 @@
 
 // This test is meant to maintain a record of the sizeof each type.
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

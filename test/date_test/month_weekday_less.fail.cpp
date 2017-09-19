@@ -22,7 +22,7 @@
 
 // month_weekday < month_weekday not allowed
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

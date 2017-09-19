@@ -37,7 +37,7 @@
 
 // std::ostream& operator<<(std::ostream& os, const month_weekday& mwd);
 
-#include "date.h"
+#include "date/date.h"
 
 #include <cassert>
 #include <sstream>
