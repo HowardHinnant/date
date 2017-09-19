@@ -36,7 +36,7 @@
 //
 // std::ostream& operator<<(std::ostream& os, const weekday_indexed& wdi);
 
-#include "date.h"
+#include "date/date.h"
 
 #include <cassert>
 #include <sstream>

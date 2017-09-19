@@ -25,7 +25,7 @@
 // constexpr month_weekday operator/(const weekday_indexed& wdi, const month& m) noexcept;
 // constexpr month_weekday operator/(const weekday_indexed& wdi, int   m) noexcept;
 
-#include "date.h"
+#include "date/date.h"
 
 int
 main()

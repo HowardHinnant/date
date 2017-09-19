@@ -27,7 +27,7 @@
 // been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
-#include "date.h"
+#include "date/date.h"
 
 namespace islamic
 {
