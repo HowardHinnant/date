@@ -101,3 +101,8 @@ if (${LIBRARY_NAME}_STANDALONE_PROJECT)
 endif ()
 
 
+if (${LIBRARY_NAME}_STANDALONE_PROJECT)
+    include_directories(include)
+    enable_testing()
+    add_subdirectory(test)
+endif()
