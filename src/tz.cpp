@@ -31,9 +31,9 @@
 // We did not mean to shout.
 
 #ifdef _WIN32
-   // Windows.h will be included directly and indirectly (e.g. by curl).
-   // We need to define these macros to prevent Windows.h bringing in
-   // more than we need and do it early so Windows.h doesn't get included
+   // windows.h will be included directly and indirectly (e.g. by curl).
+   // We need to define these macros to prevent windows.h bringing in
+   // more than we need and do it early so windows.h doesn't get included
    // without these macros having been defined.
    // min/max macros interfere with the C++ versions.
 #  ifndef NOMINMAX
@@ -80,7 +80,7 @@
 
 #  endif  // __MINGW32__
 
-#  include <Windows.h>
+#  include <windows.h>
 #endif  // _WIN32
 
 #include "date/tz_private.h"
@@ -107,7 +107,7 @@
 #include <sys/stat.h>
 
 // unistd.h is used on some platforms as part of the the means to get
-// the current time zone. On Win32 Windows.h provides a means to do it.
+// the current time zone. On Win32 windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
@@ -118,10 +118,10 @@
                         //   (see https://github.com/philsquared/Catch/issues/690)
 #  endif
 
-#  include <ShlObj.h> // CoTaskFree, ShGetKnownFolderPath etc.
+#  include <shlobj.h> // CoTaskFree, ShGetKnownFolderPath etc.
 #  if HAS_REMOTE_API
 #    include <direct.h> // _mkdir
-#    include <Shellapi.h> // ShFileOperation etc.
+#    include <shellapi.h> // ShFileOperation etc.
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
