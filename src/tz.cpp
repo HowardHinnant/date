@@ -313,7 +313,37 @@ CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 #endif  // USE_OS_TZDB
 
 #ifndef _WIN32
-constexpr const char tz_dir[] = "/usr/share/zoneinfo";
+#  ifndef __APPLE__
+static const std::string tz_dir = "/usr/share/zoneinfo";
+#  else  // __APPLE__
+
+static
+std::string
+discover_tz_dir()
+{
+    struct stat sb;
+    CONSTDATA auto timezone = "/etc/localtime";
+    using namespace std;
+    if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
+        throw runtime_error("discover_tz_dir failed\n");
+    string result;
+    char rp[PATH_MAX];
+    if (realpath(timezone, rp))
+        result = string(rp);
+    else
+        throw system_error(errno, system_category(), "realpath() failed");
+    auto i = result.find("zoneinfo");
+    if (i == string::npos)
+        throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
+    i = result.find('/', i);
+    if (i == string::npos)
+        throw runtime_error("discover_tz_dir failed to find '/'\n");
+    return result.substr(0, i);
+}
+
+static const std::string tz_dir = discover_tz_dir();
+
+#  endif  // __APPLE__
 #endif
 
 // +-------------------+
@@ -2585,7 +2615,7 @@ init_tzdb()
                 }
                 else
                 {
-                    db->zones.emplace_back(subname.substr(sizeof(tz_dir)),
+                    db->zones.emplace_back(subname.substr(tz_dir.size()+1),
                                            detail::undocumented{});
                 }
             }
@@ -3596,7 +3626,7 @@ TZ_DB::current_zone() const
 
         const size_t pos = result.find(tz_dir);
         if (pos != result.npos)
-            result.erase(0, sizeof(tz_dir)+pos);
+            result.erase(0, tz_dir.size()+1+pos);
         return locate_zone(result);
     }
     {
