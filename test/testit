@@ -48,7 +48,10 @@ if [ -z "$CXX_LANG" ]
 then
     CXX_LANG=c++14
 fi
-OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -Wall $ROOT/tz.cpp -lcurl"
+OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -Wall $ROOT/src/tz.cpp -lcurl"
+
+echo $ROOT
+HEADER_INCLUDE="-I$ROOT/include -I$ROOT/include/date"
 
 case $TRIPLE in
   *-*-mingw* | *-*-cygwin* | *-*-win*)
