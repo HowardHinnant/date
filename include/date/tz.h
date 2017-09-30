@@ -1163,7 +1163,7 @@ struct timezone_mapping
 
 #endif  // _WIN32
 
-struct TZ_DB
+struct tzdb
 {
     std::string               version = "unknown";
     std::vector<time_zone>    zones;
@@ -1179,14 +1179,14 @@ struct TZ_DB
 #ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
 #endif
-    TZ_DB* next = nullptr;
+    tzdb* next = nullptr;
 
-    TZ_DB() = default;
+    tzdb() = default;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    TZ_DB(TZ_DB&&) = default;
-    TZ_DB& operator=(TZ_DB&&) = default;
+    tzdb(tzdb&&) = default;
+    tzdb& operator=(tzdb&&) = default;
 #else  // defined(_MSC_VER) && (_MSC_VER < 1900)
-    TZ_DB(TZ_DB&& src)
+    tzdb(tzdb&& src)
         : version(std::move(src.version))
         , zones(std::move(src.zones))
         , links(std::move(src.links))
@@ -1195,7 +1195,7 @@ struct TZ_DB
         , mappings(std::move(src.mappings))
     {}
 
-    TZ_DB& operator=(TZ_DB&& src)
+    tzdb& operator=(tzdb&& src)
     {
         version = std::move(src.version);
         zones = std::move(src.zones);
@@ -1215,22 +1215,24 @@ struct TZ_DB
     const time_zone* current_zone() const;
 };
 
-DATE_API std::ostream&
-operator<<(std::ostream& os, const TZ_DB& db);
+using TZ_DB = tzdb;
 
-DATE_API const TZ_DB& get_tzdb();
+DATE_API std::ostream&
+operator<<(std::ostream& os, const tzdb& db);
+
+DATE_API const tzdb& get_tzdb();
 
 class tzdb_list
 {
-    std::atomic<TZ_DB*> head_{nullptr};
+    std::atomic<tzdb*> head_{nullptr};
 
 public:
     ~tzdb_list();
     tzdb_list() = default;
     tzdb_list(tzdb_list&& x) noexcept;
 
-    const TZ_DB& front() const noexcept {return *head_;}
-          TZ_DB& front()       noexcept {return *head_;}
+    const tzdb& front() const noexcept {return *head_;}
+          tzdb& front()       noexcept {return *head_;}
 
     class const_iterator;
 
@@ -1244,19 +1246,19 @@ public:
 
     struct undocumented_helper;
 private:
-    void push_front(TZ_DB* tzdb) noexcept;
+    void push_front(tzdb* tzdb) noexcept;
 };
 
 class tzdb_list::const_iterator
 {
-    TZ_DB* p_ = nullptr;
+    tzdb* p_ = nullptr;
 
-    explicit const_iterator(TZ_DB* p) noexcept : p_{p} {}
+    explicit const_iterator(tzdb* p) noexcept : p_{p} {}
 public:
     const_iterator() = default;
 
     using iterator_category = std::forward_iterator_tag;
-    using value_type        = TZ_DB;
+    using value_type        = tzdb;
     using reference         = const value_type&;
     using pointer           = const value_type*;
     using difference_type   = std::ptrdiff_t;
@@ -1312,8 +1314,8 @@ DATE_API tzdb_list& get_tzdb_list();
 
 #if !USE_OS_TZDB
 
-DATE_API const TZ_DB& reload_tzdb();
-DATE_API void         set_install(const std::string& install);
+DATE_API const tzdb& reload_tzdb();
+DATE_API void        set_install(const std::string& install);
 
 #endif  // !USE_OS_TZDB
 

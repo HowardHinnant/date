@@ -359,11 +359,11 @@ struct undocumented {explicit undocumented() = default;};
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
-static std::unique_ptr<TZ_DB> init_tzdb();
+static std::unique_ptr<tzdb> init_tzdb();
 
 tzdb_list::~tzdb_list()
 {
-    const TZ_DB* ptr = head_;
+    const tzdb* ptr = head_;
     head_ = nullptr;
     while (ptr != nullptr)
     {
@@ -379,7 +379,7 @@ tzdb_list::tzdb_list(tzdb_list&& x) noexcept
 }
 
 void
-tzdb_list::push_front(TZ_DB* tzdb) noexcept
+tzdb_list::push_front(tzdb* tzdb) noexcept
 {
     tzdb->next = head_;
     head_ = tzdb;
@@ -396,7 +396,7 @@ tzdb_list::erase_after(const_iterator p) noexcept
 
 struct tzdb_list::undocumented_helper
 {
-    static void push_front(tzdb_list& db_list, TZ_DB* tzdb) noexcept
+    static void push_front(tzdb_list& db_list, tzdb* tzdb) noexcept
     {
         db_list.push_front(tzdb);
     }
@@ -2573,10 +2573,10 @@ get_version()
 # endif
 
 static
-std::unique_ptr<TZ_DB>
+std::unique_ptr<tzdb>
 init_tzdb()
 {
-    std::unique_ptr<TZ_DB> db(new TZ_DB);
+    std::unique_ptr<tzdb> db(new tzdb);
 
     //Iterate through folders
     std::queue<std::string> subfolders;
@@ -3280,7 +3280,7 @@ get_version(const std::string& path)
 }
 
 static
-std::unique_ptr<TZ_DB>
+std::unique_ptr<tzdb>
 init_tzdb()
 {
     using namespace date;
@@ -3288,7 +3288,7 @@ init_tzdb()
     const std::string path = install + folder_delimiter;
     std::string line;
     bool continue_zone = false;
-    std::unique_ptr<TZ_DB> db(new TZ_DB);
+    std::unique_ptr<tzdb> db(new tzdb);
 
 #if AUTO_DOWNLOAD
     if (!file_exists(install))
@@ -3405,7 +3405,7 @@ init_tzdb()
     return db;
 }
 
-const TZ_DB&
+const tzdb&
 reload_tzdb()
 {
 #if AUTO_DOWNLOAD
@@ -3419,7 +3419,7 @@ reload_tzdb()
 
 #endif  // !USE_OS_TZDB
 
-const TZ_DB&
+const tzdb&
 get_tzdb()
 {
     return get_tzdb_list().front();
@@ -3427,9 +3427,9 @@ get_tzdb()
 
 const time_zone*
 #if HAS_STRING_VIEW
-TZ_DB::locate_zone(std::string_view tz_name) const
+tzdb::locate_zone(std::string_view tz_name) const
 #else
-TZ_DB::locate_zone(const std::string& tz_name) const
+tzdb::locate_zone(const std::string& tz_name) const
 #endif
 {
     auto zi = std::lower_bound(zones.begin(), zones.end(), tz_name,
@@ -3482,7 +3482,7 @@ locate_zone(const std::string& tz_name)
 #if USE_OS_TZDB
 
 std::ostream&
-operator<<(std::ostream& os, const TZ_DB& db)
+operator<<(std::ostream& os, const tzdb& db)
 {
     os << "Version: " << db.version << "\n\n";
     for (const auto& x : db.zones)
@@ -3498,7 +3498,7 @@ operator<<(std::ostream& os, const TZ_DB& db)
 #else  // !USE_OS_TZDB
 
 std::ostream&
-operator<<(std::ostream& os, const TZ_DB& db)
+operator<<(std::ostream& os, const tzdb& db)
 {
     os << "Version: " << db.version << '\n';
     std::string title("--------------------------------------------"
@@ -3579,7 +3579,7 @@ getTimeZoneKeyName()
 }
 
 const time_zone*
-TZ_DB::current_zone() const
+tzdb::current_zone() const
 {
     std::string win_tzid = getTimeZoneKeyName();
     std::string standard_tzid;
@@ -3597,7 +3597,7 @@ TZ_DB::current_zone() const
 #else  // !_WIN32
 
 const time_zone*
-TZ_DB::current_zone() const
+tzdb::current_zone() const
 {
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
