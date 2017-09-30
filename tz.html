@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-09-16<br/>
+2017-09-30<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -1017,7 +1017,7 @@ functions access it.
 </p>
 
 <pre>
-struct TZ_DB
+struct tzdb
 {
     std::string            version;
     std::vector&lt;time_zone&gt; zones;
@@ -1028,7 +1028,7 @@ struct TZ_DB
 </pre>
 
 <p>
-The <cod>TZ_DB</code> database is a singleton.  And access to it is
+The <cod>tzdb</code> database is a singleton.  And access to it is
 <i>read-only</i>, except for <code>reload_tzdb()</code> which re-initializes it.
 Each <code>vector</code> is sorted to enable fast lookup.  You don't have to explicitly
 program binary search lookups on it.  That is handled by the API.  But you <i>can</i>
@@ -1039,7 +1039,7 @@ be of benefit to your inspection logic.
 <p>
 <i>All</i> information in the
 <a href="http://www.iana.org/time-zones">IANA time zone database</a> is
-represented in the above <code>TZ_DB</code> data structure, except for the
+represented in the above <code>tzdb</code> data structure, except for the
 comments in the database.  Thus it is up to you, the client of this library, to
 decide what to do with this data.  This library makes it especially easy and
 convenient to extract the data in the way that is most commonly used (e.g. time
@@ -1069,7 +1069,7 @@ information, which includes macOS and iOS.
 </ul>
 
 <pre>
-const TZ_DB&amp; get_tzdb();
+const tzdb&amp; get_tzdb();
 </pre>
 <blockquote>
 <p>
@@ -1099,7 +1099,7 @@ your compiler implements threadsafe function-local statics as specified by C++11
 </p>
 <p>
 <i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
-be returned to a valid <code>TZ_DB</code>.
+be returned to a valid <code>tzdb</code>.
 </p>
 </blockquote>
 
@@ -1146,7 +1146,7 @@ pointer to a valid <code>time_zone</code>. <i>&mdash; end note</i>]
 </blockquote>
 
 <pre>
-const TZ_DB&amp; reload_tzdb();
+const tzdb&amp; reload_tzdb();
 </pre>
 <blockquote>
 <p>
@@ -1160,13 +1160,13 @@ If If <code>tz.cpp</code> was compiled with the configuration macro
 <a href="http://www.iana.org/time-zones">IANA website</a> is unavailable, or if the
 latest version is already installed, there are no effects.  Otherwise, a new version
 is available.  It is downloaded and installed, and then the program re-initializes
-the <code>TZ_DB</code> singleton from the new disk files.
+the <code>tzdb</code> singleton from the new disk files.
 </p>
 
 <p>
 If <code>tz.cpp</code> was compiled with the configuration macro
 <code>AUTO_DOWNLOAD == 0</code>, this function re-initializes the
-<code>TZ_DB</code> singleton from the disk files.  You can manually replace the
+<code>tzdb</code> singleton from the disk files.  You can manually replace the
 database without ill-effects after your program has called
 <code>get_tzdb()</code> and before it calls <code>reload_tzdb()</code>, as there is
 no access to the files on disk between the first call to <code>get_tzdb()</code> and
@@ -1187,7 +1187,7 @@ it <i>always</i> does when <code>AUTO_DOWNLOAD == 0</code>), all outstanding
 </p>
 <p>
 <i>Throws:</i> <code>std::runtime_error</code> if for any reason a reference can not
-be returned to a valid <code>TZ_DB</code>.
+be returned to a valid <code>tzdb</code>.
 </p>
 
 <p>
@@ -1256,13 +1256,13 @@ called by your code:
 </p>
 
 <blockquote><pre>
-const TZ_DB&amp; reload_tzdb();
+const tzdb&amp; reload_tzdb();
 bool remote_download(const std::string&amp; version);
 bool remote_install(const std::string&amp; version);
 </pre></blockquote>
 
 <p>
-Once your program has initialized the <code>TZ_DB</code> singleton, that singleton
+Once your program has initialized the <code>tzdb</code> singleton, that singleton
 can <i>never</i> be changed without <i>explicit</i> use of <code>reload_tzdb()</code>.
 <i>&mdash; end note</i>]
 </p>
