@@ -1,7 +1,7 @@
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <hr/>
 
-**[Try it out on wandbox!](https://wandbox.org/permlink/n6NEh9nFCWLVgm1Q)**
+**[Try it out on wandbox!](https://wandbox.org/permlink/89NAwx7m3FtqFSJO)**
 
 This is actually several separate C++11/C++14 libraries:
 
