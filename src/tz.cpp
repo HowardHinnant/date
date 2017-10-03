@@ -93,6 +93,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -918,6 +919,8 @@ detail::operator>>(std::istream& is, MonthDayTime& x)
 {
     using namespace date;
     using namespace std::chrono;
+    assert(((std::ios::failbit | std::ios::badbit) & is.exceptions()) ==
+            (std::ios::failbit | std::ios::badbit));
     x = MonthDayTime{};
     if (!is.eof() && ws(is) && !is.eof() && is.peek() != '#')
     {
@@ -935,11 +938,11 @@ detail::operator>>(std::istream& is, MonthDayTime& x)
             else if (std::isalpha(is.peek()))
             {
                 auto dow = parse_dow(is);
-                char c;
+                char c{};
                 is >> c;
                 if (c == '<' || c == '>')
                 {
-                    char c2;
+                    char c2{};
                     is >> c2;
                     if (c2 != '=')
                         throw std::runtime_error(std::string("bad operator: ") + c + c2);
@@ -1398,7 +1401,7 @@ find_previous_rule(const Rule* r, date::year y)
     if (y == r->starting_year())
     {
         if (r == &rules.front() || r->name() != r[-1].name())
-            return {nullptr, year::min()};
+            std::terminate();  // never called with first rule
         --r;
         if (y == r->starting_year())
             return {r, y};
