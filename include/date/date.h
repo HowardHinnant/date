@@ -4566,7 +4566,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using namespace std;
     using namespace std::chrono;
-    tm tm;
+    tm tm{};
 #if !ONLY_C_LOCALE
     auto& facet = use_facet<time_put<CharT>>(os.getloc());
 #endif
