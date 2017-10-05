@@ -160,7 +160,7 @@ format:
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -321,7 +321,7 @@ unrelated time zone). What does that look like?
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -568,7 +568,7 @@ examples involving time zone arithmetic.
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -642,7 +642,7 @@ was in the air.  This can be taken into account with the following code:
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -772,7 +772,7 @@ which can hold a UTC offset with minutes precision.
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 #include &lt;type_traits&gt;
 
@@ -1514,7 +1514,7 @@ public:
 </p>
 <blockquote>
 <pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -1568,7 +1568,7 @@ public:
 </p>
 <blockquote>
 <pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -3041,7 +3041,7 @@ prior to the leap second.  But the maping between UTC, TAI and GPS is all one-to
 </p>
 
 <blockquote><pre>
-#include "tz.h"
+#include "date/tz.h"
 #include &lt;iostream&gt;
 
 int
@@ -3372,7 +3372,7 @@ Example compile command I commonly use on macOS:
 </p>
 
 <blockquote><pre>
-clang++ -std=c++14 test.cpp -I../date ../date/tz.cpp -O3 -lcurl
+clang++ -std=c++14 test.cpp -I../date/include ../date/src/tz.cpp -O3 -lcurl
 </pre></blockquote>
 
 <h3>Windows specific:</h3>
