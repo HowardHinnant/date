@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-09-30<br>
+2017-10-14<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -2945,6 +2945,13 @@ will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 
 <a name="time.format"></a><p class = note>
 Add a new section 23.17.8 Formatting [time.format]:
+</p>
+
+<p class = note>
+If <a href="https://wg21.link/p0645"><code>fmt</code> (P0645)</a> moves forward
+within the LEWG, this section can easily be reworked to plug into that facility
+without loss of functionality.  This will avoid two unrelated
+<code>format</code> facilities in the standard.
 </p>
 
 <blockquote>
