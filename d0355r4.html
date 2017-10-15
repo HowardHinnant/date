@@ -59,6 +59,9 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li>Add note to promise compatibility with <a href="https://wg21.link/p0645"><code>fmt</code> (P0645)</a></li>
+<li>Have <code>format</code> throw an exception if anything happens so that it 
+could not return an accurate string.</li>
 <li>Template <code>zoned_time</code> on <code>TimeZonePtr</code>.</li>
 <li>Give <code>weekday_indexed</code> a defaulted default constructor.</li>
 <li>Make <code>from_stream</code> and <code>to_stream</code> customization points.</li>
