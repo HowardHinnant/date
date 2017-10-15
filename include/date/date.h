@@ -30,6 +30,8 @@
 // been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
+#include <cassert>
+
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -5630,6 +5632,7 @@ format(const std::locale& loc, const CharT* fmt, const Streamable& tp)
                 std::basic_string<CharT>{})
 {
     std::basic_ostringstream<CharT> os;
+    os.exceptions(std::ios::failbit | std::ios::badbit);
     os.imbue(loc);
     to_stream(os, fmt, tp);
     return os.str();
@@ -5642,6 +5645,7 @@ format(const CharT* fmt, const Streamable& tp)
                 std::basic_string<CharT>{})
 {
     std::basic_ostringstream<CharT> os;
+    os.exceptions(std::ios::failbit | std::ios::badbit);
     to_stream(os, fmt, tp);
     return os.str();
 }
@@ -5654,6 +5658,7 @@ format(const std::locale& loc, const std::basic_string<CharT, Traits, Alloc>& fm
                 std::basic_string<CharT, Traits, Alloc>{})
 {
     std::basic_ostringstream<CharT, Traits, Alloc> os;
+    os.exceptions(std::ios::failbit | std::ios::badbit);
     os.imbue(loc);
     to_stream(os, fmt.c_str(), tp);
     return os.str();
@@ -5666,6 +5671,7 @@ format(const std::basic_string<CharT, Traits, Alloc>& fmt, const Streamable& tp)
                 std::basic_string<CharT, Traits, Alloc>{})
 {
     std::basic_ostringstream<CharT, Traits, Alloc> os;
+    os.exceptions(std::ios::failbit | std::ios::badbit);
     to_stream(os, fmt.c_str(), tp);
     return os.str();
 }
