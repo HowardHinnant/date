@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-09-30<br/>
+2017-10-14<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -7922,7 +7922,9 @@ is valid.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code> and
-imbues it with <code>loc</code>.  Calls <code>to_stream(os, fmt, tp)</code>.
+imbues it with <code>loc</code>.
+Executes <code>os.exceptions(std::ios::failbit | std::ios::badbit)</code>.
+Calls <code>to_stream(os, fmt, tp)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os.str()</code>.
@@ -7943,6 +7945,7 @@ is valid.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code>.
+Executes <code>os.exceptions(std::ios::failbit | std::ios::badbit)</code>.
 Calls <code>to_stream(os, fmt, tp)</code>.
 </p>
 <p>
@@ -7964,7 +7967,9 @@ is valid.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code> and
-imbues it with <code>loc</code>.  Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
+imbues it with <code>loc</code>.
+Executes <code>os.exceptions(std::ios::failbit | std::ios::badbit)</code>.
+Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os.str()</code>.
@@ -7985,6 +7990,7 @@ is valid.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>std::basic_ostringstream&lt;CharT&gt; os</code>.
+Executes <code>os.exceptions(std::ios::failbit | std::ios::badbit)</code>.
 Calls <code>to_stream(os, fmt.c_str(), tp)</code>.
 </p>
 <p>

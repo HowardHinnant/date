@@ -2980,7 +2980,8 @@ is a valid expression.
 <p>
 <i>Effects:</i> Constructs a local variable of type
 <code>basic_ostringstream&lt;charT&gt;</code> (for exposition purposes, named
-<code>os</code>). Then calls <code>to_stream(os, fmt, s)</code>.
+<code>os</code>).  Executes <code>os.exceptions(ios::failbit | ios::badbit)</code>.
+Then calls <code>to_stream(os, fmt, s)</code>.
 </p>
 
 <p>
@@ -3004,8 +3005,8 @@ is a valid expression.
 <p>
 <i>Effects:</i> Constructs a local variable of type
 <code>basic_ostringstream&lt;charT&gt;</code> (for exposition purposes, named
-<code>os</code>).  Then calls <code>os.imbue(loc)</code>. Then calls
-<code>to_stream(os, fmt, s)</code>.
+<code>os</code>).   Executes <code>os.exceptions(ios::failbit | ios::badbit)</code>.
+Then calls <code>os.imbue(loc)</code>. Then calls <code>to_stream(os, fmt, s)</code>.
 </p>
 
 <p>
@@ -3029,7 +3030,8 @@ is a valid expression.
 <p>
 <i>Effects:</i> Constructs a local variable of type
 <code>basic_ostringstream&lt;charT, traits, Alloc&gt;</code> (for exposition purposes, named
-<code>os</code>). Then calls <code>to_stream(os, fmt.c_str(), s)</code>.
+<code>os</code>).   Executes <code>os.exceptions(ios::failbit | ios::badbit)</code>.
+Then calls <code>to_stream(os, fmt.c_str(), s)</code>.
 </p>
 
 <p>
@@ -3053,8 +3055,9 @@ is a valid expression.
 <p>
 <i>Effects:</i> Constructs a local variable of type
 <code>basic_ostringstream&lt;charT, traits, Alloc&gt;</code> (for exposition purposes, named
-<code>os</code>). Then calls <code>os.imbue(loc)</code>. Then calls
-<code>to_stream(os, fmt.c_str(), s)</code>.
+<code>os</code>). Then calls <code>os.imbue(loc)</code>.
+Executes <code>os.exceptions(ios::failbit | ios::badbit)</code>.
+Then calls <code>to_stream(os, fmt.c_str(), s)</code>.
 </p>
 
 <p>
