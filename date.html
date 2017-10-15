@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-10-14<br/>
+2017-10-15<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -7673,22 +7673,26 @@ unchanged into the stream.
 
 <tr>
 <td><code>%a</code></td>
-<td>The locale's abbreviated weekday name.</td>
+<td>The locale's abbreviated weekday name.  If the value does not contain a valid
+<code>weekday</code>, <code>std::ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%A</code></td>
-<td>The locale's full weekday name.</td>
+<td>The locale's full weekday name.  If the value does not contain a valid
+<code>weekday</code>, <code>std::ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%b</code></td>
-<td>The locale's abbreviated month name.</td>
+<td>The locale's abbreviated month name.  If the value does not contain a valid
+<code>month</code>, <code>std::ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%B</code></td>
-<td>The locale's full month name.</td>
+<td>The locale's full month name.  If the value does not contain a valid
+<code>month</code>, <code>std::ios::failbit</code> is set.</td>
 </tr>
 
 <tr>

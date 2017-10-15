@@ -37,7 +37,7 @@
 Document number: D0355R4<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-10-14<br>
+2017-10-15<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,6 +59,8 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li><code>to_stream</code> sets <code>failbit</code> if it is required to create a name
+for an invalid month or weekday.</li>
 <li>Add note to promise compatibility with <a href="https://wg21.link/p0645"><code>fmt</code> (P0645)</a></li>
 <li>Have <code>format</code> throw an exception if anything happens so that it 
 could not return an accurate string.</li>
@@ -3106,22 +3108,26 @@ in <code>fmt</code>, <code>ios_base::failbit</code> will be set on <code>os</cod
 
 <tr>
 <td><code>%a</code></td>
-<td>The locale's abbreviated weekday name.</td>
+<td>The locale's abbreviated weekday name.  If the value does not contain a valid
+<code>weekday</code>, <code>ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%A</code></td>
-<td>The locale's full weekday name.</td>
+<td>The locale's full weekday name.  If the value does not contain a valid
+<code>weekday</code>, <code>ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%b</code></td>
-<td>The locale's abbreviated month name.</td>
+<td>The locale's abbreviated month name.  If the value does not contain a valid
+<code>month</code>, <code>ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
 <td><code>%B</code></td>
-<td>The locale's full month name.</td>
+<td>The locale's full month name.  If the value does not contain a valid
+<code>month</code>, <code>ios::failbit</code> is set.</td>
 </tr>
 
 <tr>
