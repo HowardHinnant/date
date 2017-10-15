@@ -59,6 +59,9 @@ Document number: D0355R4<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r3.html">R3</a></h3>
 
 <ul>
+<li>Presume that the time zone database is supplied only by the std::lib implementation,
+but can be updated at run time.  Removed <code>remote_download</code> and
+<code>remote_install</code>.  This functionality is now subsumed by the implementation.</li>
 <li><code>to_stream</code> sets <code>failbit</code> if it is required to create a name
 for an invalid month or weekday.</li>
 <li>Add note to promise compatibility with <a href="https://wg21.link/p0645"><code>fmt</code> (P0645)</a></li>
@@ -9254,9 +9257,14 @@ tzdb::const_iterator tzdb::cend() const noexcept;
 </p>
 
 <a name="time.timezone.database.remote"></a><h3>23.17.12.1.1 Remote time zone database support [time.timezone.database.remote]</h3>
-<p class = note>
-This subsection is optional/separable and needs further discussion in the LEWG.  No
-other sections depend upon this subsection.
+
+<p>
+The <i>local</i> time zone database is that supplied by the implementation when the
+application first accesses the database, for example via <code>current_zone()</code>.
+While the application is running, the implementation may choose to update the time
+zone database.  This update shall not impact the application in any way unless the
+application calls the functions in this section.  This potentially updated time zone
+database is referred to as the <i>remote</i> time zone database.
 </p>
 
 <pre>
@@ -9264,12 +9272,9 @@ const tzdb&amp; reload_tzdb();
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> This function first checks the latest version at the
-<a href="http://www.iana.org/time-zones">IANA website</a>.  If the
-<a href="http://www.iana.org/time-zones">IANA website</a> is unavailable, or if the
-latest version is already installed, there are no effects.  Otherwise, a new version
-is available.  It is downloaded and installed, and then the program initializes
-a new <code>tzdb</code> from the new disk files and pushes it to the front of
+<i>Effects:</i> This function first checks the version of the remote time zone database.
+If the version of the local and remote databases are the same, there are no effects.
+Otherwise the remote database is pushed to the front of
 the <code>tzdb_list</code> accessed by <code>get_tzdb_list()</code>.
 </p>
 <p>
@@ -9279,8 +9284,8 @@ the <code>tzdb_list</code> accessed by <code>get_tzdb_list()</code>.
 <i>Remarks:</i> No pointers, references or iterators are invalidated.
 </p>
 <p>
-<i>Thread Safety:</i>  This function is thread safe with respect to <code>front()</code>
-and <code>erase_after()</code>.
+<i>Thread Safety:</i>  This function is thread safe with respect to
+<code>get_tzdb_list().front()</code> and <code>get_tzdb_list().erase_after()</code>.
 </p>
 <p>
 <i>Throws:</i> <code>runtime_error</code> if for any reason a reference can not
@@ -9293,61 +9298,12 @@ string remote_version();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The latest database version number from the
-<a href="http://www.iana.org/time-zones">IANA website</a>.  If the
-<a href="http://www.iana.org/time-zones">IANA website</a> can not be reached, or
-if it can be reached but the latest version number is unexpectedly not
-available, the empty string is returned.
+<i>Returns:</i> The latest remote database version.  If the remote
+version s not available, the empty string is returned.
 </p>
 <p>
 <i>Note:</i>  If non-empty, this can be compared with <code>get_tzdb().version</code> to
-discover if you have the latest database installed.
-</p>
-</blockquote>
-
-<pre>
-bool remote_download(string_view version);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i>  If <code>version == remote_version()</code> this function will download
-the compressed tar file holding the latest time zone database from the
-<a href="http://www.iana.org/time-zones">IANA website</a>.  The tar file will be placed
-at an unspecified location.
-</p>
-<p>
-<i>Returns:</i>  <code>true</code> if the database was successfully downloaded, else
-<code>false</code>.
-</p>
-<p>
-<i>Thread safety:</i>  If called by multiple threads, there will be a race on the
-creation of the tar file.
-</p>
-</blockquote>
-
-<pre>
-bool remote_install(string_view version);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i>  If <code>version</code> refers to the file successfully
-downloaded by <code>remote_download()</code> this function will remove the
-existing time zone database, then extract a new database
-from the tar file, and will then delete the tar file.
-</p>
-<p>
-This function <i>does not</i> cause your program to re-initialize itself from
-this new database.  In order to do that, you must call
-<code>reload_tzdb()</code> (or <code>get_tzdb()</code> if the database has yet
-to be initialized).
-</p>
-<p>
-<i>Returns:</i>  <code>true</code> if the database was successfully replaced by
-the tar file , else <code>false</code>.
-</p>
-<p>
-<i>Thread safety:</i>  If called by multiple threads, there will be a race on the
-creation of the new database.
+discover if the local and remote databases are equivalent.
 </p>
 </blockquote>
 
