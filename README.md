@@ -38,5 +38,6 @@ This is actually several separate C++11/C++14 libraries:
 List of projects using this library:
 
    * www.safe.com
+   * www.webtoolkit.eu/wt
 
 If you would like your project (or product) on this list, just let me know.
