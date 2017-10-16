@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-09-30<br/>
+2017-10-16<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -3184,18 +3184,18 @@ When compiled with <code>USE_OS_TZDB == 1</code>, <code>link</code> will not exi
 
 <p>
 You will need the following four source files:
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>date.h</code></a>,
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>tz.h</code></a>,
-<a href="https://github.com/HowardHinnant/date/blob/master/tz_private.h"><code>tz_private.h</code></a> and
-<a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>.
+<a href="https://github.com/HowardHinnant/date/blob/master/include/date/tz.h"><code>date.h</code></a>,
+<a href="https://github.com/HowardHinnant/date/blob/master/include/date/tz.h"><code>tz.h</code></a>,
+<a href="https://github.com/HowardHinnant/date/blob/master/include/date/tz_private.h"><code>tz_private.h</code></a> and
+<a href="https://github.com/HowardHinnant/date/blob/master/src/tz.cpp"><code>tz.cpp</code></a>.
 These sources are located at the github repository
 <a href="https://github.com/HowardHinnant/date">https://github.com/HowardHinnant/date</a>.
 </p>
 
 <p>
-Compile <a href="https://github.com/HowardHinnant/date/blob/master/tz.cpp"><code>tz.cpp</code></a>
+Compile <a href="https://github.com/HowardHinnant/date/blob/master/src/tz.cpp"><code>tz.cpp</code></a>
 along with your other sources while providing pointers to your compiler for the location
-of the header files (i.e. <a href="https://github.com/HowardHinnant/date/blob/master/tz.h"><code>tz.h</code></a>).
+of the header files (i.e. <a href="https://github.com/HowardHinnant/date/blob/master/include/date/tz.h"><code>tz.h</code></a>).
 </p>
 
 <p>
@@ -3422,8 +3422,8 @@ initialization is thread safe in a multithreaded environment.
 
 <p>
     In addition to four aforementioned source files you will need following files:
-    <a href="https://github.com/HowardHinnant/date/blob/master/ios.h"><code>ios.h</code></a>,
-    <a href="https://github.com/HowardHinnant/date/blob/master/ios.cpp"><code>ios.cpp</code></a>.
+    <a href="https://github.com/HowardHinnant/date/blob/master/include/date/ios.h"><code>ios.h</code></a>,
+    <a href="https://github.com/HowardHinnant/date/blob/master/include/date/ios.cpp"><code>ios.cpp</code></a>.
 </p>
 <p>
     In Xcode in <i>[Your Target]->Build Settings->Other C Flags</i> set following flags: <code>-DHAS_REMOTE_API=0</code>, <code>-DUSE_SHELL_API</code>, <code>-x objective-c++</code>.
