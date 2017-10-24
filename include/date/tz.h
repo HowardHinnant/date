@@ -151,101 +151,6 @@ namespace detail
     struct undocumented;
 }
 
-class nonexistent_local_time
-    : public std::runtime_error
-{
-public:
-    template <class Duration>
-    nonexistent_local_time(local_time<Duration> tp, local_seconds first,
-                           const std::string& first_abbrev, local_seconds last,
-                           const std::string& last_abbrev, sys_seconds time_sys);
-
-private:
-    template <class Duration>
-    static
-    std::string
-    make_msg(local_time<Duration> tp,
-             local_seconds first, const std::string& first_abbrev,
-             local_seconds last, const std::string& last_abbrev,
-             sys_seconds time_sys);
-};
-
-template <class Duration>
-inline
-nonexistent_local_time::nonexistent_local_time(local_time<Duration> tp,
-                                               local_seconds begin,
-                                               const std::string& first_abbrev,
-                                               local_seconds end,
-                                               const std::string& last_abbrev,
-                                               sys_seconds time_sys)
-    : std::runtime_error(make_msg(tp, begin, first_abbrev, end, last_abbrev, time_sys))
-    {}
-
-template <class Duration>
-std::string
-nonexistent_local_time::make_msg(local_time<Duration> tp, local_seconds begin,
-                                 const std::string& first_abbrev, local_seconds end,
-                                 const std::string& last_abbrev, sys_seconds time_sys)
-{
-    using namespace date;
-    std::ostringstream os;
-    os << tp << " is in a gap between\n"
-       << begin << ' ' << first_abbrev << " and\n"
-       << end   << ' ' << last_abbrev
-       << " which are both equivalent to\n"
-       << time_sys << " UTC";
-    return os.str();
-}
-
-class ambiguous_local_time
-    : public std::runtime_error
-{
-public:
-    template <class Duration>
-    ambiguous_local_time(local_time<Duration> tp, std::chrono::seconds first_offset,
-                         const std::string& first_abbrev,
-                         std::chrono::seconds second_offset,
-                         const std::string& second_abbrev);
-
-private:
-    template <class Duration>
-    static
-    std::string
-    make_msg(local_time<Duration> tp,
-             std::chrono::seconds first_offset, const std::string& first_abbrev,
-             std::chrono::seconds second_offset, const std::string& second_abbrev);
-};
-
-template <class Duration>
-inline
-ambiguous_local_time::ambiguous_local_time(
-    local_time<Duration> tp,
-    std::chrono::seconds first_offset,
-    const std::string& first_abbrev,
-    std::chrono::seconds second_offset,
-    const std::string& second_abbrev)
-    : std::runtime_error(make_msg(tp, first_offset, first_abbrev, second_offset,
-                                  second_abbrev))
-    {}
-
-template <class Duration>
-std::string
-ambiguous_local_time::make_msg(local_time<Duration> tp,
-                               std::chrono::seconds first_offset,
-                               const std::string& first_abbrev,
-                               std::chrono::seconds second_offset,
-                               const std::string& second_abbrev)
-{
-    using namespace date;
-    std::ostringstream os;
-    os << tp << " is ambiguous.  It could be\n"
-       << tp << ' ' << first_abbrev << " == "
-       << tp - first_offset << " UTC or\n"
-       << tp << ' ' << second_abbrev  << " == "
-       << tp - second_offset  << " UTC";
-    return os.str();
-}
-
 struct sys_info
 {
     sys_seconds          begin;
@@ -289,6 +194,79 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_info& r)
         os << r.second;
     }
     return os;
+}
+
+class nonexistent_local_time
+    : public std::runtime_error
+{
+public:
+    template <class Duration>
+        nonexistent_local_time(local_time<Duration> tp, const local_info& i);
+
+private:
+    template <class Duration>
+    static
+    std::string
+    make_msg(local_time<Duration> tp, const local_info& i);
+};
+
+template <class Duration>
+inline
+nonexistent_local_time::nonexistent_local_time(local_time<Duration> tp,
+                                               const local_info& i)
+    : std::runtime_error(make_msg(tp, i))
+{
+}
+
+template <class Duration>
+std::string
+nonexistent_local_time::make_msg(local_time<Duration> tp, const local_info& i)
+{
+    assert(i.result == local_info::nonexistent);
+    std::ostringstream os;
+    os << tp << " is in a gap between\n"
+       << local_seconds{i.first.end.time_since_epoch()} + i.first.offset << ' '
+       << i.first.abbrev << " and\n"
+       << local_seconds{i.second.begin.time_since_epoch()} + i.second.offset << ' '
+       << i.second.abbrev
+       << " which are both equivalent to\n"
+       << i.first.end << " UTC";
+    return os.str();
+}
+
+class ambiguous_local_time
+    : public std::runtime_error
+{
+public:
+    template <class Duration>
+        ambiguous_local_time(local_time<Duration> tp, const local_info& i);
+
+private:
+    template <class Duration>
+    static
+    std::string
+    make_msg(local_time<Duration> tp, const local_info& i);
+};
+
+template <class Duration>
+inline
+ambiguous_local_time::ambiguous_local_time(local_time<Duration> tp, const local_info& i)
+    : std::runtime_error(make_msg(tp, i))
+{
+}
+
+template <class Duration>
+std::string
+ambiguous_local_time::make_msg(local_time<Duration> tp, const local_info& i)
+{
+    assert(i.result == local_info::ambiguous);
+    std::ostringstream os;
+    os << tp << " is ambiguous.  It could be\n"
+       << tp << ' ' << i.first.abbrev << " == "
+       << tp - i.first.offset << " UTC or\n"
+       << tp << ' ' << i.second.abbrev  << " == "
+       << tp - i.second.offset  << " UTC";
+    return os.str();
 }
 
 class time_zone;
@@ -958,19 +936,9 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     using namespace std::chrono;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
-    {
-        auto prev_end = local_seconds{i.first.end.time_since_epoch()} +
-                        i.first.offset;
-        auto next_begin = local_seconds{i.second.begin.time_since_epoch()} +
-                          i.second.offset;
-        throw nonexistent_local_time(tp, prev_end, i.first.abbrev,
-                                         next_begin, i.second.abbrev, i.first.end);
-    }
+        throw nonexistent_local_time(tp, i);
     else if (i.result == local_info::ambiguous)
-    {
-        throw ambiguous_local_time(tp, i.first.offset, i.first.abbrev,
-                                       i.second.offset, i.second.abbrev);
-    }
+        throw ambiguous_local_time(tp, i);
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
 
