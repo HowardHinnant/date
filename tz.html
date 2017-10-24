@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-10-16<br/>
+2017-10-24<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -1506,9 +1506,37 @@ class nonexistent_local_time
     : public std::runtime_error
 {
 public:
-    // Construction is undocumented
+    template &lt;class Duration&gt;
+        nonexistent_local_time(local_time&lt;Duration&gt; tp, const local_info&amp; i);
 };
 </pre>
+
+<pre>
+template &lt;class Duration&gt;
+nonexistent_local_time::nonexistent_local_time(local_time&lt;Duration&gt; tp,
+                                               const local_info&amp; i);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>i.result == local_info::nonexistent</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs a <code>nonexistent_local_time</code> by initializing
+the base class with a sequence of <code>char</code> equivalent to that produced
+by <code>os.str()</code> initialized as shown below:
+</p>
+<pre>
+std::ostringstream os;
+os &lt;&lt; tp &lt;&lt; " is in a gap between\n"
+   &lt;&lt; local_seconds{i.first.end.time_since_epoch()} + i.first.offset &lt;&lt; ' '
+   &lt;&lt; i.first.abbrev &lt;&lt; " and\n"
+   &lt;&lt; local_seconds{i.second.begin.time_since_epoch()} + i.second.offset &lt;&lt; ' '
+   &lt;&lt; i.second.abbrev
+   &lt;&lt; " which are both equivalent to\n"
+   &lt;&lt; i.first.end &lt;&lt; " UTC";
+</pre>
+</blockquote>
+
 <p>
 [<i>Example:</i>
 </p>
@@ -1560,9 +1588,35 @@ class ambiguous_local_time
     : public std::runtime_error
 {
 public:
-    // Construction is undocumented
+    template &lt;class Duration&gt;
+        ambiguous_local_time(local_time&lt;Duration&gt; tp, const local_info&amp; i);
 };
 </pre>
+
+<pre>
+template &lt;class Duration&gt;
+ambiguous_local_time::ambiguous_local_time(local_time&lt;Duration&gt; tp,
+                                               const local_info&amp; i);
+</pre>
+<blockquote>
+<p>
+<i>Requires:</i> <code>i.result == local_info::ambiguous</code>.
+</p>
+<p>
+<i>Effects:</i> Constructs an <code>ambiguous_local_time</code> by initializing
+the base class with a sequence of <code>char</code> equivalent to that produced
+by <code>os.str()</code> initialized as shown below:
+</p>
+<pre>
+std::ostringstream os;
+os &lt;&lt; tp &lt;&lt; " is ambiguous.  It could be\n"
+   &lt;&lt; tp &lt;&lt; ' ' &lt;&lt; i.first.abbrev &lt;&lt; " == "
+   &lt;&lt; tp - i.first.offset &lt;&lt; " UTC or\n"
+   &lt;&lt; tp &lt;&lt; ' ' &lt;&lt; i.second.abbrev  &lt;&lt; " == "
+   &lt;&lt; tp - i.second.offset  &lt;&lt; " UTC";
+</pre>
+</blockquote>
+
 <p>
 [<i>Example:</i>
 </p>
