@@ -1774,8 +1774,13 @@ std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const zoned_time<Duration, TimeZonePtr>& tp)
 {
-    auto const info = tp.get_info();
-    return to_stream(os, fmt, tp.get_local_time(), &info.abbrev, &info.offset);
+    using duration = typename zoned_time<Duration, TimeZonePtr>::duration;
+    using LT = local_time<duration>;
+    auto const tz = tp.get_time_zone();
+    auto const st = tp.get_sys_time();
+    auto const info = tz->get_info(st);
+    return to_stream(os, fmt, LT{(st+info.offset).time_since_epoch()},
+                     &info.abbrev, &info.offset);
 }
 
 template <class CharT, class Traits, class Duration, class TimeZonePtr>
