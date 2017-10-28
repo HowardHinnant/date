@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-10-24<br/>
+2017-10-28<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2046,9 +2046,12 @@ public:
     zoned_time(TimeZonePtr z,    const local_time&lt;Duration&gt;&amp; tp, choose c);
     zoned_time(string_view name, const local_time&lt;Duration&gt;&amp; tp, choose c);
 
-    zoned_time(TimeZonePtr z,    const zoned_time&lt;Duration&gt;&amp; zt);
+    template &lt;class Duration2, class TimeZonePtr2&gt;
+        zoned_time(TimeZonePtr z, const zoned_time&lt;Duration2, TimeZonePtr2&gt;&amp; zt);
+    template &lt;class Duration2, class TimeZonePtr2&gt;
+        zoned_time(TimeZonePtr z, const zoned_time&lt;Duration2, TimeZonePtr2&gt;&amp; zt, choose);
+
     zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; zt);
-    zoned_time(TimeZonePtr z,    const zoned_time&lt;Duration&gt;&amp; zt, choose);
     zoned_time(string_view name, const zoned_time&lt;Duration&gt;&amp; zt, choose);
 
     zoned_time&amp; operator=(const sys_time&lt;Duration&gt;&amp; st);
@@ -2084,6 +2087,44 @@ template &lt;class charT, class traits, class Duration, class TimeZonePtr&gt;
     basic_ostream&lt;charT, traits&gt;&amp;
     to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
               const zoned_time&lt;Duration, TimeZonePtr&gt;&amp; tp);
+
+zoned_time()
+    -&gt; zoned_time&lt;seconds&gt;;
+
+template &lt;class Duration&gt;
+    zoned_time(sys_time&lt;Duration&gt;)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class TimeZonePtr, class Duration&gt;
+    zoned_time(TimeZonePtr, sys_time&lt;Duration&gt;)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;, TimeZonePtr&gt;;
+
+template &lt;class TimeZonePtr, class Duration&gt;
+    zoned_time(TimeZonePtr, local_time&lt;Duration&gt;, choose = choose::earliest)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;, TimeZonePtr&gt;;
+
+template &lt;class TimeZonePtr, class Duration&gt;
+    zoned_time(TimeZonePtr, zoned_time&lt;Duration&gt;, choose = choose::earliest)
+        -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;, TimeZonePtr&gt;;
+
+zoned_time(string_view)
+    -&gt; zoned_time&lt;seconds&gt;;
+
+template &lt;class Duration&gt;
+zoned_time(string_view, sys_time&lt;Duration&gt;)
+    -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class Duration&gt;
+zoned_time(string_view, local_time&lt;Duration&gt;, choose = choose::earliest)
+    -&gt; zoned_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;;
+
+template &lt;class Duration, class TimeZonePtr, class TimeZonePtr2&gt;
+zoned_time(TimeZonePtr, zoned_time&lt;Duration, TimeZonePtr2&gt;)
+    -&gt; zoned_time&lt;Duration, TimeZonePtr&gt;;
+
+template &lt;class Duration, class TimeZonePtr, class TimeZonePtr2&gt;
+zoned_time(TimeZonePtr, zoned_time&lt;Duration, TimeZonePtr2&gt;, choose)
+    -&gt; zoned_time&lt;Duration, TimeZonePtr&gt;;
 </pre>
 
 <p>
@@ -2276,15 +2317,43 @@ zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const loca
 </blockquote>
 
 <pre>
-zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration&gt;&amp; y);
+template &lt;class Duration2, TimeZonePtr&gt;
+    zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration2, TimeZonePtr2&gt;&amp; y);
 </pre>
 <blockquote>
 <p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+<i>Remarks:</i> Does not participate in overload resolution unless
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration&gt;</code>.
+</p>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid time zone.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
 with <code>std::move(z)</code> and <code>tp_</code> with <code>z.tp_</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration2, TimeZonePtr&gt;
+    zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration2, TimeZonePtr2&gt;&amp; y,
+                                                  choose);
+</pre>
+<blockquote>
+<p>
+<i>Remarks:</i> Does not participate in overload resolution unless
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration&gt;</code>.
+</p>
+<p>
+<i>Requires:</i> <code>z</code> refers to a valid time zone.
+</p>
+<p>
+<i>Effects:</i> Equivalent to construction with <code>{z, y}</code>.
+</p>
+<p>
+<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
 </p>
 </blockquote>
 
@@ -2301,21 +2370,6 @@ and <code>zoned_time</code>.
 <p>
 <i>Effects:</i> Equivalent to construction with
 <code>{zoned_traits&lt;TimeZonePtr&gt;::locate_zone(name), y}</code>.
-</p>
-</blockquote>
-
-<pre>
-zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const zoned_time&lt;Duration&gt;&amp; y, choose);
-</pre>
-<blockquote>
-<p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
-</p>
-<p>
-<i>Effects:</i> Equivalent to construction with <code>{z, y}</code>.
-</p>
-<p>
-<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
 </p>
 </blockquote>
 
