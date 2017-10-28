@@ -417,8 +417,21 @@ public:
 #endif
         zoned_time(TimeZonePtr z, const local_time<Duration>& tp, choose c);
 
-    zoned_time(TimeZonePtr z, const zoned_time& zt);
-    zoned_time(TimeZonePtr z, const zoned_time& zt, choose);
+    template <class Duration2, class TimeZonePtr2,
+              class = typename std::enable_if
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value
+                      >::type>
+        zoned_time(TimeZonePtr z, const zoned_time<Duration2, TimeZonePtr2>& zt);
+
+    template <class Duration2, class TimeZonePtr2,
+              class = typename std::enable_if
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value
+                      >::type>
+        zoned_time(TimeZonePtr z, const zoned_time<Duration2, TimeZonePtr2>& zt, choose);
 
 #if HAS_STRING_VIEW
 
@@ -717,6 +730,14 @@ zoned_time(const char*, sys_time<Duration>)
 template <class Duration>
 zoned_time(const char*, local_time<Duration>, choose = choose::earliest)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
+
+template <class Duration, class TimeZonePtr, class TimeZonePtr2>
+zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>)
+    -> zoned_time<Duration, TimeZonePtr>;
+
+template <class Duration, class TimeZonePtr, class TimeZonePtr2>
+zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>, choose)
+    -> zoned_time<Duration, TimeZonePtr>;
 
 #endif  // HAS_DEDUCTION_GUIDES
 
@@ -1403,17 +1424,19 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Du
     {}
 
 template <class Duration, class TimeZonePtr>
+template <class Duration2, class TimeZonePtr2, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z,
-                                              const zoned_time<Duration, TimeZonePtr>& zt)
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt)
     : zone_(std::move(z))
     , tp_(zt.tp_)
     {}
 
 template <class Duration, class TimeZonePtr>
+template <class Duration2, class TimeZonePtr2, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z,
-                                      const zoned_time<Duration, TimeZonePtr>& zt, choose)
+                                      const zoned_time<Duration2, TimeZonePtr2>& zt, choose)
     : zoned_time(std::move(z), zt)
     {}
 
