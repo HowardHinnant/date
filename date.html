@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-10-16<br/>
+2017-11-03<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -2100,7 +2100,8 @@ explicit constexpr day::day(unsigned d) noexcept;
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>day</code> by constructing
-<code>d_</code> with <code>d</code>.
+<code>d_</code> with <code>d</code>.  The value held is unspecified if <code>d</code>
+is not in the range <code>[0, 255]</code>.
 </p>
 </blockquote>
 
@@ -2476,7 +2477,8 @@ explicit constexpr month::month(unsigned m) noexcept;
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>month</code> by constructing
-<code>m_</code> with <code>m</code>.
+<code>m_</code> with <code>m</code>.  The value held is unspecified if <code>m</code>
+is not in the range <code>[0, 255]</code>.
 </p>
 </blockquote>
 
@@ -2690,14 +2692,13 @@ constexpr months operator-(const month&amp;  x, const month&amp;  y) noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>x.ok() == true</code> and <code>y.ok() == true</code>.
+<i>Returns:</i> If <code>x.ok() == true</code> and <code>y.ok() == true</code>,
+returns a value of <code>months</code> in the range of <code>months{0}</code> to
+<code>months{11}</code> inclusive.  Otherwise the value returned is unspecified.
 </p>
 <p>
-<i>Returns:</i> A value of <code>months</code> in the range of <code>months{0}</code> to
-<code>months{11}</code> inclusive.
-</p>
-<p>
-<i>Remarks:</i> The returned value <code>m</code> shall satisfy the equality:
+<i>Remarks:</i> If <code>x.ok() == true</code> and <code>y.ok() == true</code>,
+the returned value <code>m</code> shall satisfy the equality:
 <code>y + m == x</code>.
 </p>
 <p>
@@ -2864,7 +2865,8 @@ explicit constexpr year::year(int y) noexcept;
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>year</code> by constructing
-<code>y_</code> with <code>y</code>.
+<code>y_</code> with <code>y</code>.  The value held is unspecified if <code>y</code>
+is not in the range <code>[-32767, 32767]</code>.
 </p>
 </blockquote>
 
@@ -3302,7 +3304,8 @@ explicit constexpr weekday::weekday(unsigned wd) noexcept;
 <blockquote>
 <p>
 <i>Effects:</i> Constructs an object of type <code>weekday</code> by constructing
-<code>wd_</code> with <code>wd</code>.
+<code>wd_</code> with <code>wd</code>.  The value held is unspecified if <code>wd</code>
+is not in the range <code>[0, 255]</code>.
 </p>
 </blockquote>
 
@@ -3528,14 +3531,13 @@ constexpr days operator-(const weekday&amp;  x, const weekday&amp;  y) noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>x.ok() == true</code> and <code>y.ok() == true</code>.
+<i>Returns:</i> If <code>x.ok() == true</code> and <code>y.ok() == true</code>,
+returns a value of <code>days</code> in the range of <code>days{0}</code> to
+<code>days{6}</code> inclusive.  Otherwise the value returned is unspecified.
 </p>
 <p>
-<i>Returns:</i> A value of <code>days</code> in the range of <code>days{0}</code> to
-<code>days{6}</code> inclusive.
-</p>
-<p>
-<i>Remarks:</i> The returned value <code>d</code> shall satisfy the equality:
+<i>Remarks:</i> If <code>x.ok() == true</code> and <code>y.ok() == true</code>,
+the returned value <code>d</code> shall satisfy the equality:
 <code>y + d == x</code>.
 </p>
 <p>
@@ -3674,6 +3676,8 @@ constexpr weekday_indexed::weekday_indexed(const date::weekday&amp; wd, unsigned
 <p>
 <i>Effects:</i> Constructs an object of type <code>weekday_indexed</code> by constructing
 <code>wd_</code> with <code>wd</code> and <code>index_</code> with <code>index</code>.
+The values held are unspecified if <code>!wd.ok()</code> or <code>index</code> is not
+in the range <code>[1, 5]</code>.
 </p>
 </blockquote>
 
@@ -5116,16 +5120,32 @@ constexpr year_month_day::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Returns:</i>  If <code>ok()</code>, returns a <code>sys_days</code>
+holding a count of <code>days</code> from the <code>sys_days</code> epoch to
+<code>*this</code> (a negative value if <code>*this</code> represents a date
+prior to the <code>sys_days</code> epoch).
+Otherwise if <code>y_.ok() &amp;&amp; m_.ok() == true</code> returns a
+<code>sys_days</code> which is offset from
+<code>sys_days{y_/m_/last}</code> by the number of <code>days</code>
+<code>d_</code> is offset from <code>sys_days{y_/m_/last}.day()</code>.
+Otherwise the value returned is unspecified.
 </p>
 <p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Remarks:</i> A <code>sys_days</code> in the range
+<code>[days{-12687428}, days{11248737}]</code> which is converted to a
+<code>year_month_day</code>, shall have the same value when converted
+back to a <code>sys_days</code>.
 </p>
 <p>
-<i>Remarks:</i> A <code>sys_days</code> which is converted to a <code>year_month_day</code>,
-shall have the same value when converted back to a <code>sys_days</code>.  The round
-trip conversion sequence shall be <i>loss-less</i>.
+[<i>Example</i>:
+</p>
+<blockquote><pre>
+static_assert(year_month_day{sys_days{2017y/jan/0}}  == 2016y/dec/31);
+static_assert(year_month_day{sys_days{2017y/jan/31}} == 2017y/jan/31);
+static_assert(year_month_day{sys_days{2017y/jan/32}} == 2017y/feb/1);
+</pre></blockquote>
+<p>
+&mdash;<i>end example</i>]
 </p>
 </blockquote>
 
@@ -5135,16 +5155,11 @@ constexpr explicit year_month_day::operator local_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
+<i>Effects:</i> Equivalent to:
 </p>
-<p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
-</p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
-</p>
+<blockquote><pre>
+return local_days{sys_days{*this}.time_since_epoch()};
+</pre></blockquote>
 </blockquote>
 
 <pre>
@@ -5229,9 +5244,6 @@ constexpr year_month_day operator+(const year_month_day&amp; ymd, const months&a
 </pre>
 
 <blockquote>
-<p>
-<i>Requires:</i> <code>ymd.month().ok()</code> is <code>true</code>.
-</p>
 <p>
 <i>Returns:</i> <code>(ymd.year() / ymd.month() + dm) / ymd.day()</code>.
 </p>
@@ -5543,11 +5555,7 @@ constexpr year_month_day_last::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Effects:</i> Equivalent to: <code>return sys_days{year()/month()/day()};</code>
 </p>
 </blockquote>
 
@@ -5557,15 +5565,7 @@ constexpr explicit year_month_day_last::operator local_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
-</p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
 </blockquote>
 
@@ -5647,17 +5647,7 @@ constexpr year_month_day_last operator+(const year_month_day_last&amp; ymdl, con
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ymdl.ok()</code> is <code>true</code>.
-</p>
-<p>
-<i>Returns:</i> <code>(ymdl.year() / ymdl.month() + dm) / last</code>.
-</p>
-<p>
-<i>Postconditions:</i> The resultant <code>year_month_day_last</code> will return
-<code>true</code> from <code>ok()</code>.
-</p>
-<p>
-<i>Complexity:</i> O(1) with respect to the value of <code>dm</code>.
+<i>Effects:</i> Equivalent to: <code>return (ymdl.year() / ymdl.month() + dm) / last</code>.
 </p>
 </blockquote>
 
@@ -5951,11 +5941,14 @@ constexpr year_month_weekday::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Returns:</i> If <code>y_.ok() &amp;&amp; m_.ok() &amp;&amp; wdi_.weekday().ok()</code>,
+returns a <code>sys_days</code> which represents the date
+<code>(index() - 1)*7</code> days after the first
+<code>weekday()</code> of <code>year()/month()</code>.  If <code>index()</code> is
+<code>0</code> the returned <code>sys_days</code> represents the date 7 days prior
+to the first <code>weekday()</code> of <code>year()/month()</code>.
+Otherwise, <code>!y_.ok() || !m_.ok() || !wdi_.weekday().ok()</code> and the returned
+value is unspecified.
 </p>
 </blockquote>
 
@@ -5965,15 +5958,7 @@ constexpr explicit year_month_weekday::operator local_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
-</p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
 </blockquote>
 
@@ -6015,17 +6000,7 @@ constexpr year_month_weekday operator+(const year_month_weekday&amp; ymwd, const
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ymwd.ok()</code> is <code>true</code>.
-</p>
-<p>
 <i>Returns:</i> <code>(ymwd.year() / ymwd.month() + dm) / ymwd.weekday_indexed()</code>.
-</p>
-<p>
-<i>Postconditions:</i> The resultant <code>year_month_weekday</code> will return
-<code>true</code> from <code>ok()</code>.
-</p>
-<p>
-<i>Complexity:</i> O(1) with respect to the value of <code>dm</code>.
 </p>
 </blockquote>
 
@@ -6298,11 +6273,9 @@ constexpr year_month_weekday_last::operator sys_days() const noexcept;
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>sys_days</code> which represents the date represented by
-<code>*this</code>.
+<i>Returns:</i> If <code>ok() == true</code>, returns a <code>sys_days</code> which
+represents the last <code>weekday()</code> of <code>year()/month()</code>.  Otherwise
+the returned value is unspecified.
 </p>
 </blockquote>
 
@@ -6312,15 +6285,7 @@ constexpr explicit year_month_weekday_last::operator local_days() const noexcept
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ok() == true</code>.
-</p>
-<p>
-<i>Returns:</i> A <code>local_days</code> which represents the date represented by
-<code>*this</code>.
-</p>
-<p>
-<i>Remarks:</i> Shall return a value equivalent to
-<code>local_days{static_cast&lt;sys_days&gt;(*this).time_since_epoch()}</code>.
+<i>Effects:</i> Equivalent to: <code>return local_days{sys_days{*this}.time_since_epoch()};</code>
 </p>
 </blockquote>
 
@@ -6360,17 +6325,7 @@ constexpr year_month_weekday_last operator+(const year_month_weekday_last&amp; y
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>ymwdl.ok()</code> is <code>true</code>.
-</p>
-<p>
-<i>Returns:</i> <code>(ymwdl.year() / ymwdl.month() + dm) / ymwdl.weekday_last()</code>.
-</p>
-<p>
-<i>Postconditions:</i> The resultant <code>year_month_weekday_last</code> will return
-<code>true</code> from <code>ok()</code>.
-</p>
-<p>
-<i>Complexity:</i> O(1) with respect to the value of <code>dm</code>.
+<i>Effects:</i> Equivalent to: <code>return (ymwdl.year() / ymwdl.month() + dm) / ymwdl.weekday_last()</code>.
 </p>
 </blockquote>
 
