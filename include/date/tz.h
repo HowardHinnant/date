@@ -1674,8 +1674,9 @@ make_zoned(const sys_time<Duration>& tp)
     return zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>(tp);
 }
 
-template <class TimeZonePtr,
-          class = typename std::enable_if
+template <class TimeZonePtr
+#if !defined(_MSC_VER) || (_MSC_VER > 1900)
+          , class = typename std::enable_if
           <
             std::is_class
             <
@@ -1685,6 +1686,7 @@ template <class TimeZonePtr,
                 >::type
             >{}
           >::type
+#endif
          >
 inline
 zoned_time<std::chrono::seconds, TimeZonePtr>
@@ -1700,11 +1702,13 @@ make_zoned(const std::string& name)
     return zoned_seconds(name);
 }
 
-template <class Duration, class TimeZonePtr,
-          class = typename std::enable_if
+template <class Duration, class TimeZonePtr
+#if !defined(_MSC_VER) || (_MSC_VER > 1900)
+          , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
          >
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
@@ -1714,11 +1718,13 @@ make_zoned(TimeZonePtr zone, const local_time<Duration>& tp)
                       TimeZonePtr>(std::move(zone), tp);
 }
 
-template <class Duration, class TimeZonePtr,
-          class = typename std::enable_if
+template <class Duration, class TimeZonePtr
+#if !defined(_MSC_VER) || (_MSC_VER > 1900)
+          , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
          >
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
@@ -1778,11 +1784,13 @@ make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt,
     return zoned_time<Duration, TimeZonePtr>(name, zt, c);
 }
 
-template <class Duration, class TimeZonePtr,
-          class = typename std::enable_if
+template <class Duration, class TimeZonePtr
+#if !defined(_MSC_VER) || (_MSC_VER > 1900)
+          , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
          >
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type, TimeZonePtr>
