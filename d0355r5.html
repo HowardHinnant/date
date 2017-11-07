@@ -8389,7 +8389,7 @@ There are 4 specializations of <code>time_of_day</code> to handle four precision
 
 <li>
 <pre>
-tempalte &lt;&gt; class time_of_day&lt;hours&gt;
+template &lt;&gt; class time_of_day&lt;hours&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours since midnight.
@@ -8398,7 +8398,7 @@ This specialization handles hours since midnight.
 
 <li>
 <pre>
-tempalte &lt;&gt; class time_of_day&lt;minutes&gt;
+template &lt;&gt; class time_of_day&lt;minutes&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours:minutes since midnight.
@@ -8407,7 +8407,7 @@ This specialization handles hours:minutes since midnight.
 
 <li>
 <pre>
-tempalte &lt;&gt; class time_of_day&lt;seconds&gt;
+template &lt;&gt; class time_of_day&lt;seconds&gt;
 </pre>
 <blockquote><p>
 This specialization handles hours:minutes:seconds since midnight.
@@ -8416,7 +8416,7 @@ This specialization handles hours:minutes:seconds since midnight.
 
 <li>
 <pre>
-tempalte &lt;class Rep, class Period&gt; class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
+template &lt;class Rep, class Period&gt; class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
 </pre>
 <blockquote><p>
 This specialization is restricted to <code>Rep</code> types that are integral, and
@@ -8434,7 +8434,7 @@ Each specialization of <code>time_of_day</code> is a standard-layout class type.
 </p>
 
 <pre>
-tempalte &lt;&gt;
+template &lt;&gt;
 class time_of_day&lt;hours&gt;
 {
 public:
@@ -8550,7 +8550,7 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-tempalte &lt;&gt;
+template &lt;&gt;
 class time_of_day&lt;minutes&gt;
 {
 public:
@@ -8679,7 +8679,7 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-tempalte &lt;&gt;
+template &lt;&gt;
 class time_of_day&lt;seconds&gt;
 {
 public:
@@ -8821,7 +8821,7 @@ that no leading zero is output for hours less than 10.
 </blockquote>
 
 <pre>
-tempalte &lt;class Rep, class Period&gt;
+template &lt;class Rep, class Period&gt;
 class time_of_day&lt;duration&lt;Rep, Period&gt;&gt;
 {
 public:
