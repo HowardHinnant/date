@@ -1691,17 +1691,32 @@ enum class endian
     big    = __ORDER_BIG_ENDIAN__
 };
 
-template <class T>
 static
 inline
-void
-reverse_bytes(T& t)
+std::uint32_t
+reverse_bytes(std::uint32_t i)
 {
-    unsigned char* bytes = static_cast<unsigned char*>(std::memmove(std::addressof(t),
-                                                                    std::addressof(t),
-                                                                    sizeof(T)));
-    for (unsigned i = 0; i < sizeof(T)/2; ++i)
-        std::swap(bytes[i], bytes[sizeof(T)-1-i]);
+    return
+        (i & 0xff000000u) >> 24 |
+        (i & 0x00ff0000u) >> 8 |
+        (i & 0x0000ff00u) << 8 |
+        (i & 0x000000ffu) << 24;
+}
+
+static
+inline
+std::uint64_t
+reverse_bytes(std::uint64_t i)
+{
+    return
+        (i & 0xff00000000000000ull) >> 56 |
+        (i & 0x00ff000000000000ull) >> 40 |
+        (i & 0x0000ff0000000000ull) >> 24 |
+        (i & 0x000000ff00000000ull) >> 8 |
+        (i & 0x00000000ff000000ull) << 8 |
+        (i & 0x0000000000ff0000ull) << 24 |
+        (i & 0x000000000000ff00ull) << 40 |
+        (i & 0x00000000000000ffull) << 56;
 }
 
 template <class T>
@@ -1712,13 +1727,20 @@ maybe_reverse_bytes(T&, std::false_type)
 {
 }
 
-template <class T>
 static
 inline
 void
-maybe_reverse_bytes(T& t, std::true_type)
+maybe_reverse_bytes(std::int32_t& t, std::true_type)
 {
-    reverse_bytes(t);
+    t = static_cast<std::int32_t>(reverse_bytes(static_cast<std::uint32_t>(t)));
+}
+
+static
+inline
+void
+maybe_reverse_bytes(std::int64_t& t, std::true_type)
+{
+    t = static_cast<std::int64_t>(reverse_bytes(static_cast<std::uint64_t>(t)));
 }
 
 template <class T>
