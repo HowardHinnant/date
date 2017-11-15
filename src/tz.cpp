@@ -508,7 +508,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
         throw std::runtime_error(msg);
     };
     // [optional space]a="b"
-    auto read_attribute = [&line_num, &line, &error]
+    auto read_attribute = [&line, &error]
                           (const char* name, std::string& value, std::size_t startPos)
                           ->std::size_t
     {
@@ -2434,7 +2434,7 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
     using namespace date;
     tz timezone = static_cast<tz>(tz_int);
     assert(timezone != tz::standard);
-    auto y = year_month_day(floor<days>(tp)).year();
+    auto y = year_month_day(date::floor<days>(tp)).year();
     if (y < min_year || y > max_year)
         throw std::runtime_error("The year " + std::to_string(static_cast<int>(y)) +
             " is out of range:[" + std::to_string(static_cast<int>(min_year)) + ", "
