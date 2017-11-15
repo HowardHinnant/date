@@ -314,17 +314,26 @@ CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 #endif  // USE_OS_TZDB
 
 #ifndef _WIN32
-#  ifndef __APPLE__
-static const std::string tz_dir = "/usr/share/zoneinfo";
-#  else  // __APPLE__
 
 static
 std::string
 discover_tz_dir()
 {
     struct stat sb;
-    CONSTDATA auto timezone = "/etc/localtime";
     using namespace std;
+#  ifndef __APPLE__
+    CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
+    CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
+
+    // Check special path which is valid for buildroot with uclibc builds
+    if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_buildroot;
+    else if(stat(tz_dir_default, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_default;
+    else
+        throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
+#  else  // __APPLE__
+    CONSTDATA auto timezone = "/etc/localtime";
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
         throw runtime_error("discover_tz_dir failed\n");
     string result;
@@ -340,11 +349,11 @@ discover_tz_dir()
     if (i == string::npos)
         throw runtime_error("discover_tz_dir failed to find '/'\n");
     return result.substr(0, i);
+#  endif  // __APPLE__
 }
 
 static const std::string tz_dir = discover_tz_dir();
 
-#  endif  // __APPLE__
 #endif
 
 // +-------------------+
