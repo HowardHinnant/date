@@ -3624,22 +3624,51 @@ tzdb::current_zone() const
     // exception will be thrown by local_timezone.
     // The path may also take a relative form:
     // "../usr/share/zoneinfo/America/Los_Angeles".
-    struct stat sb;
-    CONSTDATA auto timezone = "/etc/localtime";
-    if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        using namespace std;
-        string result;
-        char rp[PATH_MAX];
-        if (realpath(timezone, rp))
-            result = string(rp);
-        else
-            throw system_error(errno, system_category(), "realpath() failed");
+        struct stat sb;
+        CONSTDATA auto timezone = "/etc/localtime";
+        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
+            using namespace std;
+            string result;
+            char rp[PATH_MAX];
+            if (realpath(timezone, rp))
+                result = string(rp);
+            else
+                throw system_error(errno, system_category(), "realpath() failed");
 
-        const size_t pos = result.find(tz_dir);
-        if (pos != result.npos)
-            result.erase(0, tz_dir.size()+1+pos);
-        return locate_zone(result);
+            const size_t pos = result.find(tz_dir);
+            if (pos != result.npos)
+                result.erase(0, tz_dir.size() + 1 + pos);
+            return locate_zone(result);
+        }
+    }
+    // On embedded systems e.g. buildroot with uclibc the timezone is linked
+    // into /etc/TZ which is a symlink to path like this:
+    // "/usr/share/zoneinfo/uclibc/America/Los_Angeles"
+    // If it does, we try to determine the current
+    // timezone from the remainder of the path by removing the prefix
+    // and hoping the rest resolves to valid timezone.
+    // It may not always work though. If it doesn't then an
+    // exception will be thrown by local_timezone.
+    // The path may also take a relative form:
+    // "../usr/share/zoneinfo/uclibc/America/Los_Angeles".
+    {
+        struct stat sb;
+        CONSTDATA auto timezone = "/etc/TZ";
+        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
+            using namespace std;
+            string result;
+            char rp[PATH_MAX];
+            if (realpath(timezone, rp))
+                result = string(rp);
+            else
+                throw system_error(errno, system_category(), "realpath() failed");
+
+            const size_t pos = result.find(tz_dir);
+            if (pos != result.npos)
+                result.erase(0, tz_dir.size() + 1 + pos);
+            return locate_zone(result);
+        }
     }
     {
     // On some versions of some linux distro's (e.g. Ubuntu),
