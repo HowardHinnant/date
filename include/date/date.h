@@ -7431,6 +7431,7 @@ msl(CharT c) NOEXCEPT
 }
 
 CONSTCD14
+inline
 std::size_t
 to_string_len(std::intmax_t i)
 {
