@@ -314,17 +314,26 @@ CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 #endif  // USE_OS_TZDB
 
 #ifndef _WIN32
-#  ifndef __APPLE__
-static const std::string tz_dir = "/usr/share/zoneinfo";
-#  else  // __APPLE__
 
 static
 std::string
 discover_tz_dir()
 {
     struct stat sb;
-    CONSTDATA auto timezone = "/etc/localtime";
     using namespace std;
+#  ifndef __APPLE__
+    CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
+    CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
+
+    // Check special path which is valid for buildroot with uclibc builds
+    if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_buildroot;
+    else if(stat(tz_dir_default, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_default;
+    else
+        throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
+#  else  // __APPLE__
+    CONSTDATA auto timezone = "/etc/localtime";
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
         throw runtime_error("discover_tz_dir failed\n");
     string result;
@@ -340,11 +349,11 @@ discover_tz_dir()
     if (i == string::npos)
         throw runtime_error("discover_tz_dir failed to find '/'\n");
     return result.substr(0, i);
+#  endif  // __APPLE__
 }
 
 static const std::string tz_dir = discover_tz_dir();
 
-#  endif  // __APPLE__
 #endif
 
 // +-------------------+
@@ -3615,22 +3624,51 @@ tzdb::current_zone() const
     // exception will be thrown by local_timezone.
     // The path may also take a relative form:
     // "../usr/share/zoneinfo/America/Los_Angeles".
-    struct stat sb;
-    CONSTDATA auto timezone = "/etc/localtime";
-    if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
     {
-        using namespace std;
-        string result;
-        char rp[PATH_MAX];
-        if (realpath(timezone, rp))
-            result = string(rp);
-        else
-            throw system_error(errno, system_category(), "realpath() failed");
+        struct stat sb;
+        CONSTDATA auto timezone = "/etc/localtime";
+        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
+            using namespace std;
+            string result;
+            char rp[PATH_MAX];
+            if (realpath(timezone, rp))
+                result = string(rp);
+            else
+                throw system_error(errno, system_category(), "realpath() failed");
 
-        const size_t pos = result.find(tz_dir);
-        if (pos != result.npos)
-            result.erase(0, tz_dir.size()+1+pos);
-        return locate_zone(result);
+            const size_t pos = result.find(tz_dir);
+            if (pos != result.npos)
+                result.erase(0, tz_dir.size() + 1 + pos);
+            return locate_zone(result);
+        }
+    }
+    // On embedded systems e.g. buildroot with uclibc the timezone is linked
+    // into /etc/TZ which is a symlink to path like this:
+    // "/usr/share/zoneinfo/uclibc/America/Los_Angeles"
+    // If it does, we try to determine the current
+    // timezone from the remainder of the path by removing the prefix
+    // and hoping the rest resolves to valid timezone.
+    // It may not always work though. If it doesn't then an
+    // exception will be thrown by local_timezone.
+    // The path may also take a relative form:
+    // "../usr/share/zoneinfo/uclibc/America/Los_Angeles".
+    {
+        struct stat sb;
+        CONSTDATA auto timezone = "/etc/TZ";
+        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
+            using namespace std;
+            string result;
+            char rp[PATH_MAX];
+            if (realpath(timezone, rp))
+                result = string(rp);
+            else
+                throw system_error(errno, system_category(), "realpath() failed");
+
+            const size_t pos = result.find(tz_dir);
+            if (pos != result.npos)
+                result.erase(0, tz_dir.size() + 1 + pos);
+            return locate_zone(result);
+        }
     }
     {
     // On some versions of some linux distro's (e.g. Ubuntu),
