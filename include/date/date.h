@@ -30,8 +30,15 @@
 // been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
-#include <cassert>
+#ifndef HAS_STRING_VIEW
+#  if __cplusplus >= 201703
+#    define HAS_STRING_VIEW 1
+#  else
+#    define HAS_STRING_VIEW 0
+#  endif
+#endif  // HAS_STRING_VIEW
 
+#include <cassert>
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -53,6 +60,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#if HAS_STRING_VIEW
+# include <string_view>
+#endif
 #include <utility>
 #include <type_traits>
 

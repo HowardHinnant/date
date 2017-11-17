@@ -104,14 +104,6 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  endif
 #endif  // HAS_DEDUCTION_GUIDES
 
-#ifndef HAS_STRING_VIEW
-#  if __cplusplus >= 201703
-#    define HAS_STRING_VIEW 1
-#  else
-#    define HAS_STRING_VIEW 0
-#  endif
-#endif  // HAS_STRING_VIEW
-
 #include "date.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
