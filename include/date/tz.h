@@ -292,7 +292,7 @@ struct zoned_traits<const time_zone*>
     const time_zone*
     default_zone()
     {
-        return date::locate_zone("UTC");
+        return date::locate_zone("Etc/UTC");
     }
 
 #if HAS_STRING_VIEW
