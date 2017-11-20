@@ -1108,7 +1108,7 @@ trunc(const std::chrono::duration<Rep, Period>& d)
 }
 
 #ifndef HAS_CHRONO_ROUNDING
-#  if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023918
+#  if defined(_MSC_FULL_VER) && (_MSC_FULL_VER >= 190023918 || (_MSC_FULL_VER >= 190000000 && defined (__clang__)))
 #    define HAS_CHRONO_ROUNDING 1
 #  elif defined(__cpp_lib_chrono) && __cplusplus > 201402 && __cpp_lib_chrono >= 201510
 #    define HAS_CHRONO_ROUNDING 1
