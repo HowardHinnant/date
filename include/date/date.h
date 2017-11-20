@@ -1877,12 +1877,19 @@ weekday_indexed::ok() const NOEXCEPT
     return weekday().ok() && 1 <= index_ && index_ <= 5;
 }
 
+#ifdef __GNUC__
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wconversion"
+
 CONSTCD11
 inline
 weekday_indexed::weekday_indexed(const date::weekday& wd, unsigned index) NOEXCEPT
     : wd_(static_cast<decltype(wd_)>(static_cast<unsigned>(wd)))
     , index_(static_cast<decltype(index_)>(index))
     {}
+
+#  pragma GCC diagnostic pop
+#endif  // __GNUC__
 
 template<class CharT, class Traits>
 inline
