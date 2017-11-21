@@ -1880,6 +1880,7 @@ weekday_indexed::ok() const NOEXCEPT
 #ifdef __GNUC__
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wconversion"
+#endif  // __GNUC__
 
 CONSTCD11
 inline
@@ -1888,6 +1889,7 @@ weekday_indexed::weekday_indexed(const date::weekday& wd, unsigned index) NOEXCE
     , index_(static_cast<decltype(index_)>(index))
     {}
 
+#ifdef __GNUC__
 #  pragma GCC diagnostic pop
 #endif  // __GNUC__
 
