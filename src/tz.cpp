@@ -2833,7 +2833,7 @@ remote_version()
     std::string str;
     if (download_to_string("http://www.iana.org/time-zones", str))
     {
-        CONSTDATA char db[] = "/time-zones/repository/releases/tzdata";
+        CONSTDATA char db[] = "/time-zones/releases/tzdata";
         CONSTDATA auto db_size = sizeof(db) - 1;
         auto p = str.find(db, 0, db_size);
         const int ver_str_len = 5;
@@ -3238,7 +3238,7 @@ remote_download(const std::string& version)
     }
 #  endif  // _WIN32
 
-    auto url = "http://www.iana.org/time-zones/repository/releases/tzdata" + version +
+    auto url = "http://www.iana.org/time-zones/releases/tzdata" + version +
                ".tar.gz";
     bool result = download_to_file(url, get_download_gz_file(version),
                                    download_file_options::binary);
