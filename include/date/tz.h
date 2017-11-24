@@ -2259,14 +2259,14 @@ struct clock_time_conversion<Clock, Clock>
 namespace ctc_detail
 {
   //Check if TimePoint is time for given clock, 
-  //if so exposes it as type typedef
+  //if not emits hard errorf
   template<typename Clock, typename TimePoint>
   struct return_clock_time
-    : std::enable_if<
-        std::is_same<Clock, typename TimePoint::clock>::value,
-        TimePoint
-      >
-  {};
+  {
+    using clock_time_point = std::chrono::time_point<Clock, typename TimePoint::duration>;
+    static_assert(std::is_same<TimePoint, clock_time_point>::value, "time point with appropariate clock shall be returned");
+    using type = TimePoint;
+  };
 
   // Check if Clock has to_sys method accepting TimePoint with given duration const& and returning sys_time
   // If so has nested type member equal to return type to_sys.
@@ -2276,7 +2276,7 @@ namespace ctc_detail
 
   template<typename Clock, typename Duration>
   struct return_to_sys<Clock, Duration, decltype(Clock::to_sys(std::declval<std::chrono::time_point<Clock, Duration> const&>()), void())>
-    : return_clock_time<std::chrono::system_clock, typename std::decay<decltype(Clock::to_sys(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>::type>
+    : return_clock_time<std::chrono::system_clock, decltype(Clock::to_sys(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>
   {};
 
   // Similiar to above
@@ -2286,7 +2286,7 @@ namespace ctc_detail
 
   template<typename Clock, typename Duration>
   struct return_from_sys<Clock, Duration, decltype(Clock::from_sys(std::declval<std::chrono::time_point<std::chrono::system_clock, Duration> const&>()), void())>
-    : return_clock_time<Clock, typename std::decay<decltype(Clock::from_sys(std::declval<std::chrono::time_point<std::chrono::system_clock, Duration> const&>()))>::type>
+    : return_clock_time<Clock, decltype(Clock::from_sys(std::declval<std::chrono::time_point<std::chrono::system_clock, Duration> const&>()))>
   {};
 
   // Similiar to above
@@ -2296,7 +2296,7 @@ namespace ctc_detail
 
   template<typename Clock, typename Duration>
   struct return_to_utc<Clock, Duration, decltype(Clock::to_utc(std::declval<std::chrono::time_point<Clock, Duration> const&>()), void())>
-    : return_clock_time<utc_clock, typename std::decay<decltype(Clock::to_utc(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>::type>
+    : return_clock_time<utc_clock, decltype(Clock::to_utc(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>
   {};
 
   // Similiar to above
@@ -2306,7 +2306,7 @@ namespace ctc_detail
 
   template<typename Clock, typename Duration>
   struct return_from_utc<Clock, Duration, decltype(Clock::from_utc(std::declval<std::chrono::time_point<utc_clock, Duration> const&>()), void())>
-    : return_clock_time<Clock, typename std::decay<decltype(Clock::from_utc(std::declval<std::chrono::time_point<utc_clock, Duration> const&>()))>::type>
+    : return_clock_time<Clock, decltype(Clock::from_utc(std::declval<std::chrono::time_point<utc_clock, Duration> const&>()))>
   {};
 }
 
