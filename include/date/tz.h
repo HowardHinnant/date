@@ -2417,6 +2417,107 @@ auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& st)
   return clock_cast_detail::cc_impl<DestClock>(st, &st); 
 }
 
+// Deprecated API
+
+template <class Duration>
+inline
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_sys_time(const utc_time<Duration>& t)
+{
+    return clock_cast<std::chrono::system_clock>(t);
+}
+
+template <class Duration>
+inline
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_sys_time(const tai_time<Duration>& t)
+{
+    return clock_cast<std::chrono::system_clock>(t);
+}
+
+template <class Duration>
+inline
+sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_sys_time(const gps_time<Duration>& t)
+{
+    return clock_cast<std::chrono::system_clock>(t);
+}
+
+
+template <class Duration>
+inline
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_utc_time(const sys_time<Duration>& t)
+{
+    return clock_cast<utc_clock>(t);
+}
+
+template <class Duration>
+inline
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_utc_time(const tai_time<Duration>& t)
+{
+    return clock_cast<utc_clock>(t);
+}
+
+template <class Duration>
+inline
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_utc_time(const gps_time<Duration>& t)
+{
+    return clock_cast<utc_clock>(t);
+}
+
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(const sys_time<Duration>& t)
+{
+    return clock_cast<tai_clock>(t);
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(const utc_time<Duration>& t)
+{
+    return clock_cast<tai_clock>(t);
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_tai_time(const gps_time<Duration>& t)
+{
+    return clock_cast<tai_clock>(t);
+}
+
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(const sys_time<Duration>& t)
+{
+    return clock_cast<gps_clock>(t);
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(const utc_time<Duration>& t)
+{
+    return clock_cast<gps_clock>(t);
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+to_gps_time(const tai_time<Duration>& t)
+{
+    return clock_cast<gps_clock>(t);
+}
+
 #endif  // !MISSING_LEAP_SECONDS
 
 }  // namespace date
