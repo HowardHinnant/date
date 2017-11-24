@@ -27,26 +27,14 @@ int
 main()
 {
     using namespace date;
-    using sys_clock = std::chrono::system_clock;
-
-    // self
-    {
-       sys_days st(1997_y/dec/12);
-       auto ut = utc_clock::from_sys(st);
-       auto tt = tai_clock::from_utc(ut);
-       
-       assert(clock_cast<sys_clock>(st) == st);
-       assert(clock_cast<utc_clock>(ut) == ut);
-       assert(clock_cast<tai_clock>(tt) == tt);
-    }
 
     // sys <-> utc
     {
        sys_days st(1997_y/dec/12);
        auto ut = utc_clock::from_sys(st);
 
-       assert(clock_cast<utc_clock>(st) == ut);
-       assert(clock_cast<sys_clock>(ut) == st);      
+       assert(to_utc_time(st) == ut);
+       assert(to_sys_time(ut) == st);      
     }
 
     // tai <-> utc
@@ -55,8 +43,8 @@ main()
        auto ut = utc_clock::from_sys(st);
        auto tt = tai_clock::from_utc(ut);
 
-       assert(clock_cast<tai_clock>(ut) == tt);
-       assert(clock_cast<utc_clock>(tt) == ut);
+       assert(to_tai_time(ut) == tt);
+       assert(to_utc_time(tt) == ut);
     }
 
     // tai <-> sys
@@ -65,8 +53,8 @@ main()
        auto ut = utc_clock::from_sys(st);
        auto tt = tai_clock::from_utc(ut);
 
-       assert(clock_cast<tai_clock>(st) == tt);
-       assert(clock_cast<sys_clock>(tt) == st);
+       assert(to_tai_time(st) == tt);
+       assert(to_sys_time(tt) == st);
     }
 
     // gps <-> utc
@@ -75,8 +63,8 @@ main()
        auto ut = utc_clock::from_sys(st);
        auto gt = gps_clock::from_utc(ut);
 
-       assert(clock_cast<gps_clock>(ut) == gt);
-       assert(clock_cast<utc_clock>(gt) == ut);
+       assert(to_gps_time(ut) == gt);
+       assert(to_utc_time(gt) == ut);
     }
 
     // gps <-> sys
@@ -85,8 +73,8 @@ main()
        auto ut = utc_clock::from_sys(st);
        auto gt = gps_clock::from_utc(ut);
 
-       assert(clock_cast<gps_clock>(st) == gt);
-       assert(clock_cast<sys_clock>(gt) == st);
+       assert(to_gps_time(st) == gt);
+       assert(to_sys_time(gt) == st);
     }
 
     // tai <-> gps   
@@ -96,7 +84,7 @@ main()
        auto tt = tai_clock::from_utc(ut);
        auto gt = gps_clock::from_utc(ut);
 
-       assert(clock_cast<gps_clock>(tt) == gt);
-       assert(clock_cast<tai_clock>(gt) == tt);
+       assert(to_gps_time(tt) == gt);
+       assert(to_tai_time(gt) == tt);
     }
 }
