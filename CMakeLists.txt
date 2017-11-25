@@ -54,6 +54,6 @@ install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
 add_custom_target( testit 
 	COMMAND ./testit 
-	WORKING_DIRECTORY ${TEST_FOLDER} 
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${TEST_FOLDER} 
 	COMMENT "Run tests" 
 )
