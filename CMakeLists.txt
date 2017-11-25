@@ -7,6 +7,7 @@ find_package( Threads REQUIRED )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
+option( BUILD_STATIC "Build a static version of library" ON )
 
 if( USE_SYSTEM_TZ_DB ) 
 	add_definitions( -DUSE_AUTOLOAD=0 )
@@ -45,7 +46,11 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+if( BUILD_STATIC ) 
+	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+else( )
+	add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+endif( )
 set_property(TARGET tz PROPERTY CXX_STANDARD 14)
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  )
 
