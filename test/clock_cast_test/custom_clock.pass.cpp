@@ -100,7 +100,7 @@ struct s2s_clock
 namespace date
 {
    template<>
-   struct clock_time_conversion<s2s_clock, mil_clock>
+   struct clock_time_conversion<mil_clock, s2s_clock>
    {
      template<typename Duration>
      std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>

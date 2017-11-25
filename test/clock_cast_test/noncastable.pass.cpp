@@ -54,7 +54,7 @@ struct steady_based_clock
 namespace date
 {
    template<>
-   struct clock_time_conversion<steady_based_clock, std::chrono::steady_clock>
+   struct clock_time_conversion<std::chrono::steady_clock, steady_based_clock>
    {
      template<typename Duration>
      std::chrono::time_point<std::chrono::steady_clock, Duration>
@@ -66,7 +66,7 @@ namespace date
    };
 
    template<>
-   struct clock_time_conversion<std::chrono::steady_clock, steady_based_clock>
+   struct clock_time_conversion<steady_based_clock, std::chrono::steady_clock>
    {
      template<typename Duration>
      std::chrono::time_point<steady_based_clock, Duration>
@@ -174,7 +174,7 @@ namespace date
 {
    //Disambiguates that sys_clock is preffered
    template<>
-   struct clock_time_conversion<amb2_clock, amb1_clock>
+   struct clock_time_conversion<amb1_clock, amb2_clock>
    {
      template<typename Duration>
      std::chrono::time_point<amb1_clock, Duration>
