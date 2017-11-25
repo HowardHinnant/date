@@ -12,6 +12,7 @@ option( BUILD_STATIC "Build a static version of library" ON )
 if( USE_SYSTEM_TZ_DB ) 
 	add_definitions( -DUSE_AUTOLOAD=0 )
 	add_definitions( -DHAS_REMOTE_API=0 )
+	# cannot set USE_OS_TZDB to 1 on Windows
 	if( NOT WIN32 ) 
 		add_definitions( -DUSE_OS_TZDB=1 )
 	endif( )
@@ -59,8 +60,11 @@ target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAK
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
-add_custom_target( testit 
-	COMMAND ./testit 
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${TEST_FOLDER} 
-	COMMENT "Run tests" 
-)
+# testit is a bash script and does not run on Windows
+if( NOT WIN32 ) 
+	add_custom_target( testit 
+		COMMAND ./testit 
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${TEST_FOLDER} 
+		COMMENT "Run tests" 
+	)
+endif( )
