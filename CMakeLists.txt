@@ -7,8 +7,6 @@ find_package( Threads REQUIRED )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
-option( BUILD_TESTS "Build Tests" OFF )
-option( RUN_TESTS "Build Tests" OFF )
 
 if( USE_SYSTEM_TZ_DB ) 
 	add_definitions( -DUSE_AUTOLOAD=0 )
@@ -27,10 +25,6 @@ endif( )
 
 if( USE_TZ_DB_IN_DOT ) 
 	add_definitions( -DINSTALL=. )
-endif( )
-
-if( RUN_TESTS )
-	set( BUILD_TESTS ON )
 endif( )
 
 set( HEADER_FOLDER "include" )
@@ -58,10 +52,8 @@ target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAK
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
-if( BUILD_TESTS )
-	file( GLOB_RECURSE TEST_FILES ${TEST_FOLDER} *.cpp )
-	foreach( CUR_TEST ${TEST_FILES} ) 
-		MESSAGE(STATUS "Process file: ${CUR_TEST}")
-	endforeach( CUR_TEST )
-endif( )
-
+add_custom_target( testit 
+	COMMAND ./testit 
+	WORKING_DIRECTORY ${TEST_FOLDER} 
+	COMMENT "Run tests" 
+)
