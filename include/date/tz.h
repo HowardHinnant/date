@@ -2358,10 +2358,9 @@ namespace clock_cast_detail
 {
    template<typename DestClock, typename SourceClock, typename Duration>
    auto conv_clock(const std::chrono::time_point<SourceClock, Duration>& st)
-     -> decltype(std::declval<clock_time_conversion<SourceClock, DestClock>&>()(st))
+     -> decltype(std::declval<clock_time_conversion<SourceClock, DestClock>>()(st))
    {
-     clock_time_conversion<SourceClock, DestClock> converter;
-     return converter(st);
+     return clock_time_conversion<SourceClock, DestClock>{}(st);
    }
 
    //direct triat conversion, 2nd candidate 
