@@ -22,7 +22,7 @@
 
 #include "tz.h"
 
-struct bad_clock 
+struct bad_clock
 {
   using duration = std::chrono::system_clock::duration;
   using rep = duration::rep;

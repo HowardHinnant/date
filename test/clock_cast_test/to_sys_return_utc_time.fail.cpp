@@ -22,7 +22,7 @@
 
 #include "tz.h"
 
-struct bad_clock 
+struct bad_clock
 {
   using duration = std::chrono::system_clock::duration;
   using rep = duration::rep;
@@ -31,7 +31,7 @@ struct bad_clock
 
   template<typename Duration>
   static
-  date::utc_time<Duration> 
+  date::utc_time<Duration>
   to_sys(std::chrono::time_point<bad_clock, Duration> const& tp)
   {
     return utc_time<Duration>(tp.time_since_epoch());

@@ -34,7 +34,7 @@ main()
        auto ut = utc_clock::from_sys(st);
 
        assert(to_utc_time(st) == ut);
-       assert(to_sys_time(ut) == st);      
+       assert(to_sys_time(ut) == st);
     }
 
     // tai <-> utc
@@ -77,7 +77,7 @@ main()
        assert(to_sys_time(gt) == st);
     }
 
-    // tai <-> gps   
+    // tai <-> gps
     {
        sys_days st(1997_y/dec/12);
        auto ut = utc_clock::from_sys(st);

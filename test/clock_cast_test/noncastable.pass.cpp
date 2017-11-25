@@ -25,7 +25,7 @@
 #include <cassert>
 
 template<typename SourceClock, typename DestClock, typename = void>
-struct is_clock_castable 
+struct is_clock_castable
   : std::false_type
 {};
 
@@ -36,7 +36,7 @@ struct is_clock_castable<SourceClock, DestClock, decltype(date::clock_cast<DestC
 
 
 //Clock based on steady clock, not related to wall time (sys_clock/utc_clock)
-struct steady_based_clock 
+struct steady_based_clock
 {
   using duration = std::chrono::steady_clock::duration;
   using rep = duration::rep;
@@ -54,7 +54,7 @@ struct steady_based_clock
 namespace date
 {
    template<>
-   struct clock_time_conversion<steady_based_clock, std::chrono::steady_clock>
+   struct clock_time_conversion<std::chrono::steady_clock, steady_based_clock>
    {
      template<typename Duration>
      std::chrono::time_point<std::chrono::steady_clock, Duration>
@@ -66,7 +66,7 @@ namespace date
    };
 
    template<>
-   struct clock_time_conversion<std::chrono::steady_clock, steady_based_clock>
+   struct clock_time_conversion<steady_based_clock, std::chrono::steady_clock>
    {
      template<typename Duration>
      std::chrono::time_point<steady_based_clock, Duration>
@@ -78,7 +78,7 @@ namespace date
    };
 }
 
-//Ambigous clocks both providing to/from_sys and to/from_utc 
+//Ambigous clocks both providing to/from_sys and to/from_utc
 //They are mock_ups just returning zero time_point
 struct amb1_clock
 {
@@ -87,7 +87,7 @@ struct amb1_clock
    using period = duration::period;
    using time_point = std::chrono::time_point<amb1_clock>;
 
-   static time_point now() 
+   static time_point now()
    {
      return {};
    }
@@ -132,7 +132,7 @@ struct amb2_clock
    using period = duration::period;
    using time_point = std::chrono::time_point<amb2_clock>;
 
-   static time_point now() 
+   static time_point now()
    {
      return {};
    }
@@ -174,7 +174,7 @@ namespace date
 {
    //Disambiguates that sys_clock is preffered
    template<>
-   struct clock_time_conversion<amb2_clock, amb1_clock>
+   struct clock_time_conversion<amb1_clock, amb2_clock>
    {
      template<typename Duration>
      std::chrono::time_point<amb1_clock, Duration>
@@ -214,7 +214,7 @@ main()
     {
       auto s1 = steady_clock::time_point(steady_clock::duration(200));
       auto s2 = steady_based_clock::time_point(steady_based_clock::duration(200));
-   
+
       assert(clock_cast<steady_based_clock>(s1) == s2);
       assert(clock_cast<steady_clock>(s2) == s1);
     }

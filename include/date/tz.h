@@ -1839,7 +1839,7 @@ public:
     static time_point now();
 
     template<typename Duration>
-    static 
+    static
     std::chrono::time_point<std::chrono::system_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     to_sys(const std::chrono::time_point<utc_clock, Duration>&);
 
@@ -1990,7 +1990,7 @@ public:
     static time_point now() NOEXCEPT;
 
     template<typename Duration>
-    static 
+    static
     std::chrono::time_point<utc_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     to_utc(const std::chrono::time_point<tai_clock, Duration>&) NOEXCEPT;
 
@@ -2100,7 +2100,7 @@ public:
     static time_point now() NOEXCEPT;
 
     template<typename Duration>
-    static 
+    static
     std::chrono::time_point<utc_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     to_utc(const std::chrono::time_point<gps_clock, Duration>&) NOEXCEPT;
 
@@ -2197,7 +2197,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     return is;
 }
 
-template<typename SourceClock, typename DestClock>
+template<typename DestClock, typename SourceClock>
 struct clock_time_conversion
 {};
 
@@ -2207,7 +2207,7 @@ struct clock_time_conversion<std::chrono::system_clock, std::chrono::system_cloc
   template <class Duration>
   auto operator()(const sys_time<Duration>& st) const
     -> sys_time<Duration>
-  { 
+  {
     return st;
   }
 };
@@ -2218,13 +2218,13 @@ struct clock_time_conversion<utc_clock, utc_clock>
   template <class Duration>
   auto operator()(const utc_time<Duration>& ut) const
     -> utc_time<Duration>
-  { 
+  {
     return ut;
   }
 };
 
 template<>
-struct clock_time_conversion<std::chrono::system_clock, utc_clock>
+struct clock_time_conversion<utc_clock, std::chrono::system_clock>
 {
   template <class Duration>
   utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -2235,7 +2235,7 @@ struct clock_time_conversion<std::chrono::system_clock, utc_clock>
 };
 
 template<>
-struct clock_time_conversion<utc_clock, std::chrono::system_clock>
+struct clock_time_conversion<std::chrono::system_clock, utc_clock>
 {
   template <class Duration>
   sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -2251,14 +2251,14 @@ struct clock_time_conversion<Clock, Clock>
   template <class Duration>
   auto operator()(const std::chrono::time_point<Clock, Duration>& tp) const
     -> std::chrono::time_point<Clock, Duration>
-  { 
+  {
     return tp;
   }
 };
 
 namespace ctc_detail
 {
-  //Check if TimePoint is time for given clock, 
+  //Check if TimePoint is time for given clock,
   //if not emits hard error
   template<typename Clock, typename TimePoint>
   struct return_clock_time
@@ -2271,7 +2271,7 @@ namespace ctc_detail
   // Check if Clock has to_sys method accepting TimePoint with given duration const& and returning sys_time
   // If so has nested type member equal to return type to_sys.
   template<typename Clock, typename Duration, typename = void>
-  struct return_to_sys 
+  struct return_to_sys
   {};
 
   template<typename Clock, typename Duration>
@@ -2281,7 +2281,7 @@ namespace ctc_detail
 
   // Similiar to above
   template<typename Clock, typename Duration, typename = void>
-  struct return_from_sys 
+  struct return_from_sys
   {};
 
   template<typename Clock, typename Duration>
@@ -2291,7 +2291,7 @@ namespace ctc_detail
 
   // Similiar to above
   template<typename Clock, typename Duration, typename = void>
-  struct return_to_utc 
+  struct return_to_utc
   {};
 
   template<typename Clock, typename Duration>
@@ -2301,7 +2301,7 @@ namespace ctc_detail
 
   // Similiar to above
   template<typename Clock, typename Duration, typename = void>
-  struct return_from_utc 
+  struct return_from_utc
   {};
 
   template<typename Clock, typename Duration>
@@ -2311,7 +2311,7 @@ namespace ctc_detail
 }
 
 template<typename SourceClock>
-struct clock_time_conversion<SourceClock, std::chrono::system_clock> 
+struct clock_time_conversion<std::chrono::system_clock, SourceClock>
 {
   template <class Duration>
   auto operator()(const std::chrono::time_point<SourceClock, Duration>& tp) const
@@ -2322,7 +2322,7 @@ struct clock_time_conversion<SourceClock, std::chrono::system_clock>
 };
 
 template<typename DestClock>
-struct clock_time_conversion<std::chrono::system_clock, DestClock>
+struct clock_time_conversion<DestClock, std::chrono::system_clock>
 {
   template <class Duration>
   auto operator()(const sys_time<Duration>& st) const
@@ -2333,7 +2333,7 @@ struct clock_time_conversion<std::chrono::system_clock, DestClock>
 };
 
 template<typename SourceClock>
-struct clock_time_conversion<SourceClock, utc_clock> 
+struct clock_time_conversion<utc_clock, SourceClock>
 {
   template <class Duration>
   auto operator()(const std::chrono::time_point<SourceClock, Duration>& tp) const
@@ -2344,7 +2344,7 @@ struct clock_time_conversion<SourceClock, utc_clock>
 };
 
 template<typename DestClock>
-struct clock_time_conversion<utc_clock, DestClock>
+struct clock_time_conversion<DestClock, utc_clock>
 {
   template <class Duration>
   auto operator()(const utc_time<Duration>& ut) const
@@ -2358,12 +2358,12 @@ namespace clock_cast_detail
 {
    template<typename DestClock, typename SourceClock, typename Duration>
    auto conv_clock(const std::chrono::time_point<SourceClock, Duration>& st)
-     -> decltype(std::declval<clock_time_conversion<SourceClock, DestClock>>()(st))
+     -> decltype(std::declval<clock_time_conversion<DestClock, SourceClock>>()(st))
    {
-     return clock_time_conversion<SourceClock, DestClock>{}(st);
+     return clock_time_conversion<DestClock, SourceClock>{}(st);
    }
 
-   //direct triat conversion, 2nd candidate 
+   //direct triat conversion, 2nd candidate
    template<typename DestClock, typename SourceClock, typename Duration>
    auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
                 const std::chrono::time_point<SourceClock, Duration>* /* 1st */)
@@ -2412,8 +2412,8 @@ namespace clock_cast_detail
 template<typename DestClock, typename SourceClock, typename Duration>
 auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& st)
  -> decltype(clock_cast_detail::cc_impl<DestClock>(st, &st))
-{ 
-  return clock_cast_detail::cc_impl<DestClock>(st, &st); 
+{
+  return clock_cast_detail::cc_impl<DestClock>(st, &st);
 }
 
 // Deprecated API

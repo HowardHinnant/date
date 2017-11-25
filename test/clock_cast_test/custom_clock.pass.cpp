@@ -39,7 +39,7 @@ struct mil_clock
 
   template<typename Duration>
   static
-  std::chrono::time_point<std::chrono::system_clock, std::common_type_t<Duration, date::days>> 
+  std::chrono::time_point<std::chrono::system_clock, std::common_type_t<Duration, date::days>>
   to_sys(std::chrono::time_point<mil_clock, Duration> const& tp)
   {
     ++conversions;
@@ -66,7 +66,7 @@ struct mil_clock
 date::sys_days const mil_clock::epoch;
 
 // traits example
-struct s2s_clock 
+struct s2s_clock
 {
   using duration = std::chrono::system_clock::duration;
   using rep = duration::rep;
@@ -75,7 +75,7 @@ struct s2s_clock
 
   template<typename Duration>
   static
-  std::chrono::time_point<std::chrono::system_clock, Duration> 
+  std::chrono::time_point<std::chrono::system_clock, Duration>
   to_sys(std::chrono::time_point<s2s_clock, Duration> const& tp)
   {
     ++conversions;
@@ -84,7 +84,7 @@ struct s2s_clock
 
   template<typename Duration>
   static
-  std::chrono::time_point<s2s_clock, Duration> 
+  std::chrono::time_point<s2s_clock, Duration>
   from_sys(std::chrono::time_point<std::chrono::system_clock, Duration> const& tp)
   {
     ++conversions;
@@ -100,7 +100,7 @@ struct s2s_clock
 namespace date
 {
    template<>
-   struct clock_time_conversion<s2s_clock, mil_clock>
+   struct clock_time_conversion<mil_clock, s2s_clock>
    {
      template<typename Duration>
      std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>
@@ -123,7 +123,7 @@ main()
     {
        sys_days st(1997_y/dec/12);
        auto mt = mil_clock::from_sys(st);
-       
+
        assert(clock_cast<mil_clock>(mt) == mt);
     }
 
@@ -133,7 +133,7 @@ main()
        auto mt = mil_clock::from_sys(st);
 
        assert(clock_cast<mil_clock>(st) == mt);
-       assert(clock_cast<sys_clock>(mt) == st);      
+       assert(clock_cast<sys_clock>(mt) == st);
     }
 
     // mil <-> utc
@@ -143,7 +143,7 @@ main()
        auto ut = utc_clock::from_sys(st);
 
        assert(clock_cast<mil_clock>(ut) == mt);
-       assert(clock_cast<utc_clock>(mt) == ut);      
+       assert(clock_cast<utc_clock>(mt) == ut);
     }
 
     // mil <-> tai
@@ -179,7 +179,7 @@ main()
        assert(clock_cast<mil_clock>(s2t) == mt);
        assert(conversions == 1);
 
-       //uses sys_clock       
+       //uses sys_clock
        conversions = 0;
        assert(clock_cast<s2s_clock>(mt) == s2t);
        assert(conversions == 2);
