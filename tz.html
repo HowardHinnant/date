@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-10-28<br/>
+2017-11-26<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -61,6 +61,7 @@
     <li><a href="#utc_clock"><code>utc_clock</code></a></li>
     <li><a href="#tai_clock"><code>tai_clock</code></a></li>
     <li><a href="#gps_clock"><code>gps_clock</code></a></li>
+    <li><a href="#clock_cast"><code>clock_cast</code></a></li>
     <li><a href="#leap"><code>leap</code></a></li>
     <li><a href="#link"><code>link</code></a></li>
     </ul>
@@ -648,13 +649,13 @@ was in the air.  This can be taken into account with the following code:
 int
 main()
 {
-    using namespace std::chrono_literals;
+    using namespace std::chrono;
     using namespace date;
 
     auto departure = make_zoned("America/New_York", local_days{dec/31/1978} + 12h + 1min);
-    <b>auto departure_utc = to_utc_time(departure.get_sys_time());</b>
+    <b>auto departure_utc = clock_cast&lt;utc_clock&gt;(departure.get_sys_time());</b>
     auto flight_length = 14h + 44min;
-    auto arrival = make_zoned("Asia/Tehran", <b>to_sys_time(departure_utc + flight_length)</b>);
+    auto arrival = make_zoned("Asia/Tehran", <b>clock_cast&lt;system_clock&gt;(departure_utc + flight_length)</b>);
 
     std::cout &lt;&lt; "departure NYC time:  " &lt;&lt; departure &lt;&lt; '\n';
     std::cout &lt;&lt; "flight time is       " &lt;&lt; make_time(flight_length) &lt;&lt; '\n';
@@ -2672,13 +2673,23 @@ make_zoned(const std::string&amp; name, const sys_time&lt;Duration&gt;&amp; st)
 class utc_clock
 {
 public:
-    using duration                  = std::chrono::system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = std::chrono::duration&lt;rep, period&gt;;
     using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+    static 
+    sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_sys(const utc_time&lt;Duration&gt;&amp;);
+
+    template &lt;class Duration&gt;
+    static
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_sys(const sys_time&lt;Duration&gt;&amp;);
 };
 
 template &lt;class Duration&gt;
@@ -2708,19 +2719,21 @@ static utc_clock::time_point utc_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>to_utc_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_sys(system_clock::now())</code>, or a more accurate
+value of <code>utc_time</code>.
 </p>
 </blockquote>
 
 <pre>
-template &lt;class Duration&gt;
+template &lt;typename Duration&gt;
+static 
 sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_sys_time(utc_time&lt;Duration&gt; u)
+utc_clock::to_sys(const utc_time&lt;Duration&gt;&amp; u);
 </pre>
 <blockquote>
 <p>
 <i>Returns:</i> A <code>sys_time</code> <code>t</code>, such that
-<code>to_utc_time(t) == u</code> if such a mapping exists.  Otherwise <code>u</code>
+<code>from_sys(t) == u</code> if such a mapping exists.  Otherwise <code>u</code>
 represents a <code>time_point</code> during a leap second insertion and the last
 representable value of <code>sys_time</code> prior to the insertion of the leap
 second is returned.
@@ -2728,9 +2741,10 @@ second is returned.
 </blockquote>
 
 <pre>
-template &lt;class Duration&gt;
+template &lt;typename Duration&gt;
+static
 utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(sys_time&lt;Duration&gt; t)
+utc_clock::from_sys(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2739,34 +2753,6 @@ to_utc_time(sys_time&lt;Duration&gt; t)
 of leap seconds that were inserted between <code>t</code> and 1970-01-01.  If
 <code>t</code> is ambiguous on this issue (i.e. corresponds to the date of leap
 second insertion), then the conversion counts that leap second as inserted.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(tai_time&lt;Duration&gt; t) noexcept
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
-</p>
-<p>
-<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_utc_time(gps_time&lt;Duration&gt; t) noexcept
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
-</p>
-<p>
-<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -2838,13 +2824,23 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 class tai_clock
 {
 public:
-    using duration                  = std::chrono::system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = std::chrono::duration&lt;rep, period&gt;;
     using time_point                = std::chrono::time_point&lt;tai_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+    static 
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    tai_time&lt;std::common_type&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
 };
 
 template &lt;class Duration&gt;
@@ -2872,40 +2868,20 @@ static tai_clock::time_point tai_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>to_tai_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_utc(utc_clock::now())</code>, or a more accurate
+value of <code>tai_time</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_sys_time(tai_time&lt;Duration&gt; t)
+static 
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Equivalent to:</i> <code>return to_sys_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_tai_time(sys_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Equivalent to:</i> <code>return to_tai_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_tai_time(utc_time&lt;Duration&gt; u) noexcept
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
+<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
 </p>
 <p>
 <i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
@@ -2914,15 +2890,16 @@ to_tai_time(utc_time&lt;Duration&gt; u) noexcept
 
 <pre>
 template &lt;class Duration&gt;
-tai_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_tai_time(gps_time&lt;Duration&gt; t) noexcept
+static
+tai_time&lt;std::common_type&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 694656019s</code>
+<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
 </p>
 <p>
-<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
+<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -2992,13 +2969,23 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 class gps_clock
 {
 public:
-    using duration                  = std::chrono::system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = std::chrono::duration&lt;rep, period&gt;;
     using time_point                = std::chrono::time_point&lt;gps_clock&gt;;
-    static constexpr bool is_steady = false;
+    static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now() noexcept;
+
+    template &lt;class Duration&gt;
+    static 
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_utc(const gps_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
 };
 
 template &lt;class Duration&gt;
@@ -3025,40 +3012,20 @@ static gps_clock::time_point gps_clock::now() noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>to_gps_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_utc(utc_clock::now())</code>, or a more accurate
+value of <code>gps_time</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-sys_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_sys_time(gps_time&lt;Duration&gt; t)
+static 
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::to_utc(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Equivalent to:</i> <code>return to_sys_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_gps_time(sys_time&lt;Duration&gt; t)
-</pre>
-<blockquote>
-<p>
-<i>Equivalent to:</i> <code>return to_gps_time(to_utc_time(t))</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-to_gps_time(utc_time&lt;Duration&gt; u) noexcept
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
 </p>
 <p>
 <i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
@@ -3067,15 +3034,16 @@ to_gps_time(utc_time&lt;Duration&gt; u) noexcept
 
 <pre>
 template &lt;class Duration&gt;
-gps_time&lt;typename std::common_type&lt;Duration, std::chrono::seconds&gt;::type&gt;
-to_gps_time(tai_time&lt;Duration&gt; t) noexcept
+static
+gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 694656019s</code>
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
 </p>
 <p>
-<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
+<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -3156,14 +3124,14 @@ int
 main()
 {
     using namespace date;
-    using namespace std::chrono_literals;
-    auto start = to_utc_time(sys_days{2015_y/jul/1} - 500ms);
+    using namespace std::chrono;
+    auto start = clock_cast&lt;utc_clock&gt;(sys_days{2015_y/jul/1} - 500ms);
     auto end = start + 2s;
     for (auto utc = start; utc &lt; end; utc += 100ms)
     {
-        auto sys = to_sys_time(utc);
-        auto tai = to_tai_time(utc);
-        auto gps = to_gps_time(utc);
+        auto sys = clock_cast&lt;system_clock&gt;(utc);
+        auto tai = clock_cast&lt;tai_clock&gt;(utc);
+        auto gps = clock_cast&lt;gps_clock&gt;(utc);
         std::cout &lt;&lt; format("%F %T SYS  ==  ", sys)
                   &lt;&lt; format("%F %T %Z  ==  ", utc)
                   &lt;&lt; format("%F %T %Z  ==  ", tai)
@@ -3203,6 +3171,303 @@ Output:
 </p>
 
 </blockquote>
+
+<a name="clock_cast"></a><h3><code>clock_cast</code></h3>
+<blockquote>
+<pre>
+template &lt;class DestClock, class SourceClock&gt;
+struct clock_time_conversion
+{};
+</pre>
+<p>
+<code>clock_time_conversion</code> serves as trait which can be used to specify how to
+convert <code>time_point&lt;SourceClock, Duration&gt;</code> to
+<code>time_point&lt;DestClock, Duration&gt;</code> via a specialization:
+<code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code>. A specialization of
+<code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code> shall provide a
+<code>const</code>-qualified <code>operator()</code> that takes a parameter of type
+<code>time_point&lt;SourceClock, Duration&gt;</code> and returns a
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> representing an equivalent
+point in time.  A program may specialize <code>clock_time_conversion</code> if at least
+one of the template parameters is user-defined clock type. 
+</p>
+
+<p>
+Several specializations are provided by the implementation:
+</p>
+<pre>
+// Identity
+
+template &lt;typename Clock&gt;
+struct clock_time_conversion&lt;Clock, Clock&gt;
+{
+    template &lt;class Duration&gt;
+    std::chrono::time_point&lt;Clock, Duration&gt;
+    operator()(const std::chrono::time_point&lt;Clock, Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+std::chrono::time_point&lt;Clock, Duration&gt;
+operator()(const std::chrono::time_point&lt;Clock, Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;std::chrono::system_clock, std::chrono::system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    sys_time&lt;Duration&gt;
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+sys_time&lt;Duration&gt;
+operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;utc_clock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    utc_time&lt;Duration&gt;
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+utc_time&lt;Duration&gt;
+operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+// system_clock &lt;-&gt; utc_clock
+</pre>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;utc_clock, std::chrono::system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::from_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;std::chrono::system_clock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::to_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// Clock &lt;-&gt; system_clock
+</pre>
+
+<pre>
+template &lt;class SourceClock&gt;
+struct clock_time_conversion&lt;std::chrono::system_clock, SourceClock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+        -&gt; decltype(SourceClock::to_sys(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+    -&gt; decltype(SourceClock::to_sys(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>SourceClock::to_sys(t)</code> is well formed.  If
+<code>SourceClock::to_sys(t)</code> does not return
+<code>sys_time&lt;<i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>SourceClock::to_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class DestClock&gt;
+struct clock_time_conversion&lt;DestClock, std::chrono::system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const
+        -&gt; decltype(DestClock::from_sys(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const sys_time&lt;Duration&gt;&amp; t) const
+    -&gt; decltype(DestClock::from_sys(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>DestClock::from_sys(t)</code> is well formed.  If
+<code>DestClock::from_sys(t)</code> does not return
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>DestClock::from_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// Clock &lt;-&gt; utc_clock
+</pre>
+
+<pre>
+template &lt;class SourceClock&gt;
+struct clock_time_conversion&lt;utc_clock, SourceClock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+        -&gt; decltype(SourceClock::to_utc(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+    -&gt; decltype(SourceClock::to_utc(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>SourceClock::to_utc(t)</code> is well formed.  If
+<code>SourceClock::to_utc(t)</code> does not return
+<code>utc_time&lt;<i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>SourceClock::to_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class DestClock&gt;
+struct clock_time_conversion&lt;DestClock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const
+        -&gt; decltype(DestClock::from_utc(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const utc_time&lt;Duration&gt;&amp; t) const
+    -&gt; decltype(DestClock::from_utc(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>DestClock::from_utc(t)</code> is well formed.  If
+<code>DestClock::from_utc(t)</code> does not return
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> the program is ill-formed.
+<code></code>.
+</p>
+<p>
+<i>Returns:</i> <code>DestClock::from_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// clock_cast
+</pre>
+
+<pre>
+template &lt;class DestClock, class SourceClock, class Duration&gt;
+std::chrono::time_point&lt;DestClock, <i>some duration</i>&gt;
+clock_cast(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+at least one of the following expressions are well formed:
+</p>
+<ol>
+<li><code>clock_time_conversion&lt;DestClock, SourceClock&gt;{}(t)</code></li>
+<li> Exactly one of:
+<ul>
+<li><code>clock_time_conversion&lt;DestClock, system_clock&gt;{}(
+    clock_time_conversion&lt;system_clock, SourceClock&gt;{}(t))</code>
+</li>
+<li><code>clock_time_conversion&lt;DestClock, utc_clock&gt;{}(
+    clock_time_conversion&lt;utc_clock, SourceClock&gt;{}(t))</code></li>
+</ul></li>
+<li> Exactly one of:
+<ul>
+<li><code>clock_time_conversion&lt;DestClock, utc_clock&gt;{}(
+    clock_time_conversion&lt;utc_clock, system_clock&gt;{}(
+        clock_time_conversion&lt;system_clock, SourceClock&gt;{}(t)))</code></li>
+<li><code>clock_time_conversion&lt;DestClock, system_clock&gt;{}(
+    clock_time_conversion&lt;system_clock, utc_clock&gt;{}(
+        clock_time_conversion&lt;utc_clock, SourceClock&gt;{}(t)))</code></li>
+</ul></li>
+</ol>
+<p>
+<i>Returns:</i> The first expression in the above list that is well-formed.  If item 1 is
+not well-formed and both expressions in item 2 are well-formed, the
+<code>clock_cast</code> is ambiguous (ill-formed).  If items 1 and 2 are not well-formed
+and both expressions in item 3 are well-formed, the <code>clock_cast</code> is ambiguous
+(ill-formed).
+</p>
+</blockquote>
+
+</blockquote>
+
 <a name="leap"></a><h3><code>leap</code></h3>
 <blockquote>
 <pre>
@@ -3556,7 +3821,7 @@ influencing the date.h library.
 </p>
 <p>
 And I would also especially like to thank contributors to this library:  gmcode,
-Ivan Pizhenko, tomy2105 and Ville Voutilainen.
+Ivan Pizhenko, Tomasz Kami&nacute;ski,  tomy2105 and Ville Voutilainen.
 </p>
 </body>
 </html>
