@@ -1987,7 +1987,7 @@ public:
     using time_point                = std::chrono::time_point<tai_clock>;
     static const bool is_steady     = false;
 
-    static time_point now() NOEXCEPT;
+    static time_point now();
 
     template<typename Duration>
     static
@@ -2029,7 +2029,7 @@ tai_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
 
 inline
 tai_clock::time_point
-tai_clock::now() NOEXCEPT
+tai_clock::now()
 {
     using namespace std::chrono;
     return from_utc(utc_clock::now());
@@ -2097,7 +2097,7 @@ public:
     using time_point                = std::chrono::time_point<gps_clock>;
     static const bool is_steady     = false;
 
-    static time_point now() NOEXCEPT;
+    static time_point now();
 
     template<typename Duration>
     static
@@ -2140,7 +2140,7 @@ gps_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
 
 inline
 gps_clock::time_point
-gps_clock::now() NOEXCEPT
+gps_clock::now()
 {
     using namespace std::chrono;
     return from_utc(utc_clock::now());
