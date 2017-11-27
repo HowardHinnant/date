@@ -117,4 +117,3 @@ if( NOT WIN32 )
 	add_fail_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/iso_week_test/*.fail.cpp" "iso_week_test" )
 	add_fail_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/tz_test/*.fail.cpp" "tz_test" )
 endif( )
-
