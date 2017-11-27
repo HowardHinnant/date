@@ -1,9 +1,10 @@
-cmake_minimum_required( VERSION 2.8.12 )
+cmake_minimum_required( VERSION 3.0.2 )
 
 project( date_prj )
 
 find_package( Threads REQUIRED )
 
+enable_testing( )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
@@ -59,11 +60,61 @@ target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAK
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
-# testit is a bash script and does not run on Windows
+add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
+
+add_dependencies( testit tz )
+function( add_pass_tests TEST_GLOB TEST_PREFIX )
+	file( GLOB FILENAMES ${TEST_GLOB} )
+	include_directories( "${HEADER_FOLDER}/date" )
+
+	foreach( TEST_FILE ${FILENAMES} )
+		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
+		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
+
+		set( PREFIX "${TEST_PREFIX}_${TEST_NAME}_pass" )
+		set( BIN_NAME ${PREFIX}_bin )
+		set( TST_NAME ${PREFIX}_test )
+		add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
+		set_property(TARGET ${BIN_NAME} PROPERTY CXX_STANDARD 14)
+		add_test( ${TST_NAME} ${BIN_NAME} )
+		target_link_libraries( ${BIN_NAME} tz )
+		add_dependencies( testit ${BIN_NAME} )
+	endforeach( )
+endfunction( )
+
+function( add_fail_tests TEST_GLOB TEST_PREFIX )
+	file( GLOB FILENAMES ${TEST_GLOB} )
+
+	foreach( TEST_FILE ${FILENAMES} )
+		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
+		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
+
+			set( TEST_TYPE "_fail" )
+
+		set( PREFIX "${TEST_PREFIX}_${TEST_NAME}_fail" )
+		set( BIN_NAME ${PREFIX}_bin )
+		set( TST_NAME ${PREFIX}_test )
+
+		#target_compile_definitions( ${BIN_NAME} PRIVATE ${TST_NAME} )
+		set( TEST_BIN_NAME ${CMAKE_BINARY_DIR}/${BIN_NAME} )
+		add_custom_target( ${BIN_NAME} 
+			COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMENT ${TST_NAME}	
+			)
+		add_test( ${TST_NAME} "${PROJECT_SOURCE_DIR}/test_fail.sh" ${CMAKE_BINARY_DIR}/${BIN_NAME} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/" )
+		#set_tests_properties( ${TST_NAME} PROPERTIES WILL_FAIL TRUE)
+		add_dependencies( testit ${BIN_NAME} )
+	endforeach( )
+endfunction( )
+
+add_pass_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/date_test/*.pass.cpp" "date_test" )
+add_pass_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/iso_week_test/*.pass.cpp" "iso_week_test" )
+add_pass_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/tz_test/*.pass.cpp" "tz_test" )
+
 if( NOT WIN32 ) 
-	add_custom_target( testit 
-		COMMAND ./testit 
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${TEST_FOLDER} 
-		COMMENT "Run tests" 
-	)
+	add_fail_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/date_test/*.fail.cpp" "date_test" )
+	add_fail_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/iso_week_test/*.fail.cpp" "iso_week_test" )
+	add_fail_tests( "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/tz_test/*.fail.cpp" "tz_test" )
 endif( )
+
