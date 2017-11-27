@@ -1058,7 +1058,7 @@ implicitly access the <code>front()</code> of this list via the
 <i>read-only</i> namespace scope functions <code>get_tzdb()</code>,
 <code>locate_zone()</code> and <code>current_zone()</code>. Each
 <code>vector</code> in <code>tzdb</code> is sorted to enable fast
-lookup.  One can iterate over and inspect this database.  And 
+lookup.  One can iterate over and inspect this database.  And
 multiple versions of the database can be used at once, via the
 <code>tzdb_list</code>.
 </p>
@@ -2215,7 +2215,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -2324,7 +2324,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -2344,7 +2344,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -2679,10 +2679,10 @@ public:
     using time_point                = std::chrono::time_point&lt;utc_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
+    static time_point now();
 
     template &lt;class Duration&gt;
-    static 
+    static
     sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     to_sys(const utc_time&lt;Duration&gt;&amp;);
 
@@ -2715,7 +2715,7 @@ second information.  When this is the case, <code>utc_clock</code> will not exis
 </p>
 
 <pre>
-static utc_clock::time_point utc_clock::now() noexcept;
+static utc_clock::time_point utc_clock::now();
 </pre>
 <blockquote>
 <p>
@@ -2726,7 +2726,7 @@ value of <code>utc_time</code>.
 
 <pre>
 template &lt;typename Duration&gt;
-static 
+static
 sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
 utc_clock::to_sys(const utc_time&lt;Duration&gt;&amp; u);
 </pre>
@@ -2830,16 +2830,16 @@ public:
     using time_point                = std::chrono::time_point&lt;tai_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
-
-    template &lt;class Duration&gt;
-    static 
-    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
-    to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp;) noexcept;
+    static time_point now();
 
     template &lt;class Duration&gt;
     static
-    tai_time&lt;std::common_type&lt;Duration, std::chrono::seconds&gt;&gt;
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_utc(const tai_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
 };
 
@@ -2864,7 +2864,7 @@ second information.  When this is the case, <code>tai_clock</code> will not exis
 </p>
 
 <pre>
-static tai_clock::time_point tai_clock::now() noexcept;
+static tai_clock::time_point tai_clock::now();
 </pre>
 <blockquote>
 <p>
@@ -2875,7 +2875,7 @@ value of <code>tai_time</code>.
 
 <pre>
 template &lt;class Duration&gt;
-static 
+static
 utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
 to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp; t) noexcept;
 </pre>
@@ -2891,7 +2891,7 @@ to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp; t) noexcept
 <pre>
 template &lt;class Duration&gt;
 static
-tai_time&lt;std::common_type&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
 tai_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
@@ -2975,10 +2975,10 @@ public:
     using time_point                = std::chrono::time_point&lt;gps_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
-    static time_point now() noexcept;
+    static time_point now();
 
     template &lt;class Duration&gt;
-    static 
+    static
     utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     to_utc(const gps_time&lt;Duration&gt;&amp;) noexcept;
 
@@ -3019,7 +3019,7 @@ value of <code>gps_time</code>.
 
 <pre>
 template &lt;class Duration&gt;
-static 
+static
 utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
 gps_clock::to_utc(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
@@ -3189,7 +3189,7 @@ convert <code>time_point&lt;SourceClock, Duration&gt;</code> to
 <code>time_point&lt;SourceClock, Duration&gt;</code> and returns a
 <code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> representing an equivalent
 point in time.  A program may specialize <code>clock_time_conversion</code> if at least
-one of the template parameters is user-defined clock type. 
+one of the template parameters is user-defined clock type.
 </p>
 
 <p>

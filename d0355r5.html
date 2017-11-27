@@ -37,7 +37,8 @@
 Document number: D0355R5<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
-2017-11-03<br>
+<a href="mailto:tomaszkam at gmail dot com">Tomasz Kami&nacute;ski</a><br>
+2017-11-26<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -59,6 +60,9 @@ Document number: D0355R5<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r4.html">R4</a></h3>
 
 <ul>
+<li>Replace the family of overloaded functions <code>to_sys_time</code>,
+<code>to_utc_time</code>, <code>to_tai_time</code>, <code>to_gps_time</code>,
+<code>to_file_time</code>, with <code>clock_cast</code>.</li>
 <li>Replace undefined behavior with unspecified behavior in [time.calendar].</li>
 <li>Allow <code>zoned_time</code> conversion among different <code>TimeZonePtr</code> types.</li>
 <li>Specify the constructors for <code>nonexistent_local_time</code> and
@@ -74,7 +78,7 @@ but can be updated at run time.  Removed <code>remote_download</code> and
 <li><code>to_stream</code> sets <code>failbit</code> if it is required to create a name
 for an invalid month or weekday.</li>
 <li>Add note to promise compatibility with <a href="https://wg21.link/p0645"><code>fmt</code> (P0645)</a></li>
-<li>Have <code>format</code> throw an exception if anything happens so that it 
+<li>Have <code>format</code> throw an exception if anything happens so that it
 could not return an accurate string.</li>
 <li>Template <code>zoned_time</code> on <code>TimeZonePtr</code>.</li>
 <li>Give <code>weekday_indexed</code> a defaulted default constructor.</li>
@@ -101,7 +105,7 @@ an atomic head pointer, instead of a single <code>tzdb</code>.</li>
 <code>parse</code> in terms of <code>to_stream</code> and
 <code>from_stream</code>.</li>
 
-<li>Add <code>to_stream</code> and <code>from_stream</code> for <code>year</code>, 
+<li>Add <code>to_stream</code> and <code>from_stream</code> for <code>year</code>,
 <code>month</code>, <code>day</code>, <code>weekday</code>, <code>year_month</code>, and
 <code>month_day</code>.</li>
 
@@ -202,7 +206,7 @@ create a Coptic calendar (which knows nothing about the Gregorian calendar),
 which will convert to and from the Gregorian calendar.  This is done by
 establishing a clear and simple communication channel between calendar systems
 and the <code>&lt;chrono&gt;</code> library (specifically a
-<code>system_clock::time_point</code> with a precision of days). 
+<code>system_clock::time_point</code> with a precision of days).
 </p>
 
 <p>
@@ -301,7 +305,7 @@ can never mean "3 seconds", unless it is <i>explicitly</i> typed to do so:
 </p>
 
 <p>
-And just like <code>seconds</code>, there is a year literal suffix which can help make 
+And just like <code>seconds</code>, there is a year literal suffix which can help make
 your code more readable:
 </p>
 
@@ -318,7 +322,7 @@ as <code>year_month_day</code> are time points with a precision of a day, but
 they are also <i>field</i> types.  They are composed of 3 fields under the hood:
 <code>year</code>, <code>month</code> and <code>day</code>.  Thus when you
 construct a <code>year_month_day</code> from a <code>year</code>,
-<code>month</code> and <code>day</code>, absolutely no computation takes place. 
+<code>month</code> and <code>day</code>, absolutely no computation takes place.
 The only thing that happens is a <code>year</code>, <code>month</code> and
 <code>day</code> are stored inside the <code>year_month_day</code>.
 </p>
@@ -435,11 +439,11 @@ static_assert(ymd == sun[5]/may/2016);
 </pre></blockquote>
 
 <p>
-The literal <code>sun[5]/may/2016</code> means "the 5th Sunday of May in 2016." 
+The literal <code>sun[5]/may/2016</code> means "the 5th Sunday of May in 2016."
 The <i>conventional</i> syntax is remarkably readable.  Constructor syntax is
 also available to do the same thing.  The type constructed is
 <code>year_month_weekday</code> which does nothing but store a
-<code>year</code>, <code>month</code>, <code>weekday</code>, and the number 5. 
+<code>year</code>, <code>month</code>, <code>weekday</code>, and the number 5.
 This "auxiliary calendar" converts to and from <code>sys_days</code> just like
 <code>year_month_day</code> as demonstrated above.  As such,
 <code>year_month_weekday</code> will interoperate with <code>year_month_day</code>
@@ -534,7 +538,7 @@ local time specified by the <code>local_time</code>.
 <p>
 To interoperate with time zones, calendrical types must convert to and from
 <code>local_days</code> as well as <code>sys_days</code>.  The math is identical
-for both conversions, so it is very easy for the calendar author to provide. 
+for both conversions, so it is very easy for the calendar author to provide.
 But as seen in this example, the meaning can be quite different.
 </p>
 
@@ -710,6 +714,7 @@ please see:
         [time.clock.steady] 23.17.7.2
         [time.clock.hires]  23.17.7.3
         <a href="#time.clock.local_time">[time.clock.local_time]</a>
+        <a href="#time.clock.clock_cast">[time.clock.clock_cast]</a>
     <a href="#time.format">[time.format]</a>
     <a href="#time.parse">[time.parse]</a>
     <a href="#time.calendar">[time.calendar]</a>
@@ -829,70 +834,12 @@ template &lt;class Duration&gt;
     using file_time = time_point&lt;file_clock, Duration&gt;;
 
 // time_point conversions
-template &lt;class Duration&gt;
-    sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(const utc_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(const tai_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_sys_time(const gps_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    sys_time&lt;Duration&gt;
-    to_sys_time(const file_time&lt;Duration&gt;&amp; t);
 
-template &lt;class Duration&gt;
-    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const sys_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const tai_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const gps_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_utc_time(const file_time&lt;Duration&gt;&amp; t);
+template &lt;class DestClock, class SourceClock&gt; struct clock_time_conversion;
 
-template &lt;class Duration&gt;
-    tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const utc_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const gps_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_tai_time(const file_time&lt;Duration&gt;&amp; t);
-
-template &lt;class Duration&gt;
-    gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const utc_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const tai_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_gps_time(const file_time&lt;Duration&gt;&amp; t);
-
-template &lt;class Duration&gt;
-    file_time&lt;Duration&gt;
-    to_file_time(const sys_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_file_time(const utc_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_file_time(const tai_time&lt;Duration&gt;&amp; t);
-template &lt;class Duration&gt;
-    file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-    to_file_time(const gps_time&lt;Duration&gt;&amp; t);
+template &lt;class DestClock, class SourceClock, class Duration&gt;
+    time_point&lt;DestClock, <i>some duration</i>&gt;
+    clock_cast(const time_point&lt;SourceClock, Duration&gt;&amp; t);
 
 // time_point I/O
 
@@ -1883,109 +1830,6 @@ Append new paragraphs after 23.17.7.1 [time.clock.system]/p4:
 <blockquote>
 
 <pre>
-template &lt;class Duration&gt;
-sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(const utc_time&lt;Duration&gt;&amp; u);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>sys_time t</code>, such that <code>to_utc_time(t) == u</code>
-if such a mapping exists. Otherwise <code>u</code> represents a
-time_point during a leap second insertion and the last representable value of
-<code>sys_time prior</code> to the insertion of the leap second is returned.
-</p>
-<p>
-[<i>Example:</i>
-</p>
-<blockquote><pre>
-auto t = sys_days{jul/1/2015} - 500ms;
-auto u = to_utc_time(t);
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25s);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25s);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25001ms);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25251ms);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25501ms);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 25751ms);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-u += 250ms;
-t = to_sys_time(u);
-assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
-cout &lt;&lt; t &lt;&lt; " SYS == " &lt;&lt; u &lt;&lt; " UTC\n";
-</pre></blockquote>
-<p>
-Output:
-</p>
-<blockquote><pre>
-2015-06-30 23:59:59.500 SYS == 2015-06-30 23:59:59.500 UTC
-2015-06-30 23:59:59.750 SYS == 2015-06-30 23:59:59.750 UTC
-2015-06-30 23:59:59.999 SYS == 2015-06-30 23:59:60.000 UTC
-2015-06-30 23:59:59.999 SYS == 2015-06-30 23:59:60.250 UTC
-2015-06-30 23:59:59.999 SYS == 2015-06-30 23:59:60.500 UTC
-2015-06-30 23:59:59.999 SYS == 2015-06-30 23:59:60.750 UTC
-2015-07-01 00:00:00.000 SYS == 2015-07-01 00:00:00.000 UTC
-2015-07-01 00:00:00.250 SYS == 2015-07-01 00:00:00.250 UTC
-</pre></blockquote>
-<p>
-<i>&mdash; end example</i>]
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(const tai_time&lt;Duration&gt;&amp; u);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Equivalent to: <code>return to_sys_time(to_utc_time(u));</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_sys_time(const gps_time&lt;Duration&gt;&amp; u);
-</pre>
-<blockquote>
-<p>
-<i>Effects:</i> Equivalent to: <code>return to_sys_time(to_utc_time(u));</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-sys_time&lt;Duration&gt;
-to_sys_time(const file_time&lt;Duration&gt;&amp; u);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>sys_time t</code>, such that <code>to_file_time(t) == u</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
-</p>
-</blockquote>
-
-<pre>
 template &lt;class charT, class traits, class Duration&gt;
 basic_ostream&lt;charT, traits&gt;&amp;
 operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const sys_time&lt;Duration&gt;&amp; tp);
@@ -2080,7 +1924,7 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
 </p>
@@ -2106,13 +1950,23 @@ Add new section [time.clock.utc] after 23.17.7.1 Class system_clock [time.clock.
 class utc_clock
 {
 public:
-    using duration                  = system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = chrono::duration&lt;rep, period&gt;;
     using time_point                = chrono::time_point&lt;utc_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now();
+
+    template &lt;class Duration&gt;
+    static
+    sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    to_sys(const utc_time&lt;Duration&gt;&amp; t);
+
+    template &lt;class Duration&gt;
+    static
+    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    from_sys(const sys_time&lt;Duration&gt;&amp; t);
 };
 </pre>
 
@@ -2128,8 +1982,8 @@ account, <code>utc_clock</code> and its associated <code>time_point</code>,
 </p>
 
 <blockquote><pre>
-to_utc_time(sys_seconds{sys_days{1970y/jan/1}}).time_since_epoch() is 0s
-to_utc_time(sys_seconds{sys_days{2000y/jan/1}}).time_since_epoch() is 946'684'822s which is 10'957 * 86'400s + 22s
+clock_cast&lt;utc_clock&gt;(sys_seconds{sys_days{1970y/jan/1}}).time_since_epoch() is 0s
+clock_cast&lt;utc_clock&gt;(sys_seconds{sys_days{2000y/jan/1}}).time_since_epoch() is 946'684'822s which is 10'957 * 86'400s + 22s
 </pre></blockquote>
 
 <p>
@@ -2139,7 +1993,7 @@ to_utc_time(sys_seconds{sys_days{2000y/jan/1}}).time_since_epoch() is 946'684'82
 <p>
 <code>utc_clock</code> is not a <code>TrivialClock</code> unless the implementation
 can guarantee that <code>utc_clock::now()</code> does not propagate an exception.
-[<i>Note:</i> <code>noexcept(to_utc_time(system_clock::now()))</code> is
+[<i>Note:</i> <code>noexcept(from_sys(system_clock::now()))</code> is
 <code>false</code>. &mdash; <i>end note</i>]
 </p>
 
@@ -2148,15 +2002,32 @@ static utc_clock::time_point utc_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The implementations should supply the best measure available.
-This may be approximated with <code>to_utc_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_sys(system_clock::now())</code>, or a more accurate
+value of <code>utc_time</code>.
 </p>
 </blockquote>
 
 <pre>
-template &lt;class Duration&gt;
+template &lt;typename Duration&gt;
+static
+sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+utc_clock::to_sys(const utc_time&lt;Duration&gt;&amp; u);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> A <code>sys_time</code> <code>t</code>, such that
+<code>from_sys(t) == u</code> if such a mapping exists.  Otherwise <code>u</code>
+represents a <code>time_point</code> during a leap second insertion and the last
+representable value of <code>sys_time</code> prior to the insertion of the leap
+second is returned.
+</p>
+</blockquote>
+
+<pre>
+template &lt;typename Duration&gt;
+static
 utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const sys_time&lt;Duration&gt;&amp; t);
+utc_clock::from_sys(const sys_time&lt;Duration&gt;&amp; t);
 </pre>
 <blockquote>
 <p>
@@ -2171,61 +2042,20 @@ counts that leap second as inserted.
 </p>
 <blockquote><pre>
 auto t = sys_days{jul/1/2015} - 2ns;
-auto u = to_utc_time(t);
+auto u = utc_clock::from_sys(t);
 assert(u.time_since_epoch() - t.time_since_epoch() == 25s);
 t += 1ns;
-u = to_utc_time(t);
+u = utc_clock::from_sys(t);
 assert(u.time_since_epoch() - t.time_since_epoch() == 25s);
 t += 1ns;
-u = to_utc_time(t);
+u = utc_clock::from_sys(t);
 assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
 t += 1ns;
-u = to_utc_time(t);
+u = utc_clock::from_sys(t);
 assert(u.time_since_epoch() - t.time_since_epoch() == 26s);
 </pre></blockquote>
 <p>
 <i>&mdash; end example</i>]
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const tai_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
-</p>
-<p>
-<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const gps_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
-</p>
-<p>
-<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_utc_time(const file_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>utc_time t</code>, such that <code>to_file_time(t) == u</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
 </p>
 </blockquote>
 
@@ -2269,7 +2099,7 @@ of that format shall be <code>"60"</code>.
 </p>
 <blockquote><pre>
 auto t = sys_days{jul/1/2015} - 500ms;
-auto u = to_utc_time(t);
+auto u = clock_cast&lt;utc_clock&gt;(t);
 for (auto i = 0; i &lt; 8; ++i, u += 250ms)
     cout &lt;&lt; u &lt;&lt; " UTC\n";
 </pre></blockquote>
@@ -2313,7 +2143,7 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
 </p>
@@ -2339,13 +2169,23 @@ Add new section [time.clock.tai] after 23.17.7.2 Class utc_clock [time.clock.utc
 class tai_clock
 {
 public:
-    using duration                  = system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = chrono::duration&lt;rep, period&gt;;
     using time_point                = chrono::time_point&lt;tai_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now();
+
+    template &lt;class Duration&gt;
+    static
+    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    to_utc(const tai_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
 };
 </pre>
 
@@ -2361,7 +2201,7 @@ is equivalent to 2000-01-01 00:00:32 TAI (22s plus the initial 10s offset).
 <p>
 <code>tai_clock</code> is not a <code>TrivialClock</code> unless the implementation
 can guarantee that <code>tai_clock::now()</code> does not propagate an exception.
-[<i>Note:</i> <code>noexcept(to_tai_time(system_clock::now()))</code> is
+[<i>Note:</i> <code>noexcept(from_utc(utc_clock::now()))</code> is
 <code>false</code>. &mdash; <i>end note</i>]
 </p>
 
@@ -2370,30 +2210,20 @@ static tai_clock::time_point tai_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The implementations should supply the best measure available.  This may
-be approximated with <code>to_tai_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_utc(utc_clock::now())</code>, or a more accurate
+value of <code>tai_time</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const sys_time&lt;Duration&gt;&amp; t);
+static
+utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+to_utc(const tai_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Equivalent to: <code>return to_tai_time(to_utc_time(t));</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const utc_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
+<i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
 </p>
 <p>
 <i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
@@ -2402,28 +2232,16 @@ to_tai_time(const utc_time&lt;Duration&gt;&amp; t);
 
 <pre>
 template &lt;class Duration&gt;
+static
 tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const gps_time&lt;Duration&gt;&amp; t);
+tai_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 694656019s</code>
+<i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
 </p>
 <p>
-<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_tai_time(const file_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>tai_time t</code>, such that <code>to_file_time(t) == u</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
+<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -2469,7 +2287,7 @@ sys_time&lt;Duration&gt;{tp.time_since_epoch()} - (sys_days{1970y/jan/1} - sys_d
 </p>
 <blockquote><pre>
 auto st = sys_days{2000_y/jan/1};
-auto tt = to_tai_time(st);
+auto tt = clock_cast&lt;tai_clock&gt;(st);
 cout &lt;&lt; format("%F %T %Z == ", st) &lt;&lt; format("%F %T %Z\n", tt);
 </pre></blockquote>
 <p>
@@ -2505,7 +2323,7 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
 </p>
@@ -2532,13 +2350,23 @@ Add new section [time.clock.gps] after 23.17.7.3 Class tai_clock [time.clock.tai
 class gps_clock
 {
 public:
-    using duration                  = system_clock::duration;
-    using rep                       = duration::rep;
-    using period                    = duration::period;
+    using rep                       = <i>a signed arithmetic type</i>;
+    using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
+    using duration                  = chrono::duration&lt;rep, period&gt;;
     using time_point                = chrono::time_point&lt;gps_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now();
+
+    template &lt;class Duration&gt;
+    static
+    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    to_utc(const gps_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
 };
 </pre>
 
@@ -2554,7 +2382,7 @@ the 10s offset between 1958 and 1970 and the additional 9 leap seconds inserted 
 <p>
 <code>gps_clock</code> is not a <code>TrivialClock</code> unless the implementation
 can guarantee that <code>gps_clock::now()</code> does not propagate an exception.
-[<i>Note:</i> <code>noexcept(to_gps_time(system_clock::now()))</code> is
+[<i>Note:</i> <code>noexcept(from_utc(utc_clock::now()))</code> is
 <code>false</code>. &mdash; <i>end note</i>]
 </p>
 
@@ -2563,30 +2391,20 @@ static gps_clock::time_point gps_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> The implementations should supply the best measure available.  This may
-be approximated with <code>to_gps_time(system_clock::now())</code>.
+<i>Returns:</i> <code>from_utc(utc_clock::now())</code>, or a more accurate
+value of <code>gps_time</code>.
 </p>
 </blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const sys_time&lt;Duration&gt;&amp; t);
+static
+utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+gps_clock::to_utc(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Effects:</i> Equivalent to: <code>return to_gps_time(to_utc_time(t));</code>.
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const utc_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
 </p>
 <p>
 <i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
@@ -2595,28 +2413,16 @@ to_gps_time(const utc_time&lt;Duration&gt;&amp; t);
 
 <pre>
 template &lt;class Duration&gt;
+static
 gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const tai_time&lt;Duration&gt;&amp; t);
+gps_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 694656019s</code>
+<i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
 </p>
 <p>
-<i>Note:</i> <code>694656019s == sys_days{1980y/jan/sun[1]} - sys_days{1958y/jan/1} + 19s</code>
-</p>
-</blockquote>
-
-<pre>
-template &lt;class Duration&gt;
-gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_gps_time(const file_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>gps_time t</code>, such that <code>to_file_time(t) == u</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
+<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -2662,7 +2468,7 @@ sys_time&lt;Duration&gt;{tp.time_since_epoch()} + (sys_days{1980y/jan/sun[1]} - 
 </p>
 <blockquote><pre>
 auto st = sys_days{2000_y/jan/1};
-auto gt = to_gps_time(st);
+auto gt = clock_cast&lt;gps_clock&gt;(st);
 cout &lt;&lt; format("%F %T %Z == ", st) &lt;&lt; format("%F %T %Z\n", gt);
 </pre></blockquote>
 <p>
@@ -2698,7 +2504,7 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
 </p>
@@ -2724,13 +2530,15 @@ Add new section [time.clock.file] after 23.17.7.4 Class gps_clock [time.clock.gp
 class file_clock
 {
 public:
-    using rep                       = <i>unspecified</i>;
+    using rep                       = <i>a signed arithmetic type</i>;
     using period                    = ratio&lt;<i>unspecified</i>, <i>unspecified</i>&gt;;
     using duration                  = chrono::duration&lt;rep, period&gt;;
     using time_point                = chrono::time_point&lt;file_clock&gt;;
     static constexpr bool is_steady = <i>unspecified</i>;
 
     static time_point now() noexcept;
+
+    // Conversion functions, see below
 };
 </pre>
 
@@ -2740,54 +2548,52 @@ used for <code>file_time_type</code> ([filesystems]).  It's epoch is unspecified
 </p>
 
 <pre>
-template &lt;class Duration&gt;
-file_time&lt;Duration&gt;
-to_file_time(const sys_time&lt;Duration&gt;&amp; t);
+static file_clock::time_point file_clock::now();
 </pre>
 <blockquote>
 <p>
-<i>Returns:</i> A <code>file_time u</code>, such that <code>to_sys_time(u) == t</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
+<i>Returns:</i> A <code>file_clock::time_point</code> indicating the current time.
 </p>
 </blockquote>
 
+<p>
+The class <code>file_clock</code> shall provide precisely one of the
+following two sets of static member functions:
+</p>
+
+<blockquote>
 <pre>
 template &lt;class Duration&gt;
-file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_file_time(const utc_time&lt;Duration&gt;&amp; t);
+static
+sys_time&lt;<i>some duration</i>&gt;
+to_sys(const file_time&lt;Duration&gt;&amp;);
+
+template &lt;class Duration&gt;
+static
+file_time&lt;<i>some duration</i>&gt;
+from_sys(const sys_time&lt;Duration&gt;&amp;);
 </pre>
-<blockquote>
+
 <p>
-<i>Returns:</i> A <code>file_time u</code>, such that <code>to_utc_time(u) == t</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
+or:
 </p>
-</blockquote>
 
 <pre>
 template &lt;class Duration&gt;
-file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_file_time(const tai_time&lt;Duration&gt;&amp; t);
-</pre>
-<blockquote>
-<p>
-<i>Returns:</i> A <code>file_time u</code>, such that <code>to_tai_time(u) == t</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
-</p>
-</blockquote>
+static
+utc_time&lt;<i>some duration</i>&gt;
+to_utc(const file_time&lt;Duration&gt;&amp;);
 
-<pre>
 template &lt;class Duration&gt;
-file_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
-to_file_time(const gps_time&lt;Duration&gt;&amp; t);
+static
+file_time&lt;<i>some duration</i>&gt;
+from_utc(const utc_time&lt;Duration&gt;&amp;);
 </pre>
-<blockquote>
+
 <p>
-<i>Returns:</i> A <code>file_time t</code>, such that <code>to_gps_time(t) == u</code> if
-such a mapping exists.  <code>t</code> and <code>u</code> should represent the same point
-in time, even though they may have different epochs.
+These member functions shall provide <code>time_point</code>
+conversions consistent with those specified by <code>utc_clock</code>,
+<code>tai_clock</code>, and <code>gps_clock</code>.
 </p>
 </blockquote>
 
@@ -2820,7 +2626,8 @@ the null-terminated array <code>fmt</code>.  <code>fmt</code> encoding follows t
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
 <code>"UTC"</code>.  If <code>%z</code> is used (or a modified form of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.  The date and time formatted shall be
-equivalent to that formatted by a <code>sys_time</code> initialized with <code>to_sys_time(tp)</code>.
+equivalent to that formatted by a <code>sys_time</code> initialized with <code>clock_cast&lt;system_clock&gt;(tp)</code>,
+or by a <code>utc_time</code> initialized with <code>clock_cast&lt;utc_clock&gt;(tp)</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2849,7 +2656,7 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 Additionally, the parsed offset will be subtracted from the successfully parsed time stamp
 prior to assigning that difference to <code>tp</code>.
 </p>
@@ -2874,7 +2681,7 @@ Add new section [time.clock.local_time] after 23.17.7.3 Class high_resolution_cl
 <p>
 The family of time points denoted by <code>local_time&lt;Duration&gt;</code> are
 based on the <i>pseudo clock</i> <code>local_t</code>.  <code>local_t</code> has
-no member <code>now()</code> and thus does not meet the clock requirements. 
+no member <code>now()</code> and thus does not meet the clock requirements.
 Nevertheless <code>local_time&lt;Duration&gt;</code> serves the vital role of
 representing local time with respect to a not-yet-specified time zone.  Aside
 from being able to get the current time, the complete <code>time_point</code>
@@ -2948,10 +2755,315 @@ If <code>%Z</code> is used and successfully parsed, that value will be assigned 
 </p>
 <p>
 If <code>%z</code> (or a modified variant) is used and successfully parsed, that value
-will be assigned to <code>*offset</code> if <code>offset</code> is non-null. 
+will be assigned to <code>*offset</code> if <code>offset</code> is non-null.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
+</p>
+</blockquote>
+
+<p>
+<a href="#Wording">Back to TOC</a>
+</p>
+</blockquote>
+
+<a name="time.clock.clock_cast"></a><p class = note>
+Add new section [time.clock.clock_cast] after 23.17.7.9 local_time [time.clock.local_time]:
+</p>
+
+<blockquote>
+
+<h3>23.17.7.9 clock_cast [time.clock.clock_cast]</h3>
+
+<pre>
+template &lt;class DestClock, class SourceClock&gt;
+struct clock_time_conversion
+{};
+</pre>
+<p>
+<code>clock_time_conversion</code> serves as trait which can be used to specify how to
+convert <code>time_point&lt;SourceClock, Duration&gt;</code> to
+<code>time_point&lt;DestClock, Duration&gt;</code> via a specialization:
+<code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code>. A specialization of
+<code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code> shall provide a
+<code>const</code>-qualified <code>operator()</code> that takes a parameter of type
+<code>time_point&lt;SourceClock, Duration&gt;</code> and returns a
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> representing an equivalent
+point in time.  A program may specialize <code>clock_time_conversion</code> if at least
+one of the template parameters is user-defined clock type.
+</p>
+
+<p>
+Several specializations are provided by the implementation:
+</p>
+<pre>
+// Identity
+
+template &lt;typename Clock&gt;
+struct clock_time_conversion&lt;Clock, Clock&gt;
+{
+    template &lt;class Duration&gt;
+    time_point&lt;Clock, Duration&gt;
+    operator()(const time_point&lt;Clock, Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+time_point&lt;Clock, Duration&gt;
+operator()(const time_point&lt;Clock, Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;system_clock, system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    sys_time&lt;Duration&gt;
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+sys_time&lt;Duration&gt;
+operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;utc_clock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    utc_time&lt;Duration&gt;
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+utc_time&lt;Duration&gt;
+operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
+// system_clock &lt;-&gt; utc_clock
+</pre>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;utc_clock, system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::from_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;system_clock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+sys_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;
+operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::to_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// Clock &lt;-&gt; system_clock
+</pre>
+
+<pre>
+template &lt;class SourceClock&gt;
+struct clock_time_conversion&lt;system_clock, SourceClock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const time_point&lt;SourceClock, Duration&gt;&amp; t) const
+        -&gt; decltype(SourceClock::to_sys(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const time_point&lt;SourceClock, Duration&gt;&amp; t) const
+    -&gt; decltype(SourceClock::to_sys(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>SourceClock::to_sys(t)</code> is well formed.  If
+<code>SourceClock::to_sys(t)</code> does not return
+<code>sys_time&lt;<i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>SourceClock::to_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class DestClock&gt;
+struct clock_time_conversion&lt;DestClock, system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const
+        -&gt; decltype(DestClock::from_sys(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const sys_time&lt;Duration&gt;&amp; t) const
+    -&gt; decltype(DestClock::from_sys(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>DestClock::from_sys(t)</code> is well formed.  If
+<code>DestClock::from_sys(t)</code> does not return
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>DestClock::from_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// Clock &lt;-&gt; utc_clock
+</pre>
+
+<pre>
+template &lt;class SourceClock&gt;
+struct clock_time_conversion&lt;utc_clock, SourceClock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const time_point&lt;SourceClock, Duration&gt;&amp; t) const
+        -&gt; decltype(SourceClock::to_utc(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const time_point&lt;SourceClock, Duration&gt;&amp; t) const
+    -&gt; decltype(SourceClock::to_utc(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>SourceClock::to_utc(t)</code> is well formed.  If
+<code>SourceClock::to_utc(t)</code> does not return
+<code>utc_time&lt;<i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>SourceClock::to_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class DestClock&gt;
+struct clock_time_conversion&lt;DestClock, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const
+        -&gt; decltype(DestClock::from_utc(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const utc_time&lt;Duration&gt;&amp; t) const
+    -&gt; decltype(DestClock::from_utc(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>DestClock::from_utc(t)</code> is well formed.  If
+<code>DestClock::from_utc(t)</code> does not return
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> the program is ill-formed.
+<code></code>.
+</p>
+<p>
+<i>Returns:</i> <code>DestClock::from_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// clock_cast
+</pre>
+
+<pre>
+template &lt;class DestClock, class SourceClock, class Duration&gt;
+time_point&lt;DestClock, <i>some duration</i>&gt;
+clock_cast(const time_point&lt;SourceClock, Duration&gt;&amp; t);
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+at least one of the following expressions are well formed:
+</p>
+<ol>
+<li><code>clock_time_conversion&lt;DestClock, SourceClock&gt;{}(t)</code></li>
+<li> Exactly one of:
+<ul>
+<li><code>clock_time_conversion&lt;DestClock, system_clock&gt;{}(
+    clock_time_conversion&lt;system_clock, SourceClock&gt;{}(t))</code>
+</li>
+<li><code>clock_time_conversion&lt;DestClock, utc_clock&gt;{}(
+    clock_time_conversion&lt;utc_clock, SourceClock&gt;{}(t))</code></li>
+</ul></li>
+<li> Exactly one of:
+<ul>
+<li><code>clock_time_conversion&lt;DestClock, utc_clock&gt;{}(
+    clock_time_conversion&lt;utc_clock, system_clock&gt;{}(
+        clock_time_conversion&lt;system_clock, SourceClock&gt;{}(t)))</code></li>
+<li><code>clock_time_conversion&lt;DestClock, system_clock&gt;{}(
+    clock_time_conversion&lt;system_clock, utc_clock&gt;{}(
+        clock_time_conversion&lt;utc_clock, SourceClock&gt;{}(t)))</code></li>
+</ul></li>
+</ol>
+<p>
+<i>Returns:</i> The first expression in the above list that is well-formed.  If item 1 is
+not well-formed and both expressions in item 2 are well-formed, the
+<code>clock_cast</code> is ambiguous (ill-formed).  If items 1 and 2 are not well-formed
+and both expressions in item 3 are well-formed, the <code>clock_cast</code> is ambiguous
+(ill-formed).
 </p>
 </blockquote>
 
@@ -3773,8 +3885,8 @@ to <code>sys_days</code> and <code>local_days</code>.
 <a name="time.calendar.last"></a><h3>23.17.10.1 Class <code>last_spec</code> [time.calendar.last]</h3>
 
 <p>
-The struct <code>last_spec</code> is used in conjunction with other calendar types to 
-specify the last in a sequence.  For example, depending on context, it can represent 
+The struct <code>last_spec</code> is used in conjunction with other calendar types to
+specify the last in a sequence.  For example, depending on context, it can represent
 the last day of a month, or the last day of the week of a month.
 </p>
 
@@ -4143,7 +4255,7 @@ constexpr day operator "" d(unsigned long long d) noexcept;
 
 <p>
 <code>month</code> represents a month of a year.  It normally holds values in
-the range 1 to 12.  However it may hold non-negative values outside this range. 
+the range 1 to 12.  However it may hold non-negative values outside this range.
 It can be constructed with any <code>unsigned</code> value, which will be
 subsequently truncated to fit into <code>month</code>'s unspecified internal
 storage.  <code>month</code> is equality and less-than comparable, and
@@ -4921,13 +5033,13 @@ constexpr year operator "" y(unsigned long long y) noexcept;
 normally holds values in the range 0 to 6, corresponding to Sunday through
 Saturday. However it may hold non-negative values outside this range.  It can be
 constructed with any <code>unsigned</code> value, which will be subsequently
-truncated to fit into <code>weekday</code>'s unspecified internal storage. 
+truncated to fit into <code>weekday</code>'s unspecified internal storage.
 <code>weekday</code> is equality comparable. <code>weekday</code> is not
 less-than comparable because there is no universal consensus on which day is the
 first day of the week.  This design chooses the encoding of 0 to 6 to represent
 Sunday through Saturday only because this is consistent with existing C and C++
 practice.  However  <code>weekday</code>'s comparison and arithmetic operations
-treat the days of the week as a circular range, with no beginning and no end.  
+treat the days of the week as a circular range, with no beginning and no end.
 One can stream out a <code>weekday</code>. <code>weekday</code> has explicit
 conversions to and from <code>unsigned</code>.  There are 7 <code>weekday</code>
 constants, one for each day of the week in the <code>chrono_literals</code>
@@ -5441,7 +5553,7 @@ return os &lt;&lt; wdi.weekday() &lt;&lt; '[' &lt;&lt; wdi.index() &lt;&lt; ']';
 <a name="time.calendar.weekday_last"></a><h3>23.17.10.7 Class <code>weekday_last</code> [time.calendar.weekday_last]</h3>
 
 <p>
-<code>weekday_last</code> represents the last <code>weekday</code> of a month. 
+<code>weekday_last</code> represents the last <code>weekday</code> of a month.
 It is most easily constructed by indexing a <code>weekday</code> with <code>last</code>.
 </p>
 
@@ -6511,7 +6623,7 @@ and <code>day</code>.  <code>year_month_day</code> is a field-based time point w
 resolution of <code>days</code>.  One can observe each field.  <code>year_month_day</code>
 supports <code>years</code> and <code>months</code> oriented arithmetic, but not
 <code>days</code> oriented arithmetic.  For the latter, there is a conversion to
-<code>sys_days</code> which efficiently supports <code>days</code> oriented arithmetic. 
+<code>sys_days</code> which efficiently supports <code>days</code> oriented arithmetic.
 There is also a conversion <i>from</i> <code>sys_days</code>.
 <code>year_month_day</code> is equality and less-than comparable.
 </p>
@@ -7317,12 +7429,12 @@ return os &lt;&lt; ymdl.year() &lt;&lt; '/' &lt;&lt; ymdl.month_day_last();
 
 <p>
 <code>year_month_weekday</code> represents a specific <code>year</code>,
-<code>month</code>, and nth <code>weekday</code> of the <code>month</code>. 
+<code>month</code>, and nth <code>weekday</code> of the <code>month</code>.
 <code>year_month_weekday</code> is a field-based time point with a resolution of
 <code>days</code>.  One can observe each field. <code>year_month_weekday</code> supports
 <code>years</code> and <code>months</code> oriented arithmetic, but not <code>days</code>
 oriented arithmetic. For the latter, there is a conversion to <code>sys_days</code> which
-efficiently supports <code>days</code> oriented arithmetic. 
+efficiently supports <code>days</code> oriented arithmetic.
 <code>year_month_weekday</code> is equality comparable.
 </p>
 
@@ -9026,7 +9138,7 @@ struct tzdb
 
 class tzdb_list
 {
-    std::atomic&lt;tzdb*&gt; head_{nullptr};  // exposition only
+    atomic&lt;tzdb*&gt; head_{nullptr};  // exposition only
 
 public:
     class const_iterator;
@@ -9053,7 +9165,7 @@ implicitly access the <code>front()</code> of this list via the
 <i>read-only</i> namespace scope functions <code>get_tzdb()</code>,
 <code>locate_zone()</code> and <code>current_zone()</code>. Each
 <code>vector</code> in <code>tzdb</code> is sorted to enable fast
-lookup.  One can iterate over and inspect this database.  And 
+lookup.  One can iterate over and inspect this database.  And
 multiple versions of the database can be used at once, via the
 <code>tzdb_list</code>.
 </p>
@@ -9097,7 +9209,7 @@ list&lt;tzdb&gt;&amp; get_tzdb_list();
 <i>Effects:</i>  If this is the first access to the database, will
 initialize the database.  If this call initializes the database, the
 resulting database will be a <code>tzdb_list</code> which holds a
-single initialized <code>tzdb</code>. 
+single initialized <code>tzdb</code>.
 </p>
 <p>
 <i>Returns:</i> A reference to the database.
@@ -9301,7 +9413,7 @@ the base class with a sequence of <code>char</code> equivalent to that produced
 by <code>os.str()</code> initialized as shown below:
 </p>
 <pre>
-std::ostringstream os;
+ostringstream os;
 os &lt;&lt; tp &lt;&lt; " is in a gap between\n"
    &lt;&lt; local_seconds{i.first.end.time_since_epoch()} + i.first.offset &lt;&lt; ' '
    &lt;&lt; i.first.abbrev &lt;&lt; " and\n"
@@ -9317,7 +9429,7 @@ os &lt;&lt; tp &lt;&lt; " is in a gap between\n"
 </p>
 <blockquote>
 <pre>
-#include "tz.h"
+#include &lt;chrono&gt;
 #include &lt;iostream&gt;
 
 int
@@ -9378,7 +9490,7 @@ the base class with a sequence of <code>char</code> equivalent to that produced
 by <code>os.str()</code> initialized as shown below:
 </p>
 <pre>
-std::ostringstream os;
+ostringstream os;
 os &lt;&lt; tp &lt;&lt; " is ambiguous.  It could be\n"
    &lt;&lt; tp &lt;&lt; ' ' &lt;&lt; i.first.abbrev &lt;&lt; " == "
    &lt;&lt; tp - i.first.offset &lt;&lt; " UTC or\n"
@@ -9392,7 +9504,7 @@ os &lt;&lt; tp &lt;&lt; " is ambiguous.  It could be\n"
 </p>
 <blockquote>
 <pre>
-#include "tz.h"
+#include &lt;chrono&gt;
 #include &lt;iostream&gt;
 
 int
@@ -9949,7 +10061,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -10058,7 +10170,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -10078,7 +10190,7 @@ template &lt;class Duration2, TimeZonePtr&gt;
 <blockquote>
 <p>
 <i>Remarks:</i> Does not participate in overload resolution unless
-<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to 
+<code>sys_time&lt;Duration2&gt;</code> is implicitly convertible to
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
@@ -10286,7 +10398,7 @@ class leap
 public:
     leap(const leap&amp;)            = default;
     leap&amp; operator=(const leap&amp;) = default;
-    
+
     // Undocumented constructors
 
     sys_seconds date() const;
@@ -10557,8 +10669,8 @@ Add a new section 23.17.12.8 link [time.timezone.link]:
 class link
 {
 private:
-    std::string name_;    // exposition only
-    std::string target_;  // exposition only
+    string name_;    // exposition only
+    string target_;  // exposition only
 
 public:
     link(const link&amp;)            = default;
