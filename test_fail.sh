@@ -1,7 +1,10 @@
 #!/bin/bash
 
-if [[ -e $@ ]]; then
-	exit 1;
+echo $1
+eval $1
+
+if [ $? -eq 0 ]; then
+	exit 0;
 fi
-exit 0;
+exit 1;
 

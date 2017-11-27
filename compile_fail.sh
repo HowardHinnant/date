@@ -5,10 +5,12 @@ shift 1
 export BUILD_COMMAND=$@
 echo "Build command: ${BUILD_COMMAND}"
 eval ${BUILD_COMMAND} #>/dev/null 2>/dev/null
+
 if [ $? -eq 0 ]; then
-	exit 1;
+	echo -ne "#!/bin/bash\nexit 1;" > ${TEST_BIN_NAME}
+else
+	echo -ne "#!/bin/bash\nexit 0;" > ${TEST_BIN_NAME}
 fi
-echo "#!/bin/bash" > ${TEST_BIN_NAME}
 chmod u+x ${TEST_BIN_NAME}
 exit 0;
 
