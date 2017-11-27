@@ -71,7 +71,7 @@ function( add_pass_tests TEST_GLOB TEST_PREFIX )
 		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
 		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
 		if( NOT ${TEST_EXT} STREQUAL ".fail.cpp" ) 
-			set( PREFIX "${TEST_PREFIX}_${TEST_NAME}_pass" )
+			set( PREFIX "${TEST_PREFIX}_pass_${TEST_NAME}" )
 			set( BIN_NAME ${PREFIX}_bin )
 			set( TST_NAME ${PREFIX}_test )
 			add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
@@ -92,7 +92,7 @@ function( add_fail_tests TEST_GLOB TEST_PREFIX )
 
 			set( TEST_TYPE "_fail" )
 
-		set( PREFIX "${TEST_PREFIX}_${TEST_NAME}_fail" )
+		set( PREFIX "${TEST_PREFIX}_fail_${TEST_NAME}" )
 		set( BIN_NAME ${PREFIX}_bin )
 		set( TST_NAME ${PREFIX}_test )
 
