@@ -2293,6 +2293,17 @@ struct clock_time_conversion<utc_clock, utc_clock>
     }
 };
 
+template<>
+struct clock_time_conversion<local_t, local_t>
+{
+    template <class Duration>
+    local_time<Duration>
+    operator()(const local_time<Duration>& lt) const
+    {
+        return lt;
+    }
+};
+
 template <>
 struct clock_time_conversion<utc_clock, std::chrono::system_clock>
 {
@@ -2315,7 +2326,51 @@ struct clock_time_conversion<std::chrono::system_clock, utc_clock>
     }
 };
 
-template <class Clock>
+template<>
+struct clock_time_conversion<local_t, std::chrono::system_clock>
+{
+    template <class Duration>
+    local_time<Duration>
+    operator()(const sys_time<Duration>& st) const
+    {
+       return local_time<Duration>{st.time_since_epoch()};
+    }
+};
+
+template<>
+struct clock_time_conversion<std::chrono::system_clock, local_t>
+{
+    template <class Duration>
+    sys_time<Duration>
+    operator()(const local_time<Duration>& lt) const
+    {
+        return sys_time<Duration>{lt.time_sine_epoch()};
+    }
+};
+
+template<>
+struct clock_time_conversion<utc_clock, local_t>
+{
+    template <class Duration>
+    utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+    operator()(const local_time<Duration>& lt) const
+    {
+       return utc_clock::from_local(lt);
+    }
+};
+
+template<>
+struct clock_time_conversion<local_t, utc_clock>
+{
+    template <class Duration>
+    local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+    operator()(const utc_time<Duration>& ut) const
+    {
+       return utc_clock::to_local(ut);
+    }
+};
+
+template<typename Clock>
 struct clock_time_conversion<Clock, Clock>
 {
     template <class Duration>
@@ -2421,6 +2476,44 @@ struct return_from_utc
       >
 {};
 
+// Similiar to above
+template<typename Clock, typename Duration, typename = void>
+struct return_to_local
+{};
+
+template<typename Clock, typename Duration>
+struct return_to_local
+       <
+          Clock, Duration, 
+          decltype(Clock::to_local(declval<time_point<Clock, Duration> const&>()), 
+                   void())
+       >
+     : return_clock_time
+       <
+           local_t, 
+           decltype(Clock::to_local(declval<time_point<Clock, Duration> const&>()))
+       >
+{};
+
+// Similiar to above
+template<typename Clock, typename Duration, typename = void>
+struct return_from_local
+{};
+
+template<typename Clock, typename Duration>
+struct return_from_local
+       <
+           Clock, Duration, 
+           decltype(Clock::from_local(declval<time_point<local_t, Duration> const&>()),
+                    void())
+       >
+     : return_clock_time
+       <
+           Clock, 
+           decltype(Clock::from_local(declval<time_point<local_t, Duration> const&>()))
+       >
+{};
+
 }  // namespace ctc_detail
 
 template <class SrcClock>
@@ -2464,6 +2557,28 @@ struct clock_time_conversion<DstClock, utc_clock>
     operator()(const utc_time<Duration>& ut) const
     {
         return DstClock::from_utc(ut);
+    }
+};
+
+template<typename SrcClock>
+struct clock_time_conversion<local_t, SrcClock>
+{
+    template <class Duration>
+    typename ctc_detail::return_to_local<SrcClock, Duration>::type 
+    operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
+    {
+        return SrcClock::to_local(tp);
+    }
+};
+
+template<typename DstClock>
+struct clock_time_conversion<DstClock, local_t>
+{
+    template <class Duration>
+    typename ctc_detail::return_from_local<DstClock, Duration>::type
+    operator()(const local_time<Duration>& lt) const
+    {
+        return DstClock::from_local(lt);
     }
 };
 
