@@ -1865,6 +1865,16 @@ public:
     static
     std::chrono::time_point<utc_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     from_sys(const std::chrono::time_point<std::chrono::system_clock, Duration>&);
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<local_t, typename std::common_type<Duration, std::chrono::seconds>::type>
+    to_local(const std::chrono::time_point<utc_clock, Duration>&);
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<utc_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
+    from_local(const std::chrono::time_point<local_t, Duration>&);
 };
 
 template <class Duration>
@@ -1931,6 +1941,21 @@ utc_clock::now()
 {
     using namespace std::chrono;
     return from_sys(system_clock::now());
+}
+
+template <class Duration>
+utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+utc_clock::from_local(const local_time<Duration>& st)
+{
+    return from_sys(sys_time<Duration>{st.time_since_epoch()});
+}
+
+template <class Duration>
+local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+utc_clock::to_local(const utc_time<Duration>& ut)
+{
+    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
+    return local_time<duration>{to_sys(ut).time_since_epoch()};
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2017,6 +2042,16 @@ public:
     static
     std::chrono::time_point<tai_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     from_utc(const std::chrono::time_point<utc_clock, Duration>&) NOEXCEPT;
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<local_t, typename std::common_type<Duration, date::days>::type>
+    to_local(const std::chrono::time_point<tai_clock, Duration>&) NOEXCEPT;
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<tai_clock, typename std::common_type<Duration, date::days>::type>
+    from_local(const std::chrono::time_point<local_t, Duration>&) NOEXCEPT;
 };
 
 template <class Duration>
@@ -2054,23 +2089,34 @@ tai_clock::now()
     return from_utc(utc_clock::now());
 }
 
+template <class Duration>
+inline
+local_time<typename std::common_type<Duration, date::days>::type>
+tai_clock::to_local(const tai_time<Duration>& t) NOEXCEPT
+{
+    using duration = typename std::common_type<Duration, date::days>::type;
+    return local_time<duration>{t.time_since_epoch()} -
+           (local_days(year{1970}/jan/1) - local_days(year{1958}/jan/1));
+}
+
+template <class Duration>
+inline
+tai_time<typename std::common_type<Duration, date::days>::type>
+tai_clock::from_local(const local_time<Duration>& t) NOEXCEPT
+{
+    using duration = typename std::common_type<Duration, date::days>::type;
+    return tai_time<duration>{t.time_since_epoch()} +
+            (local_days(year{1970}/jan/1) - local_days(year{1958}/jan/1));
+}
+
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const tai_time<Duration>& t)
 {
-    using namespace std;
-    using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
-    const string abbrev("TAI");
-    CONSTDATA seconds offset{0};
-    auto tp = sys_time<CT>{t.time_since_epoch()} -
-              seconds(sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1));
-    auto const sd = floor<days>(tp);
-    year_month_day ymd = sd;
-    auto time = make_time(tp - sys_seconds{sd});
-    fields<CT> fds{ymd, time};
-    return to_stream(os, fmt, fds, &abbrev, &offset);
+    const std::string abbrev("TAI");
+    CONSTDATA std::chrono::seconds offset{0};
+    return to_stream(os, fmt, tai_clock::to_local(t), &abbrev, &offset);   
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2088,21 +2134,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
-    using namespace std;
-    using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
-    minutes offset_local{};
-    auto offptr = offset ? offset : &offset_local;
-    fields<CT> fds{};
-    fds.has_tod = true;
-    from_stream(is, fmt, fds, abbrev, offptr);
-    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
-        is.setstate(ios::failbit);
+    local_time<Duration> lp;      
+    from_stream(is, fmt, lp, abbrev, offset); 
     if (!is.fail())
-        tp = tai_time<Duration>{duration_cast<Duration>(
-                (sys_days(fds.ymd) +
-                 (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1)) -
-                 *offptr + fds.tod.to_duration()).time_since_epoch())};
+        tp = tai_clock::from_local(lp);
     return is;
 }
 
@@ -2129,6 +2164,15 @@ public:
     std::chrono::time_point<gps_clock, typename std::common_type<Duration, std::chrono::seconds>::type>
     from_utc(const std::chrono::time_point<utc_clock, Duration>&) NOEXCEPT;
 
+    template<typename Duration>
+    static
+    std::chrono::time_point<local_t, typename std::common_type<Duration, date::days>::type>
+    to_local(const std::chrono::time_point<gps_clock, Duration>&) NOEXCEPT;
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<gps_clock, typename std::common_type<Duration, date::days>::type>
+    from_local(const std::chrono::time_point<local_t, Duration>&) NOEXCEPT;
 };
 
 template <class Duration>
@@ -2168,23 +2212,35 @@ gps_clock::now()
     return from_utc(utc_clock::now());
 }
 
+template <class Duration>
+inline
+local_time<typename std::common_type<Duration, date::days>::type>
+gps_clock::to_local(const gps_time<Duration>& t) NOEXCEPT
+{
+    using duration = typename std::common_type<Duration, date::days>::type;
+    return local_time<duration>{t.time_since_epoch()} +
+            (local_days(year{1980}/jan/sun[1]) - local_days(year{1970}/jan/1));
+}
+
+template <class Duration>
+inline
+gps_time<typename std::common_type<Duration, date::days>::type>
+gps_clock::from_local(const local_time<Duration>& t) NOEXCEPT
+{
+    using duration = typename std::common_type<Duration, date::days>::type;
+    return gps_time<duration>{t.time_since_epoch()} -
+            (local_days(year{1980}/jan/sun[1]) - local_days(year{1970}/jan/1));
+}
+
+
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const gps_time<Duration>& t)
 {
-    using namespace std;
-    using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
-    const string abbrev("GPS");
-    CONSTDATA seconds offset{0};
-    auto tp = sys_time<CT>{t.time_since_epoch()} +
-         seconds(sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1));
-    auto const sd = floor<days>(tp);
-    year_month_day ymd = sd;
-    auto time = make_time(tp - sys_seconds{sd});
-    fields<CT> fds{ymd, time};
-    return to_stream(os, fmt, fds, &abbrev, &offset);
+    const std::string abbrev("GPS");
+    CONSTDATA std::chrono::seconds offset{0};
+    return to_stream(os, fmt, gps_clock::to_local(t), &abbrev, &offset);   
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2202,21 +2258,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
-    using namespace std;
-    using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
-    minutes offset_local{};
-    auto offptr = offset ? offset : &offset_local;
-    fields<CT> fds{};
-    fds.has_tod = true;
-    from_stream(is, fmt, fds, abbrev, offptr);
-    if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
-        is.setstate(ios::failbit);
+    local_time<Duration> lp;      
+    from_stream(is, fmt, lp, abbrev, offset); 
     if (!is.fail())
-        tp = gps_time<Duration>{duration_cast<Duration>(
-              (sys_days(fds.ymd) -
-               (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1)) -
-               *offptr + fds.tod.to_duration()).time_since_epoch())};
+        tp = gps_clock::from_local(lp);
     return is;
 }
 
