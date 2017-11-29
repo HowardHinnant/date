@@ -10,11 +10,11 @@ option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_STATIC "Build a static version of library" ON )
 
-if( USE_SYSTEM_TZ_DB ) 
+if( USE_SYSTEM_TZ_DB )
 	add_definitions( -DUSE_AUTOLOAD=0 )
 	add_definitions( -DHAS_REMOTE_API=0 )
 	# cannot set USE_OS_TZDB to 1 on Windows
-	if( NOT WIN32 ) 
+	if( NOT WIN32 )
 		add_definitions( -DUSE_OS_TZDB=1 )
 	endif( )
 else( )
@@ -27,15 +27,13 @@ else( )
 	set( OPTIONAL_LIBRARIES ${CURL_LIBRARIES} )
 endif( )
 
-if( USE_TZ_DB_IN_DOT ) 
+if( USE_TZ_DB_IN_DOT )
 	add_definitions( -DINSTALL=. )
 endif( )
 
 set( HEADER_FOLDER "include" )
 set( SOURCE_FOLDER "src" )
 set( TEST_FOLDER "test" )
-
-include_directories( ${HEADER_FOLDER} )
 
 # This is needed so IDE's live MSVC show header files
 set( HEADER_FILES
@@ -49,13 +47,23 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-if( BUILD_STATIC ) 
+if( BUILD_STATIC )
 	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 else( )
 	add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 endif( )
 set_property(TARGET tz PROPERTY CXX_STANDARD 14)
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  )
+
+# add include folders to the library and targets that consume it
+target_include_directories(tz PUBLIC
+    $<BUILD_INTERFACE:
+        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
+    >
+    $<INSTALL_INTERFACE:
+        include
+    >
+)
 
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
@@ -70,7 +78,7 @@ function( add_pass_tests TEST_GLOB TEST_PREFIX )
 	foreach( TEST_FILE ${FILENAMES} )
 		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
 		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
-		if( NOT ${TEST_EXT} STREQUAL ".fail.cpp" ) 
+		if( NOT ${TEST_EXT} STREQUAL ".fail.cpp" )
 			set( PREFIX "${TEST_PREFIX}_pass_${TEST_NAME}" )
 			set( BIN_NAME ${PREFIX}_bin )
 			set( TST_NAME ${PREFIX}_test )
@@ -98,10 +106,10 @@ function( add_fail_tests TEST_GLOB TEST_PREFIX )
 
 		#target_compile_definitions( ${BIN_NAME} PRIVATE ${TST_NAME} )
 		set( TEST_BIN_NAME ${CMAKE_BINARY_DIR}/${BIN_NAME} )
-		add_custom_target( ${BIN_NAME} 
+		add_custom_target( ${BIN_NAME}
 			COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-			COMMENT ${TST_NAME}	
+			COMMENT ${TST_NAME}
 			)
 		add_test( ${TST_NAME} "${PROJECT_SOURCE_DIR}/test_fail.sh" ${CMAKE_BINARY_DIR}/${BIN_NAME} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/" )
 		#set_tests_properties( ${TST_NAME} PROPERTIES WILL_FAIL TRUE)
@@ -114,7 +122,7 @@ foreach( child ${children} )
 	if( IS_DIRECTORY "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/${child}" )
 		set( CUR_FOLDER "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/${child}" )
 		add_pass_tests( "${CUR_FOLDER}/*.cpp" ${child} )
-		if( NOT WIN32 ) 
+		if( NOT WIN32 )
 			add_fail_tests( "${CUR_FOLDER}/*.fail.cpp" ${child} )
 		endif( )
 	endif( )
