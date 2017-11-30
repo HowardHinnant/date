@@ -2197,224 +2197,281 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     return is;
 }
 
-template<typename DestClock, typename SourceClock>
+#if !defined(_MSC_VER) || _MSC_VER > 1912
+
+// clock_time_conversion
+
+template <class DstClock, class SrcClock>
 struct clock_time_conversion
 {};
 
-template<>
+template <>
 struct clock_time_conversion<std::chrono::system_clock, std::chrono::system_clock>
 {
-  template <class Duration>
-  auto operator()(const sys_time<Duration>& st) const
-    -> sys_time<Duration>
-  {
-    return st;
-  }
+    template <class Duration>
+    sys_time<Duration>
+    operator()(const sys_time<Duration>& st) const
+    {
+        return st;
+    }
 };
 
-template<>
+template <>
 struct clock_time_conversion<utc_clock, utc_clock>
 {
-  template <class Duration>
-  auto operator()(const utc_time<Duration>& ut) const
-    -> utc_time<Duration>
-  {
-    return ut;
-  }
+    template <class Duration>
+    utc_time<Duration>
+    operator()(const utc_time<Duration>& ut) const
+    {
+        return ut;
+    }
 };
 
-template<>
+template <>
 struct clock_time_conversion<utc_clock, std::chrono::system_clock>
 {
-  template <class Duration>
-  utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-  operator()(const sys_time<Duration>& st) const
-  {
-     return utc_clock::from_sys(st);
-  }
+    template <class Duration>
+    utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+    operator()(const sys_time<Duration>& st) const
+    {
+        return utc_clock::from_sys(st);
+    }
 };
 
-template<>
+template <>
 struct clock_time_conversion<std::chrono::system_clock, utc_clock>
 {
-  template <class Duration>
-  sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-  operator()(const utc_time<Duration>& ut) const
-  {
-    return utc_clock::to_sys(ut);
-  }
+    template <class Duration>
+    sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+    operator()(const utc_time<Duration>& ut) const
+    {
+        return utc_clock::to_sys(ut);
+    }
 };
 
-template<typename Clock>
+template <class Clock>
 struct clock_time_conversion<Clock, Clock>
 {
-  template <class Duration>
-  auto operator()(const std::chrono::time_point<Clock, Duration>& tp) const
-    -> std::chrono::time_point<Clock, Duration>
-  {
-    return tp;
-  }
+    template <class Duration>
+    std::chrono::time_point<Clock, Duration>
+    operator()(const std::chrono::time_point<Clock, Duration>& tp) const
+    {
+        return tp;
+    }
 };
 
 namespace ctc_detail
 {
-  //Check if TimePoint is time for given clock,
-  //if not emits hard error
-  template<typename Clock, typename TimePoint>
-  struct return_clock_time
-  {
-    using clock_time_point = std::chrono::time_point<Clock, typename TimePoint::duration>;
-    static_assert(std::is_same<TimePoint, clock_time_point>::value, "time point with appropariate clock shall be returned");
-    using type = TimePoint;
-  };
 
-  // Check if Clock has to_sys method accepting TimePoint with given duration const& and returning sys_time
-  // If so has nested type member equal to return type to_sys.
-  template<typename Clock, typename Duration, typename = void>
-  struct return_to_sys
-  {};
+template <class Clock, class Duration>
+    using time_point = std::chrono::time_point<Clock, Duration>;
 
-  template<typename Clock, typename Duration>
-  struct return_to_sys<Clock, Duration, decltype(Clock::to_sys(std::declval<std::chrono::time_point<Clock, Duration> const&>()), void())>
-    : return_clock_time<std::chrono::system_clock, decltype(Clock::to_sys(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>
-  {};
+using std::declval;
+using std::chrono::system_clock;
 
-  // Similiar to above
-  template<typename Clock, typename Duration, typename = void>
-  struct return_from_sys
-  {};
-
-  template<typename Clock, typename Duration>
-  struct return_from_sys<Clock, Duration, decltype(Clock::from_sys(std::declval<std::chrono::time_point<std::chrono::system_clock, Duration> const&>()), void())>
-    : return_clock_time<Clock, decltype(Clock::from_sys(std::declval<std::chrono::time_point<std::chrono::system_clock, Duration> const&>()))>
-  {};
-
-  // Similiar to above
-  template<typename Clock, typename Duration, typename = void>
-  struct return_to_utc
-  {};
-
-  template<typename Clock, typename Duration>
-  struct return_to_utc<Clock, Duration, decltype(Clock::to_utc(std::declval<std::chrono::time_point<Clock, Duration> const&>()), void())>
-    : return_clock_time<utc_clock, decltype(Clock::to_utc(std::declval<std::chrono::time_point<Clock, Duration> const&>()))>
-  {};
-
-  // Similiar to above
-  template<typename Clock, typename Duration, typename = void>
-  struct return_from_utc
-  {};
-
-  template<typename Clock, typename Duration>
-  struct return_from_utc<Clock, Duration, decltype(Clock::from_utc(std::declval<std::chrono::time_point<utc_clock, Duration> const&>()), void())>
-    : return_clock_time<Clock, decltype(Clock::from_utc(std::declval<std::chrono::time_point<utc_clock, Duration> const&>()))>
-  {};
-}
-
-template<typename SourceClock>
-struct clock_time_conversion<std::chrono::system_clock, SourceClock>
+//Check if TimePoint is time for given clock,
+//if not emits hard error
+template <class Clock, class TimePoint>
+struct return_clock_time
 {
-  template <class Duration>
-  auto operator()(const std::chrono::time_point<SourceClock, Duration>& tp) const
-    -> typename ctc_detail::return_to_sys<SourceClock, Duration>::type
-  {
-    return SourceClock::to_sys(tp);
-  }
+    using clock_time_point = time_point<Clock, typename TimePoint::duration>;
+    using type             = TimePoint;
+
+    static_assert(std::is_same<TimePoint, clock_time_point>::value,
+                  "time point with appropariate clock shall be returned");
 };
 
-template<typename DestClock>
-struct clock_time_conversion<DestClock, std::chrono::system_clock>
+// Check if Clock has to_sys method accepting TimePoint with given duration const& and
+// returning sys_time. If so has nested type member equal to return type to_sys.
+template <class Clock, class Duration, class = void>
+struct return_to_sys
+{};
+
+template <class Clock, class Duration>
+struct return_to_sys
+       <
+           Clock, Duration,
+           decltype(Clock::to_sys(declval<time_point<Clock, Duration> const&>()), void())
+       >
+    : return_clock_time
+      <
+          system_clock,
+          decltype(Clock::to_sys(declval<time_point<Clock, Duration> const&>()))
+      >
+{};
+
+// Similiar to above
+template <class Clock, class Duration, class = void>
+struct return_from_sys
+{};
+
+template <class Clock, class Duration>
+struct return_from_sys
+       <
+           Clock, Duration,
+           decltype(Clock::from_sys(declval<time_point<system_clock, Duration> const&>()),
+                    void())
+       >
+    : return_clock_time
+      <
+          Clock,
+          decltype(Clock::from_sys(declval<time_point<system_clock, Duration> const&>()))
+      >
+{};
+
+// Similiar to above
+template <class Clock, class Duration, class = void>
+struct return_to_utc
+{};
+
+template <class Clock, class Duration>
+struct return_to_utc
+       <
+           Clock, Duration,
+           decltype(Clock::to_utc(declval<time_point<Clock, Duration> const&>()), void())
+       >
+    : return_clock_time
+      <
+          utc_clock,
+          decltype(Clock::to_utc(declval<time_point<Clock, Duration> const&>()))>
+{};
+
+// Similiar to above
+template <class Clock, class Duration, class = void>
+struct return_from_utc
+{};
+
+template <class Clock, class Duration>
+struct return_from_utc
+       <
+           Clock, Duration,
+           decltype(Clock::from_utc(declval<time_point<utc_clock, Duration> const&>()),
+                    void())
+       >
+    : return_clock_time
+      <
+          Clock,
+          decltype(Clock::from_utc(declval<time_point<utc_clock, Duration> const&>()))
+      >
+{};
+
+}  // namespace ctc_detail
+
+template <class SrcClock>
+struct clock_time_conversion<std::chrono::system_clock, SrcClock>
 {
-  template <class Duration>
-  auto operator()(const sys_time<Duration>& st) const
-    -> typename ctc_detail::return_from_sys<DestClock, Duration>::type
-  {
-    return DestClock::from_sys(st);
-  }
+    template <class Duration>
+    typename ctc_detail::return_to_sys<SrcClock, Duration>::type
+    operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
+    {
+        return SrcClock::to_sys(tp);
+    }
 };
 
-template<typename SourceClock>
-struct clock_time_conversion<utc_clock, SourceClock>
+template <class DstClock>
+struct clock_time_conversion<DstClock, std::chrono::system_clock>
 {
-  template <class Duration>
-  auto operator()(const std::chrono::time_point<SourceClock, Duration>& tp) const
-    -> typename ctc_detail::return_to_utc<SourceClock, Duration>::type
-  {
-    return SourceClock::to_utc(tp);
-  }
+    template <class Duration>
+    typename ctc_detail::return_from_sys<DstClock, Duration>::type
+    operator()(const sys_time<Duration>& st) const
+    {
+        return DstClock::from_sys(st);
+    }
 };
 
-template<typename DestClock>
-struct clock_time_conversion<DestClock, utc_clock>
+template <class SrcClock>
+struct clock_time_conversion<utc_clock, SrcClock>
 {
-  template <class Duration>
-  auto operator()(const utc_time<Duration>& ut) const
-    -> typename ctc_detail::return_from_utc<DestClock, Duration>::type
-  {
-    return DestClock::from_utc(ut);
-  }
+    template <class Duration>
+    typename ctc_detail::return_to_utc<SrcClock, Duration>::type
+    operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
+    {
+        return SrcClock::to_utc(tp);
+    }
+};
+
+template <class DstClock>
+struct clock_time_conversion<DstClock, utc_clock>
+{
+    template <class Duration>
+    typename ctc_detail::return_from_utc<DstClock, Duration>::type
+    operator()(const utc_time<Duration>& ut) const
+    {
+        return DstClock::from_utc(ut);
+    }
 };
 
 namespace clock_cast_detail
 {
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto conv_clock(const std::chrono::time_point<SourceClock, Duration>& st)
-     -> decltype(std::declval<clock_time_conversion<DestClock, SourceClock>>()(st))
-   {
-     return clock_time_conversion<DestClock, SourceClock>{}(st);
-   }
 
-   //direct triat conversion, 2nd candidate
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
-                const std::chrono::time_point<SourceClock, Duration>* /* 1st */)
-     -> decltype(conv_clock<DestClock>(st))
-   {
-     return conv_clock<DestClock>(st);
-   }
+template <class Clock, class Duration>
+    using time_point = std::chrono::time_point<Clock, Duration>;
+using std::chrono::system_clock;
 
-   //conversion trought sys, 3rd candidate
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
-                const void* /* 2nd */)
-     -> decltype(conv_clock<DestClock>(conv_clock<std::chrono::system_clock>(st)))
-   {
-     return conv_clock<DestClock>(conv_clock<std::chrono::system_clock>(st));
-   }
-
-   //conversion trought utc, 3rd candidate
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
-                const void* /* 2nd */)
-     -> decltype(conv_clock<DestClock>(conv_clock<utc_clock>(st)))
-   {
-     return conv_clock<DestClock>(conv_clock<utc_clock>(st));
-   }
-
-   //conversion trought sys and utc, 4th candidate
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
-                ... /* 3rd */)
-     -> decltype(conv_clock<DestClock>(conv_clock<utc_clock>(conv_clock<std::chrono::system_clock>(st))))
-   {
-     return conv_clock<DestClock>(conv_clock<utc_clock>(conv_clock<std::chrono::system_clock>(st)));
-   }
-
-   //conversion trought utc and sys, 4th candidate
-   template<typename DestClock, typename SourceClock, typename Duration>
-   auto cc_impl(const std::chrono::time_point<SourceClock, Duration>& st,
-                ... /* 3rd */)
-     -> decltype(conv_clock<DestClock>(conv_clock<std::chrono::system_clock>(conv_clock<utc_clock>(st))))
-   {
-     return conv_clock<DestClock>(conv_clock<std::chrono::system_clock>(conv_clock<utc_clock>(st)));
-   }
-}
-
-template<typename DestClock, typename SourceClock, typename Duration>
-auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& st)
- -> decltype(clock_cast_detail::cc_impl<DestClock>(st, &st))
+template <class DstClock, class SrcClock, class Duration>
+auto
+conv_clock(const time_point<SrcClock, Duration>& t)
+    -> decltype(std::declval<clock_time_conversion<DstClock, SrcClock>>()(t))
 {
-  return clock_cast_detail::cc_impl<DestClock>(st, &st);
+    return clock_time_conversion<DstClock, SrcClock>{}(t);
 }
+
+//direct trait conversion, 1st candidate
+template <class DstClock, class SrcClock, class Duration>
+auto
+cc_impl(const time_point<SrcClock, Duration>& t, const time_point<SrcClock, Duration>*)
+    -> decltype(conv_clock<DstClock>(t))
+{
+    return conv_clock<DstClock>(t);
+}
+
+//conversion through sys, 2nd candidate
+template <class DstClock, class SrcClock, class Duration>
+auto
+cc_impl(const time_point<SrcClock, Duration>& t, const void*)
+    -> decltype(conv_clock<DstClock>(conv_clock<system_clock>(t)))
+{
+    return conv_clock<DstClock>(conv_clock<system_clock>(t));
+}
+
+//conversion through utc, 2nd candidate
+template <class DstClock, class SrcClock, class Duration>
+auto
+cc_impl(const time_point<SrcClock, Duration>& t, const void*)
+    -> decltype(conv_clock<DstClock>(conv_clock<utc_clock>(t)))
+{
+    return conv_clock<DstClock>(conv_clock<utc_clock>(t));
+}
+
+//conversion through sys and utc, 3rd candidate
+template <class DstClock, class SrcClock, class Duration>
+auto
+cc_impl(const time_point<SrcClock, Duration>& t, ...)
+    -> decltype(conv_clock<DstClock>(conv_clock<utc_clock>(conv_clock<system_clock>(t))))
+{
+    return conv_clock<DstClock>(conv_clock<utc_clock>(conv_clock<system_clock>(t)));
+}
+
+//conversion through utc and sys, 3rd candidate
+template <class DstClock, class SrcClock, class Duration>
+auto
+cc_impl(const time_point<SrcClock, Duration>& t, ...)
+    -> decltype(conv_clock<DstClock>(conv_clock<system_clock>(conv_clock<utc_clock>(t))))
+{
+    return conv_clock<DstClock>(conv_clock<system_clock>(conv_clock<utc_clock>(t)));
+}
+
+}  // namespace clock_cast_detail
+
+template <class DstClock, class SrcClock, class Duration>
+auto
+clock_cast(const std::chrono::time_point<SrcClock, Duration>& tp)
+    -> decltype(clock_cast_detail::cc_impl<DstClock>(tp, &tp))
+{
+    return clock_cast_detail::cc_impl<DstClock>(tp, &tp);
+}
+
+#endif  // !defined(_MSC_VER) || _MSC_VER > 1912
 
 // Deprecated API
 
@@ -2423,7 +2480,7 @@ inline
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_sys_time(const utc_time<Duration>& t)
 {
-    return clock_cast<std::chrono::system_clock>(t);
+    return utc_clock::to_sys(t);
 }
 
 template <class Duration>
@@ -2431,7 +2488,7 @@ inline
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_sys_time(const tai_time<Duration>& t)
 {
-    return clock_cast<std::chrono::system_clock>(t);
+    return utc_clock::to_sys(tai_clock::to_utc(t));
 }
 
 template <class Duration>
@@ -2439,7 +2496,7 @@ inline
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_sys_time(const gps_time<Duration>& t)
 {
-    return clock_cast<std::chrono::system_clock>(t);
+    return utc_clock::to_sys(gps_clock::to_utc(t));
 }
 
 
@@ -2448,7 +2505,7 @@ inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(const sys_time<Duration>& t)
 {
-    return clock_cast<utc_clock>(t);
+    return utc_clock::from_sys(t);
 }
 
 template <class Duration>
@@ -2456,7 +2513,7 @@ inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(const tai_time<Duration>& t)
 {
-    return clock_cast<utc_clock>(t);
+    return tai_clock::to_utc(t);
 }
 
 template <class Duration>
@@ -2464,7 +2521,7 @@ inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_utc_time(const gps_time<Duration>& t)
 {
-    return clock_cast<utc_clock>(t);
+    return gps_clock::to_utc(t);
 }
 
 
@@ -2473,7 +2530,7 @@ inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_tai_time(const sys_time<Duration>& t)
 {
-    return clock_cast<tai_clock>(t);
+    return tai_clock::from_utc(utc_clock::from_sys(t));
 }
 
 template <class Duration>
@@ -2481,7 +2538,7 @@ inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_tai_time(const utc_time<Duration>& t)
 {
-    return clock_cast<tai_clock>(t);
+    return tai_clock::from_utc(t);
 }
 
 template <class Duration>
@@ -2489,7 +2546,7 @@ inline
 tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_tai_time(const gps_time<Duration>& t)
 {
-    return clock_cast<tai_clock>(t);
+    return tai_clock::from_utc(gps_clock::to_utc(t));
 }
 
 
@@ -2498,7 +2555,7 @@ inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_gps_time(const sys_time<Duration>& t)
 {
-    return clock_cast<gps_clock>(t);
+    return gps_clock::from_utc(utc_clock::from_sys(t));
 }
 
 template <class Duration>
@@ -2506,7 +2563,7 @@ inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_gps_time(const utc_time<Duration>& t)
 {
-    return clock_cast<gps_clock>(t);
+    return gps_clock::from_utc(t);
 }
 
 template <class Duration>
@@ -2514,7 +2571,7 @@ inline
 gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 to_gps_time(const tai_time<Duration>& t)
 {
-    return clock_cast<gps_clock>(t);
+    return gps_clock::from_utc(tai_clock::to_utc(t));
 }
 
 #endif  // !MISSING_LEAP_SECONDS
