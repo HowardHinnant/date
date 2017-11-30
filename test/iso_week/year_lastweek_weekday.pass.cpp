@@ -115,4 +115,15 @@ main()
     std::ostringstream os;
     os << x0;
     assert(os.str() == "2015-W last-Tue");
+
+    for (auto y = 1950_y; y <= 2050_y; ++y)
+    {
+        auto wd = mon;
+        do
+        {
+            auto x = y/last/wd;
+            assert(date::year_month_day{x} == date::year_month_day{year_weeknum_weekday{x}});
+            ++wd;
+        } while (wd != mon);
+    }
 }

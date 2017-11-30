@@ -1314,7 +1314,7 @@ inline
 year_lastweek_weekday::operator sys_days() const NOEXCEPT
 {
     return sys_days(date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last])
-         + (mon - thu) - (mon - wd_);
+         + (sun - thu) - (sun - wd_);
 }
 
 CONSTCD14
@@ -1322,7 +1322,7 @@ inline
 year_lastweek_weekday::operator local_days() const NOEXCEPT
 {
     return local_days(date::year{static_cast<int>(y_)}/date::dec/date::thu[date::last])
-         + (mon - thu) - (mon - wd_);
+         + (sun - thu) - (sun - wd_);
 }
 
 CONSTCD11
