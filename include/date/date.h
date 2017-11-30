@@ -6996,6 +6996,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 else if (day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
+            if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
+                goto broken;
             auto ymd = year{Y}/m/d;
             if (wd != not_a_weekday && ymd.ok())
             {
