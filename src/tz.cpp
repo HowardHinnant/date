@@ -337,11 +337,11 @@ discover_tz_dir()
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
         throw runtime_error("discover_tz_dir failed\n");
     string result;
-    char rp[PATH_MAX];
-    if (realpath(timezone, rp))
+    char rp[PATH_MAX+1] = {};
+    if (readlink(timezone, rp, sizeof(rp)-1) > 0)
         result = string(rp);
     else
-        throw system_error(errno, system_category(), "realpath() failed");
+        throw system_error(errno, system_category(), "readlink() failed");
     auto i = result.find("zoneinfo");
     if (i == string::npos)
         throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
@@ -3652,11 +3652,11 @@ tzdb::current_zone() const
         if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
             using namespace std;
             string result;
-            char rp[PATH_MAX];
-            if (realpath(timezone, rp))
+            char rp[PATH_MAX+1] = {};
+            if (readlink(timezone, rp, sizeof(rp)-1) > 0)
                 result = string(rp);
             else
-                throw system_error(errno, system_category(), "realpath() failed");
+                throw system_error(errno, system_category(), "readlink() failed");
 
             const size_t pos = result.find(tz_dir);
             if (pos != result.npos)
@@ -3680,11 +3680,11 @@ tzdb::current_zone() const
         if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
             using namespace std;
             string result;
-            char rp[PATH_MAX];
-            if (realpath(timezone, rp))
+            char rp[PATH_MAX+1] = {};
+            if (readlink(timezone, rp, sizeof(rp)-1) > 0)
                 result = string(rp);
             else
-                throw system_error(errno, system_category(), "realpath() failed");
+                throw system_error(errno, system_category(), "readlink() failed");
 
             const size_t pos = result.find(tz_dir);
             if (pos != result.npos)
