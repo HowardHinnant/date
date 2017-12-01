@@ -72,6 +72,19 @@ target_include_directories(tz PUBLIC
     >
 )
 
+add_library(date INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "tz.h and its lib" are needed)
+
+# add include folders to the INTERFACE and targets that consume it
+target_include_directories(date INTERFACE
+    $<BUILD_INTERFACE:
+        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
+    >
+    $<INSTALL_INTERFACE:
+        include
+    >
+)
+
+
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
