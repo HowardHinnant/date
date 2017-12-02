@@ -8,7 +8,18 @@ enable_testing( )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
-option( BUILD_STATIC "Build a static version of library" ON )
+option( BUILD_TZ_STATIC  "Build a static version of library" ON )
+
+function( print_option OPT )
+	if ( NOT DEFINED CURR_${OPT} OR ( NOT CURR_${OPT} STREQUAL ${OPT} ) )
+		set( CURR_${OPT} ${${OPT}} CACHE BOOL "" )
+		message( "# date: ${OPT} ${${OPT}}" )
+	endif( )
+endfunction( )
+
+print_option( USE_SYSTEM_TZ_DB )
+print_option( USE_TZ_DB_IN_DOT )
+print_option( BUILD_TZ_STATIC  )
 
 if( USE_SYSTEM_TZ_DB )
 	add_definitions( -DUSE_AUTOLOAD=0 )
@@ -46,13 +57,13 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-if( BUILD_STATIC )
+if( BUILD_TZ_STATIC )
 	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 else( )
 	add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 endif( )
 set_property(TARGET tz PROPERTY CXX_STANDARD 14)
-target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  )
+target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
 
 # add include folders to the library and targets that consume it
 target_include_directories(tz PUBLIC
@@ -64,10 +75,10 @@ target_include_directories(tz PUBLIC
     >
 )
 
-add_library(date INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "tz.h and its lib" are needed)
+add_library(date_interface INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "tz.h and its lib" are needed)
 
 # add include folders to the INTERFACE and targets that consume it
-target_include_directories(date INTERFACE
+target_include_directories(date_interface INTERFACE
     $<BUILD_INTERFACE:
         ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
     >
