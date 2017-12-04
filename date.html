@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-11-03<br/>
+2017-12-04<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -7845,7 +7845,7 @@ left-padded with <code>0</code> to four digits.</td>
 <td><code>%z</code></td>
 <td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
 4 hours 30 minutes behind UTC.  If the offset is zero, <code>+0000</code> is used.
-The modified commands <code>%Ez</code> and <code>%Ez</code> insert a <code>:</code>
+The modified commands <code>%Ez</code> and <code>%Oz</code> insert a <code>:</code>
 between the hours and minutes: <code>-04:30</code>.  If the offset information is not
 available, <code>failbit</code> will be set.</td>
 </tr>
@@ -8227,7 +8227,7 @@ representation.</td>
 <tr>
 <td><code>%z</code></td>
 <td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
-4 hours 30 minutes behind UTC. The modified commands <code>%Ez</code> and <code>%Ez</code>
+4 hours 30 minutes behind UTC. The modified commands <code>%Ez</code> and <code>%Oz</code>
 parse a <code>:</code> between the hours and minutes and leading zeroes on the hour field
 are optional: <code>-4:30</code>.</td>
 </tr>
