@@ -1112,7 +1112,7 @@ detail::Rule::Rule(const std::string& s)
         in >> abbrev_;
         if (abbrev_ == "-")
             abbrev_.clear();
-        assert(hours{0} <= save_ && save_ <= hours{2});
+        assert(hours{-1} <= save_ && save_ <= hours{2});
     }
     catch (...)
     {
