@@ -9,6 +9,7 @@ enable_testing( )
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_STATIC "Build a static version of library" ON )
+option( USE_STATIC_LIB_FPIC "Build the static library with -fPIC" OFF)
 
 if( USE_SYSTEM_TZ_DB )
 	add_definitions( -DUSE_AUTOLOAD=0 )
@@ -46,6 +47,11 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz.h
 	${HEADER_FOLDER}/date/tz_private.h
 )
+
+if( BUILD_STATIC AND USE_STATIC_LIB_FPIC )
+	set( CMAKE_POSITION_INDEPENDENT_CODE ON )
+	message(STATUS "--> Setting fPIC")
+endif()
 
 if( BUILD_STATIC )
 	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
@@ -127,4 +133,3 @@ foreach( child ${children} )
 		endif( )
 	endif( )
 endforeach( )
-
