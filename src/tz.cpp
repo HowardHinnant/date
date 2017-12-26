@@ -86,6 +86,10 @@
 #include "date/tz_private.h"
 #include "date/ios.h"
 
+#ifndef __APPLE__
+#    define TARGET_OS_IPHONE 0
+#endif
+
 #if USE_OS_TZDB
 #  include <dirent.h>
 #endif
@@ -333,6 +337,9 @@ discover_tz_dir()
     else
         throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
 #  else  // __APPLE__
+#      if TARGET_OS_IPHONE
+    return "/var/db/timezone/zoneinfo";
+#      else
     CONSTDATA auto timezone = "/etc/localtime";
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
         throw runtime_error("discover_tz_dir failed\n");
@@ -349,6 +356,7 @@ discover_tz_dir()
     if (i == string::npos)
         throw runtime_error("discover_tz_dir failed to find '/'\n");
     return result.substr(0, i);
+#      endif
 #  endif  // __APPLE__
 }
 
@@ -1112,7 +1120,7 @@ detail::Rule::Rule(const std::string& s)
         in >> abbrev_;
         if (abbrev_ == "-")
             abbrev_.clear();
-        assert(hours{0} <= save_ && save_ <= hours{2});
+        assert(hours{-1} <= save_ && save_ <= hours{2});
     }
     catch (...)
     {
