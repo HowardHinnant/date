@@ -8641,11 +8641,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <blockquote>
 <p>
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%H00".  "%H" will emit a leading 0 for
-hours less than 10.
+according to the format: "%H00" ([time.format]).
 Else <code>t</code> is a 12-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%I%p" according to the C locale, except
-that no leading zero is output for hours less than 10.
+according to the format: "%I%p" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -8770,11 +8768,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <blockquote>
 <p>
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%H:%M".  "%H" will emit a leading 0 for
-hours less than 10.
+according to the format: "%H:%M" ([time.format]).
 Else <code>t</code> is a 12-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%I:%M%p" according to the C locale, except
-that no leading zero is output for hours less than 10.
+according to the format: "%I:%M%p" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -8912,11 +8908,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <blockquote>
 <p>
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%H:%M%S".  "%H" will emit a leading 0 for
-hours less than 10.
+according to the format: "%T"  ([time.format]).
 Else <code>t</code> is a 12-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%I:%M%S%p" according to the C locale, except
-that no leading zero is output for hours less than 10.
+according to the format: "%I:%M%:S%p" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -9075,12 +9069,9 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <blockquote>
 <p>
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%H:%M%S.%s".  "%H" will emit a leading 0 for
-hours less than 10.  "%s" is not a <code>strftime</code> code and represents the fractional
-seconds.
+according to the format: "%T" ([time.format]).
 Else <code>t</code> is a 12-hour time, outputs to <code>os</code>
-according to the <code>strftime</code> format: "%I:%M%S.%s%p" according to the C locale, except
-that no leading zero is output for hours less than 10.
+according to the format: "%I:%M:%S" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
