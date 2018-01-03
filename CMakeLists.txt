@@ -65,11 +65,7 @@ else( )
 endif( )
 
 if( NOT TZ_CXX_STANDARD ) 
-  if ( ${CMAKE_MINOR_VERSION} GREATER 7 )
     set( TZ_CXX_STANDARD 17 )
-  else( )
-    set( TZ_CXX_STANDARD 14 )
-  endif( )
 endif( )
 
 set_property(TARGET tz PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
