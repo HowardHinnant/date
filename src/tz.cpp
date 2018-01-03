@@ -84,10 +84,11 @@
 #endif  // _WIN32
 
 #include "date/tz_private.h"
-#include "date/ios.h"
 
-#ifndef __APPLE__
-#    define TARGET_OS_IPHONE 0
+#ifdef __APPLE__
+#  include "ios.h"
+#else
+#  define TARGET_OS_IPHONE 0
 #endif
 
 #if USE_OS_TZDB
