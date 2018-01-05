@@ -6775,8 +6775,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     else
                         read(is, rs{H, 1, 2}, CharT{':'}, ru{M, 2, 2});
                     if (!is.fail())
-                        temp_offset = hours{H} + minutes{M};
-                    command = nullptr;
+						temp_offset = hours{ H } +minutes{ H < 0 ? -M : M };
+					command = nullptr;
                     width = -1;
                     modified = CharT{};
                 }
