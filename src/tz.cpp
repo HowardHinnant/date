@@ -360,7 +360,13 @@ discover_tz_dir()
 #  endif  // __APPLE__
 }
 
-static const std::string tz_dir = discover_tz_dir();
+static
+const std::string&
+get_tz_dir()
+{
+    static const std::string tz_dir = discover_tz_dir();
+    return tz_dir;
+}
 
 #endif
 
@@ -2011,7 +2017,7 @@ time_zone::init_impl()
 {
     using namespace std;
     using namespace std::chrono;
-    auto name = tz_dir + ('/' + name_);
+    auto name = get_tz_dir() + ('/' + name_);
     std::ifstream inf(name);
     if (!inf.is_open())
         throw std::runtime_error{"Unable to open " + name};
@@ -2604,7 +2610,7 @@ std::string
 get_version()
 {
     using namespace std;
-    auto path = tz_dir + string("/+VERSION");
+    auto path = get_tz_dir() + string("/+VERSION");
     ifstream in{path};
     string version;
     in >> version;
@@ -2622,7 +2628,7 @@ init_tzdb()
 
     //Iterate through folders
     std::queue<std::string> subfolders;
-    subfolders.emplace(tz_dir);
+    subfolders.emplace(get_tz_dir());
     struct dirent* d;
     struct stat s;
     while (!subfolders.empty())
@@ -2657,7 +2663,7 @@ init_tzdb()
                 }
                 else
                 {
-                    db->zones.emplace_back(subname.substr(tz_dir.size()+1),
+                    db->zones.emplace_back(subname.substr(get_tz_dir().size()+1),
                                            detail::undocumented{});
                 }
             }
@@ -2667,7 +2673,7 @@ init_tzdb()
     db->zones.shrink_to_fit();
     std::sort(db->zones.begin(), db->zones.end());
 #  if !MISSING_LEAP_SECONDS
-    std::ifstream in(tz_dir + std::string(1, folder_delimiter) + "right/UTC",
+    std::ifstream in(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
                      std::ios_base::binary);
     if (in)
     {
@@ -2677,7 +2683,8 @@ init_tzdb()
     else
     {
         in.clear();
-        in.open(tz_dir + std::string(1, folder_delimiter) + "UTC", std::ios_base::binary);
+        in.open(get_tz_dir() + std::string(1, folder_delimiter) +
+                "UTC", std::ios_base::binary);
         if (!in)
             throw std::runtime_error("Unable to extract leap second information");
         in.exceptions(std::ios::failbit | std::ios::badbit);
@@ -3668,9 +3675,9 @@ tzdb::current_zone() const
             else
                 throw system_error(errno, system_category(), "readlink() failed");
 
-            const size_t pos = result.find(tz_dir);
+            const size_t pos = result.find(get_tz_dir());
             if (pos != result.npos)
-                result.erase(0, tz_dir.size() + 1 + pos);
+                result.erase(0, get_tz_dir().size() + 1 + pos);
             return locate_zone(result);
         }
     }
@@ -3696,9 +3703,9 @@ tzdb::current_zone() const
             else
                 throw system_error(errno, system_category(), "readlink() failed");
 
-            const size_t pos = result.find(tz_dir);
+            const size_t pos = result.find(get_tz_dir());
             if (pos != result.npos)
-                result.erase(0, tz_dir.size() + 1 + pos);
+                result.erase(0, get_tz_dir().size() + 1 + pos);
             return locate_zone(result);
         }
     }
