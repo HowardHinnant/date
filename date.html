@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-12-04<br/>
+2018-01-07<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -2028,13 +2028,13 @@ public:
     day() = default;
     explicit constexpr day(unsigned d) noexcept;
 
-    day&amp; operator++() noexcept;
-    day operator++(int) noexcept;
-    day&amp; operator--() noexcept;
-    day operator--(int) noexcept;
+    constexpr day&amp; operator++() noexcept;
+    constexpr day operator++(int) noexcept;
+    constexpr day&amp; operator--() noexcept;
+    constexpr day operator--(int) noexcept;
 
-    day&amp; operator+=(const days&amp; d) noexcept;
-    day&amp; operator-=(const days&amp; d) noexcept;
+    constexpr day&amp; operator+=(const days&amp; d) noexcept;
+    constexpr day&amp; operator-=(const days&amp; d) noexcept;
 
     constexpr explicit operator unsigned() const noexcept;
     constexpr bool ok() const noexcept;
@@ -2106,7 +2106,7 @@ is not in the range <code>[0, 255]</code>.
 </blockquote>
 
 <pre>
-day&amp; day::operator++() noexcept;
+constexpr day&amp; day::operator++() noexcept;
 </pre>
 
 <blockquote>
@@ -2119,7 +2119,7 @@ day&amp; day::operator++() noexcept;
 </blockquote>
 
 <pre>
-day day::operator++(int) noexcept;
+constexpr day day::operator++(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2133,7 +2133,7 @@ function.
 </blockquote>
 
 <pre>
-day&amp; day::operator--() noexcept;
+constexpr day&amp; day::operator--() noexcept;
 </pre>
 
 <blockquote>
@@ -2146,7 +2146,7 @@ day&amp; day::operator--() noexcept;
 </blockquote>
 
 <pre>
-day day::operator--(int) noexcept;
+constexpr day day::operator--(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2160,7 +2160,7 @@ function.
 </blockquote>
 
 <pre>
-day&amp; day::operator+=(const days&amp; d) noexcept;
+constexpr day&amp; day::operator+=(const days&amp; d) noexcept;
 </pre>
 
 <blockquote>
@@ -2173,7 +2173,7 @@ day&amp; day::operator+=(const days&amp; d) noexcept;
 </blockquote>
 
 <pre>
-day&amp; day::operator-=(const days&amp; d) noexcept;
+constexpr day&amp; day::operator-=(const days&amp; d) noexcept;
 </pre>
 
 <blockquote>
@@ -2393,13 +2393,13 @@ public:
     month() = default;
     explicit constexpr month(unsigned m) noexcept;
 
-    month&amp; operator++() noexcept;
-    month operator++(int) noexcept;
-    month&amp; operator--() noexcept;
-    month operator--(int) noexcept;
+    constexpr month&amp; operator++() noexcept;
+    constexpr month operator++(int) noexcept;
+    constexpr month&amp; operator--() noexcept;
+    constexpr month operator--(int) noexcept;
 
-    month&amp; operator+=(const months&amp; m) noexcept;
-    month&amp; operator-=(const months&amp; m) noexcept;
+    constexpr month&amp; operator+=(const months&amp; m) noexcept;
+    constexpr month&amp; operator-=(const months&amp; m) noexcept;
 
     constexpr explicit operator unsigned() const noexcept;
     constexpr bool ok() const noexcept;
@@ -2483,7 +2483,7 @@ is not in the range <code>[0, 255]</code>.
 </blockquote>
 
 <pre>
-month&amp; month::operator++() noexcept;
+constexpr month&amp; month::operator++() noexcept;
 </pre>
 
 <blockquote>
@@ -2497,7 +2497,7 @@ month&amp; month::operator++() noexcept;
 </blockquote>
 
 <pre>
-month month::operator++(int) noexcept;
+constexpr month month::operator++(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2511,7 +2511,7 @@ function.
 </blockquote>
 
 <pre>
-month&amp; month::operator--() noexcept;
+constexpr month&amp; month::operator--() noexcept;
 </pre>
 
 <blockquote>
@@ -2525,7 +2525,7 @@ month&amp; month::operator--() noexcept;
 </blockquote>
 
 <pre>
-month month::operator--(int) noexcept;
+constexpr month month::operator--(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2539,7 +2539,7 @@ function.
 </blockquote>
 
 <pre>
-month&amp; month::operator+=(const months&amp; m) noexcept;
+constexpr month&amp; month::operator+=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -2552,7 +2552,7 @@ month&amp; month::operator+=(const months&amp; m) noexcept;
 </blockquote>
 
 <pre>
-month&amp; month::operator-=(const months&amp; m) noexcept;
+constexpr month&amp; month::operator-=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -2785,13 +2785,13 @@ public:
     year() = default;
     explicit constexpr year(int y) noexcept;
 
-    year&amp; operator++() noexcept;
-    year operator++(int) noexcept;
-    year&amp; operator--() noexcept;
-    year operator--(int) noexcept;
+    constexpr year&amp; operator++() noexcept;
+    constexpr year operator++(int) noexcept;
+    constexpr year&amp; operator--() noexcept;
+    constexpr year operator--(int) noexcept;
 
-    year&amp; operator+=(const years&amp; y) noexcept;
-    year&amp; operator-=(const years&amp; y) noexcept;
+    constexpr year&amp; operator+=(const years&amp; y) noexcept;
+    constexpr year&amp; operator-=(const years&amp; y) noexcept;
 
     constexpr year operator-() const noexcept;
     constexpr year operator+() const noexcept;
@@ -2871,7 +2871,7 @@ is not in the range <code>[-32767, 32767]</code>.
 </blockquote>
 
 <pre>
-year&amp; year::operator++() noexcept;
+constexpr year&amp; year::operator++() noexcept;
 </pre>
 
 <blockquote>
@@ -2884,7 +2884,7 @@ year&amp; year::operator++() noexcept;
 </blockquote>
 
 <pre>
-year year::operator++(int) noexcept;
+constexpr year year::operator++(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2898,7 +2898,7 @@ function.
 </blockquote>
 
 <pre>
-year&amp; year::operator--() noexcept;
+constexpr year&amp; year::operator--() noexcept;
 </pre>
 
 <blockquote>
@@ -2911,7 +2911,7 @@ year&amp; year::operator--() noexcept;
 </blockquote>
 
 <pre>
-year year::operator--(int) noexcept;
+constexpr year year::operator--(int) noexcept;
 </pre>
 
 <blockquote>
@@ -2925,7 +2925,7 @@ function.
 </blockquote>
 
 <pre>
-year&amp; year::operator+=(const years&amp; y) noexcept;
+constexpr year&amp; year::operator+=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -2938,7 +2938,7 @@ year&amp; year::operator+=(const years&amp; y) noexcept;
 </blockquote>
 
 <pre>
-year&amp; year::operator-=(const years&amp; y) noexcept;
+constexpr year&amp; year::operator-=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -3212,13 +3212,13 @@ public:
     constexpr weekday(const sys_days&amp; dp) noexcept;
     constexpr explicit weekday(const local_days&amp; dp) noexcept;
 
-    weekday&amp; operator++() noexcept;
-    weekday operator++(int) noexcept;
-    weekday&amp; operator--() noexcept;
-    weekday operator--(int) noexcept;
+    constexpr weekday&amp; operator++() noexcept;
+    constexpr weekday operator++(int) noexcept;
+    constexpr weekday&amp; operator--() noexcept;
+    constexpr weekday operator--(int) noexcept;
 
-    weekday&amp; operator+=(const days&amp; d) noexcept;
-    weekday&amp; operator-=(const days&amp; d) noexcept;
+    constexpr weekday&amp; operator+=(const days&amp; d) noexcept;
+    constexpr weekday&amp; operator-=(const days&amp; d) noexcept;
 
     constexpr explicit operator unsigned() const noexcept;
     constexpr bool ok() const noexcept;
@@ -3342,7 +3342,7 @@ The value after construction shall be identical to that constructed from
 </blockquote>
 
 <pre>
-weekday&amp; weekday::operator++() noexcept;
+constexpr weekday&amp; weekday::operator++() noexcept;
 </pre>
 
 <blockquote>
@@ -3356,7 +3356,7 @@ weekday&amp; weekday::operator++() noexcept;
 </blockquote>
 
 <pre>
-weekday weekday::operator++(int) noexcept;
+constexpr weekday weekday::operator++(int) noexcept;
 </pre>
 
 <blockquote>
@@ -3370,7 +3370,7 @@ function.
 </blockquote>
 
 <pre>
-weekday&amp; weekday::operator--() noexcept;
+constexpr weekday&amp; weekday::operator--() noexcept;
 </pre>
 
 <blockquote>
@@ -3384,7 +3384,7 @@ weekday&amp; weekday::operator--() noexcept;
 </blockquote>
 
 <pre>
-weekday weekday::operator--(int) noexcept;
+constexpr weekday weekday::operator--(int) noexcept;
 </pre>
 
 <blockquote>
@@ -3398,7 +3398,7 @@ function.
 </blockquote>
 
 <pre>
-weekday&amp; weekday::operator+=(const days&amp; d) noexcept;
+constexpr weekday&amp; weekday::operator+=(const days&amp; d) noexcept;
 </pre>
 
 <blockquote>
@@ -3411,7 +3411,7 @@ weekday&amp; weekday::operator+=(const days&amp; d) noexcept;
 </blockquote>
 
 <pre>
-weekday&amp; weekday::operator-=(const days&amp; d) noexcept;
+constexpr weekday&amp; weekday::operator-=(const days&amp; d) noexcept;
 </pre>
 
 <blockquote>
@@ -4534,10 +4534,10 @@ public:
     constexpr date::year year() const noexcept;
     constexpr date::month month() const noexcept;
 
-    year_month&amp; operator+=(const months&amp; dm) noexcept;
-    year_month&amp; operator-=(const months&amp; dm) noexcept;
-    year_month&amp; operator+=(const years&amp; dy) noexcept;
-    year_month&amp; operator-=(const years&amp; dy) noexcept;
+    constexpr year_month&amp; operator+=(const months&amp; dm) noexcept;
+    constexpr year_month&amp; operator-=(const months&amp; dm) noexcept;
+    constexpr year_month&amp; operator+=(const years&amp; dy) noexcept;
+    constexpr year_month&amp; operator-=(const years&amp; dy) noexcept;
 
     constexpr bool ok() const noexcept;
 };
@@ -4624,7 +4624,7 @@ constexpr month year_month::month() const noexcept;
 </blockquote>
 
 <pre>
-year_month&amp; operator+=(const months&amp; dm) noexcept;
+constexpr year_month&amp; operator+=(const months&amp; dm) noexcept;
 </pre>
 
 <blockquote>
@@ -4637,7 +4637,7 @@ year_month&amp; operator+=(const months&amp; dm) noexcept;
 </blockquote>
 
 <pre>
-year_month&amp; operator-=(const months&amp; dm) noexcept;
+constexpr year_month&amp; operator-=(const months&amp; dm) noexcept;
 </pre>
 
 <blockquote>
@@ -4650,7 +4650,7 @@ year_month&amp; operator-=(const months&amp; dm) noexcept;
 </blockquote>
 
 <pre>
-year_month&amp; operator+=(const years&amp; dy) noexcept;
+constexpr year_month&amp; operator+=(const years&amp; dy) noexcept;
 </pre>
 
 <blockquote>
@@ -4663,7 +4663,7 @@ year_month&amp; operator+=(const years&amp; dy) noexcept;
 </blockquote>
 
 <pre>
-year_month&amp; operator-=(const years&amp; dy) noexcept;
+constexpr year_month&amp; operator-=(const years&amp; dy) noexcept;
 </pre>
 
 <blockquote>
@@ -4907,10 +4907,10 @@ public:
     constexpr year_month_day(const sys_days&amp; dp) noexcept;
     constexpr explicit year_month_day(const local_days&amp; dp) noexcept;
 
-    year_month_day&amp; operator+=(const months&amp; m) noexcept;
-    year_month_day&amp; operator-=(const months&amp; m) noexcept;
-    year_month_day&amp; operator+=(const years&amp; y) noexcept;
-    year_month_day&amp; operator-=(const years&amp; y) noexcept;
+    constexpr year_month_day&amp; operator+=(const months&amp; m) noexcept;
+    constexpr year_month_day&amp; operator-=(const months&amp; m) noexcept;
+    constexpr year_month_day&amp; operator+=(const years&amp; y) noexcept;
+    constexpr year_month_day&amp; operator-=(const years&amp; y) noexcept;
 
     constexpr date::year year()   const noexcept;
     constexpr date::month month() const noexcept;
@@ -5033,7 +5033,7 @@ to the date represented by <code>dp</code>.
 </blockquote>
 
 <pre>
-year_month_day&amp; year_month_day::operator+=(const months&amp; m) noexcept;
+constexpr year_month_day&amp; year_month_day::operator+=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5046,7 +5046,7 @@ year_month_day&amp; year_month_day::operator+=(const months&amp; m) noexcept;
 </blockquote>
 
 <pre>
-year_month_day&amp; year_month_day::operator-=(const months&amp; m) noexcept;
+constexpr year_month_day&amp; year_month_day::operator-=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5059,7 +5059,7 @@ year_month_day&amp; year_month_day::operator-=(const months&amp; m) noexcept;
 </blockquote>
 
 <pre>
-year_month_day&amp; year_month_day::operator+=(const years&amp; y) noexcept;
+constexpr year_month_day&amp; year_month_day::operator+=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -5072,7 +5072,7 @@ year_month_day&amp; year_month_day::operator+=(const years&amp; y) noexcept;
 </blockquote>
 
 <pre>
-year_month_day&amp; year_month_day::operator-=(const years&amp; y) noexcept;
+constexpr year_month_day&amp; year_month_day::operator-=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -5387,10 +5387,10 @@ public:
     constexpr year_month_day_last(const date::year&amp; y,
                                   const date::month_day_last&amp; mdl) noexcept;
 
-    year_month_day_last&amp; operator+=(const months&amp; m) noexcept;
-    year_month_day_last&amp; operator-=(const months&amp; m) noexcept;
-    year_month_day_last&amp; operator+=(const years&amp; y) noexcept;
-    year_month_day_last&amp; operator-=(const years&amp; y) noexcept;
+    constexpr year_month_day_last&amp; operator+=(const months&amp; m) noexcept;
+    constexpr year_month_day_last&amp; operator-=(const months&amp; m) noexcept;
+    constexpr year_month_day_last&amp; operator+=(const years&amp; y) noexcept;
+    constexpr year_month_day_last&amp; operator-=(const years&amp; y) noexcept;
 
     constexpr date::year           year()           const noexcept;
     constexpr date::month          month()          const noexcept;
@@ -5457,7 +5457,7 @@ constructing <code>y_</code> with <code>y</code> and <code>mdl_</code> with <cod
 </blockquote>
 
 <pre>
-year_month_day_last&amp; year_month_day_last::operator+=(const months&amp; m) noexcept;
+constexpr year_month_day_last&amp; year_month_day_last::operator+=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5470,7 +5470,7 @@ year_month_day_last&amp; year_month_day_last::operator+=(const months&amp; m) no
 </blockquote>
 
 <pre>
-year_month_day_last&amp; year_month_day_last::operator-=(const months&amp; m) noexcept;
+constexpr year_month_day_last&amp; year_month_day_last::operator-=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5483,7 +5483,7 @@ year_month_day_last&amp; year_month_day_last::operator-=(const months&amp; m) no
 </blockquote>
 
 <pre>
-year_month_day_last&amp; year_month_day_last::operator+=(const years&amp; y) noexcept;
+constexpr year_month_day_last&amp; year_month_day_last::operator+=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -5496,7 +5496,7 @@ year_month_day_last&amp; year_month_day_last::operator+=(const years&amp; y) noe
 </blockquote>
 
 <pre>
-year_month_day_last&amp; year_month_day_last::operator-=(const years&amp; y) noexcept;
+constexpr year_month_day_last&amp; year_month_day_last::operator-=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -5738,10 +5738,10 @@ public:
     constexpr year_month_weekday(const sys_days&amp; dp) noexcept;
     constexpr explicit year_month_weekday(const local_days&amp; dp) noexcept;
 
-    year_month_weekday&amp; operator+=(const months&amp; m) noexcept;
-    year_month_weekday&amp; operator-=(const months&amp; m) noexcept;
-    year_month_weekday&amp; operator+=(const years&amp; y) noexcept;
-    year_month_weekday&amp; operator-=(const years&amp; y) noexcept;
+    constexpr year_month_weekday&amp; operator+=(const months&amp; m) noexcept;
+    constexpr year_month_weekday&amp; operator-=(const months&amp; m) noexcept;
+    constexpr year_month_weekday&amp; operator+=(const years&amp; y) noexcept;
+    constexpr year_month_weekday&amp; operator-=(const years&amp; y) noexcept;
 
     constexpr date::year year() const noexcept;
     constexpr date::month month() const noexcept;
@@ -5834,7 +5834,7 @@ corresponds to the date represented by <code>dp</code>.
 </blockquote>
 
 <pre>
-year_month_weekday&amp; year_month_weekday::operator+=(const months&amp; m) noexcept;
+constexpr year_month_weekday&amp; year_month_weekday::operator+=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5847,7 +5847,7 @@ year_month_weekday&amp; year_month_weekday::operator+=(const months&amp; m) noex
 </blockquote>
 
 <pre>
-year_month_weekday&amp; year_month_weekday::operator-=(const months&amp; m) noexcept;
+constexpr year_month_weekday&amp; year_month_weekday::operator-=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -5860,7 +5860,7 @@ year_month_weekday&amp; year_month_weekday::operator-=(const months&amp; m) noex
 </blockquote>
 
 <pre>
-year_month_weekday&amp; year_month_weekday::operator+=(const years&amp; y) noexcept;
+constexpr year_month_weekday&amp; year_month_weekday::operator+=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -5873,7 +5873,7 @@ year_month_weekday&amp; year_month_weekday::operator+=(const years&amp; y) noexc
 </blockquote>
 
 <pre>
-year_month_weekday&amp; year_month_weekday::operator-=(const years&amp; y) noexcept;
+constexpr year_month_weekday&amp; year_month_weekday::operator-=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -6088,10 +6088,10 @@ public:
     constexpr year_month_weekday_last(const date::year&amp; y, const date::month&amp; m,
                                       const date::weekday_last&amp; wdl) noexcept;
 
-    year_month_weekday_last&amp; operator+=(const months&amp; m) noexcept;
-    year_month_weekday_last&amp; operator-=(const months&amp; m) noexcept;
-    year_month_weekday_last&amp; operator+=(const years&amp; y) noexcept;
-    year_month_weekday_last&amp; operator-=(const years&amp; y) noexcept;
+    constexpr year_month_weekday_last&amp; operator+=(const months&amp; m) noexcept;
+    constexpr year_month_weekday_last&amp; operator-=(const months&amp; m) noexcept;
+    constexpr year_month_weekday_last&amp; operator+=(const years&amp; y) noexcept;
+    constexpr year_month_weekday_last&amp; operator-=(const years&amp; y) noexcept;
 
     constexpr date::year year() const noexcept;
     constexpr date::month month() const noexcept;
@@ -6176,7 +6176,7 @@ and <code>wdl_</code> with <code>wdl</code>.
 </blockquote>
 
 <pre>
-year_month_weekday_last&amp; year_month_weekday_last::operator+=(const months&amp; m) noexcept;
+constexpr year_month_weekday_last&amp; year_month_weekday_last::operator+=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -6189,7 +6189,7 @@ year_month_weekday_last&amp; year_month_weekday_last::operator+=(const months&am
 </blockquote>
 
 <pre>
-year_month_weekday_last&amp; year_month_weekday_last::operator-=(const months&amp; m) noexcept;
+constexpr year_month_weekday_last&amp; year_month_weekday_last::operator-=(const months&amp; m) noexcept;
 </pre>
 
 <blockquote>
@@ -6202,7 +6202,7 @@ year_month_weekday_last&amp; year_month_weekday_last::operator-=(const months&am
 </blockquote>
 
 <pre>
-year_month_weekday_last&amp; year_month_weekday_last::operator+=(const years&amp; y) noexcept;
+constexpr year_month_weekday_last&amp; year_month_weekday_last::operator+=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
@@ -6215,7 +6215,7 @@ year_month_weekday_last&amp; year_month_weekday_last::operator+=(const years&amp
 </blockquote>
 
 <pre>
-year_month_weekday_last&amp; year_month_weekday_last::operator-=(const years&amp; y) noexcept;
+constexpr year_month_weekday_last&amp; year_month_weekday_last::operator-=(const years&amp; y) noexcept;
 </pre>
 
 <blockquote>
