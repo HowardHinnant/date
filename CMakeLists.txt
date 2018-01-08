@@ -7,9 +7,9 @@ find_package( Threads REQUIRED )
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_TZ_STATIC  "Build a static version of library" ON )
-option( ENABLE_TESTING  "Enable unit tests" ON )
+option( ENABLE_DATE_TESTING  "Enable unit tests" ON )
 
-if( ENABLE_TESTING )
+if( ENABLE_DATE_TESTING )
 	enable_testing( )
 endif( )
 
@@ -24,7 +24,7 @@ endfunction( )
 print_option( USE_SYSTEM_TZ_DB )
 print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_TZ_STATIC  )
-print_option( ENABLE_TESTING  )
+print_option( ENABLE_DATE_TESTING  )
 
 if( USE_SYSTEM_TZ_DB )
 	add_definitions( -DUSE_AUTOLOAD=0 )
@@ -105,7 +105,7 @@ add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
 
 add_dependencies( testit tz )
 function( add_pass_tests TEST_GLOB TEST_PREFIX )
-	if( ENABLE_TESTING )
+	if( ENABLE_DATE_TESTING )
 		file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
 		include_directories( "${HEADER_FOLDER}/date" )
 
@@ -127,7 +127,7 @@ function( add_pass_tests TEST_GLOB TEST_PREFIX )
 endfunction( )
 
 function( add_fail_tests TEST_GLOB TEST_PREFIX )
-	if( ENABLE_TESTING )
+	if( ENABLE_DATE_TESTING )
 		file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
 
 		foreach( TEST_FILE ${FILENAMES} )
