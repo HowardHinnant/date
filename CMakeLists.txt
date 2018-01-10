@@ -94,6 +94,8 @@ target_include_directories(date_interface INTERFACE
 )
 
 
+install( TARGETS date_prj EXPORT DateConfig )
+install( EXPORT DateConfig DESTINATION lib/cmake/date )
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
