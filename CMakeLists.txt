@@ -89,9 +89,14 @@ target_include_directories(date_interface INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
+if(WIN32 AND NOT CYGWIN)
+    set(DEF_INSTALL_CMAKE_DIR CMake)
+else()
+    set(DEF_INSTALL_CMAKE_DIR lib/cmake/date)
+endif()
 
 install( TARGETS date_interface EXPORT DateConfig )
-install( EXPORT DateConfig DESTINATION lib/cmake/date )
+install( EXPORT DateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
