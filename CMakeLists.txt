@@ -85,16 +85,12 @@ add_library(date_interface INTERFACE) # an interface (not a library), to enable 
 
 # add include folders to the INTERFACE and targets that consume it
 target_include_directories(date_interface INTERFACE
-    $<BUILD_INTERFACE:
-        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
-    >
-    $<INSTALL_INTERFACE:
-        include
-    >
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    $<INSTALL_INTERFACE:include>
 )
 
 
-install( TARGETS date_prj EXPORT DateConfig )
+install( TARGETS date_interface EXPORT DateConfig )
 install( EXPORT DateConfig DESTINATION lib/cmake/date )
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
