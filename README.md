@@ -1,9 +1,9 @@
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <hr/>
 
-**[Try it out on wandbox!](https://wandbox.org/permlink/n6NEh9nFCWLVgm1Q)**
+**[Try it out on wandbox!](https://wandbox.org/permlink/vqwMyTphHJv5iXX7)**
 
-This is actually several separate C++11/C++14 libraries:
+This is actually several separate C++11/C++14/C++17 libraries:
 
 1.  `"date.h"` is a header-only library which builds upon `<chrono>`.  It adds some new `duration` types, and new `time_point` types.  It also adds "field" types such as `year_month_day` which is a struct `{year, month, day}`.  And it provides convenient means to convert between the "field" types and the `time_point` types.
 
@@ -29,11 +29,15 @@ This is actually several separate C++11/C++14 libraries:
 
     * Documentation: http://howardhinnant.github.io/date/islamic.html
 
-`"date.h"` and `"tz.h"` are now being proposed for standardization: http://howardhinnant.github.io/date/d0355r3.html
+`"date.h"` and `"tz.h"` are now being proposed for standardization:
 
-<hr/>
+   * Current proposal:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r4.html
+   * Draft revision:  http://howardhinnant.github.io/date/d0355r5.html
+   * Status:  The proposal was approved by LEWG and forwarded to LWG with the recommendation of targeting C++20 at the Albuquerque, NM meeting in Nov. 2017.
 
-**Projects that use this project**
+List of projects using this library:
 
+   * www.safe.com
+   * www.webtoolkit.eu/wt
 
-If you would like to see your project listed here, and it isn't, please let me know.  If your project is listed here and it shouldn't be, please let me know.
+If you would like your project (or product) on this list, just let me know.

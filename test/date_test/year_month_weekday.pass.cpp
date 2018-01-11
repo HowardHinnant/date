@@ -23,6 +23,7 @@
 // class year_month_weekday
 // {
 // public:
+//     year_month_weekday() = default;
 //     constexpr year_month_weekday(const date::year& y, const date::month& m,
 //                                    const date::weekday_indexed& wdi) noexcept;
 //     constexpr year_month_weekday(const sys_days& dp) noexcept;
@@ -83,7 +84,7 @@
 #include <type_traits>
 
 static_assert( std::is_trivially_destructible<date::year_month_weekday>{}, "");
-static_assert(!std::is_default_constructible<date::year_month_weekday>{}, "");
+static_assert( std::is_default_constructible<date::year_month_weekday>{}, "");
 static_assert( std::is_trivially_copy_constructible<date::year_month_weekday>{}, "");
 static_assert( std::is_trivially_copy_assignable<date::year_month_weekday>{}, "");
 static_assert( std::is_trivially_move_constructible<date::year_month_weekday>{}, "");
