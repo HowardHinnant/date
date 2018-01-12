@@ -84,6 +84,7 @@
 #endif  // _WIN32
 
 #include "date/tz_private.h"
+#include "date/android.h"
 #include "date/ios.h"
 
 #ifndef __APPLE__
@@ -251,6 +252,17 @@ namespace date
 // | Begin Configuration |
 // +---------------------+
 
+    #ifdef ANDROID
+    namespace AndroidUtils
+    {
+        static std::string *app_private_path = nullptr;
+        void set_app_private_path(const std::string &src)
+        {
+            app_private_path = new std::string(src);
+        }
+    }
+    #endif // ANDROID
+
 using namespace detail;
 
 #if !USE_OS_TZDB
@@ -274,6 +286,10 @@ access_install()
     #undef STRINGIZEIMP
     #undef STRINGIZE
 #endif  // !INSTALL
+    #ifdef ANDROID
+    if (date::AndroidUtils::app_private_path)
+    install = *date::AndroidUtils::app_private_path + folder_delimiter + "tzdata";
+    #endif // ANDROID
 
     return install;
 }
@@ -3302,6 +3318,165 @@ remote_install(const std::string& version)
 
 #endif  // HAS_REMOTE_API
 
+#ifdef _WIN32
+// Parse this XML file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// The parsing method is designed to be simple and quick. It is not overly
+// forgiving of change but it should diagnose basic format issues.
+// See timezone_mapping structure for more info.
+static
+std::vector<detail::timezone_mapping>
+load_timezone_mappings_from_xml_file(const std::string& input_path)
+{
+	std::size_t line_num = 0;
+	std::vector<detail::timezone_mapping> mappings;
+	std::string line;
+
+	std::ifstream is(input_path);
+	if (!is.is_open())
+	{
+		// We don't emit file exceptions because that's an implementation detail.
+		std::string msg = "Error opening time zone mapping file \"";
+		msg += input_path;
+		msg += "\".";
+		throw std::runtime_error(msg);
+	}
+
+	auto error = [&input_path, &line_num](const char* info)
+	{
+		std::string msg = "Error loading time zone mapping file \"";
+		msg += input_path;
+		msg += "\" at line ";
+		msg += std::to_string(line_num);
+		msg += ": ";
+		msg += info;
+		throw std::runtime_error(msg);
+	};
+	// [optional space]a="b"
+	auto read_attribute = [&line_num, &line, &error]
+		(const char* name, std::string& value, std::size_t startPos)
+		->std::size_t
+	{
+		value.clear();
+		// Skip leading space before attribute name.
+		std::size_t spos = line.find_first_not_of(' ', startPos);
+		if (spos == std::string::npos)
+			spos = startPos;
+		// Assume everything up to next = is the attribute name
+		// and that an = will always delimit that.
+		std::size_t epos = line.find('=', spos);
+		if (epos == std::string::npos)
+			error("Expected \'=\' right after attribute name.");
+		std::size_t name_len = epos - spos;
+		// Expect the name we find matches the name we expect.
+		if (line.compare(spos, name_len, name) != 0)
+		{
+			std::string msg;
+			msg = "Expected attribute name \'";
+			msg += name;
+			msg += "\' around position ";
+			msg += std::to_string(spos);
+			msg += " but found something else.";
+			error(msg.c_str());
+		}
+		++epos; // Skip the '=' that is after the attribute name.
+		spos = epos;
+		if (spos < line.length() && line[spos] == '\"')
+			++spos; // Skip the quote that is before the attribute value.
+		else
+		{
+			std::string msg = "Expected '\"' to begin value of attribute \'";
+			msg += name;
+			msg += "\'.";
+			error(msg.c_str());
+		}
+		epos = line.find('\"', spos);
+		if (epos == std::string::npos)
+		{
+			std::string msg = "Expected '\"' to end value of attribute \'";
+			msg += name;
+			msg += "\'.";
+			error(msg.c_str());
+		}
+		// Extract everything in between the quotes. Note no escaping is done.
+		std::size_t value_len = epos - spos;
+		value.assign(line, spos, value_len);
+		++epos; // Skip the quote that is after the attribute value;
+		return epos;
+	};
+
+	// Quick but not overly forgiving XML mapping file processing.
+	bool mapTimezonesOpenTagFound = false;
+	bool mapTimezonesCloseTagFound = false;
+	bool mapZoneOpenTagFound = false;
+	bool mapTZoneCloseTagFound = false;
+	std::size_t mapZonePos = std::string::npos;
+	std::size_t mapTimezonesPos = std::string::npos;
+	CONSTDATA char mapTimeZonesOpeningTag[] = { "<mapTimezones " };
+	CONSTDATA char mapZoneOpeningTag[] = { "<mapZone " };
+	CONSTDATA std::size_t mapZoneOpeningTagLen = sizeof(mapZoneOpeningTag) /
+		sizeof(mapZoneOpeningTag[0]) - 1;
+	while (!mapTimezonesOpenTagFound)
+	{
+		std::getline(is, line);
+		++line_num;
+		if (is.eof())
+		{
+			// If there is no mapTimezones tag is it an error?
+			// Perhaps if there are no mapZone mappings it might be ok for
+			// its parent mapTimezones element to be missing?
+			// We treat this as an error though on the assumption that if there
+			// really are no mappings we should still get a mapTimezones parent
+			// element but no mapZone elements inside. Assuming we must
+			// find something will hopefully at least catch more drastic formatting
+			// changes or errors than if we don't do this and assume nothing found.
+			error("Expected a mapTimezones opening tag.");
+		}
+		mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
+		mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
+	}
+
+	// NOTE: We could extract the version info that follows the opening
+	// mapTimezones tag and compare that to the version of other data we have.
+	// I would have expected them to be kept in synch but testing has shown
+	// it is typically does not match anyway. So what's the point?
+	while (!mapTimezonesCloseTagFound)
+	{
+		std::getline(is, line);
+		++line_num;
+		if (is.eof())
+			error("Expected a mapTimezones closing tag.");
+		if (line.empty())
+			continue;
+		mapZonePos = line.find(mapZoneOpeningTag);
+		if (mapZonePos != std::string::npos)
+		{
+			mapZonePos += mapZoneOpeningTagLen;
+			detail::timezone_mapping zm{};
+			std::size_t pos = read_attribute("other", zm.other, mapZonePos);
+			pos = read_attribute("territory", zm.territory, pos);
+			read_attribute("type", zm.type, pos);
+			mappings.push_back(std::move(zm));
+
+			continue;
+		}
+		mapTimezonesPos = line.find("</mapTimezones>");
+		mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
+		if (!mapTimezonesCloseTagFound)
+		{
+			std::size_t commentPos = line.find("<!--");
+			std::size_t emptyTabPos = line.find("\t\t\t");
+			if (commentPos == std::string::npos && emptyTabPos == std::string::npos)
+				error("Unexpected mapping record found. A xml mapZone or comment "
+					"attribute or mapTimezones closing tag was expected.");
+		}
+	}
+
+	is.close();
+	return mappings;
+}
+#endif
+
 static
 std::string
 get_version(const std::string& path)
@@ -3738,6 +3913,18 @@ tzdb::current_zone() const
         // Fall through to try other means.
     }
     {
+    // On some versions of some bsd distro's (e.g. iOS),
+    // it is not possible to use file based approach,
+    // we switch to system API, calling functions in
+    // CoreFoundation framework.
+#if TARGET_OS_IPHONE
+        std::string result = date::iOSUtils::get_current_timezone();
+        if (!result.empty())
+            return locate_zone(result);
+#endif
+    // Fall through to try other means.
+    }
+    {
     // On some versions of some linux distro's (e.g. Red Hat),
     // the current timezone might be in the first line of
     // the /etc/sysconfig/clock file as:
@@ -3757,6 +3944,17 @@ tzdb::current_zone() const
         }
         // Fall through to try other means.
     }
+    #ifdef ANDROID
+    {
+        std::string result;
+        char sys_timezone[PROP_VALUE_MAX];
+        if (__system_property_get("persist.sys.timezone", sys_timezone) >= 1)
+        {
+            result = std::string(sys_timezone);
+            return locate_zone(result);
+        }
+    }
+    #endif // ANDROID
     throw std::runtime_error("Could not get current timezone");
 }
 
