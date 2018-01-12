@@ -3738,6 +3738,18 @@ tzdb::current_zone() const
         // Fall through to try other means.
     }
     {
+    // On some versions of some bsd distro's (e.g. iOS),
+    // it is not possible to use file based approach,
+    // we switch to system API, calling functions in
+    // CoreFoundation framework.
+#if TARGET_OS_IPHONE
+        std::string result = date::iOSUtils::get_current_timezone();
+        if (!result.empty())
+            return locate_zone(result);
+#endif
+    // Fall through to try other means.
+    }
+    {
     // On some versions of some linux distro's (e.g. Red Hat),
     // the current timezone might be in the first line of
     // the /etc/sysconfig/clock file as:
