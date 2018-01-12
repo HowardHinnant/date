@@ -2197,7 +2197,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     return is;
 }
 
-#if !defined(_MSC_VER) || _MSC_VER > 1912
+#if !defined(_MSC_VER) || _MSC_VER > 1913
 
 // clock_time_conversion
 
@@ -2471,7 +2471,7 @@ clock_cast(const std::chrono::time_point<SrcClock, Duration>& tp)
     return clock_cast_detail::cc_impl<DstClock>(tp, &tp);
 }
 
-#endif  // !defined(_MSC_VER) || _MSC_VER > 1912
+#endif  // !defined(_MSC_VER) || _MSC_VER > 1913
 
 // Deprecated API
 
