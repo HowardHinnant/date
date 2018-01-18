@@ -1963,7 +1963,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         bool is_60_sec = fds.tod.seconds() == seconds{60};
         if (is_60_sec)
             fds.tod.seconds() -= seconds{1};
-        auto tmp = to_utc_time(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
+        auto tmp = utc_clock::from_sys(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
         if (is_60_sec)
             tmp += seconds{1};
         if (is_60_sec != is_leap_second(tmp).first || !fds.tod.in_conventional_range())
