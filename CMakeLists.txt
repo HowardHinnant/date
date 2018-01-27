@@ -4,11 +4,14 @@ project( date_prj )
 
 find_package( Threads REQUIRED )
 
-enable_testing( )
-
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_TZ_STATIC  "Build a static version of library" ON )
+option( ENABLE_DATE_TESTING  "Enable unit tests" ON )
+
+if( ENABLE_DATE_TESTING )
+	enable_testing( )
+endif( )
 
 function( print_option OPT )
 	if ( NOT DEFINED PRINT_OPTION_CURR_${OPT} OR ( NOT PRINT_OPTION_CURR_${OPT} STREQUAL ${OPT} ) )
@@ -21,6 +24,7 @@ endfunction( )
 print_option( USE_SYSTEM_TZ_DB )
 print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_TZ_STATIC  )
+print_option( ENABLE_DATE_TESTING  )
 
 set( HEADER_FOLDER "include" )
 set( SOURCE_FOLDER "src" )
@@ -104,49 +108,53 @@ add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
 
 add_dependencies( testit tz )
 function( add_pass_tests TEST_GLOB TEST_PREFIX )
-	file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
-	include_directories( "${HEADER_FOLDER}/date" )
+	if( ENABLE_DATE_TESTING )
+		file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
+		include_directories( "${HEADER_FOLDER}/date" )
 
-	foreach( TEST_FILE ${FILENAMES} )
-		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
-		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
-		if( NOT ${TEST_EXT} STREQUAL ".fail.cpp" )
-			set( PREFIX "${TEST_PREFIX}_pass_${TEST_NAME}" )
-			set( BIN_NAME ${PREFIX}_bin )
-			set( TST_NAME ${PREFIX}_test )
-			add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
-			set_property(TARGET ${BIN_NAME} PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
-			add_test( ${TST_NAME} ${BIN_NAME} )
-			target_link_libraries( ${BIN_NAME} tz )
-			add_dependencies( testit ${BIN_NAME} )
-		endif( )
-	endforeach( )
+		foreach( TEST_FILE ${FILENAMES} )
+			get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
+			get_filename_component( TEST_EXT ${TEST_FILE} EXT )
+			if( NOT ${TEST_EXT} STREQUAL ".fail.cpp" )
+				set( PREFIX "${TEST_PREFIX}_pass_${TEST_NAME}" )
+				set( BIN_NAME ${PREFIX}_bin )
+				set( TST_NAME ${PREFIX}_test )
+				add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
+				set_property(TARGET ${BIN_NAME} PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
+				add_test( ${TST_NAME} ${BIN_NAME} )
+				target_link_libraries( ${BIN_NAME} tz )
+				add_dependencies( testit ${BIN_NAME} )
+			endif( )
+		endforeach( )
+	endif( )
 endfunction( )
 
 function( add_fail_tests TEST_GLOB TEST_PREFIX )
-	file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
+	if( ENABLE_DATE_TESTING )
+		file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
 
-	foreach( TEST_FILE ${FILENAMES} )
-		get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
-		get_filename_component( TEST_EXT ${TEST_FILE} EXT )
+		foreach( TEST_FILE ${FILENAMES} )
+			get_filename_component( TEST_NAME ${TEST_FILE} NAME_WE )
+			get_filename_component( TEST_EXT ${TEST_FILE} EXT )
 
-			set( TEST_TYPE "_fail" )
+				set( TEST_TYPE "_fail" )
 
-		set( PREFIX "${TEST_PREFIX}_fail_${TEST_NAME}" )
-		set( BIN_NAME ${PREFIX}_bin )
-		set( TST_NAME ${PREFIX}_test )
+			set( PREFIX "${TEST_PREFIX}_fail_${TEST_NAME}" )
+			set( BIN_NAME ${PREFIX}_bin )
+			set( TST_NAME ${PREFIX}_test )
 
-		#target_compile_definitions( ${BIN_NAME} PRIVATE ${TST_NAME} )
-		set( TEST_BIN_NAME ${CMAKE_BINARY_DIR}/${BIN_NAME} )
-		add_custom_target( ${BIN_NAME}
-			COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
-			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-			COMMENT ${TST_NAME}
-			)
-		add_test( ${TST_NAME} "${PROJECT_SOURCE_DIR}/test_fail.sh" ${CMAKE_BINARY_DIR}/${BIN_NAME} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/" )
-		#set_tests_properties( ${TST_NAME} PROPERTIES WILL_FAIL TRUE)
-		add_dependencies( testit ${BIN_NAME} )
-	endforeach( )
+			#target_compile_definitions( ${BIN_NAME} PRIVATE ${TST_NAME} )
+			set( TEST_BIN_NAME ${CMAKE_BINARY_DIR}/${BIN_NAME} )
+			add_custom_target( ${BIN_NAME}
+				COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
+				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+				COMMENT ${TST_NAME}
+				)
+			add_test( ${TST_NAME} "${PROJECT_SOURCE_DIR}/test_fail.sh" ${CMAKE_BINARY_DIR}/${BIN_NAME} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/" )
+			#set_tests_properties( ${TST_NAME} PROPERTIES WILL_FAIL TRUE)
+			add_dependencies( testit ${BIN_NAME} )
+		endforeach( )
+	endif( )
 endfunction( )
 
 file( GLOB children RELATIVE "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}" "${PROJECT_SOURCE_DIR}/${TEST_FOLDER}/*" )
