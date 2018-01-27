@@ -86,7 +86,7 @@
 #include "date/tz_private.h"
 
 #ifdef __APPLE__
-#  include "ios.h"
+#  include "date/ios.h"
 #else
 #  define TARGET_OS_IPHONE 0
 #endif
