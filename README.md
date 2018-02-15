@@ -31,8 +31,8 @@ This is actually several separate C++11/C++14/C++17 libraries:
 
 `"date.h"` and `"tz.h"` are now being proposed for standardization:
 
-   * Current proposal:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r4.html
-   * Draft revision:  http://howardhinnant.github.io/date/d0355r5.html
+   * Current proposal:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0355r5.html
+   * Draft revision:  _not available_
    * Status:  The proposal was approved by LEWG and forwarded to LWG with the recommendation of targeting C++20 at the Albuquerque, NM meeting in Nov. 2017.
 
 List of projects using this library:
