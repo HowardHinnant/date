@@ -2197,8 +2197,6 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     return is;
 }
 
-#if !defined(_MSC_VER) || _MSC_VER > 1913
-
 // clock_time_conversion
 
 template <class DstClock, class SrcClock>
@@ -2438,7 +2436,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, const void*)
 template <class DstClock, class SrcClock, class Duration>
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, const void*)
-    -> decltype(conv_clock<DstClock>(conv_clock<utc_clock>(t)))
+    -> decltype(0/*MSVC_WORKAROUND*/, conv_clock<DstClock>(conv_clock<utc_clock>(t)))
 {
     return conv_clock<DstClock>(conv_clock<utc_clock>(t));
 }
@@ -2456,7 +2454,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, ...)
 template <class DstClock, class SrcClock, class Duration>
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, ...)
-    -> decltype(conv_clock<DstClock>(conv_clock<system_clock>(conv_clock<utc_clock>(t))))
+    -> decltype(0/*MSVC_WORKAROUND*/, conv_clock<DstClock>(conv_clock<system_clock>(conv_clock<utc_clock>(t))))
 {
     return conv_clock<DstClock>(conv_clock<system_clock>(conv_clock<utc_clock>(t)));
 }
@@ -2470,8 +2468,6 @@ clock_cast(const std::chrono::time_point<SrcClock, Duration>& tp)
 {
     return clock_cast_detail::cc_impl<DstClock>(tp, &tp);
 }
-
-#endif  // !defined(_MSC_VER) || _MSC_VER > 1913
 
 // Deprecated API
 
