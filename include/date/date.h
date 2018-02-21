@@ -5788,7 +5788,7 @@ read_long_double(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned
     unsigned count = 0;
     auto decimal_point = Traits::to_int_type(
         use_facet<numpunct<CharT>>(is.getloc()).decimal_point());
-    string buf;
+    std::string buf;
     while (true)
     {
         auto ic = is.peek();
