@@ -7006,7 +7006,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
             }
             fds.ymd = ymd;
-            fds.tod = time_of_day<Duration>(hours{h} + minutes{min});
+            fds.tod = time_of_day<Duration>{h};
+            fds.tod.m_ = min;
             fds.tod.s_ = detail::decimal_format_seconds<Duration>{s};
             if (wd != not_a_weekday)
                 fds.wd = weekday{static_cast<unsigned>(wd)};
