@@ -95,8 +95,8 @@ else()
     set(DEF_INSTALL_CMAKE_DIR lib/cmake/date)
 endif()
 
-install( TARGETS date_interface EXPORT DateConfig )
-install( EXPORT DateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
+install( TARGETS date_interface EXPORT dateConfig )
+install( EXPORT dateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
 install( TARGETS tz DESTINATION lib )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
