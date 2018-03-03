@@ -6771,11 +6771,46 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 {
                     int H, M;
                     if (modified == CharT{})
-                        read(is, rs{H, 2, 2}, ru{M, 2, 2});
+                    {
+                        read(is, rs{H, 2, 2});
+                        if (!is.fail())
+                            temp_offset = hours{H};
+                        if (is.good())
+                        {
+                            auto ic = is.peek();
+                            if (!Traits::eq_int_type(ic, Traits::eof()))
+                            {
+                                auto c = static_cast<char>(Traits::to_char_type(ic));
+                                if ('0' <= c && c <= '9')
+                                {
+                                    read(is, ru{M, 2, 2});
+                                    if (!is.fail())
+                                        temp_offset += minutes{ H < 0 ? -M : M };
+                                }
+                            }
+                        }
+                    }
                     else
-                        read(is, rs{H, 1, 2}, CharT{':'}, ru{M, 2, 2});
-                    if (!is.fail())
-                        temp_offset = hours{ H } + minutes{ H < 0 ? -M : M };
+                    {
+                        read(is, rs{H, 1, 2});
+                        if (!is.fail())
+                            temp_offset = hours{H};
+                        if (is.good())
+                        {
+                            auto ic = is.peek();
+                            if (!Traits::eq_int_type(ic, Traits::eof()))
+                            {
+                                auto c = static_cast<char>(Traits::to_char_type(ic));
+                                if (c == ':')
+                                {
+                                    (void)is.get();
+                                    read(is, ru{M, 2, 2});
+                                    if (!is.fail())
+                                        temp_offset += minutes{ H < 0 ? -M : M };
+                                }
+                            }
+                        }
+                    }
                     command = nullptr;
                     width = -1;
                     modified = CharT{};
