@@ -38,7 +38,7 @@ Document number: D0355R5<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
 <a href="mailto:tomaszkam at gmail dot com">Tomasz Kami&nacute;ski</a><br>
-2018-02-11<br>
+2018-03-03<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -60,6 +60,8 @@ Document number: D0355R5<br>
 <h3>Changes since <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0355r4.html">R4</a></h3>
 
 <ul>
+<li>Make the parsing of minutes optional under the flags <code>%z</code>,
+<code>%Ez</code>, and <code>%Oz</code>.</li>
 <li>Replace the family of overloaded functions <code>to_sys_time</code>,
 <code>to_utc_time</code>, <code>to_tai_time</code>, <code>to_gps_time</code>,
 <code>to_file_time</code>, with <code>clock_cast</code>.</li>
@@ -3840,10 +3842,12 @@ representation.</td>
 
 <tr>
 <td><code>%z</code></td>
-<td>The offset from UTC in the ISO 8601 format.  For example <code>-0430</code> refers to
-4 hours 30 minutes behind UTC. The modified commands <code>%Ez</code> and <code>%Oz</code>
-parse a <code>:</code> between the hours and minutes and leading zeroes on the hour field
-are optional: <code>-4:30</code>.</td>
+<td>The offset from UTC in the format <code>[+|-]hh[mm]</code>.  For example
+<code>-0430</code> refers to 4 hours 30 minutes behind UTC.  And <code>04</code> refers to
+4 hours ahead of UTC. The modified commands <code>%Ez</code> and <code>%Oz</code> parse a
+<code>:</code> between the hours and minutes and leading zeroes on the hour field are
+optional: <code>[+|-]h[h][:mm]</code>.  For example <code>-04:30</code> refers to 4 hours
+30 minutes behind UTC.  And <code>4</code> refers to 4 hours ahead of UTC.</td>
 </tr>
 
 <tr>
