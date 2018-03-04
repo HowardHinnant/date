@@ -149,7 +149,7 @@
 
 #if HAS_REMOTE_API
    // Note curl includes windows.h so we must include curl AFTER definitions of things
-   // that effect windows.h such as NOMINMAX.
+   // that affect windows.h such as NOMINMAX.
 #if defined(_MSC_VER) && defined(SHORTENED_CURL_INCLUDE)
    // For rmt_curl nuget package
 #  include <curl.h>
@@ -616,7 +616,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     // NOTE: We could extract the version info that follows the opening
     // mapTimezones tag and compare that to the version of other data we have.
     // I would have expected them to be kept in synch but testing has shown
-    // it is typically does not match anyway. So what's the point?
+    // it typically does not match anyway. So what's the point?
     while (!mapTimezonesCloseTagFound)
     {
         std::ws(is);
@@ -3659,7 +3659,7 @@ tzdb::current_zone() const
     // "/usr/share/zoneinfo/America/Los_Angeles"
     // If it does, we try to determine the current
     // timezone from the remainder of the path by removing the prefix
-    // and hoping the rest resolves to valid timezone.
+    // and hoping the rest resolves to a valid timezone.
     // It may not always work though. If it doesn't then an
     // exception will be thrown by local_timezone.
     // The path may also take a relative form:
