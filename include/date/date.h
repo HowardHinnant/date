@@ -6855,7 +6855,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 }
                 else  // !command
                 {
-                    if (isspace(*fmt))
+                    if (isspace(static_cast<unsigned char>(*fmt)))
                         ws(is); // space matches 0 or more white space characters
                     else
                         read(is, *fmt);
