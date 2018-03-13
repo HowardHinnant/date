@@ -2,6 +2,8 @@ cmake_minimum_required( VERSION 3.0.2 )
 
 project( date_prj )
 
+include( GNUInstallDirs )
+
 find_package( Threads REQUIRED )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
@@ -92,12 +94,15 @@ target_include_directories(date_interface INTERFACE
 if(WIN32 AND NOT CYGWIN)
     set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
-    set(DEF_INSTALL_CMAKE_DIR lib/cmake/date)
+    set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
 endif()
 
 install( TARGETS date_interface EXPORT dateConfig )
 install( EXPORT dateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
-install( TARGETS tz DESTINATION lib )
+install( TARGETS tz
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
 if ( ENABLE_DATE_TESTING )
