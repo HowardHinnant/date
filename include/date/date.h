@@ -1359,15 +1359,17 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
     os.flags(std::ios::dec | std::ios::right);
     os.width(2);
     os << static_cast<unsigned>(d);
+    if (!d.ok())
+        os << " is not a valid day";
     return os;
 }
 
 // month
 
 CONSTCD11 inline month::month(unsigned m) NOEXCEPT : m_(static_cast<decltype(m_)>(m)) {}
-CONSTCD14 inline month& month::operator++() NOEXCEPT {if (++m_ == 13) m_ = 1; return *this;}
+CONSTCD14 inline month& month::operator++() NOEXCEPT {*this += months{1}; return *this;}
 CONSTCD14 inline month month::operator++(int) NOEXCEPT {auto tmp(*this); ++(*this); return tmp;}
-CONSTCD14 inline month& month::operator--() NOEXCEPT {if (--m_ == 0) m_ = 12; return *this;}
+CONSTCD14 inline month& month::operator--() NOEXCEPT {*this -= months{1}; return *this;}
 CONSTCD14 inline month month::operator--(int) NOEXCEPT {auto tmp(*this); --(*this); return tmp;}
 
 CONSTCD14
@@ -1453,7 +1455,7 @@ inline
 month
 operator+(const month& x, const months& y) NOEXCEPT
 {
-    auto const mu = static_cast<long long>(static_cast<unsigned>(x)) - 1 + y.count();
+    auto const mu = static_cast<long long>(static_cast<unsigned>(x)) + (y.count() - 1);
     auto const yr = (mu >= 0 ? mu : mu-11) / 12;
     return month{static_cast<unsigned>(mu - yr * 12 + 1)};
 }
@@ -1479,48 +1481,13 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
 {
-    switch (static_cast<unsigned>(m))
+    if (m.ok())
     {
-    case 1:
-        os << "Jan";
-        break;
-    case 2:
-        os << "Feb";
-        break;
-    case 3:
-        os << "Mar";
-        break;
-    case 4:
-        os << "Apr";
-        break;
-    case 5:
-        os << "May";
-        break;
-    case 6:
-        os << "Jun";
-        break;
-    case 7:
-        os << "Jul";
-        break;
-    case 8:
-        os << "Aug";
-        break;
-    case 9:
-        os << "Sep";
-        break;
-    case 10:
-        os << "Oct";
-        break;
-    case 11:
-        os << "Nov";
-        break;
-    case 12:
-        os << "Dec";
-        break;
-    default:
-        os << static_cast<unsigned>(m) << " is not a valid month";
-        break;
+        CharT fmt[] = {'%', 'b', 0};
+        os << format(os.getloc(), fmt, m);
     }
+    else
+        os << static_cast<unsigned>(m) << " is not a valid month";
     return os;
 }
 
@@ -1660,6 +1627,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
     os << static_cast<int>(y);
+    if (!y.ok())
+        os << " is not a valid year";
     return os;
 }
 
@@ -1692,9 +1661,9 @@ weekday::weekday(const local_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
     {}
 
-CONSTCD14 inline weekday& weekday::operator++() NOEXCEPT {if (++wd_ == 7) wd_ = 0; return *this;}
+CONSTCD14 inline weekday& weekday::operator++() NOEXCEPT {*this += days{1}; return *this;}
 CONSTCD14 inline weekday weekday::operator++(int) NOEXCEPT {auto tmp(*this); ++(*this); return tmp;}
-CONSTCD14 inline weekday& weekday::operator--() NOEXCEPT {if (wd_-- == 0) wd_ = 6; return *this;}
+CONSTCD14 inline weekday& weekday::operator--() NOEXCEPT {*this -= days{1}; return *this;}
 CONSTCD14 inline weekday weekday::operator--(int) NOEXCEPT {auto tmp(*this); --(*this); return tmp;}
 
 CONSTCD14
@@ -1780,33 +1749,13 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
 {
-    switch (static_cast<unsigned>(wd))
+    if (wd.ok())
     {
-    case 0:
-        os << "Sun";
-        break;
-    case 1:
-        os << "Mon";
-        break;
-    case 2:
-        os << "Tue";
-        break;
-    case 3:
-        os << "Wed";
-        break;
-    case 4:
-        os << "Thu";
-        break;
-    case 5:
-        os << "Fri";
-        break;
-    case 6:
-        os << "Sat";
-        break;
-    default:
-        os << static_cast<unsigned>(wd) << " is not a valid weekday";
-        break;
+        CharT fmt[] = {'%', 'a', 0};
+        os << format(fmt, wd);
     }
+    else
+        os << static_cast<unsigned>(wd) << " is not a valid weekday";
     return os;
 }
 
@@ -1899,7 +1848,11 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi)
 {
-    return os << wdi.weekday() << '[' << wdi.index() << ']';
+    os << wdi.weekday() << '[' << wdi.index();
+    if (!(1 <= wdi.index() && wdi.index() <= 5))
+        os << " is not a valid index";
+    os << ']';
+    return os;
 }
 
 CONSTCD11
@@ -2761,6 +2714,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     os.width(2);
     os << static_cast<unsigned>(ymd.month()) << '-';
     os << ymd.day();
+    if (!ymd.ok())
+        os << " is not a valid date";
     return os;
 }
 

@@ -734,11 +734,7 @@ zoned_time(const char*, local_time<Duration>, choose = choose::earliest)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
 
 template <class Duration, class TimeZonePtr, class TimeZonePtr2>
-zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>)
-    -> zoned_time<Duration, TimeZonePtr>;
-
-template <class Duration, class TimeZonePtr, class TimeZonePtr2>
-zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>, choose)
+zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>, choose = choose::earliest)
     -> zoned_time<Duration, TimeZonePtr>;
 
 #endif  // HAS_DEDUCTION_GUIDES
