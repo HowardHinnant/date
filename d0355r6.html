@@ -38,7 +38,7 @@ Document number: D0355R6<br>
 <br>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br>
 <a href="mailto:tomaszkam at gmail dot com">Tomasz Kami&nacute;ski</a><br>
-2018-03-14<br>
+2018-03-15<br>
 </address>
 <hr>
 <h1>Extending <code>&lt;chrono&gt;</code> to Calendars and Time Zones</h1>
@@ -2777,7 +2777,7 @@ convert <code>time_point&lt;SourceClock, Duration&gt;</code> to
 <code>time_point&lt;DestClock, Duration&gt;</code> via a specialization:
 <code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code>. A specialization of
 <code>clock_time_conversion&lt;DestClock, SourceClock&gt;</code> shall provide a
-<code>const</code>-qualified <code>operator()</code> that takes a parameter of type
+const-qualified <code>operator()</code> that takes a parameter of type
 <code>time_point&lt;SourceClock, Duration&gt;</code> and returns a
 <code>time_point&lt;DestClock, <i>OtherDuration</i>&gt;</code> representing an equivalent
 point in time.  <code><i>OtherDuration</i></code> is a <code>chrono::duration</code> whose
@@ -3573,7 +3573,7 @@ overload takes a format string containing ordinary characters and flags which ha
 meaning. Each flag begins with a <code>%</code>.  Some flags can be modified by
 <code>E</code> or <code>O</code>.  During parsing each flag interprets characters as parts
 of date and time type according to the table below. Some flags can be modified by a width
-parameter given as a positive decimal integer called out as <code>N</code> below which
+parameter given as a positive decimal integer called out as <code><i>N</i></code> below which
 governs how many characters are parsed from the stream in interpreting the flag. All
 characters in the format string which are not represented in the table below, except for
 white space, are parsed unchanged from the stream. A white space character matches zero or
@@ -3619,18 +3619,18 @@ interprets the locale's alternate date and time representation.</td>
 
 <tr>
 <td><code>%C</code></td>
-<td>The century as a decimal number.  The modified command <code>%NC</code>
+<td>The century as a decimal number.  The modified command <code>%<i>N</i>C</code>
 specifies the maximum number of characters to
-read.  If <code>N</code> is not specified, the default is 2.  Leading zeroes are permitted but not required.
+read.  If <code><i>N</i></code> is not specified, the default is 2.  Leading zeroes are permitted but not required.
 The modified commands <code>%EC</code> and <code>%OC</code> interpret the locale's
 alternative representation of the century.</td>
 </tr>
 
 <tr>
 <td><code>%d</code></td>
-<td>The day of the month as a decimal number.  The modified command <code>%Nd</code> 
+<td>The day of the month as a decimal number.  The modified command <code>%<i>N</i>d</code> 
 specifies the maximum number of characters to
-read.  If <code>N</code> is not specified, the default is 2.  Leading zeroes are permitted but not required.
+read.  If <code><i>N</i></code> is not specified, the default is 2.  Leading zeroes are permitted but not required.
 The modified command <code>%Ed</code> interprets the locale's alternative representation
 of the day of the month.</td>
 </tr>
@@ -3648,23 +3648,23 @@ of the day of the month.</td>
 <tr>
 <td><code>%F</code></td>
 <td>Equivalent to <code>%Y-%m-%d</code>.  If modified with a width 
-<ins><code>N</code></ins>, the width is applied
+<ins><code><i>N</i></code></ins>, the width is applied
 to only <code>%Y</code>.</td>
 </tr>
 
 <tr>
 <td><code>%g</code></td>
 <td>The last two decimal digits of the ISO week-based year. The modified command
-<code>%Ng</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 2.   Leading zeroes are
+<code>%<i>N</i>g</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 2.   Leading zeroes are
 permitted but not required.</td>
 </tr>
 
 <tr>
 <td><code>%G</code></td>
-<td>The ISO week-based year as a decimal number.  The modified command <code>%NG</code>
+<td>The ISO week-based year as a decimal number.  The modified command <code>%<i>N</i>G</code>
 specifies the maximum number of
-characters to read.  If <code>N</code> is not specified, the default is 4.   Leading zeroes are permitted
+characters to read.  If <code><i>N</i></code> is not specified, the default is 4.   Leading zeroes are permitted
 but not required.</td>
 </tr>
 
@@ -3675,34 +3675,34 @@ but not required.</td>
 
 <tr>
 <td><code>%H</code></td>
-<td>The hour (24-hour clock) as a decimal number.  The modified command <code>%NH</code>
+<td>The hour (24-hour clock) as a decimal number.  The modified command <code>%<i>N</i>H</code>
 specifies the maximum number of
-characters to read.  If <code>N</code> is not specified, the default is 2.   Leading zeroes are permitted
+characters to read.  If <code><i>N</i></code> is not specified, the default is 2.   Leading zeroes are permitted
 but not required.  The modified command <code>%OH</code> interprets the locale's
 alternative representation.</td>
 </tr>
 
 <tr>
 <td><code>%I</code></td>
-<td>The hour (12-hour clock) as a decimal number.  The modified command <code>%NI</code>
+<td>The hour (12-hour clock) as a decimal number.  The modified command <code>%<i>N</i>I</code>
 specifies the maximum number of
-characters to read.  If <code>N</code> is not specified, the default is 2.   Leading zeroes are permitted
+characters to read.  If <code><i>N</i></code> is not specified, the default is 2.   Leading zeroes are permitted
 but not required.</td>
 </tr>
 
 <tr>
 <td><code>%j</code></td>
 <td>The day of the year as a decimal number. Jan 1 is <code>1</code>.  The modified
-command <code>%Nj</code> specifies the
-maximum number of characters to read.  If <code>N</code> is not specified, the default is 3. Leading zeroes
+command <code>%<i>N</i>j</code> specifies the
+maximum number of characters to read.  If <code><i>N</i></code> is not specified, the default is 3. Leading zeroes
 are permitted but not required.</td>
 </tr>
 
 <tr>
 <td><code>%m</code></td>
 <td>The month as a decimal number.  Jan is <code>1</code>.  The modified command
-<code>%Nm</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 2. Leading zeroes are
+<code>%<i>N</i>m</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 2. Leading zeroes are
 permitted but not required.  The modified command <code>%Om</code> interprets the locale's
 alternative representation.</td>
 </tr>
@@ -3710,8 +3710,8 @@ alternative representation.</td>
 <tr>
 <td><code>%M</code></td>
 <td>The minutes as a decimal number.  The modified command
-<code>%NM</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 2. Leading zeroes are
+<code>%<i>N</i>M</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 2. Leading zeroes are
 permitted but not required.  The modified command <code>%OM</code> interprets the locale's
 alternative representation.</td>
 </tr>
@@ -3743,9 +3743,9 @@ The command <code>%I</code> must precede <code>%p</code> in the format string.</
 
 <tr>
 <td><code>%S</code></td>
-<td>The seconds as a decimal number.  The modified command <code>%NS</code> 
+<td>The seconds as a decimal number.  The modified command <code>%<i>N</i>S</code> 
 specifies the maximum number of characters to
-read.  If <code>N</code> is not specified, the default is 2 if the input time has a precision convertible to
+read.  If <code><i>N</i></code> is not specified, the default is 2 if the input time has a precision convertible to
 seconds.  Otherwise the default width is determined by the decimal precision of the input
 and the field is interpreted as a long double in a fixed format.  If encountered, the
 locale determines the decimal point character. Leading zeroes are permitted but not
@@ -3766,8 +3766,8 @@ representation.</td>
 <tr>
 <td><code>%u</code></td>
 <td>The ISO weekday as a decimal number (1-7), where Monday is 1. The modified command
-<code>%Nu</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 1. Leading zeroes are
+<code>%<i>N</i>u</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 1. Leading zeroes are
 permitted but not required.  The modified command <code>%Ou</code> interprets the locale's
 alternative representation.</td>
 </tr>
@@ -3776,24 +3776,24 @@ alternative representation.</td>
 <td><code>%U</code></td>
 <td>The week number of the year as a decimal number.  The first Sunday of the year is the
 first day of week <code>01</code>.  Days of the same year prior to that are in week
-<code>00</code>.   The modified command <code>%NU</code> 
-specifies the maximum number of characters to read.  If <code>N</code> is not
+<code>00</code>.   The modified command <code>%<i>N</i>U</code> 
+specifies the maximum number of characters to read.  If <code><i>N</i></code> is not
 specified, the default is 2. Leading zeroes are permitted but not required.</td>
 </tr>
 
 <tr>
 <td><code>%V</code></td>
 <td>The ISO week-based week number as a decimal number.  The modified command
-<code>%NV</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 2. Leading zeroes are
+<code>%<i>N</i>V</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 2. Leading zeroes are
 permitted but not required.</td>
 </tr>
 
 <tr>
 <td><code>%w</code></td>
 <td>The weekday as a decimal number (0-6), where Sunday is 0.  The modified command
-<code>%Nw</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 1. Leading zeroes are
+<code>%<i>N</i>w</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 1. Leading zeroes are
 permitted but not required.  The modified command <code>%Ow</code> interprets the locale's
 alternative representation.</td>
 </tr>
@@ -3802,8 +3802,8 @@ alternative representation.</td>
 <td><code>%W</code></td>
 <td>The week number of the year as a decimal number.  The first Monday of the year is the
 first day of week <code>01</code>.  Days of the same year prior to that are in week
-<code>00</code>.  The modified command <code>%NW</code> 
-specifies the maximum number of characters to read.  If <code>N</code> is not specified, the
+<code>00</code>.  The modified command <code>%<i>N</i>W</code> 
+specifies the maximum number of characters to read.  If <code><i>N</i></code> is not specified, the
 default is 2. Leading zeroes are permitted but not required.</td>
 </tr>
 
@@ -3825,17 +3825,17 @@ produces the locale's alternate time representation.</td>
 If the century is not otherwise specified (e.g. with <code>%C</code>), values in the range
 [69 - 99] are presumed to refer to the years [1969 - 1999], and values in the range [00 -
 68] are presumed to refer to the years [2000 - 2068]. The modified command
-<code>%Ny</code> specifies the maximum
-number of characters to read.  If <code>N</code> is not specified, the default is 2. Leading zeroes are
+<code>%<i>N</i>y</code> specifies the maximum
+number of characters to read.  If <code><i>N</i></code> is not specified, the default is 2. Leading zeroes are
 permitted but not required. The modified commands <code>%Ey</code> and <code>%Oy</code>
 interpret the locale's alternative representation.</td>
 </tr>
 
 <tr>
 <td><code>%Y</code></td>
-<td>The year as a decimal number.  The modified command <code>%NY</code> 
+<td>The year as a decimal number.  The modified command <code>%<i>N</i>Y</code> 
 specifies the maximum number of characters to
-read.  If <code>N</code> is not specified, the default is 4. Leading zeroes are permitted but not required.
+read.  If <code><i>N</i></code> is not specified, the default is 4. Leading zeroes are permitted but not required.
 The modified command <code>%EY</code> interprets the locale's alternative
 representation.</td>
 </tr>
@@ -5756,7 +5756,7 @@ constexpr bool operator==(const month_day&amp; x, const month_day&amp; y) noexce
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>x.month() == y.month() &amp;&amp; x.day() == y.day()</code>
+<i>Returns:</i> <code>x.month() == y.month() &amp;&amp; x.day() == y.day()</code>.
 </p>
 </blockquote>
 
@@ -5766,7 +5766,7 @@ constexpr bool operator!=(const month_day&amp; x, const month_day&amp; y) noexce
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>!(x == y)</code>
+<i>Returns:</i> <code>!(x == y)</code>.
 </p>
 </blockquote>
 
@@ -5968,7 +5968,7 @@ constexpr bool operator!=(const month_day_last&amp; x, const month_day_last&amp;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>!(x == y)</code>
+<i>Returns:</i> <code>!(x == y)</code>.
 </p>
 </blockquote>
 
@@ -6434,7 +6434,7 @@ constexpr bool operator==(const year_month&amp; x, const year_month&amp; y) noex
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>x.year() == y.year() &amp;&amp; x.month() == y.month()</code>
+<i>Returns:</i> <code>x.year() == y.year() &amp;&amp; x.month() == y.month()</code>.
 </p>
 </blockquote>
 
@@ -6444,7 +6444,7 @@ constexpr bool operator!=(const year_month&amp; x, const year_month&amp; y) noex
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>!(x == y)</code>
+<i>Returns:</i> <code>!(x == y)</code>.
 </p>
 </blockquote>
 
@@ -9277,15 +9277,13 @@ tzdb::const_iterator tzdb::erase_after(const_iterator p);
 or <code>end()</code> if no such element exists.
 </p>
 <p>
-<i>Remarks:</i> No pointers, references or iterators are invalidated except those referring
+<i>Remarks:</i> No pointers, references, or iterators are invalidated except those referring
 to the erased <code>tzdb</code>.
+[<i>Note:</i> It is not possible to erase the <code>tzdb</code> referred to by
+<code>begin()</code>. &mdash; <i>end note</i>]
 </p>
 <p>
 <i>Throws:</i> Nothing.
-</p>
-<p>
-[<i>Note:</i> It is not possible to erase the <code>tzdb</code> referred to by
-<code>begin()</code>. &mdash; <i>end note</i>]
 </p>
 </blockquote>
 
@@ -9347,7 +9345,7 @@ the <code>tzdb_list</code> accessed by <code>get_tzdb_list()</code>.
 <i>Returns:</i> <code>get_tzdb_list().front()</code>.
 </p>
 <p>
-<i>Remarks:</i> No pointers, references or iterators are invalidated.
+<i>Remarks:</i> No pointers, references, or iterators are invalidated.
 </p>
 <p>
 <i>Remarks:</i>  This function is thread-safe with respect to
