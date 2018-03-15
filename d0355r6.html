@@ -1556,8 +1556,8 @@ width and alignment properties of the stream. &mdash; <i>end note</i>]
 <blockquote>
 <p>
 <code>get_units&lt;charT, traits&gt;(typename Period::type{})</code> is an
-exposition-only function which returns a null-terminated string of
-<code>charT</code> which depends on <code>Period::type</code> as follows
+exposition-only function which returns a NTCTS
+which depends on <code>Period::type</code> as follows
 (let <code>period</code> be the type <code>Period::type</code>):
 </p>
 
@@ -1614,7 +1614,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>d</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -1634,7 +1634,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the duration
-<code>d</code> using the format flags as specified in [time.parse].
+<code>d</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse parses everything specified by the parsing format flags without error, and
@@ -1844,6 +1844,7 @@ os &lt;&lt; year_month_day{dp} &lt;&lt; ' ' &lt;&lt; time_of_day{tp-dp};
 <blockquote><pre>
 cout &lt;&lt; sys_seconds{0s} &lt;&lt; '\n';             // 1970-01-01 00:00:00
 cout &lt;&lt; sys_seconds{946'684'800s} &lt;&lt; '\n';   // 2000-01-01 00:00:00
+cout &lt;&lt; sys_seconds{946'688'523s} &lt;&lt; '\n';   // 2000-01-01 01:02:03
 </pre></blockquote>
 <p>
 &mdash; <i>end example</i>]
@@ -1875,9 +1876,9 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const sy
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
-<code>"UTC"</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
+<code>"UTC"</code> widened to <code>charT</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.
 </p>
 <p>
@@ -1896,7 +1897,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>sys_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -2067,12 +2068,12 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ut
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
-<code>"UTC"</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
+<code>"UTC"</code> widened to <code>charT</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.  If <code>tp</code> represents a time
 during a leap second insertion, and if a seconds field is formatted, the integral portion
-of that format shall be <code>"60"</code>.
+of that format shall be <code>"60"</code> widened to <code>charT</code>.
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -2115,7 +2116,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>utc_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -2255,7 +2256,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ta
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
 <code>"TAI"</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.  The date and time formatted shall be
@@ -2297,7 +2298,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>tai_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -2438,7 +2439,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const gp
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
 <code>"GPS"</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.  The date and time formatted shall be
@@ -2480,7 +2481,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>gps_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -2611,9 +2612,9 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const fi
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
-<code>"UTC"</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
+<code>"UTC"</code> widened to <code>charT</code>.  If <code>%z</code> is used (or a modified variant of <code>%z</code>),
 an offset of <code>0min</code> will be formatted.  The date and time formatted shall be
 equivalent to that formatted by a <code>sys_time</code> initialized with <code>clock_cast&lt;system_clock&gt;(tp)</code>,
 or by a <code>utc_time</code> initialized with <code>clock_cast&lt;utc_clock&gt;(tp)</code>.
@@ -2634,7 +2635,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>file_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -2708,7 +2709,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const lo
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>tp</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].  If <code>%Z</code> is used, it will be replaced with
 <code>*abbrev</code> if <code>abbrev</code> is not equal to <code>nullptr</code>.  If
 <code>abbrev</code> is equal to <code>nullptr</code> (and <code>%Z</code> is used),
@@ -2734,7 +2735,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the <code>local_time</code>
-<code>tp</code> using the format flags as specified in [time.parse].
+<code>tp</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid date, <code>is.setstate(ios_base::failbit)</code>
@@ -4207,7 +4208,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const da
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>d</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -4226,7 +4227,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>day d</code> using the format flags as specified in [time.parse].
+<code>day d</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid day, <code>is.setstate(ios_base::failbit)</code>
@@ -4579,7 +4580,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const mo
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>m</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -4598,7 +4599,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>month m</code> using the format flags as specified in [time.parse].
+<code>month m</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid month, <code>is.setstate(ios_base::failbit)</code>
@@ -4978,7 +4979,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>y</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -4997,7 +4998,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>year y</code> using the format flags as specified in [time.parse].
+<code>year y</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid year, <code>is.setstate(ios_base::failbit)</code>
@@ -5379,7 +5380,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const we
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>wd</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -5398,7 +5399,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>weekday wd</code> using the format flags as specified in [time.parse].
+<code>weekday wd</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid weekday, <code>is.setstate(ios_base::failbit)</code>
@@ -5833,7 +5834,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const mo
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>md</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -5852,7 +5853,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>month_day md</code> using the format flags as specified in [time.parse].
+<code>month_day md</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid <code>month_day</code>,
@@ -6586,7 +6587,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>ym</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -6605,7 +6606,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>year_month ym</code> using the format flags as specified in [time.parse].
+<code>year_month ym</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid <code>year_month</code>,
@@ -7058,7 +7059,7 @@ to_stream(basic_ostream&lt;charT, traits&gt;&amp; os, const charT* fmt, const ye
 <blockquote>
 <p>
 <i>Effects:</i> Streams <code>ymd</code> into <code>os</code> using the format specified by
-the null-terminated string <code>fmt</code>.  <code>fmt</code> encoding follows the rules
+the NTCTS <code>fmt</code>.  <code>fmt</code> encoding follows the rules
 specified by [time.format].
 </p>
 <p>
@@ -7077,7 +7078,7 @@ from_stream(basic_istream&lt;charT, traits&gt;&amp; is, const charT* fmt,
 <blockquote>
 <p>
 <i>Effects:</i> Attempts to parse the input stream <code>is</code> into the
-<code>year_month_day ymd</code> using the format flags as specified in [time.parse].
+<code>year_month_day ymd</code> using the format flags given in the NTCTS <code>fmt</code> as specified in [time.parse].
 </p>
 <p>
 If the parse fails to decode a valid <code>year_month_day</code>,
