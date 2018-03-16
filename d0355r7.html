@@ -9981,7 +9981,7 @@ zoned_time(TimeZonePtr, zoned_time&lt;Duration, TimeZonePtr2&gt;, choose = choos
 
 <p>
 An invariant of <code>zoned_time&lt;Duration&gt;</code> is that it always refers
-to a valid <code>time_zone</code>, and represents a point in time that exists
+to a time zone, and represents a point in time that exists
 and is not ambiguous.
 </p>
 
@@ -10024,7 +10024,7 @@ explicit zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z);
 </pre>
 <blockquote>
 <p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+<i>Requires:</i> <code>z</code> refers to a time zone.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>zoned_time</code> initializing <code>zone_</code>
@@ -10051,7 +10051,7 @@ and default constructing <code>tp_</code>.
 
 <pre>
 template &lt;class Duration2, TimeZonePtr2&gt;
-    zoned_time&lt;Duration&gt;::zoned_time(const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y) noexcept;
+    zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(const zoned_time&lt;Duration2, TimeZonePtr&gt;&amp; y) noexcept;
 </pre>
 <blockquote>
 <p>
@@ -10060,8 +10060,8 @@ template &lt;class Duration2, TimeZonePtr2&gt;
 <code>sys_time&lt;Duration&gt;</code>.
 </p>
 <p>
-<i>Effects:</i> Constructs a <code>zoned_time</code> <code>x</code> such that
-<code>x == y</code>.
+<i>Effects:</i> Constructs a <code>zoned_time</code> by initializing
+<code>zone_</code> with <code>y.zone_</code> and <code>tp_</code> with <code>y.tp_</code>.
 </p>
 </blockquote>
 
@@ -10070,7 +10070,7 @@ zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const sys_tim
 </pre>
 <blockquote>
 <p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+<i>Requires:</i> <code>z</code> refers to a time zone.
 </p>
 <p>
 <i>Effects:</i> Constructs a <code>zoned_time</code> by initializing <code>zone_</code>
@@ -10097,7 +10097,7 @@ zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const local_t
 </pre>
 <blockquote>
 <p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+<i>Requires:</i> <code>z</code> refers to a time zone.
 </p>
 <p>
 <i>Remarks:</i> This constructor does not participate in overload resolution unless
@@ -10129,7 +10129,7 @@ zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(TimeZonePtr z, const local_t
 </pre>
 <blockquote>
 <p>
-<i>Requires:</i> <code>z</code> refers to a valid <code>time_zone</code>.
+<i>Requires:</i> <code>z</code> refers to a time zone.
 </p>
 <p>
 <i>Remarks:</i> This constructor does not participate in overload resolution unless
@@ -10227,7 +10227,7 @@ zoned_time&lt;Duration, TimeZonePtr&gt;::zoned_time(string_view name, const zone
 and <code>choose</code>.
 </p>
 <p>
-<i>Effects:</i> Equivalent to construction with <code>{locate_zone(name), y, c}</code>.
+<i>Effects:</i> Equivalent to construction with <code>{traits::locate_zone(name), y, c}</code>.
 </p>
 <p>
 [<i>Note:</i> The <code>choose</code> parameter is allowed here, but has no impact.
