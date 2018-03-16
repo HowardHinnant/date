@@ -1546,7 +1546,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const duration&lt;R
 
 <blockquote>
 <p>
-<i>Requires:</i> <code>Rep</code> is an integral type with rank <code>int</code> or
+<i>Requires:</i> <code>Rep</code> is an integral type with rank <code>short</code> or
 greater, or a floating point type.  <code>charT</code> is <code>char</code> or
 <code>wchar_t</code>.
 </p>
@@ -3578,7 +3578,7 @@ is a valid expression.
 
 <p>
 All <code>from_stream</code> overloads behave as an unformatted input function,
-except that they have an unspecified affect on the value returned by subsequent
+except that they have an unspecified effect on the value returned by subsequent
 calls to <code>basic_istream&lt;&gt;::gcount()</code>.
 Each
 overload takes a format string containing ordinary characters and flags which have special
@@ -9986,7 +9986,7 @@ and is not ambiguous.
 </p>
 
 <p>
-If <code>Duration</code> is not an instance of <code>duration</code>, the program is ill-formed.
+If <code>Duration</code> is not an specialization of <code>duration</code>, the program is ill-formed.
 </p>
 
 <pre>
