@@ -202,7 +202,7 @@ calendar, and with time zones, all with a minimal coupling.  For example:
 int
 main()
 {
-    using namespace std::chrono_literals;
+    using namespace std::chrono;
     auto date = 2016y/May/29;
     cout &lt;&lt; date &lt;&lt; " is " &lt;&lt; coptic::year_month_day{date} &lt;&lt; " in the Coptic calendar\n";
     // 2016-05-29 is 1732-09-21 in the Coptic calendar
@@ -1546,8 +1546,16 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const duration&lt;R
 
 <blockquote>
 <p>
+<i>Requires:</i> <code>Rep</code> is an integral type with rank <code>int</code> or
+greater, or a floating point type.  <code>charT</code> is <code>char</code> or
+<code>wchar_t</code>.
+</p>
+<p>
 <i>Effects:</i> Forms a <code>basic_string&lt;charT, traits&gt;</code> from
-<code>d.count()</code> appended with
+<code>d.count()</code> using <code>to_string</code> if <code>charT</code> is
+<code>char</code>, or <code>to_wstring</code> if <code>charT</code> is
+<code>wchar_t</code>.  This <code>basic_string&lt;charT, traits&gt;</code> is
+appended with
 <code>get_units&lt;charT, traits&gt;(typename Period::type{})</code> (described below) and
 inserts that <code>basic_string</code> into <code>os</code>.  [<i>Note:</i> this
 specification assures that the result of this streaming operation will obey the
@@ -3569,7 +3577,10 @@ is a valid expression.
 </blockquote>
 
 <p>
-All <code>from_stream</code> overloads behave as an unformatted input function.  Each
+All <code>from_stream</code> overloads behave as an unformatted input function,
+except that they have an unspecified affect on the value returned by subsequent
+calls to <code>basic_istream&lt;&gt;::gcount()</code>.
+Each
 overload takes a format string containing ordinary characters and flags which have special
 meaning. Each flag begins with a <code>%</code>.  Some flags can be modified by
 <code>E</code> or <code>O</code>.  During parsing each flag interprets characters as parts
@@ -4268,7 +4279,7 @@ participates in basic arithmetic with <code>months</code> representing the
 quantity between any two <code>month</code> objects.   One can stream out a
 <code>month</code>. <code>month</code> has explicit conversions to and from
 <code>unsigned</code>.  There are 12 <code>month</code> constants, one for each
-month of the year in the <code>chrono_literals</code> namespace.
+month of the year.
 </p>
 
 <pre>
@@ -4784,7 +4795,7 @@ constexpr year&amp; year::operator-=(const years&amp; y) noexcept;
 </blockquote>
 
 <pre>
-constexpr year&amp; year::operator+() const noexcept;
+constexpr year year::operator+() const noexcept;
 </pre>
 
 <blockquote>
@@ -4794,7 +4805,7 @@ constexpr year&amp; year::operator+() const noexcept;
 </blockquote>
 
 <pre>
-constexpr year&amp; year::operator-() const noexcept;
+constexpr year year::operator-() const noexcept;
 </pre>
 
 <blockquote>
@@ -5043,8 +5054,7 @@ practice.  However  <code>weekday</code> object's arithmetic operations
 treat the days of the week as a circular range, with no beginning and no end.
 One can stream out a <code>weekday</code>. <code>weekday</code> has explicit
 conversions to and from <code>unsigned</code>.  There are 7 <code>weekday</code>
-constants, one for each day of the week in the <code>chrono_literals</code>
-namespace.
+constants, one for each day of the week.
 </p>
 
 <p>
@@ -8896,7 +8906,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
 according to the format: "%T"  ([time.format]).
 Otherwise outputs to <code>os</code>
-according to the format: "%I:%M%:S%p" ([time.format]).
+according to the format: "%I:%M:%S%p" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -9060,7 +9070,7 @@ operator&lt;&lt;(basic_ostream&lt;charT, traits&gt;&amp; os, const time_of_day&l
 <i>Effects:</i> If <code>t</code> is a 24-hour time, outputs to <code>os</code>
 according to the format: "%T" ([time.format]).
 Otherwise outputs to <code>os</code>
-according to the format: "%I:%M:%S" ([time.format]).
+according to the format: "%I:%M:%S%p" ([time.format]).
 </p>
 <p>
 <i>Returns:</i> <code>os</code>.
@@ -9263,7 +9273,7 @@ of this container. &mdash; <i>end note</i>]
 </blockquote>
 
 <pre>
-tzdb::const_iterator tzdb::erase_after(const_iterator p);
+tzdb_list::const_iterator tzdb_list::erase_after(const_iterator p);
 </pre>
 <blockquote>
 <p>
@@ -9289,14 +9299,14 @@ to the erased <code>tzdb</code>.
 </blockquote>
 
 <pre>
-tzdb::const_iterator tzdb::begin() const noexcept;
+tzdb_list::const_iterator tzdb_list::begin() const noexcept;
 </pre>
 <blockquote>
 <i>Returns:</i> An iterator referring to the first <code>tzdb</code> in the container.
 </blockquote>
 
 <pre>
-tzdb::const_iterator tzdb::end() const noexcept;
+tzdb_list::const_iterator tzdb_list::end() const noexcept;
 </pre>
 <blockquote>
 <i>Returns:</i> An iterator referring to the position one past the
@@ -9304,14 +9314,14 @@ last <code>tzdb</code> in the container.
 </blockquote>
 
 <pre>
-tzdb::const_iterator tzdb::cbegin() const noexcept;
+tzdb_list::const_iterator tzdb_list::cbegin() const noexcept;
 </pre>
 <blockquote>
 <i>Returns:</i> <code>begin()</code>.
 </blockquote>
 
 <pre>
-tzdb::const_iterator tzdb::cend() const noexcept;
+tzdb_list::const_iterator tzdb_list::cend() const noexcept;
 </pre>
 <blockquote>
 <i>Returns:</i> <code>end()</code>.
@@ -9643,8 +9653,8 @@ the database initialization.  One can gain <code>const</code> access to a
 class time_zone
 {
 public:
-    time_zone(const time_zone&amp;) = delete;
-    time_zone&amp; operator=(const time_zone&amp;) = delete;
+    time_zone(time_zone&amp;&amp;) = default;
+    time_zone&amp; operator=(time_zone&amp;&amp;) = default;
 
     string_view name() const noexcept;
 
@@ -9973,6 +9983,10 @@ zoned_time(TimeZonePtr, zoned_time&lt;Duration, TimeZonePtr2&gt;, choose = choos
 An invariant of <code>zoned_time&lt;Duration&gt;</code> is that it always refers
 to a valid <code>time_zone</code>, and represents a point in time that exists
 and is not ambiguous.
+</p>
+
+<p>
+If <code>Duration</code> is not an instance of <code>duration</code>, the program is ill-formed.
 </p>
 
 <pre>
