@@ -29,11 +29,9 @@ This is actually several separate C++11/C++14/C++17 libraries:
 
     * Documentation: http://howardhinnant.github.io/date/islamic.html
 
-`"date.h"` and `"tz.h"` are now being proposed for standardization:
+Slightly modified versions of `"date.h"` and `"tz.h"` were voted into the C++20 working draft at the Jacksonville FL meeting on 2018-03-17:
 
-   * Current proposal:  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0355r5.html
-   * Draft revision:  http://howardhinnant.github.io/date/d0355r7.html
-   * Status:  The proposal was approved by LEWG and forwarded to LWG with the recommendation of targeting C++20 at the Albuquerque, NM meeting in Nov. 2017.
+   * http://howardhinnant.github.io/date/d0355r7.html
 
 List of projects using this library:
 
