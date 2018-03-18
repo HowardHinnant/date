@@ -1807,6 +1807,27 @@ CONSTDATA date::weekday sat{6u};
 }  // inline namespace literals
 #endif
 
+CONSTDATA date::month January{1};
+CONSTDATA date::month February{2};
+CONSTDATA date::month March{3};
+CONSTDATA date::month April{4};
+CONSTDATA date::month May{5};
+CONSTDATA date::month June{6};
+CONSTDATA date::month July{7};
+CONSTDATA date::month August{8};
+CONSTDATA date::month September{9};
+CONSTDATA date::month October{10};
+CONSTDATA date::month November{11};
+CONSTDATA date::month December{12};
+
+CONSTDATA date::weekday Sunday{0u};
+CONSTDATA date::weekday Monday{1u};
+CONSTDATA date::weekday Tuesday{2u};
+CONSTDATA date::weekday Wednesday{3u};
+CONSTDATA date::weekday Thursday{4u};
+CONSTDATA date::weekday Friday{5u};
+CONSTDATA date::weekday Saturday{6u};
+
 // weekday_indexed
 
 CONSTCD11
