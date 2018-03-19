@@ -11,7 +11,7 @@ set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are req
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
-option( BUILD_TZ_STATIC  "Build a static version of library" ON )
+option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" ON )
 
 function( print_option OPT )
@@ -24,7 +24,7 @@ endfunction( )
 
 print_option( USE_SYSTEM_TZ_DB )
 print_option( USE_TZ_DB_IN_DOT )
-print_option( BUILD_TZ_STATIC  )
+print_option( BUILD_SHARED_LIBS  )
 print_option( ENABLE_DATE_TESTING )
 
 set( HEADER_FOLDER "include" )
@@ -43,11 +43,7 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-if( BUILD_TZ_STATIC )
-	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
-else( )
-	add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
-endif( )
+add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 
 if( USE_SYSTEM_TZ_DB )
 	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
