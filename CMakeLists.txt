@@ -1,10 +1,13 @@
-cmake_minimum_required( VERSION 3.0.2 )
+cmake_minimum_required( VERSION 3.1.0 )
 
 project( date_prj )
 
 include( GNUInstallDirs )
 
 find_package( Threads REQUIRED )
+
+# Override by setting on CMake command line.
+set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested.")
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
@@ -66,11 +69,6 @@ if( USE_TZ_DB_IN_DOT )
 	target_compile_definitions( tz PRIVATE -DINSTALL=. )
 endif( )
 
-if( NOT TZ_CXX_STANDARD )
-    set( TZ_CXX_STANDARD 17 )
-endif( )
-
-set_property(TARGET tz PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
 
 # add include folders to the library and targets that consume it
@@ -124,7 +122,6 @@ if ( ENABLE_DATE_TESTING )
                 set( BIN_NAME ${PREFIX}_bin )
                 set( TST_NAME ${PREFIX}_test )
                 add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
-                set_property(TARGET ${BIN_NAME} PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
                 add_test( ${TST_NAME} ${BIN_NAME} )
                 target_link_libraries( ${BIN_NAME} tz )
                 add_dependencies( testit ${BIN_NAME} )
