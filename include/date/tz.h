@@ -43,20 +43,18 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
+#include "tz_config.h"
+
 #ifndef USE_OS_TZDB
-#  define USE_OS_TZDB 0
+#  error "Missing define expected from configuration header"
 #endif
 
 #ifndef HAS_REMOTE_API
-#  if USE_OS_TZDB == 0
-#    ifdef _WIN32
-#      define HAS_REMOTE_API 0
-#    else
-#      define HAS_REMOTE_API 1
-#    endif
-#  else  // HAS_REMOTE_API makes no since when using the OS timezone database
-#    define HAS_REMOTE_API 0
-#  endif
+#  error "Missing define expected from configuration header"
+#endif
+
+#ifndef AUTO_DOWNLOAD
+#  error "Missing define expected from configuration header"
 #endif
 
 #ifdef __clang__
@@ -69,10 +67,6 @@ static_assert(!(USE_OS_TZDB && HAS_REMOTE_API),
 
 #ifdef __clang__
 # pragma clang diagnostic pop
-#endif
-
-#ifndef AUTO_DOWNLOAD
-#  define AUTO_DOWNLOAD HAS_REMOTE_API
 #endif
 
 static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,

@@ -1,0 +1,9 @@
+#ifndef TZ_CONFIG_H
+#define TZ_CONFIG_H
+
+#cmakedefine01 USE_OS_TZDB
+#cmakedefine01 HAS_REMOTE_API
+#cmakedefine01 AUTO_DOWNLOAD
+#cmakedefine TZ_CXX_STANDARD @TZ_CXX_STANDARD@
+
+#endif // TZ_CONFIG_H

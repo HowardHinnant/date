@@ -40,35 +40,44 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-if( BUILD_TZ_STATIC )
-	add_library( tz STATIC ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
-else( )
-	add_library( tz SHARED ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
-endif( )
-
 if( USE_SYSTEM_TZ_DB )
-	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
-	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=0 )
+	set(AUTO_DOWNLOAD 0)
+	set(HAS_REMOTE_API 0)
+
 	# cannot set USE_OS_TZDB to 1 on Windows
 	if( NOT WIN32 )
-		target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=1 )
+		set(USE_OS_TZDB 1)
+	else ( )
+		set(USE_OS_TZDB 0)
 	endif( )
 else( )
-	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=1 )
-	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=1 )
-	target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=0 )
+	set(AUTO_DOWNLOAD 1)
+	set(HAS_REMOTE_API 1)
+	set(USE_OS_TZDB 0)
+
 	find_package( CURL REQUIRED )
 	include_directories( SYSTEM ${CURL_INCLUDE_DIRS} )
 	set( OPTIONAL_LIBRARIES ${CURL_LIBRARIES} )
+endif( )
+
+if( NOT TZ_CXX_STANDARD )
+	set( TZ_CXX_STANDARD 17 )
+endif( )
+
+set(TZ_CONFIG_H_PATH ${CMAKE_CURRENT_BINARY_DIR}/${HEADER_FOLDER}/date/tz_config.h)
+configure_file(tz_config.h.in ${TZ_CONFIG_H_PATH} @ONLY)
+
+
+if( BUILD_TZ_STATIC )
+	add_library( tz STATIC ${HEADER_FILES} ${TZ_CONFIG_H_PATH} ${SOURCE_FOLDER}/tz.cpp )
+else( )
+	add_library( tz SHARED ${HEADER_FILES} ${TZ_CONFIG_H_PATH} ${SOURCE_FOLDER}/tz.cpp )
 endif( )
 
 if( USE_TZ_DB_IN_DOT )
 	target_compile_definitions( tz PRIVATE -DINSTALL=. )
 endif( )
 
-if( NOT TZ_CXX_STANDARD )
-    set( TZ_CXX_STANDARD 17 )
-endif( )
 
 set_property(TARGET tz PROPERTY CXX_STANDARD ${TZ_CXX_STANDARD})
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
@@ -77,6 +86,7 @@ target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
 target_include_directories(tz PUBLIC
     $<BUILD_INTERFACE:
         ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
+        ${CMAKE_CURRENT_BINARY_DIR}/${HEADER_FOLDER} # For the configuration header
     >
     $<INSTALL_INTERFACE:
         include
@@ -104,6 +114,7 @@ install( TARGETS tz
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
+install( FILES ${TZ_CONFIG_H_PATH} DESTINATION include/date/ )
 
 if ( ENABLE_DATE_TESTING )
 
@@ -148,7 +159,7 @@ if ( ENABLE_DATE_TESTING )
             #target_compile_definitions( ${BIN_NAME} PRIVATE ${TST_NAME} )
             set( TEST_BIN_NAME ${CMAKE_BINARY_DIR}/${BIN_NAME} )
             add_custom_target( ${BIN_NAME}
-                COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
+                COMMAND ${PROJECT_SOURCE_DIR}/compile_fail.sh ${TEST_BIN_NAME} ${CMAKE_CXX_COMPILER} -std=c++14 -L${CMAKE_BINARY_DIR}/ -ltz -I${PROJECT_SOURCE_DIR}/${HEADER_FOLDER}/date -I${CMAKE_BINARY_DIR}/${HEADER_FOLDER}/date -o ${BIN_NAME} ${TEST_FILE}
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                 COMMENT ${TST_NAME}
                 )
