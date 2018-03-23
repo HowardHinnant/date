@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2017-12-26<br/>
+2018-03-22<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2813,6 +2813,25 @@ If <code>abbrev</code> is not equal to <code>nullptr</code>, the information par
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+std::pair&lt;bool, std::chrono::seconds&gt;
+is_leap_second(utc_time&lt;Duration&gt; const&amp; t);
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> If <code>t</code> represents a <code>time_point</code> during a leap
+second insertion, the first member of the <code>pair</code> has a value of
+<code>true</code>, otherwise <code>false</code>.  The second member of the returned
+<code>pair</code> holds the number of leap seconds that have been inserted between
+<code>t</code> and 1970-01-01.  If <code>t</code> represents a <code>time_point</code>
+prior to 1970-01-01, the value is <code>0s</code>.  If <code>t</code> represents a
+<code>time_point</code> during a leap second insertion, that full leap second is included
+in the count.
 </p>
 </blockquote>
 
