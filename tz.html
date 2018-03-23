@@ -2824,14 +2824,50 @@ is_leap_second(utc_time&lt;Duration&gt; const&amp; t);
 
 <blockquote>
 <p>
-<i>Returns:</i> If <code>t</code> represents a <code>time_point</code> during a leap
-second insertion, the first member of the <code>pair</code> has a value of
+<i>Returns:</i> Given a list of leap second insertion dates <i>l<sub>i</sub></i> since
+1970-01-01,
+if <code>t</code> is in the range [<i>l<sub>i</sub></i>, <i>l<sub>i</sub></i> + 1s),
+the first member of the <code>pair</code> has a value of
 <code>true</code>, otherwise <code>false</code>.  The second member of the returned
 <code>pair</code> holds the number of leap seconds that have been inserted between
 <code>t</code> and 1970-01-01.  If <code>t</code> represents a <code>time_point</code>
-prior to 1970-01-01, the value is <code>0s</code>.  If <code>t</code> represents a
-<code>time_point</code> during a leap second insertion, that full leap second is included
+prior to 1970-01-01, the value is <code>0s</code>.  If <code>t</code> is in the range
+[<i>l<sub>i</sub></i>, <i>l<sub>i</sub></i> + 1s), <i>l<sub>i</sub></i> is included
 in the count.
+</p>
+<p>
+[<i>Example:</i>
+</p>
+<blockquote><pre>
+cout &lt;&lt; boolalpha;
+
+auto t = clock_cast&lt;utc_clock&gt;(sys_days{December/31/2016} + 23h + 59min + 59s + 999ms);
+auto p = is_leap_second(t);
+cout &lt;&lt; t &lt;&lt; " : {" &lt;&lt; p.first &lt;&lt; ", " &lt;&lt; p.second &lt;&lt; "}\n";
+// 2016-12-31 23:59:59.999 : {false, 26s}
+
+t += 1ms;
+p = is_leap_second(t);
+cout &lt;&lt; t &lt;&lt; " : {" &lt;&lt; p.first &lt;&lt; ", " &lt;&lt; p.second &lt;&lt; "}\n";
+// 2016-12-31 23:59:60.000 : {true, 27s}
+
+t += 1ms;
+p = is_leap_second(t);
+cout &lt;&lt; t &lt;&lt; " : {" &lt;&lt; p.first &lt;&lt; ", " &lt;&lt; p.second &lt;&lt; "}\n";
+// 2016-12-31 23:59:60.001 : {true, 27s}
+
+t += 998ms;
+p = is_leap_second(t);
+cout &lt;&lt; t &lt;&lt; " : {" &lt;&lt; p.first &lt;&lt; ", " &lt;&lt; p.second &lt;&lt; "}\n";
+// 2016-12-31 23:59:60.999 : {true, 27s}
+
+t += 1ms;
+p = is_leap_second(t);
+cout &lt;&lt; t &lt;&lt; " : {" &lt;&lt; p.first &lt;&lt; ", " &lt;&lt; p.second &lt;&lt; "}\n";
+// 2017-01-01 00:00:00.000 : {false, 27s}
+</pre></blockquote>
+<p>
+&mdash;<i>end example</i>]
 </p>
 </blockquote>
 
