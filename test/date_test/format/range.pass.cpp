@@ -69,10 +69,10 @@ main()
     assert(os.str() == "32767-12-31 00:00:01.2096");
     os.str("");
 
-    os << format("%F %T", jan/1/year::min());
-    assert(os.str() == "-32767-01-01 00:00:00");
+    os << format("%F", jan/1/year::min());
+    assert(os.str() == "-32767-01-01");
     os.str("");
-    os << format("%F %T", dec/last/year::max());
-    assert(os.str() == "32767-12-31 00:00:00");
+    os << format("%F", dec/last/year::max());
+    assert(os.str() == "32767-12-31");
     os.str("");
 }
