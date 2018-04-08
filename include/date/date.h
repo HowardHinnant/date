@@ -7058,23 +7058,26 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             }
             if (G != not_a_year)
             {
-                // Convert G, V and wd to Y, m and d
-                if (V == not_a_week_num || wd == not_a_weekday)
-                    goto broken;
-                auto ymd = year_month_day{local_days(year{G-1}/dec/thu[last]) +
+                // If V and wd  are available, convert G, V and wd to Y, m and d
+                year_month_day ymd;
+                bool full = V != not_a_week_num && wd != not_a_weekday;
+                if (full)
+                    ymd = year_month_day{local_days(year{G-1}/dec/thu[last]) +
                                           (mon-thu) + weeks{V-1} +
                                           (weekday{static_cast<unsigned>(wd)}-mon)};
+                else
+                    ymd = year{G}/0/0;
                 if (Y == not_a_year)
                     Y = static_cast<int>(ymd.year());
                 else if (year{Y} != ymd.year())
                     goto broken;
                 if (m == 0)
                     m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(static_cast<unsigned>(m)) != ymd.month())
+                else if (full && month(static_cast<unsigned>(m)) != ymd.month())
                     goto broken;
                 if (d == 0)
                     d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(static_cast<unsigned>(d)) != ymd.day())
+                else if (full && day(static_cast<unsigned>(d)) != ymd.day())
                     goto broken;
             }
             if (j != 0 && Y != not_a_year)
@@ -7091,47 +7094,53 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             }
             if (U != not_a_week_num && Y != not_a_year)
             {
-                if (wd == not_a_weekday)
-                    goto broken;
-                sys_days sd;
-                if (U == 0)
-                    sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
+                if (wd != not_a_weekday)
+                {
+                    year_month_day ymd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} +
+                              (weekday{static_cast<unsigned>(wd)} - sun);
+                    if (year{Y} != ymd.year())
+                        goto broken;
+                    if (m == 0)
+                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
+                    else if (month(static_cast<unsigned>(m)) != ymd.month())
+                        goto broken;
+                    if (d == 0)
+                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                    else if (day(static_cast<unsigned>(d)) != ymd.day())
+                        goto broken;
+                }
                 else
-                    sd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} +
-                         (weekday{static_cast<unsigned>(wd)} - sun);
-                year_month_day ymd = sd;
-                if (year{Y} != ymd.year())
-                    goto broken;
-                if (m == 0)
-                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(static_cast<unsigned>(m)) != ymd.month())
-                    goto broken;
-                if (d == 0)
-                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(static_cast<unsigned>(d)) != ymd.day())
-                    goto broken;
+                {
+                    if (floor<weeks>(sys_days(year{Y}/m/d) -
+                                     sys_days(Sunday[1]/January/year{Y})) +
+                            weeks{1} != weeks{U})
+                        goto broken;
+                }
             }
             if (W != not_a_week_num && Y != not_a_year)
             {
-                if (wd == not_a_weekday)
-                    goto broken;
-                sys_days sd;
-                if (W == 0)
-                    sd = year{Y-1}/dec/weekday{static_cast<unsigned>(wd)}[last];
+                if (wd != not_a_weekday)
+                {
+                    year_month_day ymd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} +
+                              (weekday{static_cast<unsigned>(wd)} - mon);
+                    if (year{Y} != ymd.year())
+                        goto broken;
+                    if (m == 0)
+                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
+                    else if (month(static_cast<unsigned>(m)) != ymd.month())
+                        goto broken;
+                    if (d == 0)
+                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
+                    else if (day(static_cast<unsigned>(d)) != ymd.day())
+                        goto broken;
+                }
                 else
-                    sd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} +
-                         (weekday{static_cast<unsigned>(wd)} - mon);
-                year_month_day ymd = sd;
-                if (year{Y} != ymd.year())
-                    goto broken;
-                if (m == 0)
-                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(static_cast<unsigned>(m)) != ymd.month())
-                    goto broken;
-                if (d == 0)
-                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(static_cast<unsigned>(d)) != ymd.day())
-                    goto broken;
+                {
+                    if (floor<weeks>(sys_days(year{Y}/m/d) -
+                                     sys_days(Monday[1]/January/year{Y})) +
+                            weeks{1} != weeks{W})
+                        goto broken;
+                }
             }
             if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
                 Y = not_a_year;
