@@ -6022,9 +6022,12 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         int C = not_a_century;
         CONSTDATA int not_a_2digit_year = 100;
         int y = not_a_2digit_year;
-        int m{};
-        int d{};
-        int j{};
+        CONSTDATA int not_a_month = 0;
+        CONSTDATA int not_a_day = 0;
+        CONSTDATA int not_a_doy = 0;
+        int m = not_a_month;
+        int d = not_a_day;
+        int j = not_a_doy;
         CONSTDATA int not_a_weekday = 7;
         int wd = not_a_weekday;
         CONSTDATA int not_a_hour_12_value = 0;
@@ -6807,12 +6810,26 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 #endif
                     {
                         read(is, ru{wd, 1, width == -1 ? 1u : static_cast<unsigned>(width)});
-                        if (!is.fail() && *fmt == 'u')
+                        if (!is.fail())
                         {
-                            if (wd == 7)
-                                wd = 0;
-                            else if (wd == 0)
-                                wd = 7;
+                            if (*fmt == 'u')
+                            {
+                                if (!(1 <= wd && wd <= 7))
+                                {
+                                    wd = not_a_weekday;
+                                    is.setstate(ios_base::failbit);
+                                }
+                                else if (wd == 7)
+                                    wd = 0;
+                            }
+                            else  // *fmt == 'w'
+                            {
+                                if (!(0 <= wd && wd <= 6))
+                                {
+                                    wd = not_a_weekday;
+                                    is.setstate(ios_base::failbit);
+                                }
+                            }
                         }
                     }
 #if !ONLY_C_LOCALE
@@ -7056,99 +7073,124 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 G = tG;
             }
-            if (G != not_a_year)
+            if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
+                Y = not_a_year;
+            bool computed = false;
+            if (G != not_a_year && V != not_a_week_num && wd != not_a_weekday)
             {
-                // If V and wd  are available, convert G, V and wd to Y, m and d
-                year_month_day ymd;
-                bool full = V != not_a_week_num && wd != not_a_weekday;
-                if (full)
-                    ymd = year_month_day{local_days(year{G-1}/dec/thu[last]) +
-                                          (mon-thu) + weeks{V-1} +
-                                          (weekday{static_cast<unsigned>(wd)}-mon)};
-                else
-                    ymd = year{G}/0/0;
+                year_month_day ymd_trial = sys_days(year{G-1}/December/Thursday[last]) +
+                                           (Monday-Thursday) + weeks{V-1} +
+                                           (weekday{static_cast<unsigned>(wd)}-Monday);
                 if (Y == not_a_year)
-                    Y = static_cast<int>(ymd.year());
-                else if (year{Y} != ymd.year())
+                    Y = static_cast<int>(ymd_trial.year());
+                else if (year{Y} != ymd_trial.year())
                     goto broken;
-                if (m == 0)
-                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (full && month(static_cast<unsigned>(m)) != ymd.month())
+                if (m == not_a_month)
+                    m = static_cast<int>(static_cast<unsigned>(ymd_trial.month()));
+                else if (month(static_cast<unsigned>(m)) != ymd_trial.month())
                     goto broken;
-                if (d == 0)
-                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (full && day(static_cast<unsigned>(d)) != ymd.day())
+                if (d == not_a_day)
+                    d = static_cast<int>(static_cast<unsigned>(ymd_trial.day()));
+                else if (day(static_cast<unsigned>(d)) != ymd_trial.day())
                     goto broken;
+                computed = true;
+            }
+            if (Y != not_a_year && U != not_a_week_num && wd != not_a_weekday)
+            {
+                year_month_day ymd_trial = sys_days(year{Y}/January/Sunday[1]) +
+                                           weeks{U-1} +
+                                           (weekday{static_cast<unsigned>(wd)} - Sunday);
+                if (Y == not_a_year)
+                    Y = static_cast<int>(ymd_trial.year());
+                else if (year{Y} != ymd_trial.year())
+                    goto broken;
+                if (m == not_a_month)
+                    m = static_cast<int>(static_cast<unsigned>(ymd_trial.month()));
+                else if (month(static_cast<unsigned>(m)) != ymd_trial.month())
+                    goto broken;
+                if (d == not_a_day)
+                    d = static_cast<int>(static_cast<unsigned>(ymd_trial.day()));
+                else if (day(static_cast<unsigned>(d)) != ymd_trial.day())
+                    goto broken;
+                computed = true;
+            }
+            if (Y != not_a_year && W != not_a_week_num && wd != not_a_weekday)
+            {
+                year_month_day ymd_trial = sys_days(year{Y}/January/Monday[1]) +
+                                           weeks{W-1} +
+                                           (weekday{static_cast<unsigned>(wd)} - Monday);
+                if (Y == not_a_year)
+                    Y = static_cast<int>(ymd_trial.year());
+                else if (year{Y} != ymd_trial.year())
+                    goto broken;
+                if (m == not_a_month)
+                    m = static_cast<int>(static_cast<unsigned>(ymd_trial.month()));
+                else if (month(static_cast<unsigned>(m)) != ymd_trial.month())
+                    goto broken;
+                if (d == not_a_day)
+                    d = static_cast<int>(static_cast<unsigned>(ymd_trial.day()));
+                else if (day(static_cast<unsigned>(d)) != ymd_trial.day())
+                    goto broken;
+                computed = true;
             }
             if (j != 0 && Y != not_a_year)
             {
-                auto ymd = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
+                auto ymd_trial = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
                 if (m == 0)
-                    m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                else if (month(static_cast<unsigned>(m)) != ymd.month())
+                    m = static_cast<int>(static_cast<unsigned>(ymd_trial.month()));
+                else if (month(static_cast<unsigned>(m)) != ymd_trial.month())
                     goto broken;
                 if (d == 0)
-                    d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                else if (day(static_cast<unsigned>(d)) != ymd.day())
+                    d = static_cast<int>(static_cast<unsigned>(ymd_trial.day()));
+                else if (day(static_cast<unsigned>(d)) != ymd_trial.day())
                     goto broken;
             }
-            if (U != not_a_week_num && Y != not_a_year)
-            {
-                if (wd != not_a_weekday)
-                {
-                    year_month_day ymd = sys_days(year{Y}/jan/sun[1]) + weeks{U-1} +
-                              (weekday{static_cast<unsigned>(wd)} - sun);
-                    if (year{Y} != ymd.year())
-                        goto broken;
-                    if (m == 0)
-                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                    else if (month(static_cast<unsigned>(m)) != ymd.month())
-                        goto broken;
-                    if (d == 0)
-                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                    else if (day(static_cast<unsigned>(d)) != ymd.day())
-                        goto broken;
-                }
-                else
-                {
-                    if (floor<weeks>(sys_days(year{Y}/m/d) -
-                                     sys_days(Sunday[1]/January/year{Y})) +
-                            weeks{1} != weeks{U})
-                        goto broken;
-                }
-            }
-            if (W != not_a_week_num && Y != not_a_year)
-            {
-                if (wd != not_a_weekday)
-                {
-                    year_month_day ymd = sys_days(year{Y}/jan/mon[1]) + weeks{W-1} +
-                              (weekday{static_cast<unsigned>(wd)} - mon);
-                    if (year{Y} != ymd.year())
-                        goto broken;
-                    if (m == 0)
-                        m = static_cast<int>(static_cast<unsigned>(ymd.month()));
-                    else if (month(static_cast<unsigned>(m)) != ymd.month())
-                        goto broken;
-                    if (d == 0)
-                        d = static_cast<int>(static_cast<unsigned>(ymd.day()));
-                    else if (day(static_cast<unsigned>(d)) != ymd.day())
-                        goto broken;
-                }
-                else
-                {
-                    if (floor<weeks>(sys_days(year{Y}/m/d) -
-                                     sys_days(Monday[1]/January/year{Y})) +
-                            weeks{1} != weeks{W})
-                        goto broken;
-                }
-            }
-            if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
-                Y = not_a_year;
             auto ymd = year{Y}/m/d;
-            if (wd != not_a_weekday && ymd.ok())
+            if (ymd.ok())
             {
-                if (weekday{static_cast<unsigned>(wd)} != weekday(ymd))
+                if (wd == not_a_weekday)
+                    wd = static_cast<int>(static_cast<unsigned>(weekday(ymd)));
+                else if (wd != static_cast<int>(static_cast<unsigned>(weekday(ymd))))
                     goto broken;
+                if (!computed)
+                {
+                    if (G != not_a_year || V != not_a_week_num)
+                    {
+                        sys_days sd = ymd;
+                        auto G_trial = year_month_day{sd + days{3}}.year();
+                        auto start = sys_days((G_trial - years{1})/December/Thursday[last]) +
+                                     (Monday - Thursday);
+                        if (sd < start)
+                        {
+                            --G_trial;
+                            if (V != not_a_week_num)
+                                start = sys_days((G_trial - years{1})/December/Thursday[last])
+                                        + (Monday - Thursday);
+                        }
+                        if (G != not_a_year && G != static_cast<int>(G_trial))
+                            goto broken;
+                        if (V != not_a_week_num)
+                        {
+                            auto V_trial = duration_cast<weeks>(sd - start).count() + 1;
+                            if (V != V_trial)
+                                goto broken;
+                        }
+                    }
+                    if (U != not_a_week_num)
+                    {
+                        auto start = sys_days(Sunday[1]/January/ymd.year());
+                        auto U_trial = floor<weeks>(sys_days(ymd) - start).count() + 1;
+                        if (U != U_trial)
+                            goto broken;
+                    }
+                    if (W != not_a_week_num)
+                    {
+                        auto start = sys_days(Monday[1]/January/ymd.year());
+                        auto W_trial = floor<weeks>(sys_days(ymd) - start).count() + 1;
+                        if (W != W_trial)
+                            goto broken;
+                    }
+                }
             }
             fds.ymd = ymd;
             fds.tod = time_of_day<Duration>{h};
