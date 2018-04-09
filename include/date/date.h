@@ -4316,7 +4316,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut
 
 // to_stream
 
-constexpr year nanyear{-32768};
+CONSTDATA year nanyear{-32768};
 
 template <class Duration>
 struct fields
