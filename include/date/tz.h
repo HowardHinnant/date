@@ -1366,7 +1366,7 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z)
 #if HAS_STRING_VIEW
 
 template <class Duration, class TimeZonePtr>
-template <class, class>
+template <class T, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name))
