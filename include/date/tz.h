@@ -1951,6 +1951,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     minutes offset_local{};
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
+    fds.has_tod = true;
     from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok())
         is.setstate(ios::failbit);
@@ -2071,6 +2072,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     minutes offset_local{};
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
+    fds.has_tod = true;
     from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
@@ -2182,6 +2184,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     minutes offset_local{};
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
+    fds.has_tod = true;
     from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(ios::failbit);
