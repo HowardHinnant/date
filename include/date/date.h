@@ -7591,7 +7591,9 @@ auto
 parse(const std::basic_string<CharT, Traits, Alloc>& format, Parsable& tp,
       std::chrono::minutes& offset)
     -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(),
-                            format.c_str(), tp, nullptr, &offset),
+                            format.c_str(), tp,
+                            std::declval<std::basic_string<CharT, Traits, Alloc>*>(),
+                            &offset),
                 parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, nullptr, &offset})
 {
     return {format, tp, nullptr, &offset};
@@ -7637,7 +7639,7 @@ inline
 auto
 parse(const CharT* format, Parsable& tp, std::chrono::minutes& offset)
     -> decltype(from_stream(std::declval<std::basic_istream<CharT>&>(), format,
-                            tp, nullptr, &offset),
+                            tp, std::declval<std::basic_string<CharT>*>(), &offset),
                 parse_manip<Parsable, CharT>{format, tp, nullptr, &offset})
 {
     return {format, tp, nullptr, &offset};
