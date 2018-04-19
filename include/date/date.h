@@ -942,33 +942,61 @@ struct is_clock<T, std::void_t<decltype(T::now()), typename T::rep, typename T::
 namespace detail {
 
 template<class CharT, class Traits = std::char_traits<CharT>>
-class save_stream
+class save_istream
 {
-    std::basic_ios<CharT, Traits>& os_;
+protected:
+    std::basic_ios<CharT, Traits>& is_;
     CharT fill_;
     std::ios::fmtflags flags_;
     std::streamsize width_;
+    std::basic_ostream<CharT, Traits>* tie_;
     std::locale loc_;
 
 public:
-    ~save_stream()
+    ~save_istream()
     {
-        os_.fill(fill_);
-        os_.flags(flags_);
-        os_.width(width_);
-        os_.imbue(loc_);
+        is_.fill(fill_);
+        is_.flags(flags_);
+        is_.width(width_);
+        is_.imbue(loc_);
+        is_.tie(tie_);
     }
 
-    save_stream(const save_stream&) = delete;
-    save_stream& operator=(const save_stream&) = delete;
+    save_istream(const save_istream&) = delete;
+    save_istream& operator=(const save_istream&) = delete;
 
-    explicit save_stream(std::basic_ios<CharT, Traits>& os)
-        : os_(os)
-        , fill_(os.fill())
-        , flags_(os.flags())
-        , width_(os.width(0))
-        , loc_(os.getloc())
-        {}
+    explicit save_istream(std::basic_ios<CharT, Traits>& is)
+        : is_(is)
+        , fill_(is.fill())
+        , flags_(is.flags())
+        , width_(is.width(0))
+        , tie_(is.tie(nullptr))
+        , loc_(is.getloc())
+        {
+            if (tie_ != nullptr)
+                tie_->flush();
+        }
+};
+
+template<class CharT, class Traits = std::char_traits<CharT>>
+class save_ostream
+    : private save_istream<CharT, Traits>
+{
+public:
+    ~save_ostream()
+    {
+        if ((this->flags_ & std::ios::unitbuf) && !std::uncaught_exception() &&
+                this->is_.good())
+            this->is_.rdbuf()->pubsync();
+    }
+
+    save_ostream(const save_ostream&) = delete;
+    save_ostream& operator=(const save_ostream&) = delete;
+
+    explicit save_ostream(std::basic_ios<CharT, Traits>& os)
+        : save_istream<CharT, Traits>(os)
+        {
+        }
 };
 
 template <class T>
@@ -1357,7 +1385,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
 {
-    detail::save_stream<CharT, Traits> _(os);
+    detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os.width(2);
@@ -1625,7 +1653,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 {
-    detail::save_stream<CharT, Traits> _(os);
+    detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
@@ -2731,7 +2759,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
 {
-    detail::save_stream<CharT, Traits> _(os);
+    detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os << ymd.year() << '-';
@@ -3644,7 +3672,7 @@ public:
     std::basic_ostream<CharT, Traits>&
     operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
     {
-        date::detail::save_stream<CharT, Traits> _(os);
+        date::detail::save_ostream<CharT, Traits> _(os);
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         os.width(2);
@@ -3689,7 +3717,7 @@ public:
     std::basic_ostream<CharT, Traits>&
     operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
     {
-        date::detail::save_stream<CharT, Traits> _(os);
+        date::detail::save_ostream<CharT, Traits> _(os);
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         os.width(2);
@@ -3889,7 +3917,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream<CharT, Traits> _(os);
+        detail::save_ostream<CharT, Traits> _(os);
         if (t.neg_)
             os << '-';
         os.fill('0');
@@ -3972,7 +4000,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream<CharT, Traits> _(os);
+        detail::save_ostream<CharT, Traits> _(os);
         if (t.neg_)
             os << '-';
         os.fill('0');
@@ -4062,7 +4090,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream<CharT, Traits> _(os);
+        detail::save_ostream<CharT, Traits> _(os);
         if (t.neg_)
             os << '-';
         os.fill('0');
@@ -4172,7 +4200,7 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const time_of_day_storage& t)
     {
         using namespace std;
-        detail::save_stream<CharT, Traits> _(os);
+        detail::save_ostream<CharT, Traits> _(os);
         if (t.neg_)
             os << '-';
         os.fill('0');
@@ -4586,7 +4614,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     using namespace std;
     using namespace std::chrono;
     using namespace detail;
-    date::detail::save_stream<CharT, Traits> ss(os);
+    date::detail::save_ostream<CharT, Traits> ss(os);
     os.fill(' ');
     os.flags(std::ios::skipws | std::ios::dec);
     os.width(0);
@@ -4704,7 +4732,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     else  // *fmt == 'x'
                     {
                         auto const& ymd = fds.ymd;
-                        save_stream<CharT, Traits> _(os);
+                        save_ostream<CharT, Traits> _(os);
                         os.fill('0');
                         os.flags(std::ios::dec | std::ios::right);
                         os.width(2);
@@ -4736,7 +4764,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        save_stream<CharT, Traits> _(os);
+                        save_ostream<CharT, Traits> _(os);
                         os.fill('0');
                         os.flags(std::ios::dec | std::ios::right);
                         if (y >= 0)
@@ -4781,7 +4809,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        save_stream<CharT, Traits> _(os);
+                        save_ostream<CharT, Traits> _(os);
                         if (*fmt == CharT{'d'})
                             os.fill('0');
                         else
@@ -4813,7 +4841,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (!fds.ymd.ok())
                         os.setstate(std::ios::failbit);
                     auto const& ymd = fds.ymd;
-                    save_stream<CharT, Traits> _(os);
+                    save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
                     os.width(2);
@@ -4841,7 +4869,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (!fds.ymd.ok())
                         os.setstate(std::ios::failbit);
                     auto const& ymd = fds.ymd;
-                    save_stream<CharT, Traits> _(os);
+                    save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
                     os.width(4);
@@ -4878,7 +4906,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os << y;
                     else
                     {
-                        save_stream<CharT, Traits> _(os);
+                        save_ostream<CharT, Traits> _(os);
                         os.fill('0');
                         os.flags(std::ios::dec | std::ios::right);
                         os.width(2);
@@ -4941,7 +4969,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     auto ld = local_days(fds.ymd);
                     auto y = fds.ymd.year();
                     auto doy = ld - local_days(y/jan/1) + days{1};
-                    save_stream<CharT, Traits> _(os);
+                    save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
                     os.width(3);
@@ -5081,7 +5109,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #else
                     time_of_day<seconds> tod(duration_cast<seconds>(fds.tod.to_duration()));
                     tod.make12();
-                    save_stream<CharT, Traits> _(os);
+                    save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.width(2);
                     os << tod.hours().count() << CharT{':'};
@@ -6019,7 +6047,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     typename basic_istream<CharT, Traits>::sentry ok{is, true};
     if (ok)
     {
-        date::detail::save_stream<CharT, Traits> ss(is);
+        date::detail::save_istream<CharT, Traits> ss(is);
         is.fill(' ');
         is.flags(std::ios::skipws | std::ios::dec);
         is.width(0);
