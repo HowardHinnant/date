@@ -393,7 +393,7 @@ throw_invalid(const string_t& s, unsigned i, const string_t& message)
 {
     throw std::runtime_error(std::string("Invalid time_zone initializer.\n") +
                              std::string(message) + ":\n" +
-                             s + '\n' +
+                             std::string(s) + '\n' +
                              "\x1b[1;32m" +
                              std::string(i, '~') + '^' +
                              std::string(s.size()-i-1, '~') +

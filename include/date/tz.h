@@ -474,30 +474,34 @@ public:
               >::type>
         zoned_time(std::string_view name,   const local_time<Duration>& tp, choose c);
 
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string_view())),
-                      zoned_time
-                  >::value
-              >::type>
-        zoned_time(std::string_view name, const zoned_time& zt);
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string_view())),
+                              zoned_time
+                          >::value
+                      >::type>
+        zoned_time(std::string_view name, const zoned_time<Duration2, TimeZonePtr2>& zt);
 
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string_view())),
-                      zoned_time,
-                      choose
-                  >::value
-              >::type>
-        zoned_time(std::string_view name, const zoned_time& zt, choose);
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string_view())),
+                              zoned_time,
+                              choose
+                          >::value
+                      >::type>
+        zoned_time(std::string_view name, const zoned_time<Duration2, TimeZonePtr2>& zt, choose);
 
 #else  // !HAS_STRING_VIEW
 
@@ -588,62 +592,80 @@ public:
         zoned_time(const char* name, const local_time<Duration>& tp, choose c);
 
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string())),
-                      zoned_time
-                  >::value
-              >::type>
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string())),
+                              zoned_time
+                          >::value
+                      >::type>
+#else
+    template <class Duration2, class TimeZonePtr2>
 #endif
-        zoned_time(const std::string& name, const zoned_time& zt);
+        zoned_time(const std::string& name, const zoned_time<Duration2, TimeZonePtr2>& zt);
 
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string())),
-                      zoned_time
-                  >::value
-              >::type>
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string())),
+                              zoned_time
+                          >::value
+                      >::type>
+#else
+    template <class Duration2, class TimeZonePtr2>
 #endif
-        zoned_time(const char* name, const zoned_time& zt);
+        zoned_time(const char* name, const zoned_time<Duration2, TimeZonePtr2>& zt);
 
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string())),
-                      zoned_time,
-                      choose
-                  >::value
-              >::type>
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string())),
+                              zoned_time,
+                              choose
+                          >::value
+                      >::type>
+#else
+    template <class Duration2, class TimeZonePtr2>
 #endif
-        zoned_time(const std::string& name, const zoned_time& zt, choose);
+        zoned_time(const std::string& name, const zoned_time<Duration2, TimeZonePtr2>& zt,
+                   choose);
 
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-    template <class T = TimeZonePtr,
+    template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
-              <
-                  std::is_constructible
-                  <
-                      zoned_time,
-                      decltype(zoned_traits<T>::locate_zone(std::string())),
-                      zoned_time,
-                      choose
-                  >::value
-              >::type>
+                      <
+                          std::is_convertible<sys_time<Duration2>,
+                                              sys_time<Duration>>::value &&
+                          std::is_constructible
+                          <
+                              zoned_time,
+                              decltype(zoned_traits<T>::locate_zone(std::string())),
+                              zoned_time,
+                              choose
+                          >::value
+                      >::type>
+#else
+    template <class Duration2, class TimeZonePtr2>
 #endif
-        zoned_time(const char* name, const zoned_time& zt, choose);
+        zoned_time(const char* name, const zoned_time<Duration2, TimeZonePtr2>& zt,
+                   choose);
 
 #endif  // !HAS_STRING_VIEW
 
@@ -1465,17 +1487,19 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
     {}
 
 template <class Duration, class TimeZonePtr>
-template <class, class>
+template <class Duration2, class TimeZonePtr2, class, class>
 inline
-zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name, const zoned_time& zt)
+zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt)
     {}
 
 template <class Duration, class TimeZonePtr>
-template <class, class>
+template <class Duration2, class TimeZonePtr2, class, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
-                                              const zoned_time& zt, choose c)
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt,
+                                              choose c)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt, c)
     {}
 
@@ -1543,40 +1567,51 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(const char* name,
 
 template <class Duration, class TimeZonePtr>
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-template <class T, class>
+template <class Duration2, class TimeZonePtr2, class, class>
+#else
+template <class Duration2, class TimeZonePtr2>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(const std::string& name,
-                                              const zoned_time& zt)
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt)
     {}
 
 template <class Duration, class TimeZonePtr>
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-template <class T, class>
+template <class Duration2, class TimeZonePtr2, class, class>
+#else
+template <class Duration2, class TimeZonePtr2>
 #endif
 inline
-zoned_time<Duration, TimeZonePtr>::zoned_time(const char* name, const zoned_time& zt)
+zoned_time<Duration, TimeZonePtr>::zoned_time(const char* name,
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt)
     {}
 
 template <class Duration, class TimeZonePtr>
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-template <class T, class>
+template <class Duration2, class TimeZonePtr2, class, class>
+#else
+template <class Duration2, class TimeZonePtr2>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(const std::string& name,
-                                              const zoned_time& zt, choose c)
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt,
+                                              choose c)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt, c)
     {}
 
 template <class Duration, class TimeZonePtr>
 #if !defined(_MSC_VER) || (_MSC_VER > 1900)
-template <class T, class>
+template <class Duration2, class TimeZonePtr2, class, class>
+#else
+template <class Duration2, class TimeZonePtr2>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(const char* name,
-                                              const zoned_time& zt, choose c)
+                                              const zoned_time<Duration2, TimeZonePtr2>& zt,
+                                              choose c)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), zt, c)
     {}
 
