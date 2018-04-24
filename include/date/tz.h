@@ -707,57 +707,45 @@ template <class Duration>
 zoned_time(sys_time<Duration>)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
 
-template <class TimeZonePtr>
-zoned_time(TimeZonePtr)
-    -> zoned_time<std::chrono::seconds, TimeZonePtr>;
+template <class TimeZonePtrOrName>
+zoned_time(TimeZonePtrOrName)
+    -> zoned_time<std::chrono::seconds,
+                  std::conditional_t
+                  <
+                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
+                      time_zone const*,
+                      TimeZonePtrOrName
+                  >>;
 
-template <class TimeZonePtr, class Duration>
-zoned_time(TimeZonePtr, sys_time<Duration>)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>, TimeZonePtr>;
+template <class TimeZonePtrOrName, class Duration>
+zoned_time(TimeZonePtrOrName, sys_time<Duration>)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
+                  std::conditional_t
+                  <
+                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
+                      time_zone const*,
+                      TimeZonePtrOrName
+                  >>;
 
-template <class TimeZonePtr, class Duration>
-zoned_time(TimeZonePtr, local_time<Duration>, choose = choose::earliest)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>, TimeZonePtr>;
+template <class TimeZonePtrOrName, class Duration>
+zoned_time(TimeZonePtrOrName, local_time<Duration>, choose = choose::earliest)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
+                  std::conditional_t
+                  <
+                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
+                      time_zone const*,
+                      TimeZonePtrOrName
+                  >>;
 
-#if HAS_STRING_VIEW
-
-zoned_time(std::string_view)
-    -> zoned_time<std::chrono::seconds>;
-
-template <class Duration>
-zoned_time(std::string_view, sys_time<Duration>)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-template <class Duration>
-zoned_time(std::string_view, local_time<Duration>, choose = choose::earliest)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-#else  // !HAS_STRING_VIEW
-
-zoned_time(std::string)
-    -> zoned_time<std::chrono::seconds>;
-
-template <class Duration>
-zoned_time(std::string, sys_time<Duration>)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-template <class Duration>
-zoned_time(std::string, local_time<Duration>, choose = choose::earliest)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-#endif  // !HAS_STRING_VIEW
-
-template <class Duration>
-zoned_time(const char*, sys_time<Duration>)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-template <class Duration>
-zoned_time(const char*, local_time<Duration>, choose = choose::earliest)
-    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>>;
-
-template <class Duration, class TimeZonePtr, class TimeZonePtr2>
-zoned_time(TimeZonePtr, zoned_time<Duration, TimeZonePtr2>, choose = choose::earliest)
-    -> zoned_time<Duration, TimeZonePtr>;
+template <class Duration, class TimeZonePtrOrName, class TimeZonePtr2>
+zoned_time(TimeZonePtrOrName, zoned_time<Duration, TimeZonePtr2>, choose = choose::earliest)
+    -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
+                  std::conditional_t
+                  <
+                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
+                      time_zone const*,
+                      TimeZonePtrOrName
+                  >>;
 
 #endif  // HAS_DEDUCTION_GUIDES
 
@@ -1840,9 +1828,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using duration = typename zoned_time<Duration, TimeZonePtr>::duration;
     using LT = local_time<duration>;
-    auto const tz = tp.get_time_zone();
     auto const st = tp.get_sys_time();
-    auto const info = tz->get_info(st);
+    auto const info = tp.get_time_zone()->get_info(st);
     return to_stream(os, fmt, LT{(st+info.offset).time_since_epoch()},
                      &info.abbrev, &info.offset);
 }
