@@ -4619,6 +4619,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     os.flags(std::ios::skipws | std::ios::dec);
     os.width(0);
     tm tm{};
+    bool insert_negative = fds.has_tod && fds.tod.to_duration() < Duration::zero();
 #if !ONLY_C_LOCALE
     auto& facet = use_facet<time_put<CharT>>(os.getloc());
 #endif
@@ -4933,6 +4934,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
                     auto hms = fds.tod;
 #if !ONLY_C_LOCALE
                     if (modified == CharT{})
@@ -5027,6 +5033,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
 #if !ONLY_C_LOCALE
                     if (modified == CharT{})
 #endif
@@ -5167,6 +5178,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
 #if !ONLY_C_LOCALE
                     if (modified == CharT{})
 #endif
