@@ -6997,14 +6997,22 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 {
                     int tH, tM;
                     minutes toff = not_a_offset;
+                    bool neg = false;
+                    auto ic = is.peek();
+                    if (!Traits::eq_int_type(ic, Traits::eof()))
+                    {
+                        auto c = static_cast<char>(Traits::to_char_type(ic));
+                        if (c == '-')
+                            neg = true;
+                    }
                     if (modified == CharT{})
                     {
                         read(is, rs{tH, 2, 2});
                         if (!is.fail())
-                            toff = hours{tH};
+                            toff = hours{std::abs(tH)};
                         if (is.good())
                         {
-                            auto ic = is.peek();
+                            ic = is.peek();
                             if (!Traits::eq_int_type(ic, Traits::eof()))
                             {
                                 auto c = static_cast<char>(Traits::to_char_type(ic));
@@ -7012,7 +7020,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                 {
                                     read(is, ru{tM, 2, 2});
                                     if (!is.fail())
-                                        toff += minutes{ tH < 0 ? -tM : tM };
+                                        toff += minutes{tM};
                                 }
                             }
                         }
@@ -7021,10 +7029,10 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         read(is, rs{tH, 1, 2});
                         if (!is.fail())
-                            toff = hours{tH};
+                            toff = hours{std::abs(tH)};
                         if (is.good())
                         {
-                            auto ic = is.peek();
+                            ic = is.peek();
                             if (!Traits::eq_int_type(ic, Traits::eof()))
                             {
                                 auto c = static_cast<char>(Traits::to_char_type(ic));
@@ -7033,11 +7041,13 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                     (void)is.get();
                                     read(is, ru{tM, 2, 2});
                                     if (!is.fail())
-                                        toff += minutes{ tH < 0 ? -tM : tM };
+                                        toff += minutes{tM};
                                 }
                             }
                         }
                     }
+                    if (neg)
+                        toff = -toff;
                     checked_set(temp_offset, toff, not_a_offset, is);
                     command = nullptr;
                     width = -1;
