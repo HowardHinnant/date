@@ -514,14 +514,14 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, years>::value
+                std::is_convertible<Duration const&, years>::value
               >::type>
     CONSTCD14 year_month& operator+=(const Duration& d)
     NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, years>::value
+                std::is_convertible<Duration const&, years>::value
               >::type>
     CONSTCD14 year_month& operator-=(const Duration& d)
     NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
@@ -544,21 +544,21 @@ CONSTCD11 months operator-(const year_month& x, const year_month& y) NOEXCEPT;
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, years>::value
+            std::is_convertible<Duration const&, years>::value
           >::type>
 CONSTCD11 year_month operator+(const year_month& ym, const Duration& d)
 NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
 template <class Duration,
           class = typename std::enable_if<
-           std::is_convertible<Duration, years>::value
+           std::is_convertible<Duration const&, years>::value
           >::type>
 CONSTCD11 year_month operator+(const Duration& d, const year_month& ym)
 NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, years>::value
+            std::is_convertible<Duration const&, years>::value
           >::type>
 CONSTCD11 year_month operator-(const year_month& ym, const Duration& d)
 NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
@@ -670,7 +670,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl
 
 #define NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS \
   NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value \
-                || std::is_nothrow_constructible<months, Duration const&>::value)
+                || !std::is_convertible<Duration const&, years>::value       \
+                && std::is_nothrow_constructible<months, Duration const&>::value)
 
 // class year_month_day
 
@@ -691,7 +692,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator+=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -702,7 +703,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator-=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -737,7 +738,7 @@ CONSTCD11 year_month operator/(const year& y, const month& m) NOEXCEPT;
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -750,7 +751,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -763,7 +764,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -791,7 +792,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day_last& operator+=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -802,7 +803,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day_last& operator-=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -836,7 +837,7 @@ CONSTCD11
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -849,7 +850,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -862,7 +863,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -895,7 +896,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator+=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -906,7 +907,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator-=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -938,7 +939,7 @@ CONSTCD11
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -951,7 +952,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -964,7 +965,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -992,7 +993,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday_last& operator+=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -1003,7 +1004,7 @@ public:
 
     template <class Duration,
               class = typename std::enable_if<
-                std::is_convertible<Duration, months>::value
+                std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday_last& operator-=(const Duration& d)
     NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
@@ -1037,7 +1038,7 @@ operator!=(const year_month_weekday_last& x, const year_month_weekday_last& y) N
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -1050,7 +1051,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
@@ -1063,7 +1064,7 @@ NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
 
 template <class Duration,
           class = typename std::enable_if<
-            std::is_convertible<Duration, months>::value
+            std::is_convertible<Duration const&, months>::value
           >::type>
 CONSTCD11
 inline
