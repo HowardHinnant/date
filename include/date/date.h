@@ -95,12 +95,14 @@ namespace date
 #    define CONSTCD11
 #    define CONSTCD14
 #    define NOEXCEPT _NOEXCEPT
+#    define NOEXCEPT_COND(...)
 #  else
 //   VS2017 and later
 #    define CONSTDATA constexpr const
 #    define CONSTCD11 constexpr
 #    define CONSTCD14 constexpr
 #    define NOEXCEPT noexcept
+#    define NOEXCEPT_COND(...) noexcept(__VA_ARGS__)
 #  endif
 
 #elif defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5150
@@ -109,6 +111,7 @@ namespace date
 #  define CONSTCD11 constexpr
 #  define CONSTCD14
 #  define NOEXCEPT noexcept
+#  define NOEXCEPT_COND(...) noexcept(__VA_ARGS__)
 
 #elif __cplusplus >= 201402
 // C++14
@@ -116,12 +119,14 @@ namespace date
 #  define CONSTCD11 constexpr
 #  define CONSTCD14 constexpr
 #  define NOEXCEPT noexcept
+#  define NOEXCEPT_COND(...) noexcept(__VA_ARGS__)
 #else
 // C++11
 #  define CONSTDATA constexpr const
 #  define CONSTCD11 constexpr
 #  define CONSTCD14
 #  define NOEXCEPT noexcept
+#  define NOEXCEPT_COND(...) noexcept(__VA_ARGS__)
 #endif
 
 #ifndef HAS_VOID_T
@@ -511,12 +516,12 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
-    CONSTCD14 year_month& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+    CONSTCD14 year_month& operator+=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
     { return *this += years(d); }
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
-    CONSTCD14 year_month& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+    CONSTCD14 year_month& operator-=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
     { return *this -= years(d); }
 
 
@@ -541,17 +546,17 @@ CONSTCD11 year_month operator-(const year_month& ym, const years& dy) NOEXCEPT;
 
 template<typename Duration, 
          std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
-CONSTCD11 year_month operator+(const year_month& ym, const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+CONSTCD11 year_month operator+(const year_month& ym, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
 { return ym + years(d);}
 
 template<typename Duration, 
          std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
-CONSTCD11 year_month operator+(const Duration& d, const year_month& ym) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+CONSTCD11 year_month operator+(const Duration& d, const year_month& ym) NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
 { return ym + years(d); }
 
 template<typename Duration, 
          std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
-CONSTCD11 year_month operator-(const year_month& ym, const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+CONSTCD11 year_month operator-(const year_month& ym, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
 { return ym - years(d);}
 
 
@@ -679,7 +684,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_day& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_day& operator+=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this + d;
        return *this;
@@ -687,7 +692,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_day& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_day& operator-=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this - d;
        return *this;
@@ -722,7 +727,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day
-operator+(const year_month_day& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const year_month_day& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.day();
 }
@@ -732,7 +737,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day
-operator+(const Duration& d, const year_month_day& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const Duration& d, const year_month_day& ymd) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.day();
 }
@@ -742,7 +747,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day
-operator-(const year_month_day& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator-(const year_month_day& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() - d) / ymd.day();
 }
@@ -764,7 +769,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_day_last& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_day_last& operator+=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this + d;
        return *this;
@@ -772,7 +777,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_day_last& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_day_last& operator-=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this - d;
        return *this;
@@ -806,7 +811,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day_last
-operator+(const year_month_day_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const year_month_day_last& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / last_spec();
 }
@@ -816,7 +821,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day_last
-operator+(const Duration& d, const year_month_day_last& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const Duration& d, const year_month_day_last& ymd) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / last_spec();
 }
@@ -826,7 +831,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_day_last
-operator-(const year_month_day_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator-(const year_month_day_last& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() - d) / last_spec();
 }
@@ -853,7 +858,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_weekday& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_weekday& operator+=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this + d;
        return *this;
@@ -861,7 +866,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_weekday& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_weekday& operator-=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this - d;
        return *this;
@@ -893,7 +898,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday
-operator+(const year_month_weekday& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const year_month_weekday& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();
 }
@@ -903,7 +908,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday
-operator+(const Duration& d, const year_month_weekday& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const Duration& d, const year_month_weekday& ymd) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();;
 }
@@ -913,7 +918,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday
-operator-(const year_month_weekday& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator-(const year_month_weekday& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() - d) / ymd.weekday_indexed();
 }
@@ -936,7 +941,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_weekday_last& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_weekday_last& operator+=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this + d;
        return *this;
@@ -944,7 +949,7 @@ public:
 
     template<typename Duration, 
 	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
-    CONSTCD14 year_month_weekday_last& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    CONSTCD14 year_month_weekday_last& operator-=(const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)
     {
        *this = *this - d;
        return *this;
@@ -978,7 +983,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday_last
-operator+(const year_month_weekday_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const year_month_weekday_last& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_last();
 }
@@ -988,7 +993,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday_last
-operator+(const Duration& d, const year_month_weekday_last& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator+(const Duration& d, const year_month_weekday_last& ymd) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_last();;
 }
@@ -998,7 +1003,7 @@ template<typename Duration,
 CONSTCD11
 inline
 year_month_weekday_last
-operator-(const year_month_weekday_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+operator-(const year_month_weekday_last& ymd, const Duration& d) NOEXCEPT_COND(std::is_nothrow_constructible<months, Duration const&>::value)	
 {
     return (ymd.year() / ymd.month() - d) / ymd.weekday_last();
 }
