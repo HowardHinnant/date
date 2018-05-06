@@ -668,10 +668,10 @@ template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl);
 
-#define NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS \
-  NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value \
-                || !std::is_convertible<Duration const&, years>::value       \
-                && std::is_nothrow_constructible<months, Duration const&>::value)
+#define NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS                                  \
+  NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value     \
+                || (!std::is_convertible<Duration const&, years>::value          \
+                && std::is_nothrow_constructible<months, Duration const&>::value))
 
 // class year_month_day
 
@@ -695,7 +695,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this + d;
        return *this;
@@ -706,7 +706,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this - d;
        return *this;
@@ -744,7 +744,7 @@ CONSTCD11
 inline
 year_month_day
 operator+(const year_month_day& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.day();
 }
@@ -757,7 +757,7 @@ CONSTCD11
 inline
 year_month_day
 operator+(const Duration& d, const year_month_day& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.day();
 }
@@ -770,7 +770,7 @@ CONSTCD11
 inline
 year_month_day
 operator-(const year_month_day& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() - d) / ymd.day();
 }
@@ -795,7 +795,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day_last& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this + d;
        return *this;
@@ -806,7 +806,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day_last& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this - d;
        return *this;
@@ -843,7 +843,7 @@ CONSTCD11
 inline
 year_month_day_last
 operator+(const year_month_day_last& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / last_spec();
 }
@@ -856,7 +856,7 @@ CONSTCD11
 inline
 year_month_day_last
 operator+(const Duration& d, const year_month_day_last& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / last_spec();
 }
@@ -869,7 +869,7 @@ CONSTCD11
 inline
 year_month_day_last
 operator-(const year_month_day_last& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() - d) / last_spec();
 }
@@ -899,7 +899,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this + d;
        return *this;
@@ -910,7 +910,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this - d;
        return *this;
@@ -945,7 +945,7 @@ CONSTCD11
 inline
 year_month_weekday
 operator+(const year_month_weekday& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();
 }
@@ -958,7 +958,7 @@ CONSTCD11
 inline
 year_month_weekday
 operator+(const Duration& d, const year_month_weekday& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();;
 }
@@ -970,7 +970,7 @@ template <class Duration,
 CONSTCD11
 inline
 year_month_weekday
-operator-(const year_month_weekday& ymd, const Duration& d) NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+operator-(const year_month_weekday& ymd, const Duration& d) NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() - d) / ymd.weekday_indexed();
 }
@@ -996,7 +996,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday_last& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this + d;
        return *this;
@@ -1007,7 +1007,7 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday_last& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
     {
        *this = *this - d;
        return *this;
@@ -1044,7 +1044,7 @@ CONSTCD11
 inline
 year_month_weekday_last
 operator+(const year_month_weekday_last& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_last();
 }
@@ -1057,7 +1057,7 @@ CONSTCD11
 inline
 year_month_weekday_last
 operator+(const Duration& d, const year_month_weekday_last& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() + d) / ymd.weekday_last();;
 }
@@ -1070,7 +1070,7 @@ CONSTCD11
 inline
 year_month_weekday_last
 operator-(const year_month_weekday_last& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTS
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
 {
     return (ymd.year() / ymd.month() - d) / ymd.weekday_last();
 }
