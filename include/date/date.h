@@ -851,10 +851,22 @@ public:
     CONSTCD14 year_month_weekday(const sys_days& dp) NOEXCEPT;
     CONSTCD14 explicit year_month_weekday(const local_days& dp) NOEXCEPT;
 
-    CONSTCD14 year_month_weekday& operator+=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_weekday& operator-=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_weekday& operator+=(const years& y)  NOEXCEPT;
-    CONSTCD14 year_month_weekday& operator-=(const years& y)  NOEXCEPT;
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_weekday& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this + d;
+       return *this;
+    }
+
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_weekday& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this - d;
+       return *this;
+    }
+
 
     CONSTCD11 date::year year() const NOEXCEPT;
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -876,29 +888,35 @@ CONSTCD11
 CONSTCD11
     bool operator!=(const year_month_weekday& x, const year_month_weekday& y) NOEXCEPT;
 
-CONSTCD14
-year_month_weekday
-operator+(const year_month_weekday& ymwd, const months& dm) NOEXCEPT;
-
-CONSTCD14
-year_month_weekday
-operator+(const months& dm, const year_month_weekday& ymwd) NOEXCEPT;
-
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_weekday
-operator+(const year_month_weekday& ymwd, const years& dy) NOEXCEPT;
+operator+(const year_month_weekday& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();
+}
 
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_weekday
-operator+(const years& dy, const year_month_weekday& ymwd) NOEXCEPT;
+operator+(const Duration& d, const year_month_weekday& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();;
+}
 
-CONSTCD14
-year_month_weekday
-operator-(const year_month_weekday& ymwd, const months& dm) NOEXCEPT;
-
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_weekday
-operator-(const year_month_weekday& ymwd, const years& dy) NOEXCEPT;
+operator-(const year_month_weekday& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() - d) / ymd.weekday_indexed();
+}
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2779,42 +2797,6 @@ year_month_weekday::year_month_weekday(const local_days& dp) NOEXCEPT
     : year_month_weekday(from_days(dp.time_since_epoch()))
     {}
 
-CONSTCD14
-inline
-year_month_weekday&
-year_month_weekday::operator+=(const months& m) NOEXCEPT
-{
-    *this = *this + m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_weekday&
-year_month_weekday::operator-=(const months& m) NOEXCEPT
-{
-    *this = *this - m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_weekday&
-year_month_weekday::operator+=(const years& y) NOEXCEPT
-{
-    *this = *this + y;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_weekday&
-year_month_weekday::operator-=(const years& y) NOEXCEPT
-{
-    *this = *this - y;
-    return *this;
-}
-
 CONSTCD11 inline year year_month_weekday::year() const NOEXCEPT {return y_;}
 CONSTCD11 inline month year_month_weekday::month() const NOEXCEPT {return m_;}
 
@@ -2914,54 +2896,6 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday& ymwd
 {
     return os << ymwdi.year() << '/' << ymwdi.month()
               << '/' << ymwdi.weekday_indexed();
-}
-
-CONSTCD14
-inline
-year_month_weekday
-operator+(const year_month_weekday& ymwd, const months& dm) NOEXCEPT
-{
-    return (ymwd.year() / ymwd.month() + dm) / ymwd.weekday_indexed();
-}
-
-CONSTCD14
-inline
-year_month_weekday
-operator+(const months& dm, const year_month_weekday& ymwd) NOEXCEPT
-{
-    return ymwd + dm;
-}
-
-CONSTCD14
-inline
-year_month_weekday
-operator-(const year_month_weekday& ymwd, const months& dm) NOEXCEPT
-{
-    return ymwd + (-dm);
-}
-
-CONSTCD11
-inline
-year_month_weekday
-operator+(const year_month_weekday& ymwd, const years& dy) NOEXCEPT
-{
-    return {ymwd.year()+dy, ymwd.month(), ymwd.weekday_indexed()};
-}
-
-CONSTCD11
-inline
-year_month_weekday
-operator+(const years& dy, const year_month_weekday& ymwd) NOEXCEPT
-{
-    return ymwd + dy;
-}
-
-CONSTCD11
-inline
-year_month_weekday
-operator-(const year_month_weekday& ymwd, const years& dy) NOEXCEPT
-{
-    return ymwd + (-dy);
 }
 
 // year_month_weekday_last
