@@ -509,6 +509,17 @@ public:
     CONSTCD14 year_month& operator+=(const years& dy) NOEXCEPT;
     CONSTCD14 year_month& operator-=(const years& dy) NOEXCEPT;
 
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
+    CONSTCD14 year_month& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+    { return *this += years(d); }
+
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
+    CONSTCD14 year_month& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+    { return *this -= years(d); }
+
+
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -527,6 +538,22 @@ CONSTCD11 months operator-(const year_month& x, const year_month& y) NOEXCEPT;
 CONSTCD11 year_month operator+(const year_month& ym, const years& dy) NOEXCEPT;
 CONSTCD11 year_month operator+(const years& dy, const year_month& ym) NOEXCEPT;
 CONSTCD11 year_month operator-(const year_month& ym, const years& dy) NOEXCEPT;
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
+CONSTCD11 year_month operator+(const year_month& ym, const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+{ return ym + years(d);}
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
+CONSTCD11 year_month operator+(const Duration& d, const year_month& ym) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+{ return ym + years(d); }
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, years>::value, bool> = true>
+CONSTCD11 year_month operator-(const year_month& ym, const Duration& d) noexcept(std::is_nothrow_constructible<years, Duration const&>::value)
+{ return ym - years(d);}
+
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
