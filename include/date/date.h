@@ -762,10 +762,21 @@ public:
     CONSTCD11 year_month_day_last(const date::year& y,
                                   const date::month_day_last& mdl) NOEXCEPT;
 
-    CONSTCD14 year_month_day_last& operator+=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_day_last& operator-=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_day_last& operator+=(const years& y)  NOEXCEPT;
-    CONSTCD14 year_month_day_last& operator-=(const years& y)  NOEXCEPT;
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_day_last& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this + d;
+       return *this;
+    }
+
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_day_last& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this - d;
+       return *this;
+    }
 
     CONSTCD11 date::year           year()           const NOEXCEPT;
     CONSTCD11 date::month          month()          const NOEXCEPT;
@@ -790,29 +801,36 @@ CONSTCD11
 CONSTCD11
     bool operator>=(const year_month_day_last& x, const year_month_day_last& y) NOEXCEPT;
 
-CONSTCD14
-year_month_day_last
-operator+(const year_month_day_last& ymdl, const months& dm) NOEXCEPT;
-
-CONSTCD14
-year_month_day_last
-operator+(const months& dm, const year_month_day_last& ymdl) NOEXCEPT;
-
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_day_last
-operator+(const year_month_day_last& ymdl, const years& dy) NOEXCEPT;
+operator+(const year_month_day_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / last_spec();
+}
 
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_day_last
-operator+(const years& dy, const year_month_day_last& ymdl) NOEXCEPT;
+operator+(const Duration& d, const year_month_day_last& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / last_spec();
+}
 
-CONSTCD14
-year_month_day_last
-operator-(const year_month_day_last& ymdl, const months& dm) NOEXCEPT;
-
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
 CONSTCD11
+inline
 year_month_day_last
-operator-(const year_month_day_last& ymdl, const years& dy) NOEXCEPT;
+operator-(const year_month_day_last& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() - d) / last_spec();
+}
+
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2462,42 +2480,6 @@ year_month_day_last::year_month_day_last(const date::year& y,
     , mdl_(mdl)
     {}
 
-CONSTCD14
-inline
-year_month_day_last&
-year_month_day_last::operator+=(const months& m) NOEXCEPT
-{
-    *this = *this + m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day_last&
-year_month_day_last::operator-=(const months& m) NOEXCEPT
-{
-    *this = *this - m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day_last&
-year_month_day_last::operator+=(const years& y) NOEXCEPT
-{
-    *this = *this + y;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day_last&
-year_month_day_last::operator-=(const years& y) NOEXCEPT
-{
-    *this = *this - y;
-    return *this;
-}
-
 CONSTCD11 inline year year_month_day_last::year() const NOEXCEPT {return y_;}
 CONSTCD11 inline month year_month_day_last::month() const NOEXCEPT {return mdl_.month();}
 
@@ -2603,54 +2585,6 @@ std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymdl)
 {
     return os << ymdl.year() << '/' << ymdl.month_day_last();
-}
-
-CONSTCD14
-inline
-year_month_day_last
-operator+(const year_month_day_last& ymdl, const months& dm) NOEXCEPT
-{
-    return (ymdl.year() / ymdl.month() + dm) / last;
-}
-
-CONSTCD14
-inline
-year_month_day_last
-operator+(const months& dm, const year_month_day_last& ymdl) NOEXCEPT
-{
-    return ymdl + dm;
-}
-
-CONSTCD14
-inline
-year_month_day_last
-operator-(const year_month_day_last& ymdl, const months& dm) NOEXCEPT
-{
-    return ymdl + (-dm);
-}
-
-CONSTCD11
-inline
-year_month_day_last
-operator+(const year_month_day_last& ymdl, const years& dy) NOEXCEPT
-{
-    return {ymdl.year()+dy, ymdl.month_day_last()};
-}
-
-CONSTCD11
-inline
-year_month_day_last
-operator+(const years& dy, const year_month_day_last& ymdl) NOEXCEPT
-{
-    return ymdl + dy;
-}
-
-CONSTCD11
-inline
-year_month_day_last
-operator-(const year_month_day_last& ymdl, const years& dy) NOEXCEPT
-{
-    return ymdl + (-dy);
 }
 
 // year_month_day

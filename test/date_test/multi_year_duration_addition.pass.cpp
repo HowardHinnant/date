@@ -39,7 +39,7 @@ main()
     using decamonths = duration<int, std::ratio_multiply<std::ratio<10>, months::period>>;
 
     {
-       constexpr year_month ym{2001_y, feb};
+       constexpr year_month ym = 2001_y/feb;
        static_assert(ym + months{1} == 2001_y/mar);
        static_assert(noexcept(ym + months{1}));
        static_assert(months{1} + ym == 2001_y/mar);
@@ -86,7 +86,7 @@ main()
     }
 
     {
-       constexpr year_month_day ym{2001_y, feb, 10_d};
+       constexpr year_month_day ym = 2001_y/feb/10;
        static_assert(ym + months{1} == 2001_y/mar/10);
        static_assert(noexcept(ym + months{1}));
        static_assert(months{1} + ym == 2001_y/mar/10);
@@ -129,6 +129,53 @@ main()
        static_assert((copy(ym) += decamonths{1}) == 2001_y/dec/10);
        static_assert(noexcept(copy(ym) += decamonths{1}));
        static_assert((copy(ym) -= decamonths{1}) == 2000_y/apr/10);
+       static_assert(noexcept(copy(ym) -= decamonths{1}));
+    }
+
+    {
+       constexpr year_month_day_last ym = 2001_y/feb/last;
+       static_assert(ym + months{1} == 2001_y/mar/last);
+       static_assert(noexcept(ym + months{1}));
+       static_assert(months{1} + ym == 2001_y/mar/last);
+       static_assert(noexcept(months{1} + ym));
+       static_assert(ym - months{1} == 2001_y/jan/last);
+       static_assert(noexcept(ym - months{1}));
+       static_assert((copy(ym) += months{1}) == 2001_y/mar/last);
+       static_assert(noexcept(copy(ym) += months{1}));
+       static_assert((copy(ym) -= months{1}) == 2001_y/jan/last);
+       static_assert(noexcept(copy(ym) -= months{1}));
+      
+       static_assert(ym + years{1} == 2002_y/feb/last);
+       static_assert(noexcept(ym + years{1}));
+       static_assert(years{1} + ym == 2002_y/feb/last);
+       static_assert(noexcept(years{1} + ym));
+       static_assert(ym - years{1} == 2000_y/feb/last);
+       static_assert(noexcept(ym - years{1}));
+       static_assert((copy(ym) += years{1}) == 2002_y/feb/last);
+       static_assert(noexcept(copy(ym) += years{1}));
+       static_assert((copy(ym) -= years{1}) == 2000_y/feb/last);
+       static_assert(noexcept(copy(ym) -= years{1}));
+
+       static_assert(ym + decades{1} == 2011_y/feb/last);
+       static_assert(noexcept(ym + decades{1}));
+       static_assert(decades{1} + ym == 2011_y/feb/last);
+       static_assert(noexcept(decades{1} + ym));
+       static_assert(ym - decades{1} == 1991_y/feb/last);
+       static_assert(noexcept(ym - decades{1}));
+       static_assert((copy(ym) += decades{1}) == 2011_y/feb/last);
+       static_assert(noexcept(copy(ym) += decades{1}));
+       static_assert((copy(ym) -= decades{1}) == 1991_y/feb/last);
+       static_assert(noexcept(copy(ym) -= decades{1}));
+
+       static_assert(ym + decamonths{1} == 2001_y/dec/last);
+       static_assert(noexcept(ym + decamonths{1}));
+       static_assert(decamonths{1} + ym == 2001_y/dec/last);
+       static_assert(noexcept(decamonths{1} + ym));
+       static_assert(ym - decamonths{1} == 2000_y/apr/last);
+       static_assert(noexcept(ym - decamonths{1}));
+       static_assert((copy(ym) += decamonths{1}) == 2001_y/dec/last);
+       static_assert(noexcept(copy(ym) += decamonths{1}));
+       static_assert((copy(ym) -= decamonths{1}) == 2000_y/apr/last);
        static_assert(noexcept(copy(ym) -= decamonths{1}));
     }
 
