@@ -511,25 +511,20 @@ public:
 
     CONSTCD14 year_month& operator+=(const months& dm) NOEXCEPT;
     CONSTCD14 year_month& operator-=(const months& dm) NOEXCEPT;
-    CONSTCD14 year_month& operator+=(const years& dy) NOEXCEPT;
-    CONSTCD14 year_month& operator-=(const years& dy) NOEXCEPT;
 
     template <class Duration,
               class = typename std::enable_if<
                 std::is_convertible<Duration, years>::value
               >::type>
     CONSTCD14 year_month& operator+=(const Duration& d)
-    NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
-    { return *this += years(d); }
+    NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
     template <class Duration,
               class = typename std::enable_if<
                 std::is_convertible<Duration, years>::value
               >::type>
     CONSTCD14 year_month& operator-=(const Duration& d)
-    NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
-    { return *this -= years(d); }
-
+    NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
     CONSTCD11 bool ok() const NOEXCEPT;
 };
@@ -546,33 +541,27 @@ CONSTCD14 year_month operator+(const months& dm, const year_month& ym) NOEXCEPT;
 CONSTCD14 year_month operator-(const year_month& ym, const months& dm) NOEXCEPT;
 
 CONSTCD11 months operator-(const year_month& x, const year_month& y) NOEXCEPT;
-CONSTCD11 year_month operator+(const year_month& ym, const years& dy) NOEXCEPT;
-CONSTCD11 year_month operator+(const years& dy, const year_month& ym) NOEXCEPT;
-CONSTCD11 year_month operator-(const year_month& ym, const years& dy) NOEXCEPT;
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration, years>::value
           >::type>
 CONSTCD11 year_month operator+(const year_month& ym, const Duration& d)
-NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
-{ return ym + years(d);}
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
 template <class Duration,
           class = typename std::enable_if<
            std::is_convertible<Duration, years>::value
           >::type>
 CONSTCD11 year_month operator+(const Duration& d, const year_month& ym)
-NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
-{ return ym + years(d); }
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration, years>::value
           >::type>
 CONSTCD11 year_month operator-(const year_month& ym, const Duration& d)
-NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
-{ return ym - years(d);}
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value);
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2198,21 +2187,26 @@ year_month::operator-=(const months& dm) NOEXCEPT
     return *this;
 }
 
-CONSTCD14
+template <class Duration, class>
+CONSTCD14 
 inline
-year_month&
-year_month::operator+=(const years& dy) NOEXCEPT
+year_month& 
+year_month::operator+=(const Duration& d)
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
 {
-    *this = *this + dy;
+    *this = *this + d;
     return *this;
 }
 
-CONSTCD14
+
+template <class Duration, class>
+CONSTCD14 
 inline
-year_month&
-year_month::operator-=(const years& dy) NOEXCEPT
+year_month& 
+year_month::operator-=(const Duration& d)
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
 {
-    *this = *this - dy;
+    *this = *this - d;
     return *this;
 }
 
@@ -2302,28 +2296,34 @@ operator-(const year_month& x, const year_month& y) NOEXCEPT
             months(static_cast<unsigned>(x.month()) - static_cast<unsigned>(y.month()));
 }
 
-CONSTCD11
+template <class Duration, class>
+CONSTCD11 
 inline
 year_month
-operator+(const year_month& ym, const years& dy) NOEXCEPT
-{
-    return (ym.year() + dy) / ym.month();
+operator+(const year_month& ym, const Duration& d)
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
+{ 
+    return (ym.year() + years(d)) / ym.month();;
 }
 
+template <class Duration, class>
 CONSTCD11
 inline
 year_month
-operator+(const years& dy, const year_month& ym) NOEXCEPT
-{
-    return ym + dy;
+operator+(const Duration& d, const year_month& ym)
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
+{ 
+    return ym + years(d);
 }
 
-CONSTCD11
+template <class Duration, class>
+CONSTCD11 
 inline
-year_month
-operator-(const year_month& ym, const years& dy) NOEXCEPT
-{
-    return ym + -dy;
+year_month 
+operator-(const year_month& ym, const Duration& d)
+NOEXCEPT_COND(std::is_nothrow_constructible<years, Duration const&>::value)
+{ 
+   return ym + -years(d);
 }
 
 template<class CharT, class Traits>
