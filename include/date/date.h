@@ -677,10 +677,22 @@ public:
     CONSTCD14 year_month_day(sys_days dp) NOEXCEPT;
     CONSTCD14 explicit year_month_day(local_days dp) NOEXCEPT;
 
-    CONSTCD14 year_month_day& operator+=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_day& operator-=(const months& m) NOEXCEPT;
-    CONSTCD14 year_month_day& operator+=(const years& y)  NOEXCEPT;
-    CONSTCD14 year_month_day& operator-=(const years& y)  NOEXCEPT;
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_day& operator+=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this + d;
+       return *this;
+    }
+
+    template<typename Duration, 
+	     std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+    CONSTCD14 year_month_day& operator-=(const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)
+    {
+       *this = *this - d;
+       return *this;
+    }
+
 
     CONSTCD11 date::year  year()  const NOEXCEPT;
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -702,12 +714,38 @@ CONSTCD11 bool operator> (const year_month_day& x, const year_month_day& y) NOEX
 CONSTCD11 bool operator<=(const year_month_day& x, const year_month_day& y) NOEXCEPT;
 CONSTCD11 bool operator>=(const year_month_day& x, const year_month_day& y) NOEXCEPT;
 
-CONSTCD14 year_month_day operator+(const year_month_day& ymd, const months& dm) NOEXCEPT;
-CONSTCD14 year_month_day operator+(const months& dm, const year_month_day& ymd) NOEXCEPT;
-CONSTCD14 year_month_day operator-(const year_month_day& ymd, const months& dm) NOEXCEPT;
-CONSTCD11 year_month_day operator+(const year_month_day& ymd, const years& dy)  NOEXCEPT;
-CONSTCD11 year_month_day operator+(const years& dy, const year_month_day& ymd)  NOEXCEPT;
-CONSTCD11 year_month_day operator-(const year_month_day& ymd, const years& dy)  NOEXCEPT;
+
+CONSTCD11 year_month operator/(const year& y, const month& m) NOEXCEPT;
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+CONSTCD11
+inline
+year_month_day
+operator+(const year_month_day& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / ymd.day();
+}
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+CONSTCD11
+inline
+year_month_day
+operator+(const Duration& d, const year_month_day& ymd) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() + d) / ymd.day();
+}
+
+template<typename Duration, 
+         std::enable_if_t<std::is_convertible<Duration, months>::value, bool> = true>
+CONSTCD11
+inline
+year_month_day
+operator-(const year_month_day& ymd, const Duration& d) noexcept(std::is_nothrow_constructible<months, Duration const&>::value)	
+{
+    return (ymd.year() / ymd.month() - d) / ymd.day();
+}
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2652,42 +2690,6 @@ CONSTCD11 inline day year_month_day::day() const NOEXCEPT {return d_;}
 
 CONSTCD14
 inline
-year_month_day&
-year_month_day::operator+=(const months& m) NOEXCEPT
-{
-    *this = *this + m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day&
-year_month_day::operator-=(const months& m) NOEXCEPT
-{
-    *this = *this - m;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day&
-year_month_day::operator+=(const years& y) NOEXCEPT
-{
-    *this = *this + y;
-    return *this;
-}
-
-CONSTCD14
-inline
-year_month_day&
-year_month_day::operator-=(const years& y) NOEXCEPT
-{
-    *this = *this - y;
-    return *this;
-}
-
-CONSTCD14
-inline
 days
 year_month_day::to_days() const NOEXCEPT
 {
@@ -2817,54 +2819,6 @@ year_month_day::from_days(days dp) NOEXCEPT
     auto const d = doy - (153*mp+2)/5 + 1;                             // [1, 31]
     auto const m = mp < 10 ? mp+3 : mp-9;                              // [1, 12]
     return year_month_day{date::year{y + (m <= 2)}, date::month(m), date::day(d)};
-}
-
-CONSTCD14
-inline
-year_month_day
-operator+(const year_month_day& ymd, const months& dm) NOEXCEPT
-{
-    return (ymd.year() / ymd.month() + dm) / ymd.day();
-}
-
-CONSTCD14
-inline
-year_month_day
-operator+(const months& dm, const year_month_day& ymd) NOEXCEPT
-{
-    return ymd + dm;
-}
-
-CONSTCD14
-inline
-year_month_day
-operator-(const year_month_day& ymd, const months& dm) NOEXCEPT
-{
-    return ymd + (-dm);
-}
-
-CONSTCD11
-inline
-year_month_day
-operator+(const year_month_day& ymd, const years& dy) NOEXCEPT
-{
-    return (ymd.year() + dy) / ymd.month() / ymd.day();
-}
-
-CONSTCD11
-inline
-year_month_day
-operator+(const years& dy, const year_month_day& ymd) NOEXCEPT
-{
-    return ymd + dy;
-}
-
-CONSTCD11
-inline
-year_month_day
-operator-(const year_month_day& ymd, const years& dy) NOEXCEPT
-{
-    return ymd + (-dy);
 }
 
 // year_month_weekday

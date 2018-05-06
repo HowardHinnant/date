@@ -109,7 +109,7 @@ main()
        static_assert((copy(ym) -= years{1}) == 2000_y/feb/10);
        static_assert(noexcept(copy(ym) -= years{1}));
 
-      /* static_assert(ym + decades{1} == 2011_y/feb/10);
+       static_assert(ym + decades{1} == 2011_y/feb/10);
        static_assert(noexcept(ym + decades{1}));
        static_assert(decades{1} + ym == 2011_y/feb/10);
        static_assert(noexcept(decades{1} + ym));
@@ -118,7 +118,7 @@ main()
        static_assert((copy(ym) += decades{1}) == 2011_y/feb/10);
        static_assert(noexcept(copy(ym) += decades{1}));
        static_assert((copy(ym) -= decades{1}) == 1991_y/feb/10);
-       static_assert(noexcept(copy(ym) -= decades{1}));*/
+       static_assert(noexcept(copy(ym) -= decades{1}));
 
        static_assert(ym + decamonths{1} == 2001_y/dec/10);
        static_assert(noexcept(ym + decamonths{1}));
