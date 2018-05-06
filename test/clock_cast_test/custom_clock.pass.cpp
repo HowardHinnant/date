@@ -30,16 +30,16 @@ int conversions = 0;
 //to/from impl
 struct mil_clock
 {
-  using duration = std::common_type_t<std::chrono::system_clock::duration, date::days>;
+  using duration = typename std::common_type<std::chrono::system_clock::duration, date::days>::type;
   using rep = duration::rep;
   using period = duration::period;
   using time_point = std::chrono::time_point<mil_clock, duration>;
 
-  static constexpr date::sys_days epoch = date::year{2000}/date::month{0}/date::day{1};
+  static constexpr date::sys_days epoch{date::days{1000}};
 
   template<typename Duration>
   static
-  std::chrono::time_point<std::chrono::system_clock, std::common_type_t<Duration, date::days>>
+  std::chrono::time_point<std::chrono::system_clock, typename std::common_type<Duration, date::days>::type>
   to_sys(std::chrono::time_point<mil_clock, Duration> const& tp)
   {
     ++conversions;
@@ -48,11 +48,11 @@ struct mil_clock
 
   template<typename Duration>
   static
-  std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>
+  std::chrono::time_point<mil_clock, typename std::common_type<Duration, date::days>::type>
   from_sys(std::chrono::time_point<std::chrono::system_clock, Duration> const& tp)
   {
     ++conversions;
-    using res = std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>;
+    using res = std::chrono::time_point<mil_clock, typename std::common_type<Duration, date::days>::type>;
     return res(tp - epoch);
   }
 
@@ -103,11 +103,11 @@ namespace date
    struct clock_time_conversion<mil_clock, s2s_clock>
    {
      template<typename Duration>
-     std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>
+     std::chrono::time_point<mil_clock, typename std::common_type<Duration, date::days>::type>
      operator()(std::chrono::time_point<s2s_clock, Duration> const& tp)
      {
        ++conversions;
-       using res = std::chrono::time_point<mil_clock, std::common_type_t<Duration, date::days>>;
+       using res = std::chrono::time_point<mil_clock, typename std::common_type<Duration, date::days>::type>;
        return res(tp.time_since_epoch() - mil_clock::epoch.time_since_epoch());
      }
    };
