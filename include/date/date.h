@@ -7,6 +7,7 @@
 // Copyright (c) 2016 Adrian Colomitchi
 // Copyright (c) 2017 Florian Dang
 // Copyright (c) 2017 Paul Thompson
+// Copyright (c) 2018 Tomasz Kamiński
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -695,23 +696,14 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-    {
-       *this = *this + d;
-       return *this;
-    }
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
     template <class Duration,
               class = typename std::enable_if<
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_day& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-    {
-       *this = *this - d;
-       return *this;
-    }
-
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
     CONSTCD11 date::year  year()  const NOEXCEPT;
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -740,40 +732,22 @@ template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_day
-operator+(const year_month_day& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() + d) / ymd.day();
-}
+CONSTCD11 year_month_day operator+(const year_month_day& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_day
-operator+(const Duration& d, const year_month_day& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() + d) / ymd.day();
-}
+CONSTCD11 year_month_day operator+(const Duration& d, const year_month_day& ymd)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_day
-operator-(const year_month_day& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() - d) / ymd.day();
-}
+CONSTCD11 year_month_day operator-(const year_month_day& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2742,6 +2716,28 @@ CONSTCD11 inline year year_month_day::year() const NOEXCEPT {return y_;}
 CONSTCD11 inline month year_month_day::month() const NOEXCEPT {return m_;}
 CONSTCD11 inline day year_month_day::day() const NOEXCEPT {return d_;}
 
+template <class Duration, class>
+CONSTCD14 
+inline
+year_month_day&
+year_month_day::operator+=(const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    *this = *this + d;
+    return *this;
+}
+
+template <class Duration, class>
+CONSTCD14 
+inline
+year_month_day& 
+year_month_day::operator-=(const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    *this = *this - d;
+    return *this;
+}
+
 CONSTCD14
 inline
 days
@@ -2835,6 +2831,36 @@ bool
 operator>=(const year_month_day& x, const year_month_day& y) NOEXCEPT
 {
     return !(x < y);
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_day
+operator+(const year_month_day& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() + d) / ymd.day();
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_day
+operator+(const Duration& d, const year_month_day& ymd)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() + d) / ymd.day();
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_day
+operator-(const year_month_day& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() - d) / ymd.day();
 }
 
 template<class CharT, class Traits>
