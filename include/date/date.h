@@ -849,23 +849,14 @@ public:
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator+=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-    {
-       *this = *this + d;
-       return *this;
-    }
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
     template <class Duration,
               class = typename std::enable_if<
                 std::is_convertible<Duration const&, months>::value
               >::type>
     CONSTCD14 year_month_weekday& operator-=(const Duration& d)
-    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-    {
-       *this = *this - d;
-       return *this;
-    }
-
+    NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
     CONSTCD11 date::year year() const NOEXCEPT;
     CONSTCD11 date::month month() const NOEXCEPT;
@@ -891,39 +882,22 @@ template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_weekday
-operator+(const year_month_weekday& ymd, const Duration& d)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();
-}
+CONSTCD11 year_month_weekday operator+(const year_month_weekday& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_weekday
-operator+(const Duration& d, const year_month_weekday& ymd)
-NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();;
-}
+CONSTCD11 year_month_weekday operator+(const Duration& d, const year_month_weekday& ymd)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template <class Duration,
           class = typename std::enable_if<
             std::is_convertible<Duration const&, months>::value
           >::type>
-CONSTCD11
-inline
-year_month_weekday
-operator-(const year_month_weekday& ymd, const Duration& d) NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
-{
-    return (ymd.year() / ymd.month() - d) / ymd.weekday_indexed();
-}
+CONSTCD11 year_month_weekday operator-(const year_month_weekday& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS;
 
 template<class CharT, class Traits>
 std::basic_ostream<CharT, Traits>&
@@ -2980,6 +2954,26 @@ year_month_weekday::weekday_indexed() const NOEXCEPT
     return wdi_;
 }
 
+template <class Duration, class>
+CONSTCD14 
+year_month_weekday& 
+year_month_weekday::operator+=(const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    *this = *this + d;
+    return *this;
+}
+
+template <class Duration, class>
+CONSTCD14 
+year_month_weekday& 
+year_month_weekday::operator-=(const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    *this = *this - d;
+    return *this;
+}
+
 CONSTCD14
 inline
 year_month_weekday::operator sys_days() const NOEXCEPT
@@ -3043,6 +3037,36 @@ bool
 operator!=(const year_month_weekday& x, const year_month_weekday& y) NOEXCEPT
 {
     return !(x == y);
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_weekday
+operator+(const year_month_weekday& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_weekday
+operator+(const Duration& d, const year_month_weekday& ymd)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() + d) / ymd.weekday_indexed();;
+}
+
+template <class Duration, class>
+CONSTCD11
+inline
+year_month_weekday
+operator-(const year_month_weekday& ymd, const Duration& d)
+NOEXCEPT_CONVERTIBLE_TO_YEARS_OR_MONTHS
+{
+    return (ymd.year() / ymd.month() - d) / ymd.weekday_indexed();
 }
 
 template<class CharT, class Traits>
