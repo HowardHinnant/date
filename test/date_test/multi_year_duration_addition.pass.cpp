@@ -20,11 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #include "date.h"
 #include <chrono>
 #include <cassert>
 #include <type_traits>
+
+#define CPP11_ASSERT(...) static_assert(__VA_ARGS__, "")
+
+#if __cplusplus >= 201402
+// C++14
+#  define CPP14_ASSERT(...) static_assert(__VA_ARGS__, "")
+#else
+// C++11
+#  define CPP14_ASSERT(...) assert(__VA_ARGS__)
+#endif
+
+
 
 template<typename T>
 constexpr T copy(T const& t) noexcept { return t; }
@@ -48,237 +59,237 @@ main()
 
     {
        constexpr year_month ym = 2001_y/feb;
-       static_assert(ym + one_month == 2001_y/mar, "");
-       static_assert(noexcept(ym + one_month), "");
-       static_assert(one_month + ym == 2001_y/mar, "");
-       static_assert(noexcept(one_month + ym), "");
-       static_assert(ym - one_month == 2001_y/jan, "");
-       static_assert(noexcept(ym - one_month), "");
-       static_assert((copy(ym) += one_month) == 2001_y/mar, "");
-       static_assert(noexcept(copy(ym) += one_month), "");
-       static_assert((copy(ym) -= one_month) == 2001_y/jan, "");
-       static_assert(noexcept(copy(ym) -= one_month), "");
+       CPP14_ASSERT(ym + one_month == 2001_y/mar);
+       CPP11_ASSERT(noexcept(ym + one_month));
+       CPP14_ASSERT(one_month + ym == 2001_y/mar);
+       CPP11_ASSERT(noexcept(one_month + ym));
+       CPP14_ASSERT(ym - one_month == 2001_y/jan);
+       CPP11_ASSERT(noexcept(ym - one_month));
+       CPP14_ASSERT((copy(ym) += one_month) == 2001_y/mar);
+       CPP11_ASSERT(noexcept(copy(ym) += one_month));
+       CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_month));
       
-       static_assert(ym + one_year == 2002_y/feb, "");
-       static_assert(noexcept(ym + one_year), "");
-       static_assert(one_year + ym == 2002_y/feb, "");
-       static_assert(noexcept(one_year + ym), "");
-       static_assert(ym - one_year == 2000_y/feb, "");
-       static_assert(noexcept(ym - one_year), "");
-       static_assert((copy(ym) += one_year) == 2002_y/feb, "");
-       static_assert(noexcept(copy(ym) += one_year), "");
-       static_assert((copy(ym) -= one_year) == 2000_y/feb, "");
-       static_assert(noexcept(copy(ym) -= one_year), "");
+       CPP11_ASSERT(ym + one_year == 2002_y/feb);
+       CPP11_ASSERT(noexcept(ym + one_year));
+       CPP11_ASSERT(one_year + ym == 2002_y/feb);
+       CPP11_ASSERT(noexcept(one_year + ym));
+       CPP11_ASSERT(ym - one_year == 2000_y/feb);
+       CPP11_ASSERT(noexcept(ym - one_year));
+       CPP14_ASSERT((copy(ym) += one_year) == 2002_y/feb);
+       CPP11_ASSERT(noexcept(copy(ym) += one_year));
+       CPP14_ASSERT((copy(ym) -= one_year) == 2000_y/feb);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_year));
 
-       static_assert(ym + one_decade == 2011_y/feb, "");
-       //static_assert(noexcept(ym + one_decade), "");
-       static_assert(one_decade + ym == 2011_y/feb, "");
-       //static_assert(noexcept(one_decade + ym), "");
-       static_assert(ym - one_decade == 1991_y/feb, "");
-       //static_assert(noexcept(ym - one_decade), "");
-       static_assert((copy(ym) += one_decade) == 2011_y/feb, "");
-       //static_assert(noexcept(copy(ym) += one_decade), "");
-       static_assert((copy(ym) -= one_decade) == 1991_y/feb, "");
-       //static_assert(noexcept(copy(ym) -= one_decade), "");
+       CPP11_ASSERT(ym + one_decade == 2011_y/feb);
+       //CPP11_ASSERT(noexcept(ym + one_decade));
+       CPP11_ASSERT(one_decade + ym == 2011_y/feb);
+       //CPP11_ASSERT(noexcept(one_decade + ym));
+       CPP11_ASSERT(ym - one_decade == 1991_y/feb);
+       //CPP11_ASSERT(noexcept(ym - one_decade));
+       CPP14_ASSERT((copy(ym) += one_decade) == 2011_y/feb);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decade));
+       CPP14_ASSERT((copy(ym) -= one_decade) == 1991_y/feb);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decade));
 
-       static_assert(ym + one_decamonth == 2001_y/dec, "");
-       //static_assert(noexcept(ym + one_decamonth), "");
-       static_assert(one_decamonth + ym == 2001_y/dec, "");
-       //static_assert(noexcept(one_decamonth + ym), "");
-       static_assert(ym - one_decamonth == 2000_y/apr, "");
-       //static_assert(noexcept(ym - one_decamonth), "");
-       static_assert((copy(ym) += one_decamonth) == 2001_y/dec, "");
-       //static_assert(noexcept(copy(ym) += one_decamonth), "");
-       static_assert((copy(ym) -= one_decamonth) == 2000_y/apr, "");
-       //static_assert(noexcept(copy(ym) -= one_decamonth), "");
+       CPP14_ASSERT(ym + one_decamonth == 2001_y/dec);
+       //CPP11_ASSERT(noexcept(ym + one_decamonth));
+       CPP14_ASSERT(one_decamonth + ym  == 2001_y/dec);
+       //CPP11_ASSERT(noexcept(one_decamonth + ym));
+       CPP14_ASSERT(ym - one_decamonth == 2000_y/apr);
+       //CPP11_ASSERT(noexcept(ym - one_decamonth));
+       CPP14_ASSERT((copy(ym) += one_decamonth) == 2001_y/dec);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decamonth));
+       CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decamonth));
     }
 
     {
        constexpr year_month_day ym = 2001_y/feb/10;
-       static_assert(ym + one_month == 2001_y/mar/10, "");
-       static_assert(noexcept(ym + one_month), "");
-       static_assert(one_month + ym == 2001_y/mar/10, "");
-       static_assert(noexcept(one_month + ym), "");
-       static_assert(ym - one_month == 2001_y/jan/10, "");
-       static_assert(noexcept(ym - one_month), "");
-       static_assert((copy(ym) += one_month) == 2001_y/mar/10, "");
-       static_assert(noexcept(copy(ym) += one_month), "");
-       static_assert((copy(ym) -= one_month) == 2001_y/jan/10, "");
-       static_assert(noexcept(copy(ym) -= one_month), "");
+       CPP14_ASSERT(ym + one_month == 2001_y/mar/10);
+       CPP11_ASSERT(noexcept(ym + one_month));
+       CPP14_ASSERT(one_month + ym == 2001_y/mar/10);
+       CPP11_ASSERT(noexcept(one_month + ym));
+       CPP14_ASSERT(ym - one_month == 2001_y/jan/10);
+       CPP11_ASSERT(noexcept(ym - one_month));
+       CPP14_ASSERT((copy(ym) += one_month) == 2001_y/mar/10);
+       CPP11_ASSERT(noexcept(copy(ym) += one_month));
+       CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/10);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_month));
       
-       static_assert(ym + one_year == 2002_y/feb/10, "");
-       static_assert(noexcept(ym + one_year), "");
-       static_assert(one_year + ym == 2002_y/feb/10, "");
-       static_assert(noexcept(one_year + ym), "");
-       static_assert(ym - one_year == 2000_y/feb/10, "");
-       static_assert(noexcept(ym - one_year), "");
-       static_assert((copy(ym) += one_year) == 2002_y/feb/10, "");
-       static_assert(noexcept(copy(ym) += one_year), "");
-       static_assert((copy(ym) -= one_year) == 2000_y/feb/10, "");
-       static_assert(noexcept(copy(ym) -= one_year), "");
+       CPP11_ASSERT(ym + one_year == 2002_y/feb/10);
+       CPP11_ASSERT(noexcept(ym + one_year));
+       CPP11_ASSERT(one_year + ym == 2002_y/feb/10);
+       CPP11_ASSERT(noexcept(one_year + ym));
+       CPP11_ASSERT(ym - one_year == 2000_y/feb/10);
+       CPP11_ASSERT(noexcept(ym - one_year));
+       CPP14_ASSERT((copy(ym) += one_year) == 2002_y/feb/10);
+       CPP11_ASSERT(noexcept(copy(ym) += one_year));
+       CPP14_ASSERT((copy(ym) -= one_year) == 2000_y/feb/10);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_year));
 
-       static_assert(ym + one_decade == 2011_y/feb/10, "");
-       //static_assert(noexcept(ym + one_decade), "");
-       static_assert(one_decade + ym == 2011_y/feb/10, "");
-       //static_assert(noexcept(one_decade + ym), "");
-       static_assert(ym - one_decade == 1991_y/feb/10, "");
-       //static_assert(noexcept(ym - one_decade), "");
-       static_assert((copy(ym) += one_decade) == 2011_y/feb/10, "");
-       //static_assert(noexcept(copy(ym) += one_decade), "");
-       static_assert((copy(ym) -= one_decade) == 1991_y/feb/10, "");
-       //static_assert(noexcept(copy(ym) -= one_decade), "");
+       CPP11_ASSERT(ym + one_decade == 2011_y/feb/10);
+       //CPP11_ASSERT(noexcept(ym + one_decade));
+       CPP11_ASSERT(one_decade + ym == 2011_y/feb/10);
+       //CPP11_ASSERT(noexcept(one_decade + ym));
+       CPP11_ASSERT(ym - one_decade == 1991_y/feb/10);
+       //CPP11_ASSERT(noexcept(ym - one_decade));
+       CPP14_ASSERT((copy(ym) += one_decade) == 2011_y/feb/10);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decade));
+       CPP14_ASSERT((copy(ym) -= one_decade) == 1991_y/feb/10);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decade));
 
-       static_assert(ym + one_decamonth == 2001_y/dec/10, "");
-       //static_assert(noexcept(ym + one_decamonth), "");
-       static_assert(one_decamonth + ym == 2001_y/dec/10, "");
-       //static_assert(noexcept(one_decamonth + ym), "");
-       static_assert(ym - one_decamonth == 2000_y/apr/10, "");
-       //static_assert(noexcept(ym - one_decamonth), "");
-       static_assert((copy(ym) += one_decamonth) == 2001_y/dec/10, "");
-       //static_assert(noexcept(copy(ym) += one_decamonth), "");
-       static_assert((copy(ym) -= one_decamonth) == 2000_y/apr/10, "");
-       //static_assert(noexcept(copy(ym) -= one_decamonth), "");
+       CPP14_ASSERT(ym + one_decamonth == 2001_y/dec/10);
+       //CPP11_ASSERT(noexcept(ym + one_decamonth));
+       CPP14_ASSERT(one_decamonth + ym  == 2001_y/dec/10);
+       //CPP11_ASSERT(noexcept(one_decamonth + ym));
+       CPP14_ASSERT(ym - one_decamonth == 2000_y/apr/10);
+       //CPP11_ASSERT(noexcept(ym - one_decamonth));
+       CPP14_ASSERT((copy(ym) += one_decamonth) == 2001_y/dec/10);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decamonth));
+       CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/10);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decamonth));
     }
 
     {
        constexpr year_month_day_last ym = 2001_y/feb/last;
-       static_assert(ym + one_month == 2001_y/mar/last, "");
-       static_assert(noexcept(ym + one_month), "");
-       static_assert(one_month + ym == 2001_y/mar/last, "");
-       static_assert(noexcept(one_month + ym), "");
-       static_assert(ym - one_month == 2001_y/jan/last, "");
-       static_assert(noexcept(ym - one_month), "");
-       static_assert((copy(ym) += one_month) == 2001_y/mar/last, "");
-       static_assert(noexcept(copy(ym) += one_month), "");
-       static_assert((copy(ym) -= one_month) == 2001_y/jan/last, "");
-       static_assert(noexcept(copy(ym) -= one_month), "");
+       CPP14_ASSERT(ym + one_month == 2001_y/mar/last);
+       CPP11_ASSERT(noexcept(ym + one_month));
+       CPP14_ASSERT(one_month + ym == 2001_y/mar/last);
+       CPP11_ASSERT(noexcept(one_month + ym));
+       CPP14_ASSERT(ym - one_month == 2001_y/jan/last);
+       CPP11_ASSERT(noexcept(ym - one_month));
+       CPP14_ASSERT((copy(ym) += one_month) == 2001_y/mar/last);
+       CPP11_ASSERT(noexcept(copy(ym) += one_month));
+       CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/last);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_month));
       
-       static_assert(ym + one_year == 2002_y/feb/last, "");
-       static_assert(noexcept(ym + one_year), "");
-       static_assert(one_year + ym == 2002_y/feb/last, "");
-       static_assert(noexcept(one_year + ym), "");
-       static_assert(ym - one_year == 2000_y/feb/last, "");
-       static_assert(noexcept(ym - one_year), "");
-       static_assert((copy(ym) += one_year) == 2002_y/feb/last, "");
-       static_assert(noexcept(copy(ym) += one_year), "");
-       static_assert((copy(ym) -= one_year) == 2000_y/feb/last, "");
-       static_assert(noexcept(copy(ym) -= one_year), "");
+       CPP11_ASSERT(ym + one_year == 2002_y/feb/last);
+       CPP11_ASSERT(noexcept(ym + one_year));
+       CPP11_ASSERT(one_year + ym == 2002_y/feb/last);
+       CPP11_ASSERT(noexcept(one_year + ym));
+       CPP11_ASSERT(ym - one_year == 2000_y/feb/last);
+       CPP11_ASSERT(noexcept(ym - one_year));
+       CPP14_ASSERT((copy(ym) += one_year) == 2002_y/feb/last);
+       CPP11_ASSERT(noexcept(copy(ym) += one_year));
+       CPP14_ASSERT((copy(ym) -= one_year) == 2000_y/feb/last);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_year));
 
-       static_assert(ym + one_decade == 2011_y/feb/last, "");
-       //static_assert(noexcept(ym + one_decade), "");
-       static_assert(one_decade + ym == 2011_y/feb/last, "");
-       //static_assert(noexcept(one_decade + ym), "");
-       static_assert(ym - one_decade == 1991_y/feb/last, "");
-       //static_assert(noexcept(ym - one_decade), "");
-       static_assert((copy(ym) += one_decade) == 2011_y/feb/last, "");
-       //static_assert(noexcept(copy(ym) += one_decade), "");
-       static_assert((copy(ym) -= one_decade) == 1991_y/feb/last, "");
-       //static_assert(noexcept(copy(ym) -= one_decade), "");
+       CPP11_ASSERT(ym + one_decade == 2011_y/feb/last);
+       //CPP11_ASSERT(noexcept(ym + one_decade));
+       CPP11_ASSERT(one_decade + ym == 2011_y/feb/last);
+       //CPP11_ASSERT(noexcept(one_decade + ym));
+       CPP11_ASSERT(ym - one_decade == 1991_y/feb/last);
+       //CPP11_ASSERT(noexcept(ym - one_decade));
+       CPP14_ASSERT((copy(ym) += one_decade) == 2011_y/feb/last);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decade));
+       CPP14_ASSERT((copy(ym) -= one_decade) == 1991_y/feb/last);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decade));
 
-       static_assert(ym + one_decamonth == 2001_y/dec/last, "");
-       //static_assert(noexcept(ym + one_decamonth), "");
-       static_assert(one_decamonth + ym == 2001_y/dec/last, "");
-       //static_assert(noexcept(one_decamonth + ym), "");
-       static_assert(ym - one_decamonth == 2000_y/apr/last, "");
-       //static_assert(noexcept(ym - one_decamonth), "");
-       static_assert((copy(ym) += one_decamonth) == 2001_y/dec/last, "");
-       //static_assert(noexcept(copy(ym) += one_decamonth), "");
-       static_assert((copy(ym) -= one_decamonth) == 2000_y/apr/last, "");
-       //static_assert(noexcept(copy(ym) -= one_decamonth), "");
+       CPP14_ASSERT(ym + one_decamonth == 2001_y/dec/last);
+       //CPP11_ASSERT(noexcept(ym + one_decamonth));
+       CPP14_ASSERT(one_decamonth + ym  == 2001_y/dec/last);
+       //CPP11_ASSERT(noexcept(one_decamonth + ym));
+       CPP14_ASSERT(ym - one_decamonth == 2000_y/apr/last);
+       //CPP11_ASSERT(noexcept(ym - one_decamonth));
+       CPP14_ASSERT((copy(ym) += one_decamonth) == 2001_y/dec/last);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decamonth));
+       CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/last);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decamonth));
     }
 
     {
        constexpr year_month_weekday ym = 2001_y/feb/fri[4];
-       static_assert(ym + one_month == 2001_y/mar/fri[4], "");
-       static_assert(noexcept(ym + one_month), "");
-       static_assert(one_month + ym == 2001_y/mar/fri[4], "");
-       static_assert(noexcept(one_month + ym), "");
-       static_assert(ym - one_month == 2001_y/jan/fri[4], "");
-       static_assert(noexcept(ym - one_month), "");
-       static_assert((copy(ym) += one_month) == 2001_y/mar/fri[4], "");
-       static_assert(noexcept(copy(ym) += one_month), "");
-       static_assert((copy(ym) -= one_month) == 2001_y/jan/fri[4], "");
-       static_assert(noexcept(copy(ym) -= one_month), "");
+       CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[4]);
+       CPP11_ASSERT(noexcept(ym + one_month));
+       CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[4]);
+       CPP11_ASSERT(noexcept(one_month + ym));
+       CPP14_ASSERT(ym - one_month == 2001_y/jan/fri[4]);
+       CPP11_ASSERT(noexcept(ym - one_month));
+       CPP14_ASSERT((copy(ym) += one_month) == 2001_y/mar/fri[4]);
+       CPP11_ASSERT(noexcept(copy(ym) += one_month));
+       CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/fri[4]);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_month));
       
-       static_assert(ym + one_year == 2002_y/feb/fri[4], "");
-       static_assert(noexcept(ym + one_year), "");
-       static_assert(one_year + ym == 2002_y/feb/fri[4], "");
-       static_assert(noexcept(one_year + ym), "");
-       static_assert(ym - one_year == 2000_y/feb/fri[4], "");
-       static_assert(noexcept(ym - one_year), "");
-       static_assert((copy(ym) += one_year) == 2002_y/feb/fri[4], "");
-       static_assert(noexcept(copy(ym) += one_year), "");
-       static_assert((copy(ym) -= one_year) == 2000_y/feb/fri[4], "");
-       static_assert(noexcept(copy(ym) -= one_year), "");
+       CPP11_ASSERT(ym + one_year == 2002_y/feb/fri[4]);
+       CPP11_ASSERT(noexcept(ym + one_year));
+       CPP11_ASSERT(one_year + ym == 2002_y/feb/fri[4]);
+       CPP11_ASSERT(noexcept(one_year + ym));
+       CPP11_ASSERT(ym - one_year == 2000_y/feb/fri[4]);
+       CPP11_ASSERT(noexcept(ym - one_year));
+       CPP14_ASSERT((copy(ym) += one_year) == 2002_y/feb/fri[4]);
+       CPP11_ASSERT(noexcept(copy(ym) += one_year));
+       CPP14_ASSERT((copy(ym) -= one_year) == 2000_y/feb/fri[4]);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_year));
 
-       static_assert(ym + one_decade == 2011_y/feb/fri[4], "");
-       //static_assert(noexcept(ym + one_decade), "");
-       static_assert(one_decade + ym == 2011_y/feb/fri[4], "");
-       //static_assert(noexcept(one_decade + ym), "");
-       static_assert(ym - one_decade == 1991_y/feb/fri[4], "");
-       //static_assert(noexcept(ym - one_decade), "");
-       static_assert((copy(ym) += one_decade) == 2011_y/feb/fri[4], "");
-       //static_assert(noexcept(copy(ym) += one_decade), "");
-       static_assert((copy(ym) -= one_decade) == 1991_y/feb/fri[4], "");
-       //static_assert(noexcept(copy(ym) -= one_decade), "");
+       CPP11_ASSERT(ym + one_decade == 2011_y/feb/fri[4]);
+       //CPP11_ASSERT(noexcept(ym + one_decade));
+       CPP11_ASSERT(one_decade + ym == 2011_y/feb/fri[4]);
+       //CPP11_ASSERT(noexcept(one_decade + ym));
+       CPP11_ASSERT(ym - one_decade == 1991_y/feb/fri[4]);
+       //CPP11_ASSERT(noexcept(ym - one_decade));
+       CPP14_ASSERT((copy(ym) += one_decade) == 2011_y/feb/fri[4]);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decade));
+       CPP14_ASSERT((copy(ym) -= one_decade) == 1991_y/feb/fri[4]);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decade));
 
-       static_assert(ym + one_decamonth == 2001_y/dec/fri[4], "");
-       //static_assert(noexcept(ym + one_decamonth), "");
-       static_assert(one_decamonth + ym == 2001_y/dec/fri[4], "");
-       //static_assert(noexcept(one_decamonth + ym), "");
-       static_assert(ym - one_decamonth == 2000_y/apr/fri[4], "");
-       //static_assert(noexcept(ym - one_decamonth), "");
-       static_assert((copy(ym) += one_decamonth) == 2001_y/dec/fri[4], "");
-       //static_assert(noexcept(copy(ym) += one_decamonth), "");
-       static_assert((copy(ym) -= one_decamonth) == 2000_y/apr/fri[4], "");
-       //static_assert(noexcept(copy(ym) -= one_decamonth), "");
+       CPP14_ASSERT(ym + one_decamonth == 2001_y/dec/fri[4]);
+       //CPP11_ASSERT(noexcept(ym + one_decamonth));
+       CPP14_ASSERT(one_decamonth + ym  == 2001_y/dec/fri[4]);
+       //CPP11_ASSERT(noexcept(one_decamonth + ym));
+       CPP14_ASSERT(ym - one_decamonth == 2000_y/apr/fri[4]);
+       //CPP11_ASSERT(noexcept(ym - one_decamonth));
+       CPP14_ASSERT((copy(ym) += one_decamonth) == 2001_y/dec/fri[4]);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decamonth));
+       CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/fri[4]);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decamonth));
     }
 
     {
        constexpr year_month_weekday_last ym = 2001_y/feb/fri[last];
-       static_assert(ym + one_month == 2001_y/mar/fri[last], "");
-       static_assert(noexcept(ym + one_month), "");
-       static_assert(one_month + ym == 2001_y/mar/fri[last], "");
-       static_assert(noexcept(one_month + ym), "");
-       static_assert(ym - one_month == 2001_y/jan/fri[last], "");
-       static_assert(noexcept(ym - one_month), "");
-       static_assert((copy(ym) += one_month) == 2001_y/mar/fri[last], "");
-       static_assert(noexcept(copy(ym) += one_month), "");
-       static_assert((copy(ym) -= one_month) == 2001_y/jan/fri[last], "");
-       static_assert(noexcept(copy(ym) -= one_month), "");
+       CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[last]);
+       CPP11_ASSERT(noexcept(ym + one_month));
+       CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[last]);
+       CPP11_ASSERT(noexcept(one_month + ym));
+       CPP14_ASSERT(ym - one_month == 2001_y/jan/fri[last]);
+       CPP11_ASSERT(noexcept(ym - one_month));
+       CPP14_ASSERT((copy(ym) += one_month) == 2001_y/mar/fri[last]);
+       CPP11_ASSERT(noexcept(copy(ym) += one_month));
+       CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/fri[last]);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_month));
       
-       static_assert(ym + one_year == 2002_y/feb/fri[last], "");
-       static_assert(noexcept(ym + one_year), "");
-       static_assert(one_year + ym == 2002_y/feb/fri[last], "");
-       static_assert(noexcept(one_year + ym), "");
-       static_assert(ym - one_year == 2000_y/feb/fri[last], "");
-       static_assert(noexcept(ym - one_year), "");
-       static_assert((copy(ym) += one_year) == 2002_y/feb/fri[last], "");
-       static_assert(noexcept(copy(ym) += one_year), "");
-       static_assert((copy(ym) -= one_year) == 2000_y/feb/fri[last], "");
-       static_assert(noexcept(copy(ym) -= one_year), "");
+       CPP11_ASSERT(ym + one_year == 2002_y/feb/fri[last]);
+       CPP11_ASSERT(noexcept(ym + one_year));
+       CPP11_ASSERT(one_year + ym == 2002_y/feb/fri[last]);
+       CPP11_ASSERT(noexcept(one_year + ym));
+       CPP11_ASSERT(ym - one_year == 2000_y/feb/fri[last]);
+       CPP11_ASSERT(noexcept(ym - one_year));
+       CPP14_ASSERT((copy(ym) += one_year) == 2002_y/feb/fri[last]);
+       CPP11_ASSERT(noexcept(copy(ym) += one_year));
+       CPP14_ASSERT((copy(ym) -= one_year) == 2000_y/feb/fri[last]);
+       CPP11_ASSERT(noexcept(copy(ym) -= one_year));
 
-       static_assert(ym + one_decade == 2011_y/feb/fri[last], "");
-       //static_assert(noexcept(ym + one_decade), "");
-       static_assert(one_decade + ym == 2011_y/feb/fri[last], "");
-       //static_assert(noexcept(one_decade + ym), "");
-       static_assert(ym - one_decade == 1991_y/feb/fri[last], "");
-       //static_assert(noexcept(ym - one_decade), "");
-       static_assert((copy(ym) += one_decade) == 2011_y/feb/fri[last], "");
-       //static_assert(noexcept(copy(ym) += one_decade), "");
-       static_assert((copy(ym) -= one_decade) == 1991_y/feb/fri[last], "");
-       //static_assert(noexcept(copy(ym) -= one_decade), "");
+       CPP11_ASSERT(ym + one_decade == 2011_y/feb/fri[last]);
+       //CPP11_ASSERT(noexcept(ym + one_decade));
+       CPP11_ASSERT(one_decade + ym == 2011_y/feb/fri[last]);
+       //CPP11_ASSERT(noexcept(one_decade + ym));
+       CPP11_ASSERT(ym - one_decade == 1991_y/feb/fri[last]);
+       //CPP11_ASSERT(noexcept(ym - one_decade));
+       CPP14_ASSERT((copy(ym) += one_decade) == 2011_y/feb/fri[last]);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decade));
+       CPP14_ASSERT((copy(ym) -= one_decade) == 1991_y/feb/fri[last]);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decade));
 
-       static_assert(ym + one_decamonth == 2001_y/dec/fri[last], "");
-       //static_assert(noexcept(ym + one_decamonth), "");
-       static_assert(one_decamonth + ym == 2001_y/dec/fri[last], "");
-       //static_assert(noexcept(one_decamonth + ym), "");
-       static_assert(ym - one_decamonth == 2000_y/apr/fri[last], "");
-       //static_assert(noexcept(ym - one_decamonth), "");
-       static_assert((copy(ym) += one_decamonth) == 2001_y/dec/fri[last], "");
-       //static_assert(noexcept(copy(ym) += one_decamonth), "");
-       static_assert((copy(ym) -= one_decamonth) == 2000_y/apr/fri[last], "");
-       //static_assert(noexcept(copy(ym) -= one_decamonth), "");
+       CPP14_ASSERT(ym + one_decamonth == 2001_y/dec/fri[last]);
+       //CPP11_ASSERT(noexcept(ym + one_decamonth));
+       CPP14_ASSERT(one_decamonth + ym  == 2001_y/dec/fri[last]);
+       //CPP11_ASSERT(noexcept(one_decamonth + ym));
+       CPP14_ASSERT(ym - one_decamonth == 2000_y/apr/fri[last]);
+       //CPP11_ASSERT(noexcept(ym - one_decamonth));
+       CPP14_ASSERT((copy(ym) += one_decamonth) == 2001_y/dec/fri[last]);
+       //CPP11_ASSERT(noexcept(copy(ym) += one_decamonth));
+       CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/fri[last]);
+       //CPP11_ASSERT(noexcept(copy(ym) -= one_decamonth));
     }
 
 }
