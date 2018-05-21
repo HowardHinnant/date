@@ -103,7 +103,7 @@ namespace date
 #    define CONSTCD11 constexpr
 #    define CONSTCD14 constexpr
 #    define NOEXCEPT noexcept
-#    define NOEXCEPT_COND(...) noexcept(__VA_ARGS__)
+#    define NOEXCEPT_COND(...) /*noexcept(__VA_ARGS__)*/
 #  endif
 
 #elif defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5150
