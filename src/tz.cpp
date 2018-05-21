@@ -117,6 +117,14 @@
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
 #ifdef _WIN32
+#  ifdef WINAPI_FAMILY
+#    include <winapifamily.h>
+#    if WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP
+#      define WINRT
+#      define INSTALL .
+#    endif
+#  endif
+
 #  include <io.h> // _unlink etc.
 
 #  if defined(__clang__)
@@ -173,6 +181,7 @@ static CONSTDATA char folder_delimiter = '/';
 #if !USE_OS_TZDB
 
 #  ifdef _WIN32
+#    ifndef WINRT
 
 namespace
 {
@@ -212,6 +221,7 @@ get_download_folder()
     return get_known_folder(FOLDERID_Downloads);
 }
 
+#    endif // WINRT
 #  else // !_WIN32
 
 #    if !defined(INSTALL) || HAS_REMOTE_API
