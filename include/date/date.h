@@ -7313,8 +7313,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 fds.wd = weekday{static_cast<unsigned>(wd)};
             if (abbrev != nullptr)
                 *abbrev = std::move(temp_abbrev);
-            if (offset != nullptr)
-                *offset = temp_offset;
+            if (offset != nullptr && temp_offset != not_a_offset)
+              *offset = temp_offset;
         }
        return is;
     }
