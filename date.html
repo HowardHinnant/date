@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2018-03-03<br/>
+2018-06-02<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -162,9 +162,9 @@ in order to cut down on the verbosity.
 </p>
 
 <blockquote><pre>
-constexpr auto x1 = 2015_y/mar/22;
-constexpr auto x2 = mar/22/2015;
-constexpr auto x3 = 22_d/mar/2015;
+constexpr auto x1 = 2015_y/March/22;
+constexpr auto x2 = March/22/2015;
+constexpr auto x3 = 22_d/March/2015;
 </pre></blockquote>
 
 <p>
@@ -223,9 +223,9 @@ to indicate the last day of the month for that year:
 </p>
 
 <blockquote><pre>
-constexpr auto x1 = 2015_y/feb/last;
-constexpr auto x2 = feb/last/2015;
-constexpr auto x3 = last/feb/2015;
+constexpr auto x1 = 2015_y/February/last;
+constexpr auto x2 = February/last/2015;
+constexpr auto x3 = last/February/2015;
 </pre></blockquote>
 
 <p>
@@ -248,9 +248,9 @@ Anywhere you can specify a <code>day</code> you can instead specify an <i>indexe
 </p>
 
 <blockquote><pre>
-constexpr auto x1 = 2015_y/mar/sun[4];
-constexpr auto x2 = mar/sun[4]/2015;
-constexpr auto x3 = sun[4]/mar/2015;
+constexpr auto x1 = 2015_y/March/Sunday[4];
+constexpr auto x2 = March/Sunday[4]/2015;
+constexpr auto x3 = Sunday[4]/March/2015;
 </pre></blockquote>
 
 <p>
@@ -271,9 +271,9 @@ constexpr auto x4 = year_month_day{x3};
 </p>
 
 <blockquote><pre>
-constexpr auto x1 = 2015_y/mar/sun[last];
-constexpr auto x2 = mar/sun[last]/2015;
-constexpr auto x3 = sun[last]/mar/2015;
+constexpr auto x1 = 2015_y/March/Sunday[last];
+constexpr auto x2 = March/Sunday[last]/2015;
+constexpr auto x3 = Sunday[last]/March/2015;
 constexpr auto x4 = year_month_day{x3};
 cout &lt;&lt; x3 &lt;&lt; '\n';
 cout &lt;&lt; x4 &lt;&lt; '\n';
@@ -299,7 +299,7 @@ API.
 </p>
 
 <blockquote><pre>
-constexpr auto x1 = 2015_y/mar/sun[last];
+constexpr auto x1 = 2015_y/March/Sunday[last];
 constexpr auto x2 = year_month_weekday_last{year{2015}, month{3u}, weekday_last{weekday{0u}}};
 static_assert(x1 == x2,                                   "No matter the API, x1 and x2 have the same value ...");
 static_assert(is_same&lt;decltype(x1), decltype(x2)&gt;::value, "... and are the same type");
@@ -436,7 +436,7 @@ int
 main()
 {
     using namespace date;
-    std::cout &lt;&lt; weekday{jul/4/2001} &lt;&lt; '\n';
+    std::cout &lt;&lt; weekday{July/4/2001} &lt;&lt; '\n';
 }
 </pre></blockquote>
 
@@ -459,7 +459,7 @@ int
 main()
 {
     using namespace date;
-    static_assert(weekday{2001_y/jul/4} == wed, "");
+    static_assert(weekday{2001_y/July/4} == Wednesday, "");
 }
 </pre></blockquote>
 
@@ -489,7 +489,7 @@ main()
     using namespace date;
     for (auto m = 1; m &lt;= 12; ++m)
     {
-        auto meet = year_month_day{m/fri[1]/2015};
+        auto meet = year_month_day{m/Friday[1]/2015};
         cout &lt;&lt; meet &lt;&lt; '\n';
         meet = meet.year()/meet.month()/(meet.day()+weeks{2});
         cout &lt;&lt; meet &lt;&lt; '\n';
@@ -808,7 +808,7 @@ involves shifting the epoch to Jan. 1, 1970.
 
 <blockquote>
 <table border="1" cellpadding="10">
-<caption>Shift epoch from <code>jan/1/2000</code> to <code>jan/1/1970</code></caption>
+<caption>Shift epoch from <code>January/1/2000</code> to <code>January/1/1970</code></caption>
 <tr>
 
 <td>
@@ -820,7 +820,7 @@ time_point
 shift_epoch(time_point t)
 {
     using namespace date;
-    return t + (sys_days(jan/1/2000) - sys_days(jan/1/1970));
+    return t + (sys_days(January/1/2000) - sys_days(January/1/1970));
 }
 </pre>
 </td>
@@ -898,7 +898,7 @@ seconds between these two epochs ... who knew?
 
 <p>
 clang generates <i>identical</i> assembly for these two functions at -O2 and higher.  That
-is, the sub-expression <code>(sys_days(jan/1/2000) - sys_days(jan/1/1970))</code> is
+is, the sub-expression <code>(sys_days(January/1/2000) - sys_days(January/1/1970))</code> is
 reduced down to a number of days (10,957) <i>at compile time</i>, and then this
 sub-expression, which has type <code>days</code> is added to a <code>time_point</code>
 with a resolution of <code>seconds</code>, which causes the compiler to convert
@@ -1042,8 +1042,8 @@ utc_offset_Eastern_US(std::chrono::system_clock::time_point tp)
     constexpr auto EST = -5h;
     constexpr auto EDT = -4h;
     const auto y = year_month_day{floor&lt;days&gt;(tp)}.year();
-    const auto begin = sys_days{sun[2]/mar/y} + 2h - EST; // EDT begins at this UTC time
-    const auto end   = sys_days{sun[1]/nov/y} + 2h - EDT; // EST begins at this UTC time
+    const auto begin = sys_days{Sunday[2]/March/y} + 2h - EST; // EDT begins at this UTC time
+    const auto end   = sys_days{Sunday[1]/November/y} + 2h - EDT; // EST begins at this UTC time
     if (tp &lt; begin || end &lt;= tp)
         return EST;
     return EDT;
@@ -1078,7 +1078,7 @@ std::cout &lt;&lt; ymd &lt;&lt; ' ' &lt;&lt; time &lt;&lt; '\n';
 
 <p>
 The hub of this library is <code>sys_days</code>.  This is a <i>serial-based</i> time
-point which simply counts the days since (or before) <code>jan/1/1970</code>.  And
+point which simply counts the days since (or before) <code>January/1/1970</code>.  And
 ironically this all important hub is nothing but a type alias to a std-defined type.  That
 is, the central theme this library is built around is nothing more than this:
 </p>
@@ -1122,7 +1122,7 @@ public:
     constexpr operator date::sys_days() const noexcept
     {
         using namespace date;
-        return iso_week_start(y_) + w_ - weeks{1} + (wd_ - mon);
+        return iso_week_start(y_) + w_ - weeks{1} + (wd_ - Monday);
     }
 
     friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const iso_week&amp; x)
@@ -1137,7 +1137,7 @@ private:
     iso_week_start(date::year y) noexcept
     {
         using namespace date;
-        return sys_days{thu[1]/jan/y} - (thu-mon);
+        return sys_days{Thursday[1]/January/y} - (Thursday-Monday);
     }
 
     static
@@ -1199,16 +1199,16 @@ to rule 2,  this can be elegantly coded as:
 </p>
 
 <blockquote><pre>
-return sys_days{thu[1]/jan/y} - (thu-mon);
+return sys_days{Thursday[1]/January/y} - (Thursday-Monday);
 </pre></blockquote>
 
 <p>
 That is, first find the first Thursday in January for year <code>y</code>, and then subtract
 the number of days required to find the Monday before this day.  This could have been done
-with <code>days{3}</code>.   But I chose to code this as <code>(thu-mon)</code>.
+with <code>days{3}</code>.   But I chose to code this as <code>(Thursday-Monday)</code>.
 Computationally and performance wise, these two choices are identical: they both subtract
 the literal 3.  I chose the latter because I believe it to be more readable.
-"<code>3</code>" is just a magic constant.  But "<code>(thu-mon)</code>" is the number of
+"<code>3</code>" is just a magic constant.  But "<code>(Thursday-Monday)</code>" is the number of
 days Thursday is past Monday.
 </p>
 
@@ -1217,7 +1217,7 @@ The constructor <code>iso_week(date::sys_days dp)</code> has to first discover w
 ISO week-based year the <code>sys_days dp</code> falls into.  Most often this is the
 same as the civil (<code>year_month_day</code>) year number associated <code>dp</code>.
 But because the week-based year may start a few days earlier or later than
-<code>jan/1</code>, the week-based year number may be one less or one greater than the
+<code>January/1</code>, the week-based year number may be one less or one greater than the
 civil year number associated <code>dp</code>. Once the proper start of the week-based year
 is nailed down (in <code>start</code>), the translation to the field-based
 <code>iso_week</code> is trivial:
@@ -1232,7 +1232,7 @@ The conversion from <code>iso_week</code> to <code>sys_days</code> is even easie
 </p>
 
 <blockquote><pre>
-return iso_week_start(y_) + w_ - weeks{1} + (wd_ - mon);
+return iso_week_start(y_) + w_ - weeks{1} + (wd_ - Monday);
 </pre></blockquote>
 
 <p>
@@ -1332,7 +1332,7 @@ limit(const std::string&amp; msg)
     using namespace std;
     using namespace std::chrono;
     using dsecs = sys_time&lt;duration&lt;double&gt;&gt;;
-    constexpr auto ymin = sys_days{year::min()}/jan/1};
+    constexpr auto ymin = sys_days{year::min()}/January/1};
     constexpr auto ymax = sys_days{year::max()}/12/last};
     constexpr auto dmin = sys_time&lt;D&gt;::min();
     constexpr auto dmax = sys_time&lt;D&gt;::max();
@@ -1611,7 +1611,7 @@ operator&lt;&lt;(std::basic_ostream&lt;CharT, Traits&gt;&amp; os, const local_ti
 
 <p>
 Everything here is contained in the namespace <code>date</code>.  The literal operators,
-and the constexpr field literals (e.g. <code>sun</code>, <code>jan</code>, etc.) are
+and the constexpr field literals (e.g. <code>Sunday</code>, <code>January</code>, etc.) are
 in namespace <code>date::literals</code> and imported into namespace <code>date</code>.
 </p>
 
@@ -1898,9 +1898,9 @@ referring to UTC.
 </p>
 <p>
 For example, we can say that the upcoming 2017 New Years will be commonly
-celebrated at <code>local_time&lt;days&gt;{2017_y/jan/1} + 0s</code>.  For those
+celebrated at <code>local_time&lt;days&gt;{2017_y/January/1} + 0s</code>.  For those
 in a time zone with a zero offset from UTC, it will be celebrated at the
-concrete time of <code>sys_days{2017_y/jan/1} + 0s</code>.  These two timestamps
+concrete time of <code>sys_days{2017_y/January/1} + 0s</code>.  These two timestamps
 have different types, though both have the exact same representation (a count of
 seconds), because they mean two <i>subtly</i> different things, and are both
 <i>quite</i> useful.
@@ -1920,7 +1920,7 @@ template &lt;class Duration&gt;
 <p>
 <code>local_days</code> is a convient way to write <code>local_time&lt;days&gt;</code>.
 The upcoming 2017 New Years will be commonly celebrated at
-<code>local_days{2017_y/jan/1} + 0s</code>.
+<code>local_days{2017_y/January/1} + 0s</code>.
 </p>
 
 <pre>
@@ -2433,18 +2433,18 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, m
             std::chrono::minutes* offset = nullptr);
 
 inline namespace literals {
-constexpr month jan{1};
-constexpr month feb{2};
-constexpr month mar{3};
-constexpr month apr{4};
-constexpr month may{5};
-constexpr month jun{6};
-constexpr month jul{7};
-constexpr month aug{8};
-constexpr month sep{9};
-constexpr month oct{10};
-constexpr month nov{11};
-constexpr month dec{12};
+constexpr month January{1};
+constexpr month February{2};
+constexpr month March{3};
+constexpr month April{4};
+constexpr month May{5};
+constexpr month June{6};
+constexpr month July{7};
+constexpr month August{8};
+constexpr month September{9};
+constexpr month October{10};
+constexpr month November{11};
+constexpr month December{12};
 }
 </pre>
 
@@ -2662,7 +2662,7 @@ and <code>month{13}</code> becomes <code>month{1}</code>. &mdash; <i>end note</i
 increments or decrements is not a valid implementation.
 </p>
 <p>
-<i>Example:</i> <code>feb + months{11} == jan</code>.
+<i>Example:</i> <code>February + months{11} == January</code>.
 </p>
 </blockquote>
 
@@ -2702,7 +2702,7 @@ the returned value <code>m</code> shall satisfy the equality:
 <code>y + m == x</code>.
 </p>
 <p>
-<i>Example:</i> <code>jan - feb == months{11} </code>.
+<i>Example:</i> <code>January - February == months{11} </code>.
 </p>
 </blockquote>
 
@@ -3249,15 +3249,13 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, w
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
 
-inline namespace literals {
-constexpr weekday sun{0};
-constexpr weekday mon{1};
-constexpr weekday tue{2};
-constexpr weekday wed{3};
-constexpr weekday thu{4};
-constexpr weekday fri{5};
-constexpr weekday sat{6};
-}
+constexpr weekday Sunday{0};
+constexpr weekday Monday{1};
+constexpr weekday Tuesday{2};
+constexpr weekday Wednesday{3};
+constexpr weekday Thursday{4};
+constexpr weekday Friday{5};
+constexpr weekday Saturday{6};
 </pre>
 
 <p><b>Overview</b></p>
@@ -3501,7 +3499,7 @@ arithmetic. [<i>Note:</i> For example <code>weekday{7}</code> becomes
 increments or decrements is not a valid implementation.
 </p>
 <p>
-<i>Example:</i> <code>mon + days{6} == sun</code>.
+<i>Example:</i> <code>Monday + days{6} == Sunday</code>.
 </p>
 </blockquote>
 
@@ -3541,7 +3539,7 @@ the returned value <code>d</code> shall satisfy the equality:
 <code>y + d == x</code>.
 </p>
 <p>
-<i>Example:</i> <code>sun - mon == days{6}</code>.
+<i>Example:</i> <code>Sunday - Monday == days{6}</code>.
 </p>
 </blockquote>
 
@@ -3651,8 +3649,8 @@ weekday of a month.  It is most easily constructed by indexing a <code>weekday</
 </p>
 
 <blockquote><pre>
-constexpr auto wdi = sun[2];  // wdi is the second Sunday of an as yet unspecified month
-static_assert(wdi.weekday() == sun);
+constexpr auto wdi = Sunday[2];  // wdi is the second Sunday of an as yet unspecified month
+static_assert(wdi.weekday() == Sunday);
 static_assert(wdi.index() == 2);
 </pre></blockquote>
 
@@ -3786,8 +3784,8 @@ It is most easily constructed by indexing a <code>weekday</code> with <code>last
 </p>
 
 <blockquote><pre>
-constexpr auto wdl = sun[last];  // wdl is the last Sunday of an as yet unspecified month
-static_assert(wdl.weekday() == sun);
+constexpr auto wdl = Sunday[last];  // wdl is the last Sunday of an as yet unspecified month
+static_assert(wdl.weekday() == Sunday);
 </pre></blockquote>
 
 <p>
@@ -3971,7 +3969,7 @@ constexpr bool month_day::ok() const noexcept;
 <p>
 <i>Returns:</i> <code>true</code> if <code>m_.ok()</code> is true, and if
 <code>1_d &lt;= d_</code>, and if <code>d_ &lt;=</code> the number of days in month
-<code>m_</code>.  For <code>m_ == feb</code> the number of days is considered to be 29.
+<code>m_</code>.  For <code>m_ == February</code> the number of days is considered to be 29.
 Otherwise returns <code>false</code>.
 </p>
 </blockquote>
@@ -4146,8 +4144,8 @@ It is most easily constructed using the expression <code>m/last</code> or
 </p>
 
 <blockquote><pre>
-constexpr auto mdl = feb/last;  // mdl is the last day of February of an as yet unspecified year
-static_assert(mdl.month() == feb);
+constexpr auto mdl = February/last;  // mdl is the last day of February of an as yet unspecified year
+static_assert(mdl.month() == February);
 </pre></blockquote>
 
 <p>
@@ -5140,9 +5138,9 @@ back to a <code>sys_days</code>.
 [<i>Example</i>:
 </p>
 <blockquote><pre>
-static_assert(year_month_day{sys_days{2017y/jan/0}}  == 2016y/dec/31);
-static_assert(year_month_day{sys_days{2017y/jan/31}} == 2017y/jan/31);
-static_assert(year_month_day{sys_days{2017y/jan/32}} == 2017y/feb/1);
+static_assert(year_month_day{sys_days{2017y/January/0}}  == 2016y/December/31);
+static_assert(year_month_day{sys_days{2017y/January/31}} == 2017y/January/31);
+static_assert(year_month_day{sys_days{2017y/January/32}} == 2017y/February/1);
 </pre></blockquote>
 <p>
 &mdash;<i>end example</i>]
@@ -5283,7 +5281,7 @@ constexpr year_month_day operator+(const year_month_day&amp; ymd, const years&am
 <i>Returns:</i> <code>(ymd.year() + dy) / ymd.month() / ymd.day()</code>.
 </p>
 <p>
-<i>Remarks:</i> If <code>ymd.month()</code> is <code>feb</code> and <code>ymd.day()</code>
+<i>Remarks:</i> If <code>ymd.month()</code> is <code>February</code> and <code>ymd.day()</code>
 is not in the range <code>[1_d, 28_d]</code>, the resultant <code>year_month_day</code> is
 not guaranteed to return <code>true</code> from <code>ok()</code>.
 </p>
@@ -6435,9 +6433,9 @@ example:
 </p>
 
 <blockquote><pre>
-year_month ym = 2015_y/apr;
-month_day md1 = apr/4;
-month_day md2 = 4_d/apr;
+year_month ym = 2015_y/April;
+month_day md1 = April/4;
+month_day md2 = 4_d/April;
 </pre></blockquote>
 
 <p>
@@ -6449,8 +6447,8 @@ has type <code>int</code>.
 <blockquote><pre>
 auto a = 2015/4/4;       // a == int(125)
 auto b = 2015_y/4/4;     // b == year_month_day{year(2015), month(4), day(4)}
-auto c = 2015_y/4_d/apr; // error: invalid operands to binary expression ('date::year' and 'date::day')
-auto d = 2015/apr/4;     // error: invalid operands to binary expression ('int' and 'const date::month')
+auto c = 2015_y/4_d/April; // error: invalid operands to binary expression ('date::year' and 'date::day')
+auto d = 2015/April/4;     // error: invalid operands to binary expression ('int' and 'const date::month')
 </pre></blockquote>
 
 <p>

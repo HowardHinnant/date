@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2018-03-22<br/>
+2018-06-02<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -330,7 +330,7 @@ main()
 {
     using namespace date::literals;
     using namespace std::chrono_literals;
-    auto meet_nyc = make_zoned("America/New_York", date::local_days{mon[1]/may/2016} + 9h);
+    auto meet_nyc = make_zoned("America/New_York", date::local_days{Monday[1]/May/2016} + 9h);
     auto meet_lon = make_zoned("Europe/London",    meet_nyc);
     auto meet_syd = make_zoned("Australia/Sydney", meet_nyc);
     std::cout &lt;&lt; "The New York meeting is " &lt;&lt; meet_nyc &lt;&lt; '\n';
@@ -352,7 +352,7 @@ The Sydney   meeting is 2016-05-02 23:00:00 AEST
 
 <p>
 The first time, <code>meet_nyc</code> is a pairing of a time zone ("America/New_York")
-with a <i>local time</i> (<code>mon[1]/may/2016</code> at 09:00).  Note that this
+with a <i>local time</i> (<code>Monday[1]/May/2016</code> at 09:00).  Note that this
 input is exactly reflected in the output:
 </p>
 
@@ -393,7 +393,7 @@ local times.  This is called a <code>local_time</code>.
 </p>
 
 <blockquote><pre>
-auto new_years = local_time&lt;days&gt;{2017_y/jan/1} + 0h + 0m + 0s;
+auto new_years = local_time&lt;days&gt;{2017_y/January/1} + 0h + 0m + 0s;
 </pre></blockquote>
 
 <p>
@@ -431,7 +431,7 @@ In summary:  When is 1min after New Years 2017?
 </p>
 
 <blockquote><pre>
-auto t = local_days{jan/1/2017} + 1min;
+auto t = local_days{January/1/2017} + 1min;
 cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01
 </pre></blockquote>
 
@@ -440,7 +440,7 @@ When is 1min after New Years 2017 UTC?
 </p>
 
 <blockquote><pre>
-auto t = sys_days{jan/1/2017} + 1min;
+auto t = sys_days{January/1/2017} + 1min;
 cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01
 </pre></blockquote>
 
@@ -457,7 +457,7 @@ When is 1min after New Years 2017 in New York?
 </p>
 
 <blockquote><pre>
-zoned_seconds t{"America/New_York", local_days{jan/1/2017} + 1min};
+zoned_seconds t{"America/New_York", local_days{January/1/2017} + 1min};
 cout &lt;&lt; t &lt;&lt; '\n';  // 2017-01-01 00:01:00 EST
 </pre></blockquote>
 
@@ -466,7 +466,7 @@ What time will it be in New York when it is 1min after New Years 2017 UTC?
 </p>
 
 <blockquote><pre>
-zoned_seconds t{"America/New_York", sys_days{jan/1/2017} + 1min};
+zoned_seconds t{"America/New_York", sys_days{January/1/2017} + 1min};
 cout &lt;&lt; t &lt;&lt; '\n';  // 2016-12-31 19:01:00 EST
 </pre></blockquote>
 
@@ -578,7 +578,7 @@ main()
     using namespace std::chrono_literals;
     using namespace date;
 
-    auto departure = make_zoned("America/New_York", local_days{dec/30/1978} + 12h + 1min);
+    auto departure = make_zoned("America/New_York", local_days{December/30/1978} + 12h + 1min);
     auto flight_length = 14h + 44min;
     auto arrival = make_zoned("Asia/Tehran", departure.get_sys_time() + flight_length);
 
@@ -620,7 +620,7 @@ line to look at the same flight 24 hours later:
 </p>
 
 <blockquote><pre>
-auto departure = make_zoned("America/New_York", local_days{dec/<b>31</b>/1978} + 12h + 1min);
+auto departure = make_zoned("America/New_York", local_days{December/<b>31</b>/1978} + 12h + 1min);
 </pre></blockquote>
 
 <p>
@@ -652,7 +652,7 @@ main()
     using namespace std::chrono;
     using namespace date;
 
-    auto departure = make_zoned("America/New_York", local_days{dec/31/1978} + 12h + 1min);
+    auto departure = make_zoned("America/New_York", local_days{December/31/1978} + 12h + 1min);
     <b>auto departure_utc = clock_cast&lt;utc_clock&gt;(departure.get_sys_time());</b>
     auto flight_length = 14h + 44min;
     auto arrival = make_zoned("Asia/Tehran", <b>clock_cast&lt;system_clock&gt;(departure_utc + flight_length)</b>);
@@ -1553,7 +1553,7 @@ main()
     using namespace std::chrono_literals;
     try
     {
-        auto zt = make_zoned("America/New_York", local_days{sun[2]/mar/2016} + 2h + 30min);
+        auto zt = make_zoned("America/New_York", local_days{Sunday[2]/March/2016} + 2h + 30min);
     }
     catch (const nonexistent_local_time&amp; e)
     {
@@ -1633,7 +1633,7 @@ main()
     using namespace std::chrono_literals;
     try
     {
-        auto zt = make_zoned("America/New_York", local_days{sun[1]/nov/2016} + 1h + 30min);
+        auto zt = make_zoned("America/New_York", local_days{Sunday[1]/November/2016} + 1h + 30min);
     }
     catch (const ambiguous_local_time&amp; e)
     {
@@ -2939,7 +2939,7 @@ to_utc(const std::chrono::time_point&lt;tai_clock, Duration&gt;&amp; t) noexcept
 <i>Returns:</i> <code>utc_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 378691210s</code>
 </p>
 <p>
-<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
+<i>Note:</i> <code>378691210s == sys_days{1970y/January/1} - sys_days{1958y/January/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -2954,7 +2954,7 @@ tai_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 <i>Returns:</i> <code>tai_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 378691210s</code>
 </p>
 <p>
-<i>Note:</i> <code>378691210s == sys_days{1970y/jan/1} - sys_days{1958y/jan/1} + 10s</code>
+<i>Note:</i> <code>378691210s == sys_days{1970y/January/1} - sys_days{1958y/January/1} + 10s</code>
 </p>
 </blockquote>
 
@@ -3083,7 +3083,7 @@ gps_clock::to_utc(const gps_time&lt;Duration&gt;&amp; t) noexcept;
 <i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} + 315964809s</code>
 </p>
 <p>
-<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
+<i>Note:</i> <code>315964809s == sys_days{1980y/January/Sunday[1]} - sys_days{1970y/January/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -3098,7 +3098,7 @@ gps_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 <i>Returns:</i> <code>gps_time&lt;common_type_t&lt;Duration, seconds&gt;&gt;{t.time_since_epoch()} - 315964809s</code>
 </p>
 <p>
-<i>Note:</i> <code>315964809s == sys_days{1980y/jan/sun[1]} - sys_days{1970y/jan/1} + 9s</code>
+<i>Note:</i> <code>315964809s == sys_days{1980y/January/Sunday[1]} - sys_days{1970y/January/1} + 9s</code>
 </p>
 </blockquote>
 
@@ -3180,7 +3180,7 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
-    auto start = clock_cast&lt;utc_clock&gt;(sys_days{2015_y/jul/1} - 500ms);
+    auto start = clock_cast&lt;utc_clock&gt;(sys_days{2015_y/July/1} - 500ms);
     auto end = start + 2s;
     for (auto utc = start; utc &lt; end; utc += 100ms)
     {
