@@ -431,7 +431,6 @@ public:
     CONSTCD14 weekday& operator+=(const days& d) NOEXCEPT;
     CONSTCD14 weekday& operator-=(const days& d) NOEXCEPT;
 
-    CONSTCD11 explicit operator unsigned() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
     CONSTCD11 weekday_indexed operator[](unsigned index) const NOEXCEPT;
@@ -439,6 +438,14 @@ public:
 
 private:
     static CONSTCD11 unsigned char weekday_from_days(int z) NOEXCEPT;
+
+    friend CONSTCD11 bool operator==(const weekday& x, const weekday& y) NOEXCEPT;
+    friend CONSTCD14 days operator-(const weekday& x, const weekday& y) NOEXCEPT;
+    friend CONSTCD14 weekday operator+(const weekday& x, const days& y) NOEXCEPT;
+    template<class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits>&
+            operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd);
+    friend class weekday_indexed;
 };
 
 CONSTCD11 bool operator==(const weekday& x, const weekday& y) NOEXCEPT;
@@ -1765,7 +1772,7 @@ weekday::weekday_from_days(int z) NOEXCEPT
 CONSTCD11
 inline
 weekday::weekday(unsigned wd) NOEXCEPT
-    : wd_(static_cast<decltype(wd_)>(wd))
+    : wd_(static_cast<decltype(wd_)>(wd != 7 ? wd : 0))
     {}
 
 CONSTCD11
@@ -1803,13 +1810,6 @@ weekday::operator-=(const days& d) NOEXCEPT
     return *this;
 }
 
-CONSTCD11
-inline
-weekday::operator unsigned() const NOEXCEPT
-{
-    return static_cast<unsigned>(wd_);
-}
-
 CONSTCD11 inline bool weekday::ok() const NOEXCEPT {return wd_ <= 6;}
 
 CONSTCD11
@@ -1817,7 +1817,7 @@ inline
 bool
 operator==(const weekday& x, const weekday& y) NOEXCEPT
 {
-    return static_cast<unsigned>(x) == static_cast<unsigned>(y);
+    return x.wd_ == y.wd_;
 }
 
 CONSTCD11
@@ -1833,8 +1833,9 @@ inline
 days
 operator-(const weekday& x, const weekday& y) NOEXCEPT
 {
-    auto const diff = static_cast<unsigned>(x) - static_cast<unsigned>(y);
-    return days{diff <= 6 ? diff : diff + 7};
+    auto const wdu = x.wd_ - y.wd_;
+    auto const wk = (wdu >= 0 ? wdu : wdu-6) / 7;
+    return days{wdu - wk * 7};
 }
 
 CONSTCD14
@@ -1842,7 +1843,7 @@ inline
 weekday
 operator+(const weekday& x, const days& y) NOEXCEPT
 {
-    auto const wdu = static_cast<long long>(static_cast<unsigned>(x)) + y.count();
+    auto const wdu = static_cast<long long>(static_cast<unsigned>(x.wd_)) + y.count();
     auto const wk = (wdu >= 0 ? wdu : wdu-6) / 7;
     return weekday{static_cast<unsigned>(wdu - wk * 7)};
 }
@@ -1874,7 +1875,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
         os << format(fmt, wd);
     }
     else
-        os << static_cast<unsigned>(wd) << " is not a valid weekday";
+        os << static_cast<unsigned>(wd.wd_) << " is not a valid weekday";
     return os;
 }
 
@@ -1939,13 +1940,13 @@ CONSTDATA date::month October{10};
 CONSTDATA date::month November{11};
 CONSTDATA date::month December{12};
 
-CONSTDATA date::weekday Sunday{0u};
-CONSTDATA date::weekday Monday{1u};
-CONSTDATA date::weekday Tuesday{2u};
-CONSTDATA date::weekday Wednesday{3u};
-CONSTDATA date::weekday Thursday{4u};
-CONSTDATA date::weekday Friday{5u};
-CONSTDATA date::weekday Saturday{6u};
+CONSTDATA date::weekday Monday{1};
+CONSTDATA date::weekday Tuesday{2};
+CONSTDATA date::weekday Wednesday{3};
+CONSTDATA date::weekday Thursday{4};
+CONSTDATA date::weekday Friday{5};
+CONSTDATA date::weekday Saturday{6};
+CONSTDATA date::weekday Sunday{7};
 
 // weekday_indexed
 
@@ -1975,7 +1976,7 @@ weekday_indexed::ok() const NOEXCEPT
 CONSTCD11
 inline
 weekday_indexed::weekday_indexed(const date::weekday& wd, unsigned index) NOEXCEPT
-    : wd_(static_cast<decltype(wd_)>(static_cast<unsigned>(wd)))
+    : wd_(static_cast<decltype(wd_)>(static_cast<unsigned>(wd.wd_)))
     , index_(static_cast<decltype(index_)>(index))
     {}
 
@@ -4337,11 +4338,11 @@ extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& f
         os.setstate(std::ios::failbit);
         return 7;
     }
-    unsigned wd;
+    weekday wd;
     if (fds.ymd.ok())
     {
-        wd = static_cast<unsigned>(weekday{fds.ymd});
-        if (fds.wd.ok() && wd != static_cast<unsigned>(fds.wd))
+        wd = weekday{fds.ymd};
+        if (fds.wd.ok() && wd != fds.wd)
         {
             // fds.ymd and fds.wd are inconsistent
             os.setstate(std::ios::failbit);
@@ -4349,8 +4350,8 @@ extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& f
         }
     }
     else
-        wd = static_cast<unsigned>(fds.wd);
-    return wd;
+        wd = fds.wd;
+    return static_cast<unsigned>((wd - Sunday).count());
 }
 
 template <class CharT, class Traits, class Duration>
@@ -7216,8 +7217,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (ymd.ok())
             {
                 if (wd == not_a_weekday)
-                    wd = static_cast<int>(static_cast<unsigned>(weekday(ymd)));
-                else if (wd != static_cast<int>(static_cast<unsigned>(weekday(ymd))))
+                    wd = static_cast<int>((weekday(ymd) - Sunday).count());
+                else if (wd != static_cast<int>((weekday(ymd) - Sunday).count()))
                     goto broken;
                 if (!computed)
                 {

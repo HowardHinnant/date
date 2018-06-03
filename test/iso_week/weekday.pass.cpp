@@ -171,7 +171,7 @@ test_with_date_weekday()
     auto constexpr d1 = iso_week::sun;
     static_assert(unsigned{d1} == 7, "");
     auto constexpr d2 = date::weekday{d1};
-    static_assert(unsigned{d2} == 0, "");
+    static_assert(d2 == date::Sunday, "");
     auto constexpr d3 = iso_week::weekday{d2};
     static_assert(unsigned{d3} == 7, "");
 }
