@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2018-06-02<br/>
+2018-06-03<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -2843,7 +2843,11 @@ constexpr year operator "" _y(unsigned long long y) noexcept;
 <code>year</code> represents a year in the Gregorian calendar.  It shall represent values
 in the range <code>[min(), max()]</code>.  It can be constructed with any
 <code>int</code> value, which will be subsequently truncated to fit into
-<code>year</code>'s internal storage.  <code>year</code> is equality and less-than
+<code>year</code>'s internal storage.  The <code>year</code> prior to <code>year{1}</code>
+is <code>year{0}</code>, and is a leap year.  The <code>year</code> prior to
+<code>year{0}</code> is <code>year{-1}</code>.  This is commonly referred to as the
+<a href="https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar">proleptic Gregorian calendar</a>.
+<code>year</code> is equality and less-than
 comparable, and participates in basic arithmetic with <code>years</code> representing the
 quantity between any two <code>year</code>'s.  One can form a <code>year</code> literal
 with <code>_y</code>.  And one can stream out a <code>year</code> for debugging purposes.
