@@ -3220,7 +3220,6 @@ public:
     constexpr weekday&amp; operator+=(const days&amp; d) noexcept;
     constexpr weekday&amp; operator-=(const days&amp; d) noexcept;
 
-    constexpr explicit operator unsigned() const noexcept;
     constexpr bool ok() const noexcept;
     constexpr weekday_indexed operator[](unsigned index) const noexcept;
     constexpr weekday_last operator[](last_spec) const noexcept;
@@ -3249,27 +3248,27 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, w
             std::basic_string&lt;CharT, Traits, Alloc&gt;* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
 
-constexpr weekday Sunday{0};
 constexpr weekday Monday{1};
 constexpr weekday Tuesday{2};
 constexpr weekday Wednesday{3};
 constexpr weekday Thursday{4};
 constexpr weekday Friday{5};
 constexpr weekday Saturday{6};
+constexpr weekday Sunday{7};
 </pre>
 
 <p><b>Overview</b></p>
 
 <p>
-<code>weekday</code> represents a day of the week in the Gregorian calendar.  It should
-only be representing values in the range 0 to 6, corresponding to Sunday thru Saturday.
-However it may hold values outside this range.  It can be constructed with any
+<code>weekday</code> represents a day of the week in the Gregorian calendar.
+It can be constructed with any
 <code>unsigned</code> value, which will be subsequently truncated to fit into
-<code>weekday</code>'s internal storage.  <code>weekday</code> is equality comparable.
+<code>weekday</code>'s internal storage.  The values [1, 6] map to Monday thru Saturday.
+Both 0 and 7 map to Sunday.  Other values in the range [8, 255] will be stored, and will
+represent values of <code>weekday</code> that are <code>!ok()</code>.
+<code>weekday</code> is equality comparable.
 <code>weekday</code> is not less-than comparable because there is no universal consensus
-on which day is the first day of the week.  This design chooses the encoding of 0 to 6 to
-represent Sunday thru Saturday only because this is consistent with existing C and C++
-practice.  However  <code>weekday</code>'s comparison and arithmetic operations treat the
+on which day is the first day of the week.  <code>weekday</code>'s comparison and arithmetic operations treat the
 days of the week as a circular range, with no beginning and no end.   One can stream out a
 <code>weekday</code> for debugging purposes. <code>weekday</code> has explicit conversions
 to and from <code>unsigned</code>.  There are 7 <code>weekday</code> constants, one for each
@@ -3301,9 +3300,14 @@ explicit constexpr weekday::weekday(unsigned wd) noexcept;
 
 <blockquote>
 <p>
-<i>Effects:</i> Constructs an object of type <code>weekday</code> by constructing
-<code>wd_</code> with <code>wd</code>.  The value held is unspecified if <code>wd</code>
-is not in the range <code>[0, 255]</code>.
+<i>Effects:</i> Constructs an object of type <code>weekday</code>
+which represents a day of the week according to the ISO 8601 mapping
+of integers to days of the week. Additionally, if <code>wd ==
+0</code>, Sunday is represented. [<i>Note:</i> Sunday can be
+constructed from both 0 and 7 &mdash; <i>end note</i>].  If
+<code>wd</code> is in the range [8, 255], <code>wd_</code> is
+initialized with wd.  If wd is not in the range [0, 255], the value
+held is unspecified.
 </p>
 </blockquote>
 
@@ -3422,22 +3426,13 @@ constexpr weekday&amp; weekday::operator-=(const days&amp; d) noexcept;
 </blockquote>
 
 <pre>
-constexpr explicit weekday::operator unsigned() const noexcept;
-</pre>
-
-<blockquote>
-<p>
-<i>Returns:</i> <code>wd_</code>.
-</p>
-</blockquote>
-
-<pre>
 constexpr bool weekday::ok() const noexcept;
 </pre>
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>wd_ <= 6</code>.
+<i>Returns:</i> <code>true</code> if <code>*this</code> holds a value in the range
+Monday thru Sunday, else returns <code>false</code>.
 </p>
 </blockquote>
 
@@ -3467,7 +3462,7 @@ constexpr bool operator==(const weekday&amp; x, const weekday&amp; y) noexcept;
 
 <blockquote>
 <p>
-<i>Returns:</i> <code>unsigned{x} == unsigned{y}</code>.
+<i>Returns:</i> <code>x.wd_ == y.wd_</code>.
 </p>
 </blockquote>
 
