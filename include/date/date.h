@@ -989,29 +989,29 @@ inline namespace literals
 CONSTCD11 date::day  operator "" _d(unsigned long long d) NOEXCEPT;
 CONSTCD11 date::year operator "" _y(unsigned long long y) NOEXCEPT;
 
-// CONSTDATA date::month jan{1};
-// CONSTDATA date::month feb{2};
-// CONSTDATA date::month mar{3};
-// CONSTDATA date::month apr{4};
-// CONSTDATA date::month may{5};
-// CONSTDATA date::month jun{6};
-// CONSTDATA date::month jul{7};
-// CONSTDATA date::month aug{8};
-// CONSTDATA date::month sep{9};
-// CONSTDATA date::month oct{10};
-// CONSTDATA date::month nov{11};
-// CONSTDATA date::month dec{12};
-//
-// CONSTDATA date::weekday sun{0u};
-// CONSTDATA date::weekday mon{1u};
-// CONSTDATA date::weekday tue{2u};
-// CONSTDATA date::weekday wed{3u};
-// CONSTDATA date::weekday thu{4u};
-// CONSTDATA date::weekday fri{5u};
-// CONSTDATA date::weekday sat{6u};
-
 }  // inline namespace literals
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
+
+// CONSTDATA date::month January{1};
+// CONSTDATA date::month February{2};
+// CONSTDATA date::month March{3};
+// CONSTDATA date::month April{4};
+// CONSTDATA date::month May{5};
+// CONSTDATA date::month June{6};
+// CONSTDATA date::month July{7};
+// CONSTDATA date::month August{8};
+// CONSTDATA date::month September{9};
+// CONSTDATA date::month October{10};
+// CONSTDATA date::month November{11};
+// CONSTDATA date::month December{12};
+//
+// CONSTDATA date::weekday Sunday{0u};
+// CONSTDATA date::weekday Monday{1u};
+// CONSTDATA date::weekday Tuesday{2u};
+// CONSTDATA date::weekday Wednesday{3u};
+// CONSTDATA date::weekday Thursday{4u};
+// CONSTDATA date::weekday Friday{5u};
+// CONSTDATA date::weekday Saturday{6u};
 
 #if HAS_VOID_T
 
@@ -2501,7 +2501,7 @@ year_month_day_last::day() const NOEXCEPT
         date::day(31), date::day(31), date::day(30),
         date::day(31), date::day(30), date::day(31)
     };
-    return month() != feb || !y_.is_leap() ?
+    return month() != February || !y_.is_leap() ?
         d[static_cast<unsigned>(month()) - 1] : date::day{29};
 }
 
@@ -2703,7 +2703,7 @@ year_month_day::to_days() const NOEXCEPT
              "This algorithm has not been ported to a 16 bit unsigned integer");
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
-    auto const y = static_cast<int>(y_) - (m_ <= feb);
+    auto const y = static_cast<int>(y_) - (m_ <= February);
     auto const m = static_cast<unsigned>(m_);
     auto const d = static_cast<unsigned>(d_);
     auto const era = (y >= 0 ? y : y-399) / 400;
@@ -4851,7 +4851,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.setstate(std::ios::failbit);
                     auto ld = local_days(fds.ymd);
                     auto y = year_month_day{ld + days{3}}.year();
-                    auto start = local_days((y - years{1})/date::dec/thu[last]) + (mon-thu);
+                    auto start = local_days((y-years{1})/December/Thursday[last]) +
+                                 (Monday-Thursday);
                     if (ld < start)
                         --y;
                     if (*fmt == CharT{'G'})
@@ -4925,7 +4926,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.setstate(std::ios::failbit);
                     auto ld = local_days(fds.ymd);
                     auto y = fds.ymd.year();
-                    auto doy = ld - local_days(y/jan/1) + days{1};
+                    auto doy = ld - local_days(y/January/1) + days{1};
                     save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
@@ -5233,7 +5234,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        auto st = local_days(sun[1]/jan/ymd.year());
+                        auto st = local_days(Sunday[1]/January/ymd.year());
                         if (ld < st)
                             os << CharT{'0'} << CharT{'0'};
                         else
@@ -5278,11 +5279,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #endif
                     {
                         auto y = year_month_day{ld + days{3}}.year();
-                        auto st = local_days((y - years{1})/12/thu[last]) + (mon-thu);
+                        auto st = local_days((y-years{1})/12/Thursday[last]) +
+                                  (Monday-Thursday);
                         if (ld < st)
                         {
                             --y;
-                            st = local_days((y - years{1})/12/thu[last]) + (mon-thu);
+                            st = local_days((y - years{1})/12/Thursday[last]) +
+                                 (Monday-Thursday);
                         }
                         auto wn = duration_cast<weeks>(ld - st).count() + 1;
                         if (wn < 10)
@@ -5356,7 +5359,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        auto st = local_days(mon[1]/jan/ymd.year());
+                        auto st = local_days(Monday[1]/January/ymd.year());
                         if (ld < st)
                             os << CharT{'0'} << CharT{'0'};
                         else

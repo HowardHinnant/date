@@ -319,8 +319,8 @@ get_download_gz_file(const std::string& version)
 CONSTDATA auto min_year = date::year::min();
 CONSTDATA auto max_year = date::year::max();
 
-CONSTDATA auto min_day = date::jan/1;
-CONSTDATA auto max_day = date::dec/31;
+CONSTDATA auto min_day = date::January/1;
+CONSTDATA auto max_day = date::December/31;
 
 #if USE_OS_TZDB
 

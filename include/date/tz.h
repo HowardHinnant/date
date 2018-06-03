@@ -2032,7 +2032,7 @@ tai_clock::to_utc(const tai_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} -
-            (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1) + seconds{10});
+            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
 template <class Duration>
@@ -2043,7 +2043,7 @@ tai_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return tai_time<duration>{t.time_since_epoch()} +
-            (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1) + seconds{10});
+            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
 inline
@@ -2065,7 +2065,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     const string abbrev("TAI");
     CONSTDATA seconds offset{0};
     auto tp = sys_time<CT>{t.time_since_epoch()} -
-              seconds(sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1));
+              seconds(sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1));
     auto const sd = floor<days>(tp);
     year_month_day ymd = sd;
     auto time = make_time(tp - sys_seconds{sd});
@@ -2101,7 +2101,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     if (!is.fail())
         tp = tai_time<Duration>{duration_cast<Duration>(
                 (sys_days(fds.ymd) +
-                 (sys_days(year{1970}/jan/1) - sys_days(year{1958}/jan/1)) -
+                 (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1)) -
                  *offptr + fds.tod.to_duration()).time_since_epoch())};
     return is;
 }
@@ -2144,7 +2144,8 @@ gps_clock::to_utc(const gps_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return utc_time<duration>{t.time_since_epoch()} +
-            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1) + seconds{9});
+            (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1) +
+             seconds{9});
 }
 
 template <class Duration>
@@ -2155,7 +2156,8 @@ gps_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using duration = typename std::common_type<Duration, seconds>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1) + seconds{9});
+            (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1) +
+             seconds{9});
 }
 
 inline
@@ -2177,7 +2179,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     const string abbrev("GPS");
     CONSTDATA seconds offset{0};
     auto tp = sys_time<CT>{t.time_since_epoch()} +
-              seconds(sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1));
+         seconds(sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1));
     auto const sd = floor<days>(tp);
     year_month_day ymd = sd;
     auto time = make_time(tp - sys_seconds{sd});
@@ -2212,9 +2214,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         is.setstate(ios::failbit);
     if (!is.fail())
         tp = gps_time<Duration>{duration_cast<Duration>(
-                (sys_days(fds.ymd) -
-                 (sys_days(year{1980}/jan/sun[1]) - sys_days(year{1970}/jan/1)) -
-                 *offptr + fds.tod.to_duration()).time_since_epoch())};
+              (sys_days(fds.ymd) -
+               (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1)) -
+               *offptr + fds.tod.to_duration()).time_since_epoch())};
     return is;
 }
 
