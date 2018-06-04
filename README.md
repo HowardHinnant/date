@@ -61,6 +61,30 @@ cd build
 cmake ../
 cmake --build . --target testit # Consider '-- -j4' for multithreading
 ```
+
+## Build Debain package
+
+To build the Debian package for your architecture run the following:
+
+```bash
+mkdir build/
+cd build/
+cmake ..
+cpack ..
+```
+
+To build a cross compiled armhf Debian package, run the following:
+
+```bash
+mkdir build-armhf/
+cd build-armhf/
+export CC=arm-linux-gnueabihf-gcc
+export CXX=arm-linux-gnueabihf-g++
+export CPACK_DEBIAN_PACKAGE_ARCHITECTURE=armhf
+cmake ..
+cpack ..
+```
+
 ## Projects using this library
 
 * www.safe.com
