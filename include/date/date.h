@@ -1080,7 +1080,12 @@ class save_ostream
 public:
     ~save_ostream()
     {
-        if ((this->flags_ & std::ios::unitbuf) && !std::uncaught_exception() &&
+        if ((this->flags_ & std::ios::unitbuf) &&
+#if __cplusplus >= 201703
+                std::uncaught_exceptions() == 0 &&
+#else
+                !std::uncaught_exception() &&
+#endif
                 this->is_.good())
             this->is_.rdbuf()->pubsync();
     }
