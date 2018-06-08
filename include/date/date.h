@@ -4306,7 +4306,7 @@ template <class Duration>
 struct fields
 {
     year_month_day        ymd{nanyear/0/0};
-    weekday               wd{7u};
+    weekday               wd{8u};
     time_of_day<Duration> tod{};
     bool                  has_tod = false;
 
@@ -4341,7 +4341,7 @@ extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& f
     {
         // fds does not contain a valid weekday
         os.setstate(std::ios::failbit);
-        return 7;
+        return 8;
     }
     weekday wd;
     if (fds.ymd.ok())
@@ -4351,7 +4351,7 @@ extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& f
         {
             // fds.ymd and fds.wd are inconsistent
             os.setstate(std::ios::failbit);
-            return 7;
+            return 8;
         }
     }
     else
@@ -6044,7 +6044,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         CONSTDATA int not_a_minute = not_a_hour;
         CONSTDATA Duration not_a_second = Duration::min();
         CONSTDATA int not_a_doy = 0;
-        CONSTDATA int not_a_weekday = 7;
+        CONSTDATA int not_a_weekday = 8;
         CONSTDATA int not_a_week_num = 100;
         CONSTDATA int not_a_ampm = -1;
         CONSTDATA minutes not_a_offset = minutes::min();
