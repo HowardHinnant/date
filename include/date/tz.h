@@ -2344,7 +2344,7 @@ struct clock_time_conversion<std::chrono::system_clock, local_t>
     sys_time<Duration>
     operator()(const local_time<Duration>& lt) const
     {
-        return sys_time<Duration>{lt.time_sine_epoch()};
+        return sys_time<Duration>{lt.time_since_epoch()};
     }
 };
 
