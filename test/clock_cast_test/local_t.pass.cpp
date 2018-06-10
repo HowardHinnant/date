@@ -7,6 +7,12 @@ main()
    using namespace date;
    using namespace std::chrono;
 
+   // self
+   {
+     auto ls = local_days{1970_y/01/01_d};
+     assert(clock_cast<local_t>(ls) == ls);
+   }
+
    /// sys epoch 
    {
      auto ls = local_days{1970_y/01/01_d};
