@@ -29,13 +29,20 @@ main()
      assert(st.time_since_epoch() == seconds(946684800));
    }
 
-
    /// utc epoch 
    {
      auto lu = local_days{1970_y/01/01_d};
      auto ut = clock_cast<utc_clock>(lu);
      assert(clock_cast<local_t>(ut) == lu);
      assert(ut.time_since_epoch() == seconds(0));
+   }
+
+   // utc leap second
+   {
+     auto lu = local_days{2015_y/07/01_d} - milliseconds(1);
+     auto ut = clock_cast<utc_clock>(lu) + milliseconds(50); //into leap second
+
+     assert(clock_cast<local_t>(ut) == lu);
    }
 
    /// utc paper example 
