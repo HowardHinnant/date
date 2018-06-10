@@ -879,7 +879,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
 {
-    date::detail::save_stream<CharT, Traits> _(os);
+    date::detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os.width(2);
@@ -1171,7 +1171,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 {
-    date::detail::save_stream<CharT, Traits> _(os);
+    date::detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
@@ -2250,7 +2250,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
 {
-    date::detail::save_stream<CharT, Traits> _(os);
+    date::detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os << ymd.year() << '-';
