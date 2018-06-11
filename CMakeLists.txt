@@ -13,6 +13,7 @@ option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" ON )
+option( DISABLE_STRING_VIEW "Disable string view" OFF )
 
 function( print_option OPT )
 	if ( NOT DEFINED PRINT_OPTION_CURR_${OPT} OR ( NOT PRINT_OPTION_CURR_${OPT} STREQUAL ${OPT} ) )
@@ -26,6 +27,7 @@ print_option( USE_SYSTEM_TZ_DB )
 print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_SHARED_LIBS  )
 print_option( ENABLE_DATE_TESTING )
+print_option( DISABLE_STRING_VIEW )
 
 set( HEADER_FOLDER "include" )
 set( SOURCE_FOLDER "src" )
@@ -63,6 +65,15 @@ endif( )
 
 if( USE_TZ_DB_IN_DOT )
 	target_compile_definitions( tz PRIVATE -DINSTALL=. )
+endif( )
+
+if( DISABLE_STRING_VIEW )
+    target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
+endif( )
+
+if( BUILD_SHARED_LIBS )
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
 endif( )
 
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
