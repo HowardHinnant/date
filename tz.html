@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2018-06-02<br/>
+2018-06-11<br/>
 </address>
 <hr/>
 <h1 align=center>Time Zone Database Parser</h1>
@@ -2690,6 +2690,16 @@ public:
     static
     utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     from_sys(const sys_time&lt;Duration&gt;&amp;);
+
+    template &lt;class Duration&gt;
+    static
+    local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_local(const utc_time&lt;Duration&gt;&amp;);
+
+    template &lt;class Duration&gt;
+    static
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_local(const local_time&lt;Duration&gt;&amp;);
 };
 
 template &lt;class Duration&gt;
@@ -2753,6 +2763,30 @@ utc_clock::from_sys(const sys_time&lt;Duration&gt;&amp; t);
 of leap seconds that were inserted between <code>t</code> and 1970-01-01.  If
 <code>t</code> is ambiguous on this issue (i.e. corresponds to the date of leap
 second insertion), then the conversion counts that leap second as inserted.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+utc_clock::to_local(const utc_time&lt;Duration&gt;&amp; u);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>local_time&lt;Duration&gt;{to_sys(u).time_since_epoch()}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+utc_clock::from_local(const local_time&lt;Duration&gt;&amp; t);
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>from_sys(sys_time&lt;Duration&gt;{t.time_since_epoch()})</code>.
 </p>
 </blockquote>
 
@@ -2896,6 +2930,16 @@ public:
     static
     tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_local(const tai_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_local(const local_time&lt;Duration&gt;&amp;) noexcept;
 };
 
 template &lt;class Duration&gt;
@@ -2955,6 +2999,32 @@ tai_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </p>
 <p>
 <i>Note:</i> <code>378691210s == sys_days{1970y/January/1} - sys_days{1958y/January/1} + 10s</code>
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_clock::to_local(const tai_time&lt;Duration&gt;&amp; t) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>local_time&lt;Duration&gt;{t.time_since_epoch()} -
+           (local_days{1970_y/January/1} - local_days{1958_y/January/1})</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+tai_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+tai_clock::from_local(const local_time&lt;Duration&gt;&amp; t) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>tai_time&lt;Duration&gt;{t.time_since_epoch()} +
+            (local_days{1970_y/January/1} - local_days{1958_y/January/1})</code>.
 </p>
 </blockquote>
 
@@ -3041,6 +3111,16 @@ public:
     static
     gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
     from_utc(const utc_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    to_local(const gps_time&lt;Duration&gt;&amp;) noexcept;
+
+    template &lt;class Duration&gt;
+    static
+    gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    from_local(const local_time&lt;Duration&gt;&amp;) noexcept;
 };
 
 template &lt;class Duration&gt;
@@ -3099,6 +3179,32 @@ gps_clock::from_utc(const utc_time&lt;Duration&gt;&amp; t) noexcept;
 </p>
 <p>
 <i>Note:</i> <code>315964809s == sys_days{1980y/January/Sunday[1]} - sys_days{1970y/January/1} + 9s</code>
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::to_local(const gps_time&lt;Duration&gt;&amp; t) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>local_time&lt;Duration&gt;{t.time_since_epoch()} +
+            (local_days{1980_y/January/Sunday[1]} - local_days{1970_y/January/1})</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+static
+gps_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+gps_clock::from_local(const local_time&lt;Duration&gt;&amp; t) noexcept;
+</pre>
+<blockquote>
+<p>
+<i>Returns:</i> <code>local_time&lt;Duration&gt;{t.time_since_epoch()} -
+            (local_days{1980_y/January/Sunday[1]} - local_days{1970_y/January/1})</code>.
 </p>
 </blockquote>
 
@@ -3313,6 +3419,26 @@ operator()(const utc_time&lt;Duration&gt;&amp; t) const;
 </blockquote>
 
 <pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;local_t, local_t&gt;
+{
+    template &lt;class Duration&gt;
+    local_time&lt;Duration&gt;
+    operator()(const local_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+local_time&lt;Duration&gt;
+operator()(const local_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>t</code>.
+</p>
+</blockquote>
+
+<pre>
 // system_clock &lt;-&gt; utc_clock
 </pre>
 
@@ -3353,6 +3479,94 @@ operator()(const utc_time&lt;Duration&gt;&amp; t) const;
 <blockquote>
 <p>
 <i>Returns:</i> <code>utc_clock::to_sys(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// system_clock &lt;-&gt; local_t
+</pre>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;local_t, std::chrono::system_clock&gt;
+{
+    template &lt;class Duration&gt;
+    local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const sys_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>local_time&lt;Duration&gt;{t.time_since_epoch()}</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;std::chrono::system_clock, local_t&gt;
+{
+    template &lt;class Duration&gt;
+    sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const local_t&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+sys_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const local_t&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>sys_time&lt;Duration&gt;{t.time_since_epoch()}</code>.
+</p>
+</blockquote>
+
+<pre>
+// utc_clock &lt;-&gt; local_t
+</pre>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;local_t, utc_clock&gt;
+{
+    template &lt;class Duration&gt;
+    local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+local_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const utc_time&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::to_local(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;&gt;
+struct clock_time_conversion&lt;utc_clock, local_t&gt;
+{
+    template &lt;class Duration&gt;
+    utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+    operator()(const local_t&lt;Duration&gt;&amp; t) const;
+};
+
+template &lt;class Duration&gt;
+utc_time&lt;std::common_type_t&lt;Duration, std::chrono::seconds&gt;&gt;
+operator()(const local_t&lt;Duration&gt;&amp; t) const;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>utc_clock::from_local(t)</code>.
 </p>
 </blockquote>
 
@@ -3474,6 +3688,58 @@ operator()(const utc_time&lt;Duration&gt;&amp; t) const
 </p>
 <p>
 <i>Returns:</i> <code>DestClock::from_utc(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+// Clock &lt;-&gt; local_t
+</pre>
+
+<pre>
+template &lt;class SourceClock&gt;
+struct clock_time_conversion&lt;local_t, SourceClock&gt;
+{
+    template &lt;class Duration&gt;
+    auto
+    operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+        -&gt; decltype(SourceClock::to_local(t));
+};
+
+template &lt;class Duration&gt;
+auto
+operator()(const std::chrono::time_point&lt;SourceClock, Duration&gt;&amp; t) const
+    -&gt; decltype(SourceClock::to_local(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>SourceClock::to_local(t)</code> is well formed.  If
+<code>SourceClock::to_local(t)</code> does not return
+<code>local_time&lt;<i>some duration</i>&gt;</code> the program is ill-formed.
+</p>
+<p>
+<i>Returns:</i> <code>SourceClock::to_local(t)</code>.
+</p>
+</blockquote>
+
+<pre>
+template &lt;class Duration&gt;
+auto
+operator()(const local_time&lt;Duration&gt;&amp; t) const
+    -&gt; decltype(DestClock::from_local(t));
+</pre>
+
+<blockquote>
+<p>
+<i>Remarks:</i> This function does not participate in overload resolution unless
+<code>DestClock::from_local(t)</code> is well formed.  If
+<code>DestClock::from_local(t)</code> does not return
+<code>time_point&lt;DestClock, <i>some duration</i>&gt;</code> the program is ill-formed.
+<code></code>.
+</p>
+<p>
+<i>Returns:</i> <code>DestClock::from_local(t)</code>.
 </p>
 </blockquote>
 
