@@ -2096,7 +2096,7 @@ tai_clock::to_local(const tai_time<Duration>& t) NOEXCEPT
 {
     using duration = typename std::common_type<Duration, date::days>::type;
     return local_time<duration>{t.time_since_epoch()} -
-           (local_days(year{1970}/jan/1) - local_days(year{1958}/jan/1));
+           (local_days(year{1970}/January/1) - local_days(year{1958}/January/1));
 }
 
 template <class Duration>
@@ -2106,7 +2106,7 @@ tai_clock::from_local(const local_time<Duration>& t) NOEXCEPT
 {
     using duration = typename std::common_type<Duration, date::days>::type;
     return tai_time<duration>{t.time_since_epoch()} +
-            (local_days(year{1970}/jan/1) - local_days(year{1958}/jan/1));
+            (local_days(year{1970}/January/1) - local_days(year{1958}/January/1));
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2116,7 +2116,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     const std::string abbrev("TAI");
     CONSTDATA std::chrono::seconds offset{0};
-    return to_stream(os, fmt, tai_clock::to_local(t), &abbrev, &offset);   
+    return to_stream(os, fmt, tai_clock::to_local(t), &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2134,8 +2134,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
-    local_time<Duration> lp;      
-    from_stream(is, fmt, lp, abbrev, offset); 
+    local_time<Duration> lp;
+    from_stream(is, fmt, lp, abbrev, offset);
     if (!is.fail())
         tp = tai_clock::from_local(lp);
     return is;
@@ -2219,7 +2219,7 @@ gps_clock::to_local(const gps_time<Duration>& t) NOEXCEPT
 {
     using duration = typename std::common_type<Duration, date::days>::type;
     return local_time<duration>{t.time_since_epoch()} +
-            (local_days(year{1980}/jan/sun[1]) - local_days(year{1970}/jan/1));
+            (local_days(year{1980}/January/Sunday[1]) - local_days(year{1970}/January/1));
 }
 
 template <class Duration>
@@ -2229,7 +2229,7 @@ gps_clock::from_local(const local_time<Duration>& t) NOEXCEPT
 {
     using duration = typename std::common_type<Duration, date::days>::type;
     return gps_time<duration>{t.time_since_epoch()} -
-            (local_days(year{1980}/jan/sun[1]) - local_days(year{1970}/jan/1));
+            (local_days(year{1980}/January/Sunday[1]) - local_days(year{1970}/January/1));
 }
 
 
@@ -2240,7 +2240,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     const std::string abbrev("GPS");
     CONSTDATA std::chrono::seconds offset{0};
-    return to_stream(os, fmt, gps_clock::to_local(t), &abbrev, &offset);   
+    return to_stream(os, fmt, gps_clock::to_local(t), &abbrev, &offset);
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2258,8 +2258,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
-    local_time<Duration> lp;      
-    from_stream(is, fmt, lp, abbrev, offset); 
+    local_time<Duration> lp;
+    from_stream(is, fmt, lp, abbrev, offset);
     if (!is.fail())
         tp = gps_clock::from_local(lp);
     return is;
@@ -2484,13 +2484,13 @@ struct return_to_local
 template<typename Clock, typename Duration>
 struct return_to_local
        <
-          Clock, Duration, 
-          decltype(Clock::to_local(declval<time_point<Clock, Duration> const&>()), 
+          Clock, Duration,
+          decltype(Clock::to_local(declval<time_point<Clock, Duration> const&>()),
                    void())
        >
      : return_clock_time
        <
-           local_t, 
+           local_t,
            decltype(Clock::to_local(declval<time_point<Clock, Duration> const&>()))
        >
 {};
@@ -2503,13 +2503,13 @@ struct return_from_local
 template<typename Clock, typename Duration>
 struct return_from_local
        <
-           Clock, Duration, 
+           Clock, Duration,
            decltype(Clock::from_local(declval<time_point<local_t, Duration> const&>()),
                     void())
        >
      : return_clock_time
        <
-           Clock, 
+           Clock,
            decltype(Clock::from_local(declval<time_point<local_t, Duration> const&>()))
        >
 {};
@@ -2564,7 +2564,7 @@ template<typename SrcClock>
 struct clock_time_conversion<local_t, SrcClock>
 {
     template <class Duration>
-    typename ctc_detail::return_to_local<SrcClock, Duration>::type 
+    typename ctc_detail::return_to_local<SrcClock, Duration>::type
     operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
     {
         return SrcClock::to_local(tp);

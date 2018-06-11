@@ -13,7 +13,7 @@ main()
      assert(clock_cast<local_t>(ls) == ls);
    }
 
-   /// sys epoch 
+   /// sys epoch
    {
      auto ls = local_days{1970_y/01/01_d};
      auto st = clock_cast<system_clock>(ls);
@@ -21,7 +21,7 @@ main()
      assert(st.time_since_epoch() == seconds(0));
    }
 
-   /// sys 2000 case 
+   /// sys 2000 case
    {
      auto ls = local_days{2000_y/01/01_d};
      auto st = clock_cast<system_clock>(ls);
@@ -29,7 +29,7 @@ main()
      assert(st.time_since_epoch() == seconds(946684800));
    }
 
-   /// utc epoch 
+   /// utc epoch
    {
      auto lu = local_days{1970_y/01/01_d};
      auto ut = clock_cast<utc_clock>(lu);
@@ -45,7 +45,7 @@ main()
      assert(clock_cast<local_t>(ut) == lu);
    }
 
-   /// utc paper example 
+   /// utc paper example
    {
      auto lu = local_days{2000_y/01/01_d};
      auto ut = clock_cast<utc_clock>(lu);
