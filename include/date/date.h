@@ -4453,7 +4453,7 @@ extract_weekday(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& f
     weekday wd;
     if (fds.ymd.ok())
     {
-        wd = weekday{fds.ymd};
+        wd = weekday{sys_days(fds.ymd)};
         if (fds.wd.ok() && wd != fds.wd)
         {
             // fds.ymd and fds.wd are inconsistent
@@ -7332,8 +7332,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (ymd.ok())
             {
                 if (wd == not_a_weekday)
-                    wd = static_cast<int>((weekday(ymd) - Sunday).count());
-                else if (wd != static_cast<int>((weekday(ymd) - Sunday).count()))
+                    wd = static_cast<int>((weekday(sys_days(ymd)) - Sunday).count());
+                else if (wd != static_cast<int>((weekday(sys_days(ymd)) - Sunday).count()))
                     goto broken;
                 if (!computed)
                 {
