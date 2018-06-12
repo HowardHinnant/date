@@ -39,7 +39,7 @@ main()
 
    // utc leap second
    {
-     auto lu = local_days{2015_y/07/1_d} - milliseconds(1);
+     auto lu = local_days{2015_y/July/1_d} - milliseconds(1);
      auto ut = clock_cast<utc_clock>(lu) + milliseconds(50); //into leap second
 
      assert(clock_cast<local_t>(ut) == lu);
