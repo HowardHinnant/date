@@ -7858,20 +7858,20 @@ operator+(const string_literal<CharT, 2>& x, const string_literal<CharT, 2>& y) 
   return string_literal<CharT, 3>({x[0], y[0], 0});
 }
 
-#if __cplusplus >= 201402  && (!defined(__EDG_VERSION__) || __EDG_VERSION__ > 411) \
-                           && (!defined(__SUNPRO_CC) || __SUNPRO_CC > 0x5150)
-
 template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
 CONSTCD14
 inline
-string_literal<std::conditional_t<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>,
+string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
                N1 + N2 - 1>
 operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
 {
-    using CharT = std::conditional_t<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>;
+    using CharT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
     return string_literal<CharT, N1 + N2 - 1>{string_literal<CharT, N1>{x},
                                               string_literal<CharT, N2>{y}};
 }
+
+#if __cplusplus >= 201402  && (!defined(__EDG_VERSION__) || __EDG_VERSION__ > 411) \
+                           && (!defined(__SUNPRO_CC) || __SUNPRO_CC > 0x5150)
 
 template <class CharT,
           class = std::enable_if_t<std::is_same<CharT, char>{} ||
@@ -7956,34 +7956,6 @@ msl(std::ratio<N, D>) NOEXCEPT
     return msl(CharT{'['}) + msl<R::num>() + msl(CharT{']'});
 }
 
-template <class CharT>
-CONSTCD14
-std::enable_if_t
-<
-    std::is_same<CharT, char>{},
-    string_literal<char, 3>
->
-msl(std::micro) NOEXCEPT
-{
-    return string_literal<char, 3>{"\xC2\xB5"};
-}
-
-template <class CharT>
-CONSTCD14
-inline
-auto
-msl(std::deca) NOEXCEPT
-{
-    return string_literal<CharT, 3>{"da"};
-}
-
-template <class CharT>
-CONSTCD11
-auto
-get_units(std::ratio<60>)
-{
-    return string_literal<CharT, 4>{"min"};
-}
 
 #else  // __cplusplus < 201402 || (defined(__EDG_VERSION__) && __EDG_VERSION__ <= 411)
 
@@ -8029,33 +8001,6 @@ msl(std::ratio<N, D>)
     return std::basic_string<CharT>(1, '[') + to_string<CharT>(R::num) + CharT{']'};
 }
 
-template <class CharT>
-CONSTCD11
-typename std::enable_if
-<
-    std::is_same<CharT, char>::value,
-    std::string
->::type
-msl(std::micro)
-{
-    return "\xC2\xB5";
-}
-
-template <class CharT>
-inline
-std::basic_string<CharT>
-msl(std::deca)
-{
-    return {'d', 'a'};
-}
-
-template <class CharT>
-std::basic_string<CharT>
-get_units(std::ratio<60>)
-{
-    return {'m', 'i', 'n'};
-}
-
 #endif  // __cplusplus < 201402 || (defined(__EDG_VERSION__) && __EDG_VERSION__ <= 411)
 
 template <class CharT>
@@ -8095,6 +8040,18 @@ msl(std::nano) NOEXCEPT
 
 template <class CharT>
 CONSTCD11
+typename std::enable_if
+<
+    std::is_same<CharT, char>::value,
+    string_literal<char, 3>
+>::type
+msl(std::micro) NOEXCEPT
+{
+    return string_literal<char, 3>{"\xC2\xB5"};
+}
+
+template <class CharT>
+CONSTCD11
 inline
 typename std::enable_if
 <
@@ -8122,6 +8079,15 @@ string_literal<CharT, 2>
 msl(std::centi) NOEXCEPT
 {
     return string_literal<CharT, 2>{'c'};
+}
+
+template <class CharT>
+CONSTCD14
+inline
+string_literal<CharT, 3>
+msl(std::deca) NOEXCEPT
+{
+    return string_literal<CharT, 3>{"da"};
 }
 
 template <class CharT>
@@ -8219,6 +8185,15 @@ string_literal<CharT, 2>
 get_units(std::ratio<3600>)
 {
     return string_literal<CharT, 2>{'h'};
+}
+
+
+template <class CharT>
+CONSTCD11
+string_literal<CharT, 4>
+get_units(std::ratio<60>)
+{
+    return string_literal<CharT, 4>{"min"};
 }
 
 template <class CharT, class Traits = std::char_traits<CharT>>
