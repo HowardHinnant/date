@@ -7775,11 +7775,10 @@ public:
 
     template <std::size_t N1 = 3,
               class = typename std::enable_if<N1 == N>::type>
-    CONSTCD11 string_literal(const CharT(&a)[3]) NOEXCEPT
-        : p_{a[0], a[1]}
+    CONSTCD11 string_literal(CharT c1, CharT c2) NOEXCEPT
+        : p_{c1, c2}
     {
     }
-
 
     CONSTCD14 string_literal(const CharT(&a)[N]) NOEXCEPT
         : p_{}
@@ -7845,7 +7844,7 @@ inline
 string_literal<CharT, 3>
 operator+(const string_literal<CharT, 2>& x, const string_literal<CharT, 2>& y) NOEXCEPT
 {
-  return string_literal<CharT, 3>({x[0], y[0], 0});
+  return string_literal<CharT, 3>(x[0], y[0]);
 }
 
 template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
@@ -8189,7 +8188,7 @@ get_units(std::ratio<3600>)
 
 
 template <class CharT>
-CONSTCD11
+CONSTCD14
 string_literal<CharT, 4>
 get_units(std::ratio<60>)
 {
