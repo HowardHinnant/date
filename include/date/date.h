@@ -7780,6 +7780,13 @@ public:
     {
     }
 
+    template <std::size_t N1 = 4,
+              class = typename std::enable_if<N1 == N>::type>
+    CONSTCD11 string_literal(CharT c1, CharT c2, CharT c3) NOEXCEPT
+        : p_{c1, c2, c3}
+    {
+    }
+
     CONSTCD14 string_literal(const CharT(&a)[N]) NOEXCEPT
         : p_{}
     {
@@ -7845,6 +7852,15 @@ string_literal<CharT, 3>
 operator+(const string_literal<CharT, 2>& x, const string_literal<CharT, 2>& y) NOEXCEPT
 {
   return string_literal<CharT, 3>(x[0], y[0]);
+}
+
+template <class CharT>
+CONSTCD11
+inline
+string_literal<CharT, 4>
+operator+(const string_literal<CharT, 3>& x, const string_literal<CharT, 2>& y) NOEXCEPT
+{
+  return string_literal<CharT, 4>(x[0], x[1], y[0]);
 }
 
 template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
@@ -8046,7 +8062,7 @@ typename std::enable_if
 >::type
 msl(std::micro) NOEXCEPT
 {
-    return string_literal<char, 3>{"\xC2\xB5"};
+    return string_literal<char, 3>{'\xC2', '\xB5'};
 }
 
 template <class CharT>
@@ -8081,12 +8097,12 @@ msl(std::centi) NOEXCEPT
 }
 
 template <class CharT>
-CONSTCD14
+CONSTCD11
 inline
 string_literal<CharT, 3>
 msl(std::deca) NOEXCEPT
 {
-    return string_literal<CharT, 3>{"da"};
+    return string_literal<CharT, 3>{'d', 'a'};
 }
 
 template <class CharT>
@@ -8188,11 +8204,11 @@ get_units(std::ratio<3600>)
 
 
 template <class CharT>
-CONSTCD14
+CONSTCD11
 string_literal<CharT, 4>
 get_units(std::ratio<60>)
 {
-    return string_literal<CharT, 4>{"min"};
+    return string_literal<CharT, 4>{'m', 'i', 'n'};
 }
 
 template <class CharT, class Traits = std::char_traits<CharT>>

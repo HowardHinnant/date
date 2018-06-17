@@ -290,13 +290,13 @@ void test_constexpr()
   CONSTCD11 auto fs = get_units<char>(std::femto{});
   CONSTCD11 auto ps = get_units<char>(std::pico{});
   CONSTCD11 auto ns = get_units<char>(std::nano{});
-  CONSTCD14 auto us = get_units<char>(std::micro{});
+  CONSTCD11 auto us = get_units<char>(std::micro{});
   CONSTCD11 auto usw = get_units<wchar_t>(std::micro{});
   CONSTCD11 auto ms = get_units<char>(std::milli{});
   CONSTCD11 auto cs = get_units<char>(std::centi{});
   CONSTCD11 auto ds = get_units<char>(std::deci{});
   CONSTCD11 auto s = get_units<char>(std::ratio<1>{});
-  CONSTCD14 auto das = get_units<char>(std::deca{});
+  CONSTCD11 auto das = get_units<char>(std::deca{});
   CONSTCD11 auto hs = get_units<char>(std::hecto{});
   CONSTCD11 auto ks = get_units<char>(std::kilo{});
   CONSTCD11 auto Ms = get_units<char>(std::mega{});
@@ -304,12 +304,17 @@ void test_constexpr()
   CONSTCD11 auto Ts = get_units<char>(std::tera{});
   CONSTCD11 auto Ps = get_units<char>(std::peta{});
   CONSTCD11 auto Es = get_units<char>(std::exa{});
+  (void)as, (void)fs, (void)ps, (void)ns, (void)usw, (void)us,
+  (void)ms, (void)cs, (void)ds, (void)s,  (void)das, (void)hs,
+  (void)ks, (void)Ms, (void)Gs, (void)Ts, (void)Ps,  (void)Es;
 
-  CONSTCD14 auto min = get_units<char>(std::ratio<60>{});
+  CONSTCD11 auto min = get_units<char>(std::ratio<60>{});
   CONSTCD11 auto h = get_units<char>(std::ratio<3600>{});
+  (void)min, (void)h;
 
   CONSTCD14 auto integer = get_units<char>(std::ratio<123>{});
   CONSTCD14 auto ratio = get_units<char>(std::ratio<123, 3>{});
+  (void)integer, (void)ratio;
 }
 
 int
