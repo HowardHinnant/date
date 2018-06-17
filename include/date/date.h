@@ -8163,7 +8163,7 @@ msl(std::exa) NOEXCEPT
 }
 
 template <class CharT, class Period>
-CONSTCD14
+CONSTCD11
 auto
 get_units(Period p)
  -> decltype(msl<CharT>(p) + string_literal<CharT, 2>{'s'})
