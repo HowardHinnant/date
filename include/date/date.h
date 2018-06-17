@@ -7839,16 +7839,6 @@ public:
     }
 };
 
-template <class CharT, class Traits, class Alloc, std::size_t N>
-inline
-std::basic_string<CharT, Traits, Alloc>
-operator+(std::basic_string<CharT, Traits, Alloc> x,
-          const string_literal<CharT, N>& y) NOEXCEPT
-{
-    x.append(y.data(), y.size());
-    return x;
-}
-
 template <class CharT>
 CONSTCD11
 inline
@@ -7868,6 +7858,16 @@ operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>&
     using CharT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
     return string_literal<CharT, N1 + N2 - 1>{string_literal<CharT, N1>{x},
                                               string_literal<CharT, N2>{y}};
+}
+
+template <class CharT, class Traits, class Alloc, std::size_t N>
+inline
+std::basic_string<CharT, Traits, Alloc>
+operator+(std::basic_string<CharT, Traits, Alloc> x,
+          const string_literal<CharT, N>& y) NOEXCEPT
+{
+    x.append(y.data(), y.size());
+    return x;
 }
 
 #if __cplusplus >= 201402  && (!defined(__EDG_VERSION__) || __EDG_VERSION__ > 411) \
