@@ -209,7 +209,7 @@ void test_integral_scale()
       os.str("");
    }
 
-   // ratio 100 / 4 = ration 25 / 1
+   // ratio 100 / 4 = ratio 25 / 1
    {
       duration<int, std::ratio<25, 1>> d(13);
       os << d;
@@ -217,7 +217,7 @@ void test_integral_scale()
       os.str("");
    }
 
-   // days = ratio 24 * 60 * 60 / 1 = ration 86400 / 1
+   // days = ratio 24 * 60 * 60 / 1 = ratio 86400 / 1
    {
       days d(13);
       os << d;
@@ -273,7 +273,7 @@ void test_ratio_scale()
       os.str("");
    }
 
-   // ratio 100 / 6 = ration 50 / 3
+   // ratio 100 / 6 = ratio 50 / 3
    {
       duration<int, std::ratio<100, 6>> d(13);
       os << d;
