@@ -7756,6 +7756,16 @@ namespace detail
 {
 
 template <class CharT, std::size_t N>
+class string_literal;
+
+template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
+inline
+CONSTCD14
+string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
+               N1 + N2 - 1>
+operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT;
+
+template <class CharT, std::size_t N>
 class string_literal
 {
     CharT p_[N];
@@ -7840,19 +7850,7 @@ public:
     CONSTCD14
     string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
                    N1 + N2 - 1>
-    operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
-    {
-        using CT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
-        
-        string_literal<CT, N1 + N2 - 1> r;
-        std::size_t i = 0;
-        for (; i < N1-1; ++i)
-           r.p_[i] = CharT(x.p_[i]);
-        for (std::size_t j = 0; j < N2; ++j, ++i)
-           r.p_[i] = CharT(y[j]);
-
-        return r;
-    }
+    operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT;
 };
 
 template <class CharT>
@@ -7871,6 +7869,25 @@ string_literal<CharT, 4>
 operator+(const string_literal<CharT, 3>& x, const string_literal<CharT, 2>& y) NOEXCEPT
 {
   return string_literal<CharT, 4>(x[0], x[1], y[0]);
+}
+
+template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
+CONSTCD14
+inline
+string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
+               N1 + N2 - 1>
+operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
+{
+    using CT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
+    
+    string_literal<CT, N1 + N2 - 1> r;
+    std::size_t i = 0;
+    for (; i < N1-1; ++i)
+       r.p_[i] = CT(x.p_[i]);
+    for (std::size_t j = 0; j < N2; ++j, ++i)
+       r.p_[i] = CT(y[j]);
+
+    return r;
 }
 
 
