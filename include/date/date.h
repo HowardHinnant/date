@@ -7760,6 +7760,10 @@ class string_literal
 {
     CharT p_[N];
 
+    constexpr string_literal()
+      : p_{}
+    {}
+
 public:
     using const_iterator = const CharT*;
 
@@ -7812,19 +7816,6 @@ public:
             p_[i] = a[i];
     }
 
-    template <std::size_t N1, std::size_t N2,
-              class = typename std::enable_if<N1 + N2 - 1 == N>::type>
-    CONSTCD14 string_literal(const string_literal<CharT, N1>& x,
-                             const string_literal<CharT, N2>& y) NOEXCEPT
-        : p_{}
-    {
-        std::size_t i = 0;
-        for (; i < N1-1; ++i)
-            p_[i] = x[i];
-        for (std::size_t j = 0; j < N2; ++j, ++i)
-            p_[i] = y[j];
-    }
-
     CONSTCD11 const CharT* data() const NOEXCEPT {return p_;}
     CONSTCD11 std::size_t size() const NOEXCEPT {return N-1;}
 
@@ -7842,6 +7833,25 @@ public:
     operator<<(std::basic_ostream<CharT, Traits>& os, const string_literal& s)
     {
         return os << s.p_;
+    }
+
+    template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
+    friend
+    CONSTCD14
+    string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
+                   N1 + N2 - 1>
+    operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
+    {
+        using CT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
+        
+        string_literal<CT, N1 + N2 - 1> r;
+        std::size_t i = 0;
+        for (; i < N1-1; ++i)
+           r.p_[i] = CharT(x.p_[i]);
+        for (std::size_t j = 0; j < N2; ++j, ++i)
+           r.p_[i] = CharT(y[j]);
+
+        return r;
     }
 };
 
@@ -7863,17 +7873,6 @@ operator+(const string_literal<CharT, 3>& x, const string_literal<CharT, 2>& y) 
   return string_literal<CharT, 4>(x[0], x[1], y[0]);
 }
 
-template <class CharT1, class CharT2, std::size_t N1, std::size_t N2>
-CONSTCD14
-inline
-string_literal<typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type,
-               N1 + N2 - 1>
-operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT
-{
-    using CharT = typename std::conditional<sizeof(CharT2) <= sizeof(CharT1), CharT1, CharT2>::type;
-    return string_literal<CharT, N1 + N2 - 1>{string_literal<CharT, N1>{x},
-                                              string_literal<CharT, N2>{y}};
-}
 
 template <class CharT, class Traits, class Alloc, std::size_t N>
 inline
