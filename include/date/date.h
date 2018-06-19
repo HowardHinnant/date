@@ -7998,6 +7998,7 @@ to_string(std::uint64_t x)
 }
 
 template <class CharT>
+inline
 std::basic_string<CharT>
 to_string(std::uint64_t x)
 {
@@ -8063,6 +8064,7 @@ msl(std::pico) NOEXCEPT
 
 template <class CharT>
 CONSTCD11
+inline
 string_literal<CharT, 2>
 msl(std::nano) NOEXCEPT
 {
@@ -8071,6 +8073,7 @@ msl(std::nano) NOEXCEPT
 
 template <class CharT>
 CONSTCD11
+inline
 typename std::enable_if
 <
     std::is_same<CharT, char>::value,
@@ -8195,6 +8198,7 @@ msl(std::exa) NOEXCEPT
 
 template <class CharT, class Period>
 CONSTCD11
+inline
 auto
 get_units(Period p)
  -> decltype(msl<CharT>(p) + string_literal<CharT, 2>{'s'})
@@ -8204,6 +8208,7 @@ get_units(Period p)
 
 template <class CharT>
 CONSTCD11
+inline
 string_literal<CharT, 2>
 get_units(std::ratio<1>)
 {
@@ -8212,6 +8217,7 @@ get_units(std::ratio<1>)
 
 template <class CharT>
 CONSTCD11
+inline
 string_literal<CharT, 2>
 get_units(std::ratio<3600>)
 {
@@ -8221,6 +8227,7 @@ get_units(std::ratio<3600>)
 
 template <class CharT>
 CONSTCD11
+inline
 string_literal<CharT, 4>
 get_units(std::ratio<60>)
 {
