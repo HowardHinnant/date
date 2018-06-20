@@ -59,14 +59,6 @@ main()
      assert(ut.time_since_epoch() == seconds(0));
    }
 
-   // utc leap second
-   {
-     auto lu = local_days{2015_y/July/1_d} - milliseconds(1);
-     auto ut = clock_cast<utc_clock>(lu) + milliseconds(50); //into leap second
-
-     assert(clock_cast<local_t>(ut) == lu);
-   }
-
    /// utc paper example
    {
      auto lu = local_days{2000_y/January/1_d};
@@ -128,5 +120,4 @@ main()
      auto tt = clock_cast<tai_clock>(lt);
      assert(clock_cast<gps_clock>(tt) == gt);
    }
-
 }

@@ -1845,6 +1845,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration, Tim
 
 #if !MISSING_LEAP_SECONDS
 
+
 class utc_clock
 {
 public:
@@ -1870,6 +1871,11 @@ public:
     static
     std::chrono::time_point<local_t, typename std::common_type<Duration, std::chrono::seconds>::type>
     to_local(const std::chrono::time_point<utc_clock, Duration>&);
+
+    template<typename Duration>
+    static
+    std::chrono::time_point<local_t, typename std::common_type<Duration, std::chrono::seconds>::type>
+    to_local(const std::chrono::time_point<utc_clock, Duration>&, choose);
 
     template<typename Duration>
     static
@@ -1950,13 +1956,66 @@ utc_clock::from_local(const local_time<Duration>& st)
     return from_sys(sys_time<Duration>{st.time_since_epoch()});
 }
 
+class leap_second_insertion
+    : public std::runtime_error
+{
+public:
+    template <class Duration>
+       leap_second_insertion(utc_time<Duration> tp);
+
+private:
+    template <class Duration>
+    static
+    std::string
+    make_msg(utc_time<Duration> tp);
+};
+
+template <class Duration>
+inline
+leap_second_insertion::leap_second_insertion(utc_time<Duration> tp)
+    : std::runtime_error(make_msg(tp))
+{
+}
+
+template <class Duration>
+std::string
+leap_second_insertion::make_msg(utc_time<Duration> tp)
+{
+    std::ostringstream os;
+    os << tp << " is time during leap second insertion, that is not representable as local time";
+    return os.str();
+}
+
 template <class Duration>
 local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 utc_clock::to_local(const utc_time<Duration>& ut)
 {
-    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
-    return local_time<duration>{to_sys(ut).time_since_epoch()};
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto ls = is_leap_second(ut);
+    if (ls.first)
+       throw leap_second_insertion(ut);
+
+    return local_time<duration>{ut.time_since_epoch() - ls.second};
 }
+
+template <class Duration>
+local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+utc_clock::to_local(const utc_time<Duration>& ut, choose c)
+{
+    using namespace std::chrono;
+    using duration = typename std::common_type<Duration, seconds>::type;
+    auto ls = is_leap_second(ut);
+    auto tp = local_time<duration>{ut.time_since_epoch() - ls.second};
+    if (!ls.first)
+      return tp;
+
+    tp = floor<seconds>(tp) + seconds{1};
+    if (c == choose::earliest)
+      tp = tp - duration(1);
+    return tp;
+}
+
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
