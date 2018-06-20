@@ -192,6 +192,14 @@ void test_calendar()
       assert(os.str() == "13h");
       os.str("");
    }
+
+   // days
+   {
+      days d(13);
+      os << d;
+      assert(os.str() == "13d");
+      os.str("");
+   }
 }
 
 void test_integral_scale()
@@ -214,14 +222,6 @@ void test_integral_scale()
       duration<int, std::ratio<25, 1>> d(13);
       os << d;
       assert(os.str() == "13[25]s");
-      os.str("");
-   }
-
-   // days = ratio 24 * 60 * 60 / 1 = ratio 86400 / 1
-   {
-      days d(13);
-      os << d;
-      assert(os.str() == "13[86400]s");
       os.str("");
    }
 
@@ -310,7 +310,8 @@ void test_constexpr()
 
   CONSTCD11 auto min = get_units<char>(std::ratio<60>{});
   CONSTCD11 auto h = get_units<char>(std::ratio<3600>{});
-  (void)min, (void)h;
+  CONSTCD11 auto d = get_units<char>(std::ratio<86400>{});
+  (void)min, (void)h, (void)d;
 
   CONSTCD14 auto integer = get_units<char>(std::ratio<123>{});
   CONSTCD14 auto ratio = get_units<char>(std::ratio<123, 3>{});

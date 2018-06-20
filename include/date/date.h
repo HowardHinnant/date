@@ -8225,7 +8225,6 @@ get_units(std::ratio<3600>)
     return string_literal<CharT, 2>{'h'};
 }
 
-
 template <class CharT>
 CONSTCD11
 inline
@@ -8233,6 +8232,15 @@ string_literal<CharT, 4>
 get_units(std::ratio<60>)
 {
     return string_literal<CharT, 4>{'m', 'i', 'n'};
+}
+
+template <class CharT>
+CONSTCD11
+inline
+string_literal<CharT, 2>
+get_units(std::ratio<86400>)
+{
+    return string_literal<CharT, 2>{'d'};
 }
 
 template <class CharT, class Traits = std::char_traits<CharT>>
