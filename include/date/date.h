@@ -7811,7 +7811,7 @@ public:
     }
 
     template <class U = CharT,
-              class = typename std::enable_if<1 < sizeof(U)>::type>
+              class = typename std::enable_if<(1 < sizeof(U))>::type>
     CONSTCD14 string_literal(const char(&a)[N]) NOEXCEPT
         : p_{}
     {
