@@ -90,6 +90,7 @@ namespace date
 
 #if defined(_MSC_VER) && (!defined(__clang__) || (_MSC_VER < 1910))
 // MSVC
+#  define _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
 #  if _MSC_VER < 1910
 //   before VS2017
 #    define CONSTDATA const
