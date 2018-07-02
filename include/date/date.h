@@ -6471,14 +6471,14 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 {
                     if (modified == CharT{})
                     {
-                        int tm = not_a_month;
+                        int tn = not_a_month;
                         int td = not_a_day;
                         int ty = not_a_2digit_year;
-                        read(is, ru{tm, 1, 2}, CharT{'\0'}, CharT{'/'}, CharT{'\0'},
+                        read(is, ru{tn, 1, 2}, CharT{'\0'}, CharT{'/'}, CharT{'\0'},
                                  ru{td, 1, 2}, CharT{'\0'}, CharT{'/'}, CharT{'\0'},
                                  rs{ty, 1, 2});
                         checked_set(y, ty, not_a_2digit_year, is);
-                        checked_set(m, tm, not_a_month, is);
+                        checked_set(m, tn, not_a_month, is);
                         checked_set(d, td, not_a_day, is);
                     }
                     else
@@ -6496,12 +6496,12 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (modified == CharT{})
                     {
                         int tY = not_a_year;
-                        int tm = not_a_month;
+                        int tn = not_a_month;
                         int td = not_a_day;
                         read(is, rs{tY, 1, width == -1 ? 4u : static_cast<unsigned>(width)},
-                                 CharT{'-'}, ru{tm, 1, 2}, CharT{'-'}, ru{td, 1, 2});
+                                 CharT{'-'}, ru{tn, 1, 2}, CharT{'-'}, ru{td, 1, 2});
                         checked_set(Y, tY, not_a_year, is);
-                        checked_set(m, tm, not_a_month, is);
+                        checked_set(m, tn, not_a_month, is);
                         checked_set(d, td, not_a_day, is);
                     }
                     else
@@ -6661,9 +6661,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (modified != CharT{'E'})
 #endif
                     {
-                        int tm = not_a_month;
-                        read(is, rs{tm, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
-                        checked_set(m, tm, not_a_month, is);
+                        int tn = not_a_month;
+                        read(is, rs{tn, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
+                        checked_set(m, tn, not_a_month, is);
                     }
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
