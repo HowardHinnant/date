@@ -1887,10 +1887,10 @@ utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 utc_clock::from_sys(const sys_time<Duration>& st)
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
+    using CD = typename std::common_type<Duration, seconds>::type;
     auto const& leaps = get_tzdb().leaps;
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), st);
-    return utc_time<duration>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
+    return utc_time<CD>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
 }
 
 // Return pair<is_leap_second, seconds{number_of_leap_seconds_since_1970}>
@@ -1927,11 +1927,11 @@ sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 utc_clock::to_sys(const utc_time<Duration>& ut)
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
+    using CD = typename std::common_type<Duration, seconds>::type;
     auto ls = is_leap_second(ut);
-    auto tp = sys_time<duration>{ut.time_since_epoch() - ls.second};
+    auto tp = sys_time<CD>{ut.time_since_epoch() - ls.second};
     if (ls.first)
-        tp = floor<seconds>(tp) + seconds{1} - duration{1};
+        tp = floor<seconds>(tp) + seconds{1} - CD{1};
     return tp;
 }
 
@@ -1954,8 +1954,8 @@ template <class Duration>
 local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 utc_clock::to_local(const utc_time<Duration>& ut)
 {
-    using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
-    return local_time<duration>{to_sys(ut).time_since_epoch()};
+    using CD = typename std::common_type<Duration, std::chrono::seconds>::type;
+    return local_time<CD>{to_sys(ut).time_since_epoch()};
 }
 
 template <class CharT, class Traits, class Duration>
@@ -2065,8 +2065,8 @@ utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 tai_clock::to_utc(const tai_time<Duration>& t) NOEXCEPT
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return utc_time<duration>{t.time_since_epoch()} -
+    using CD = typename std::common_type<Duration, seconds>::type;
+    return utc_time<CD>{t.time_since_epoch()} -
             (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
@@ -2076,8 +2076,8 @@ tai_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 tai_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return tai_time<duration>{t.time_since_epoch()} +
+    using CD = typename std::common_type<Duration, seconds>::type;
+    return tai_time<CD>{t.time_since_epoch()} +
             (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
@@ -2094,8 +2094,8 @@ inline
 local_time<typename std::common_type<Duration, date::days>::type>
 tai_clock::to_local(const tai_time<Duration>& t) NOEXCEPT
 {
-    using duration = typename std::common_type<Duration, date::days>::type;
-    return local_time<duration>{t.time_since_epoch()} -
+    using CD = typename std::common_type<Duration, date::days>::type;
+    return local_time<CD>{t.time_since_epoch()} -
            (local_days(year{1970}/January/1) - local_days(year{1958}/January/1));
 }
 
@@ -2104,8 +2104,8 @@ inline
 tai_time<typename std::common_type<Duration, date::days>::type>
 tai_clock::from_local(const local_time<Duration>& t) NOEXCEPT
 {
-    using duration = typename std::common_type<Duration, date::days>::type;
-    return tai_time<duration>{t.time_since_epoch()} +
+    using CD = typename std::common_type<Duration, date::days>::type;
+    return tai_time<CD>{t.time_since_epoch()} +
             (local_days(year{1970}/January/1) - local_days(year{1958}/January/1));
 }
 
@@ -2186,8 +2186,8 @@ utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 gps_clock::to_utc(const gps_time<Duration>& t) NOEXCEPT
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return utc_time<duration>{t.time_since_epoch()} +
+    using CD = typename std::common_type<Duration, seconds>::type;
+    return utc_time<CD>{t.time_since_epoch()} +
             (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1) +
              seconds{9});
 }
@@ -2198,8 +2198,8 @@ gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 gps_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
 {
     using namespace std::chrono;
-    using duration = typename std::common_type<Duration, seconds>::type;
-    return gps_time<duration>{t.time_since_epoch()} -
+    using CD = typename std::common_type<Duration, seconds>::type;
+    return gps_time<CD>{t.time_since_epoch()} -
             (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1) +
              seconds{9});
 }
@@ -2217,8 +2217,8 @@ inline
 local_time<typename std::common_type<Duration, date::days>::type>
 gps_clock::to_local(const gps_time<Duration>& t) NOEXCEPT
 {
-    using duration = typename std::common_type<Duration, date::days>::type;
-    return local_time<duration>{t.time_since_epoch()} +
+    using CD = typename std::common_type<Duration, date::days>::type;
+    return local_time<CD>{t.time_since_epoch()} +
             (local_days(year{1980}/January/Sunday[1]) - local_days(year{1970}/January/1));
 }
 
@@ -2227,8 +2227,8 @@ inline
 gps_time<typename std::common_type<Duration, date::days>::type>
 gps_clock::from_local(const local_time<Duration>& t) NOEXCEPT
 {
-    using duration = typename std::common_type<Duration, date::days>::type;
-    return gps_time<duration>{t.time_since_epoch()} -
+    using CD = typename std::common_type<Duration, date::days>::type;
+    return gps_time<CD>{t.time_since_epoch()} -
             (local_days(year{1980}/January/Sunday[1]) - local_days(year{1970}/January/1));
 }
 
