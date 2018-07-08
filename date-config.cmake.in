@@ -4,6 +4,7 @@ include( CMakeFindDependencyMacro )
 
 find_dependency( Threads )
 
+# CURL is required if ${USE_SYSTEM_TZ_DB} is OFF
 if( NOT @USE_SYSTEM_TZ_DB@ )
 	find_dependency( CURL )
 endif()
@@ -11,3 +12,7 @@ endif()
 include( "${CMAKE_CURRENT_LIST_DIR}/date-targets.cmake" )
 
 # include( "${CMAKE_CURRENT_LIST_DIR}/date-macros.cmake" )
+
+set( date_FOUND TRUE )
+
+check_required_components( date )
