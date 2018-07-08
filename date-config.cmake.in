@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+include( CMakeFindDependencyMacro )
+
+find_dependency( Threads )
+
+if( NOT @USE_SYSTEM_TZ_DB@ )
+	find_dependency( CURL )
+endif()
+
+include( "${CMAKE_CURRENT_LIST_DIR}/date-targets.cmake" )
+
+# include( "${CMAKE_CURRENT_LIST_DIR}/date-macros.cmake" )

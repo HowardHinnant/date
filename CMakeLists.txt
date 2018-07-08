@@ -1,8 +1,10 @@
 cmake_minimum_required( VERSION 3.1.0 )
 
-project( date_prj )
+project( date_prj VERSION 2.4.1 )
 
 include( GNUInstallDirs )
+
+include( CMakePackageConfigHelpers )
 
 find_package( Threads REQUIRED )
 
@@ -45,7 +47,17 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
+add_library( date INTERFACE)
+add_library( date::date ALIAS date )
+
+# add include folders to the INTERFACE and targets that consume it
+target_include_directories( date INTERFACE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+)
+
 add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+add_library( date::tz ALIAS tz )
 
 if( USE_SYSTEM_TZ_DB )
 	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
@@ -59,8 +71,8 @@ else( )
 	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=1 )
 	target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=0 )
 	find_package( CURL REQUIRED )
-	include_directories( SYSTEM ${CURL_INCLUDE_DIRS} )
-	set( OPTIONAL_LIBRARIES ${CURL_LIBRARIES} )
+	target_include_directories( tz PRIVATE ${CURL_INCLUDE_DIRS} )
+	target_link_libraries( tz ${CURL_LIBRARIES} )
 endif( )
 
 if( USE_TZ_DB_IN_DOT )
@@ -76,39 +88,86 @@ if( BUILD_SHARED_LIBS )
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
 endif( )
 
-target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
-
-# add include folders to the library and targets that consume it
-target_include_directories(tz PUBLIC
-    $<BUILD_INTERFACE:
-        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
-    >
-    $<INSTALL_INTERFACE:
-        include
-    >
+target_link_libraries( tz
+  date::date
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_library(date_interface INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "tz.h and its lib" are needed)
-
-# add include folders to the INTERFACE and targets that consume it
-target_include_directories(date_interface INTERFACE
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    $<INSTALL_INTERFACE:include>
+install( TARGETS date EXPORT date-targets )
+install( TARGETS tz EXPORT date-targets
+	ARCHIVE
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT lib
+	LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT lib
+	RUNTIME # This is for DLLs on Windows
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT lib
 )
+install( DIRECTORY ${HEADER_FOLDER}/
+  DESTINATION
+    include/
+  COMPONENT
+    dev
+)
+
+# Create package build configuration in build directory
+
+export( EXPORT date-targets
+  FILE
+    "${CMAKE_CURRENT_BINARY_DIR}/date-targets.cmake"
+  NAMESPACE
+    date::
+)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
+  VERSION
+    ${${PROJECT_NAME}_VERSION}
+  COMPATIBILITY
+    AnyNewerVersion
+)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/date-config.cmake.in"
+  "date-config.cmake"
+  INSTALL_DESTINATION
+    "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+# Export build configuration into local cmake repository
+
+export( PACKAGE date )
+
+# Install package configuration for installed targets
 
 if(WIN32 AND NOT CYGWIN)
-    set(DEF_INSTALL_CMAKE_DIR CMake)
+  set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
-    set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
+  set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
 endif()
 
-install( TARGETS date_interface EXPORT dateConfig )
-install( EXPORT dateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
-install( TARGETS tz
-	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
-install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
+install( EXPORT date-targets
+  DESTINATION
+    ${DEF_INSTALL_CMAKE_DIR}
+  NAMESPACE
+    date::
+  COMPONENT
+    dev
+)
+
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/date-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
+  DESTINATION
+    ${DEF_INSTALL_CMAKE_DIR}
+  COMPONENT
+    dev
+)
+
+# Tests
 
 if ( ENABLE_DATE_TESTING )
 
