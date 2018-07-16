@@ -284,6 +284,39 @@ DATE_API const time_zone* current_zone();
 template <class T>
 struct zoned_traits
 {
+    template<class T_ = T>
+    static auto
+    default_zone() -> decltype(T_::default_zone())
+    {
+        return T::default_zone();
+    }
+
+#if HAS_STRING_VIEW
+
+    template<class T_ = T>
+    static auto
+    locate_zone(std::string_view name) -> decltype(T_::locate_zone(name))
+    {
+        return T::locate_zone(name);
+    }
+
+#else  // !HAS_STRING_VIEW
+
+    template<class T_ = T>
+    static auto
+    locate_zone(const std::string& name) -> decltype(T_::locate_zone(name))
+    {
+        return T::locate_zone(name);
+    }
+
+    template<class T_ = T>
+    static auto
+    locate_zone(const char* name) -> decltype(T_::locate_zone(name))
+    {
+        return T::locate_zone(name);
+    }
+
+#endif  // !HAS_STRING_VIEW
 };
 
 template <>

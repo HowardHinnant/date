@@ -175,6 +175,33 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
     const time_zone* operator->() const {return this;}
+
+#if HAS_STRING_VIEW
+
+    static
+    time_zone
+    locate_zone(std::string_view name)
+    {
+        return time_zone{name};
+    }
+
+#else  // !HAS_STRING_VIEW
+
+    static
+    time_zone
+    locate_zone(const std::string& name)
+    {
+        return time_zone{name};
+    }
+
+    static
+    time_zone
+    locate_zone(const char* name)
+    {
+        return time_zone{name};
+    }
+
+#endif  // !HAS_STRING_VIEW
 };
 
 inline
@@ -550,43 +577,5 @@ read_unsigned(const string_t& s, unsigned i, unsigned limit, unsigned& u)
 }  // namespace detail
 
 }  // namespace Posix
-
-namespace date
-{
-
-template <>
-struct zoned_traits<Posix::time_zone>
-{
-
-#if HAS_STRING_VIEW
-
-    static
-    Posix::time_zone
-    locate_zone(std::string_view name)
-    {
-        return Posix::time_zone{name};
-    }
-
-#else  // !HAS_STRING_VIEW
-
-    static
-    Posix::time_zone
-    locate_zone(const std::string& name)
-    {
-        return Posix::time_zone{name};
-    }
-
-    static
-    Posix::time_zone
-    locate_zone(const char* name)
-    {
-        return Posix::time_zone{name};
-    }
-
-#endif  // !HAS_STRING_VIEW
-
-};
-
-}  // namespace date
 
 #endif  // PTZ_H
