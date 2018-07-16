@@ -68,7 +68,7 @@ if( USE_TZ_DB_IN_DOT )
 endif( )
 
 if( DISABLE_STRING_VIEW )
-    target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
+    target_compile_definitions( tz PUBLIC -DHAS_STRING_VIEW=0 )
 endif( )
 
 if( BUILD_SHARED_LIBS )
