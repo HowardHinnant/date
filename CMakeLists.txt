@@ -52,8 +52,8 @@ add_library( date::date ALIAS date )
 
 # add include folders to the INTERFACE and targets that consume it
 target_include_directories( date INTERFACE
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
 
 add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
@@ -80,91 +80,78 @@ if( USE_TZ_DB_IN_DOT )
 endif( )
 
 if( DISABLE_STRING_VIEW )
-    target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
+	target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
 endif( )
 
 if( BUILD_SHARED_LIBS )
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
 endif( )
 
 target_link_libraries( tz
-  date::date
-  ${CMAKE_THREAD_LIBS_INIT}
+	date::date
+	Threads::Threads
 )
 
 install( TARGETS date EXPORT date-targets )
 install( TARGETS tz EXPORT date-targets
 	ARCHIVE
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT lib
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    		COMPONENT lib
 	LIBRARY
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT lib
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		COMPONENT lib
 	RUNTIME # This is for DLLs on Windows
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT lib
+		DESTINATION ${CMAKE_INSTALL_BINDIR}
+		COMPONENT lib
 )
 install( DIRECTORY ${HEADER_FOLDER}/
-  DESTINATION
-    include/
-  COMPONENT
-    dev
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  	COMPONENT dev
 )
 
 # Create package build configuration in build directory
 
 export( EXPORT date-targets
-  FILE
-    "${CMAKE_CURRENT_BINARY_DIR}/date-targets.cmake"
-  NAMESPACE
-    date::
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/date-targets.cmake"
+	NAMESPACE date::
 )
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
-  VERSION
-    ${${PROJECT_NAME}_VERSION}
-  COMPATIBILITY
-    AnyNewerVersion
+  	"${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
+  	VERSION ${${PROJECT_NAME}_VERSION}
+  	COMPATIBILITY AnyNewerVersion
 )
 
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/date-config.cmake.in"
-  "date-config.cmake"
-  INSTALL_DESTINATION
-    "${CMAKE_CURRENT_BINARY_DIR}"
+  	"${CMAKE_CURRENT_SOURCE_DIR}/date-config.cmake.in"
+  	"date-config.cmake"
+  	INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# Export build configuration into local cmake repository
+# Export build configuration into cmake user repository
 
 export( PACKAGE date )
 
 # Install package configuration for installed targets
 
 if(WIN32 AND NOT CYGWIN)
-  set(DEF_INSTALL_CMAKE_DIR CMake)
+  	set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
-  set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
+  	set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
 endif()
 
 install( EXPORT date-targets
-  DESTINATION
-    ${DEF_INSTALL_CMAKE_DIR}
-  NAMESPACE
-    date::
-  COMPONENT
-    dev
+  	DESTINATION ${DEF_INSTALL_CMAKE_DIR}
+  	NAMESPACE   date::
+  	COMPONENT   dev
 )
 
 install(
-  FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/date-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
-  DESTINATION
-    ${DEF_INSTALL_CMAKE_DIR}
-  COMPONENT
-    dev
+	FILES	"${CMAKE_CURRENT_BINARY_DIR}/date-config.cmake"
+    		"${CMAKE_CURRENT_BINARY_DIR}/date-config-version.cmake"
+	DESTINATION ${DEF_INSTALL_CMAKE_DIR}
+	COMPONENT dev
 )
 
 # Tests
