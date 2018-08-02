@@ -11,8 +11,4 @@ endif()
 
 include( "${CMAKE_CURRENT_LIST_DIR}/date-targets.cmake" )
 
-# include( "${CMAKE_CURRENT_LIST_DIR}/date-macros.cmake" )
-
-set( date_FOUND TRUE )
-
 check_required_components( date )
