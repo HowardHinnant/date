@@ -48,15 +48,15 @@ set( HEADER_FILES
 add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 
 if( USE_SYSTEM_TZ_DB )
-	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
-	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=0 )
+	target_compile_definitions( tz PUBLIC -DUSE_AUTOLOAD=0 )
+	target_compile_definitions( tz PUBLIC -DHAS_REMOTE_API=0 )
 	# cannot set USE_OS_TZDB to 1 on Windows
 	if( NOT WIN32 )
 		target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=1 )
 	endif( )
 else( )
-	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=1 )
-	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=1 )
+	target_compile_definitions( tz PUBLIC -DUSE_AUTOLOAD=1 )
+	target_compile_definitions( tz PUBLIC -DHAS_REMOTE_API=1 )
 	target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=0 )
 	find_package( CURL REQUIRED )
 	include_directories( SYSTEM ${CURL_INCLUDE_DIRS} )
@@ -64,11 +64,11 @@ else( )
 endif( )
 
 if( USE_TZ_DB_IN_DOT )
-	target_compile_definitions( tz PRIVATE -DINSTALL=. )
+	target_compile_definitions( tz PUBLIC -DINSTALL=. )
 endif( )
 
 if( DISABLE_STRING_VIEW )
-    target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
+	target_compile_definitions( tz PUBLIC -DHAS_STRING_VIEW=0 )
 endif( )
 
 if( BUILD_SHARED_LIBS )
