@@ -63,7 +63,16 @@
 #include <stdexcept>
 #include <string>
 #if HAS_STRING_VIEW
-# include <string_view>
+#  if defined(__has_include)
+#    if __has_include(<string_view>)
+#      include <string_view>
+#    elif __has_include(<experimental/string_view>)
+#      include <experimental/string_view>
+       namespace std {
+           typedef experimental::string_view string_view;
+       }
+#    endif
+#  endif
 #endif
 #include <utility>
 #include <type_traits>
@@ -128,7 +137,16 @@ namespace date
 
 #ifndef HAS_VOID_T
 #  if __cplusplus >= 201703
-#    define HAS_VOID_T 1
+#    if defined(__has_include)
+#      define HAS_VOID_T 1
+#      if __has_include(<experimental/type_traits>)
+#        include <experimental/type_traits>
+         namespace std {
+             typedef experimental::void_t void_t;
+		 }
+#    endif
+#  endif
+#endif
 #  else
 #    define HAS_VOID_T 0
 #  endif
