@@ -50,8 +50,6 @@ set( HEADER_FILES
 add_library( date INTERFACE)
 add_library( date::date ALIAS date )
 
-set_target_properties( date PROPERTIES VERSION ${PROJECT_VERSION} )
-
 # add include folders to the INTERFACE and targets that consume it
 target_include_directories( date INTERFACE
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
