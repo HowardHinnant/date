@@ -50,6 +50,8 @@ set( HEADER_FILES
 add_library( date INTERFACE)
 add_library( date::date ALIAS date )
 
+set_target_properties( date PROPERTIES VERSION ${PROJECT_VERSION} )
+
 # add include folders to the INTERFACE and targets that consume it
 target_include_directories( date INTERFACE
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -58,6 +60,8 @@ target_include_directories( date INTERFACE
 
 add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 add_library( date::tz ALIAS tz )
+
+set_target_properties( tz PROPERTIES VERSION ${PROJECT_VERSION} )
 
 if( USE_SYSTEM_TZ_DB )
 	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
