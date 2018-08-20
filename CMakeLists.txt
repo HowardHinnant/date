@@ -80,12 +80,8 @@ target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
 
 # add include folders to the library and targets that consume it
 target_include_directories(tz PUBLIC
-    $<BUILD_INTERFACE:
-        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}
-    >
-    $<INSTALL_INTERFACE:
-        include
-    >
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    $<INSTALL_INTERFACE:include>
 )
 
 add_library(date_interface INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "tz.h and its lib" are needed)
@@ -104,10 +100,11 @@ endif()
 
 install( TARGETS date_interface EXPORT dateConfig )
 install( EXPORT dateConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR} )
-install( TARGETS tz
+install( TARGETS tz EXPORT tzConfig
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+install( EXPORT tzConfig DESTINATION "${DEF_INSTALL_CMAKE_DIR}" )
 install( DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/ )
 
 if ( ENABLE_DATE_TESTING )
