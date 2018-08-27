@@ -700,6 +700,40 @@ using zoned_seconds = zoned_time<std::chrono::seconds>;
 
 #if HAS_DEDUCTION_GUIDES
 
+namespace detail
+{
+
+#if HAS_STRING_VIEW
+template <class TimeZonePtrOrName>
+struct DeduceTimeZonePtr
+{
+    typedef std::conditional
+    <
+        std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
+        time_zone const*,
+        TimeZonePtrOrName
+    >::type type;
+};
+#else
+template <class TimeZonePtrOrName>
+struct DeduceTimeZonePtr
+{
+    typedef typename std::conditional
+    <
+        std::is_convertible<TimeZonePtrOrName, const std::string&>::value,
+        time_zone const*,
+        typename std::conditional
+        <
+            std::is_convertible<TimeZonePtrOrName, const char*>::value,
+            time_zone const*,
+            TimeZonePtrOrName
+        >::type
+    >::type type;
+};
+#endif
+
+}
+
 zoned_time()
     -> zoned_time<std::chrono::seconds>;
 
@@ -710,42 +744,22 @@ zoned_time(sys_time<Duration>)
 template <class TimeZonePtrOrName>
 zoned_time(TimeZonePtrOrName)
     -> zoned_time<std::chrono::seconds,
-                  std::conditional_t
-                  <
-                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
-                      time_zone const*,
-                      TimeZonePtrOrName
-                  >>;
+                  typename detail::DeduceTimeZonePtr<TimeZonePtrOrName>::type>;
 
 template <class TimeZonePtrOrName, class Duration>
 zoned_time(TimeZonePtrOrName, sys_time<Duration>)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
-                  std::conditional_t
-                  <
-                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
-                      time_zone const*,
-                      TimeZonePtrOrName
-                  >>;
+                  typename detail::DeduceTimeZonePtr<TimeZonePtrOrName>::type>;
 
 template <class TimeZonePtrOrName, class Duration>
 zoned_time(TimeZonePtrOrName, local_time<Duration>, choose = choose::earliest)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
-                  std::conditional_t
-                  <
-                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
-                      time_zone const*,
-                      TimeZonePtrOrName
-                  >>;
+                  typename detail::DeduceTimeZonePtr<TimeZonePtrOrName>::type>;
 
 template <class Duration, class TimeZonePtrOrName, class TimeZonePtr2>
 zoned_time(TimeZonePtrOrName, zoned_time<Duration, TimeZonePtr2>, choose = choose::earliest)
     -> zoned_time<std::common_type_t<Duration, std::chrono::seconds>,
-                  std::conditional_t
-                  <
-                      std::is_convertible<TimeZonePtrOrName, std::string_view>::value,
-                      time_zone const*,
-                      TimeZonePtrOrName
-                  >>;
+                  typename detail::DeduceTimeZonePtr<TimeZonePtrOrName>::type>;
 
 #endif  // HAS_DEDUCTION_GUIDES
 
