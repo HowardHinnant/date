@@ -33,5 +33,7 @@ main()
     static_assert(!is_copy_constructible<time_zone>{}, "");
     static_assert(!is_copy_assignable<time_zone>{}, "");
     static_assert( is_nothrow_move_constructible<time_zone>{}, "");
+#if _GLIBCXX_USE_CXX11_ABI
     static_assert( is_nothrow_move_assignable<time_zone>{}, "");
+#endif
 }
