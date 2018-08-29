@@ -337,7 +337,11 @@ discover_tz_dir()
     struct stat sb;
     using namespace std;
 #  ifndef __APPLE__
+#    ifdef __sun
+    CONSTDATA auto tz_dir_default = "/usr/share/lib/zoneinfo";
+#    else
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
+#    endif
     CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
 
     // Check special path which is valid for buildroot with uclibc builds
@@ -2660,7 +2664,9 @@ init_tzdb()
                 strcmp(d->d_name, "+VERSION")     == 0      ||
                 strcmp(d->d_name, "zone.tab")     == 0      ||
                 strcmp(d->d_name, "zone1970.tab") == 0      ||
-                strcmp(d->d_name, "leap-seconds.list") == 0   )
+                strcmp(d->d_name, "leap-seconds.list") == 0 ||
+                strcmp(d->d_name, "leapseconds")  == 0      ||
+                strcmp(d->d_name, "tzdata.zi")    == 0)
                 continue;
             auto subname = dirname + folder_delimiter + d->d_name;
             if(stat(subname.c_str(), &s) == 0)
