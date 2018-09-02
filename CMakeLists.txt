@@ -91,8 +91,10 @@ if( BUILD_SHARED_LIBS )
 endif( )
 
 target_link_libraries( tz
-	date::date
-	Threads::Threads
+	PUBLIC
+		date::date
+	PRIVATE
+		Threads::Threads
 )
 
 install( TARGETS date EXPORT date-targets )
