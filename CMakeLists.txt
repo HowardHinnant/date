@@ -74,7 +74,7 @@ else( )
 	target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=0 )
 	find_package( CURL REQUIRED )
 	target_include_directories( tz PRIVATE ${CURL_INCLUDE_DIRS} )
-	target_link_libraries( tz ${CURL_LIBRARIES} )
+	target_link_libraries( tz PRIVATE ${CURL_LIBRARIES} )
 endif( )
 
 if( USE_TZ_DB_IN_DOT )
