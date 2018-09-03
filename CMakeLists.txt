@@ -6,9 +6,6 @@ include( GNUInstallDirs )
 
 find_package( Threads REQUIRED )
 
-# Override by setting on CMake command line.
-set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested.")
-
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
@@ -28,6 +25,22 @@ print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_SHARED_LIBS  )
 print_option( ENABLE_DATE_TESTING )
 print_option( DISABLE_STRING_VIEW )
+
+# https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html
+string(COMPARE EQUAL "${CMAKE_CXX_STANDARD}" "" no_cmake_cxx_standard_set)
+if(no_cmake_cxx_standard_set)
+    if (DISABLE_STRING_VIEW)
+        # Minimum required version
+        set( CMAKE_CXX_STANDARD 11 CACHE STRING "The C++ standard whose features are requested.")
+        message(STATUS "Using default C++ standard ${CMAKE_CXX_STANDARD} because string_view is disabled")
+    else()
+        # Requiere C++17 when string_view is enabled
+        set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested.")
+        message(STATUS "Using default C++ standard ${CMAKE_CXX_STANDARD} because string_view is enabled")
+    endif()
+else()
+    message(STATUS "Using user specified C++ standard ${CMAKE_CXX_STANDARD}")
+endif()
 
 set( HEADER_FOLDER "include" )
 set( SOURCE_FOLDER "src" )
