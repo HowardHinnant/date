@@ -1,0 +1,112 @@
+sudo: required
+language: cpp
+services:
+  - docker
+
+# define the build matrix
+env:
+  global:
+    - PROJECT_DIR: .
+    - TOOLCHAIN: default
+    - BUILD_PACKAGES: ""
+    - DISABLE_STRING_VIEW: NO
+    - TZ: America/Los_Angeles
+matrix:
+  include:
+    # Linux {
+
+    # Ubuntu 16.04
+    - os: linux
+      # disable string_view, no C++17 compiler available
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=xenial
+        BUILD_ARCH=amd64
+        TOOLCHAIN=gcc-cxx11
+        DISABLE_STRING_VIEW=YES
+    # Ubuntu 18.04
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=gcc-cxx11
+        DISABLE_STRING_VIEW=YES
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=gcc-cxx14
+        DISABLE_STRING_VIEW=YES
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=gcc-cxx17
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=clang-cxx11
+        DISABLE_STRING_VIEW=YES
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=clang-cxx14
+        DISABLE_STRING_VIEW=YES
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=clang-cxx17
+
+    # Debian 8
+    - os: linux
+      # disable string_view, no C++17 compiler available
+      env: >
+        BUILD_FLAVOR=debian
+        BUILD_RELEASE=stretch
+        BUILD_ARCH=amd64
+        DISABLE_STRING_VIEW=YES
+    # Debian 9
+    - os: linux
+      env: >
+        BUILD_FLAVOR=debian
+        BUILD_RELEASE=buster
+        BUILD_ARCH=amd64
+    # } // end Linux
+
+before_install:
+  # use the Dockerfile.<distro>.template file for building the image with sed magic
+  - |
+    sed \
+    -e "s/@BUILD_FLAVOR@/${BUILD_FLAVOR}/g" \
+    -e "s/@BUILD_RELEASE@/${BUILD_RELEASE}/g" \
+    -e "s/@BUILD_ARCH@/${BUILD_ARCH}/g" \
+    -e "s/@BUILD_PACKAGES@/${BUILD_PACKAGES}/g" \
+    -e "s#@TZ@#${TZ}#g" \
+    ci/Dockerfile.template | tee ci/Dockerfile.$BUILD_FLAVOR.$BUILD_RELEASE.$BUILD_ARCH
+  - docker build -f ci/Dockerfile.$BUILD_FLAVOR.$BUILD_RELEASE.$BUILD_ARCH -t date-devel .
+
+script: |
+  # run the respective .travis.<distro>.sh script
+  docker run \
+  -e BUILD_FLAVOR="$BUILD_FLAVOR" \
+  -e BUILD_RELEASE="$BUILD_RELEASE" \
+  -e BUILD_ARCH="$BUILD_ARCH" \
+  -e PROJECT_DIR="$PROJECT_DIR" \
+  -e TOOLCHAIN="$TOOLCHAIN" \
+  -e DISABLE_STRING_VIEW="$DISABLE_STRING_VIEW" \
+  -it date-devel ./ci/travis.sh
+

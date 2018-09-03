@@ -1,0 +1,22 @@
+# Build Debian/Ubuntu image
+FROM @BUILD_ARCH@/@BUILD_FLAVOR@:@BUILD_RELEASE@
+
+# set timezone such that tzdata install successfully
+# https://serverfault.com/questions/683605/docker-container-time-timezone-will-not-reflect-changes
+ENV TZ=@TZ@
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# see https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#/run
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+  @BUILD_PACKAGES@ \
+  tzdata \
+  build-essential \
+  cmake \
+  g++ \
+  clang
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+COPY . /usr/src/app
