@@ -4493,8 +4493,7 @@ inline
 std::pair<const std::string*, const std::string*>
 weekday_names()
 {
-    using namespace std;
-    static const string nm[] =
+    static const std::string nm[] =
     {
         "Sunday",
         "Monday",
@@ -4511,15 +4510,14 @@ weekday_names()
         "Fri",
         "Sat"
     };
-    return make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
 }
 
 inline
 std::pair<const std::string*, const std::string*>
 month_names()
 {
-    using namespace std;
-    static const string nm[] =
+    static const std::string nm[] =
     {
         "January",
         "February",
@@ -4546,20 +4544,19 @@ month_names()
         "Nov",
         "Dec"
     };
-    return make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
 }
 
 inline
 std::pair<const std::string*, const std::string*>
 ampm_names()
 {
-    using namespace std;
-    static const string nm[] =
+    static const std::string nm[] =
     {
         "AM",
         "PM"
     };
-    return make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
 }
 
 template <class CharT, class Traits, class FwdIter>
