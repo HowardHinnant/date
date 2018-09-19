@@ -126,6 +126,14 @@ namespace date
 #  define NOEXCEPT noexcept
 #endif
 
+#ifndef HAS_UNCAUGHT_EXCEPTIONS
+#  if __cplusplus > 201703
+#    define HAS_UNCAUGHT_EXCEPTIONS 1
+#  else
+#    define HAS_UNCAUGHT_EXCEPTIONS 0
+#  endif
+#endif  // HAS_UNCAUGHT_EXCEPTIONS
+
 #ifndef HAS_VOID_T
 #  if __cplusplus >= 201703
 #    define HAS_VOID_T 1
@@ -1030,7 +1038,7 @@ public:
     ~save_ostream()
     {
         if ((this->flags_ & std::ios::unitbuf) &&
-#if __cplusplus >= 201703
+#if HAS_UNCAUGHT_EXCEPTIONS
                 std::uncaught_exceptions() == 0 &&
 #else
                 !std::uncaught_exception() &&
