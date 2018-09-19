@@ -132,7 +132,7 @@ namespace date
 #  else
 #    define HAS_UNCAUGHT_EXCEPTIONS 0
 #  endif
-#endif  // HAS_VOID_T   
+#endif  // HAS_UNCAUGHT_EXCEPTIONS   
 
 #ifndef HAS_VOID_T
 #  if __cplusplus >= 201703
