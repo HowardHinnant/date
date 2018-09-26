@@ -1723,6 +1723,9 @@ flags): <code>%H</code>, <code>%I</code>, <code>%M</code>, <code>%p</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>d</code> will
+not be altered.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -2372,6 +2375,9 @@ flags): <code>%e</code>, <code>%e</code>, <code>%n</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>d</code> will
+not be altered.  In particular <code>!d.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -2764,6 +2770,9 @@ flags): <code>%b</code>, <code>%B</code>, <code>%h</code>,  <code>%m</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>y</code> will
+not be altered.  In particular <code>!m.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -3193,6 +3202,9 @@ flags): <code>%C</code>, <code>%y</code>, <code>%Y</code>,  <code>%n</code>,
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>y</code> will
+not be altered.  In particular <code>!y.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -3600,6 +3612,9 @@ flags): <code>%a</code>, <code>%A</code>, <code>%u</code>, <code>%w</code>, <cod
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>wd</code> will
+not be altered.  In particular <code>!wd.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -4093,6 +4108,9 @@ flags): <code>%b</code>, <code>%B</code>,  <code>%d</code>,  <code>%e</code>,
 placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
 <code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
 placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>md</code> will
+not be altered.  In particular <code>!md.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -4877,6 +4895,9 @@ to <code>nullptr</code>, the information parsed by <code>%Z</code> (if present) 
 placed in <code>*abbrev</code>.  If <code>offset</code> is not equal to
 <code>nullptr</code>, the information parsed by <code>%z</code> (if present) will be
 placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>ym</code> will
+not be altered.  In particular <code>!ym.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
@@ -5361,6 +5382,9 @@ from_stream(std::basic_istream&lt;CharT, Traits&gt;&amp; is, const CharT* fmt, y
 <code>%Z</code> (if present) will be placed in <code>*abbrev</code>.  If
 <code>offset</code> is not equal to <code>nullptr</code>, the information parsed by
 <code>%z</code> (if present) will be placed in <code>*offset</code>.
+If an invalid date is parsed, or a time of day which is outside of the
+conventional bounds, <code>failbit</code> will be set and <code>ymd</code> will
+not be altered.  In particular <code>!ymd.ok()</code> is not an indication of error.
 </p>
 <p>
 <i>Returns:</i> <code>is</code>.
