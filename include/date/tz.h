@@ -1963,10 +1963,9 @@ std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const utc_time<Duration>& t)
 {
-    using namespace std;
     using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
-    const string abbrev("UTC");
+    using CT = typename std::common_type<Duration, seconds>::type;
+    const std::string abbrev("UTC");
     CONSTDATA seconds offset{0};
     auto ls = is_leap_second(t);
     auto tp = sys_time<CT>{t.time_since_epoch() - ls.second};
@@ -1992,16 +1991,15 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             utc_time<Duration>& tp, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr)
 {
-    using namespace std;
     using namespace std::chrono;
-    using CT = typename common_type<Duration, seconds>::type;
+    using CT = typename std::common_type<Duration, seconds>::type;
     minutes offset_local{};
     auto offptr = offset ? offset : &offset_local;
     fields<CT> fds{};
     fds.has_tod = true;
     from_stream(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok())
-        is.setstate(ios::failbit);
+        is.setstate(std::ios::failbit);
     if (!is.fail())
     {
         bool is_60_sec = fds.tod.seconds() == seconds{60};
@@ -2012,7 +2010,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             tmp += seconds{1};
         if (is_60_sec != is_leap_second(tmp).first || !fds.tod.in_conventional_range())
         {
-            is.setstate(ios::failbit);
+            is.setstate(std::ios::failbit);
             return is;
         }
         tp = time_point_cast<Duration>(tmp);
