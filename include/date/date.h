@@ -69,7 +69,7 @@
 #    elif __has_include(<experimental/string_view>)
 #      include <experimental/string_view>
        namespace std {
-           typedef experimental::string_view string_view;
+           using string_view = experimental::string_view;
        }
 #    endif
 #  endif
