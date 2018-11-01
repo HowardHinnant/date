@@ -6376,7 +6376,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
 #if !ONLY_C_LOCALE
                         ios_base::iostate err = ios_base::goodbit;
-                        f.get(is, nullptr, is, err, &tm, command, fmt+1);
+						f.get_date(is, nullptr, is, err, &tm);
                         if ((err & ios::failbit) == 0)
                         {
                             checked_set(Y, tm.tm_year + 1900, not_a_year, is);
