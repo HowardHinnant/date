@@ -2057,73 +2057,6 @@ template <class Duration>
 
 using tai_seconds = tai_time<std::chrono::seconds>;
 
-namespace detail
-{
-
-template <class Duration>
-inline
-std::chrono::duration<long double, days::period>
-mjd(sys_time<Duration> tp)
-{
-    using namespace std::chrono;
-//     constexpr auto off = sys_days{1970_y/1/1} - (sys_days{-4713_y/11/24} + hours{12}) -
-//                          dday{2400000.5};
-    constexpr days off{40587};
-    return tp.time_since_epoch() + off;
-}
-
-template <class Duration>
-Duration
-pre_leap(sys_time<Duration> tp)
-{
-    using namespace std::chrono;
-    using dsec = duration<long double>;
-    if (tp >= sys_days(1972_y/January/1))
-        return seconds{10};
-    if (tp < sys_days(1961_y/January/1))
-        return Duration{0};
-    if (tp < sys_days(1961_y/August/1))
-        return duration_cast<Duration>(
-                   dsec{1.422818} + (mjd(tp) - days{37300}).count() * dsec{0.001296});
-    if (tp < sys_days(1962_y/January/1))
-        return duration_cast<Duration>(
-                   dsec{1.372818} + (mjd(tp) - days{37300}).count() * dsec{0.001296});
-    if (tp < sys_days(1963_y/November/1))
-        return duration_cast<Duration>(
-                   dsec{1.845858} + (mjd(tp) - days{37665}).count() * dsec{0.0011232});
-    if (tp < sys_days(1964_y/January/1))
-        return duration_cast<Duration>(
-                   dsec{1.945858} + (mjd(tp) - days{37665}).count() * dsec{0.0011232});
-    if (tp < sys_days(1964_y/April/1))
-        return duration_cast<Duration>(
-                   dsec{3.240130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1964_y/September/1))
-        return duration_cast<Duration>(
-                   dsec{3.340130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1965_y/January/1))
-        return duration_cast<Duration>(
-                   dsec{3.440130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1965_y/March/1))
-        return duration_cast<Duration>(
-                   dsec{3.540130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1965_y/July/1))
-        return duration_cast<Duration>(
-                   dsec{3.640130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1965_y/September/1))
-        return duration_cast<Duration>(
-                   dsec{3.740130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1966_y/January/1))
-        return duration_cast<Duration>(
-                   dsec{3.840130} + (mjd(tp) - days{38761}).count() * dsec{0.001296});
-    if (tp < sys_days(1968_y/February/1))
-        return duration_cast<Duration>(
-                   dsec{4.313170} + (mjd(tp) - days{39126}).count() * dsec{0.002592});
-    return duration_cast<Duration>(
-               dsec{4.213170} + (mjd(tp) - days{39126}).count() * dsec{0.002592});
-}
-
-}  // namespace detail
-
 template <class Duration>
 inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -2132,8 +2065,7 @@ tai_clock::to_utc(const tai_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using CD = typename std::common_type<Duration, seconds>::type;
     return utc_time<CD>{t.time_since_epoch()} -
-            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) +
-             detail::pre_leap<CD>(sys_time<CD>(to_local(t).time_since_epoch())));
+            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
 template <class Duration>
@@ -2144,8 +2076,7 @@ tai_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
     using namespace std::chrono;
     using CD = typename std::common_type<Duration, seconds>::type;
     return tai_time<CD>{t.time_since_epoch()} +
-            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) +
-             detail::pre_leap<CD>(sys_time<CD>(t.time_since_epoch())));
+            (sys_days(year{1970}/January/1) - sys_days(year{1958}/January/1) + seconds{10});
 }
 
 inline
@@ -2247,34 +2178,6 @@ template <class Duration>
 
 using gps_seconds = gps_time<std::chrono::seconds>;
 
-#if 1
-
-template <class Duration>
-inline
-utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-gps_clock::to_utc(const gps_time<Duration>& t) NOEXCEPT
-{
-    using namespace std::chrono;
-    using CD = typename std::common_type<Duration, seconds>::type;
-    return tai_clock::to_utc(tai_time<CD>{t.time_since_epoch()} +
-            (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1958}/January/1) +
-             seconds{19}));
-}
-
-template <class Duration>
-inline
-gps_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-gps_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
-{
-    using namespace std::chrono;
-    using CD = typename std::common_type<Duration, seconds>::type;
-    return gps_time<CD>{tai_clock::from_utc(t).time_since_epoch()} -
-            (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1958}/January/1) +
-             seconds{19});
-}
-
-#else
-
 template <class Duration>
 inline
 utc_time<typename std::common_type<Duration, std::chrono::seconds>::type>
@@ -2298,8 +2201,6 @@ gps_clock::from_utc(const utc_time<Duration>& t) NOEXCEPT
             (sys_days(year{1980}/January/Sunday[1]) - sys_days(year{1970}/January/1) +
              seconds{9});
 }
-
-#endif
 
 inline
 gps_clock::time_point
