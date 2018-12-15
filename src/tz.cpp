@@ -2974,7 +2974,7 @@ make_directory(const std::string& folder)
 #    endif // !USE_SHELL_API
 #  else  // !_WIN32
 #    if USE_SHELL_API
-    return std::system(("mkdir " + folder).c_str()) == EXIT_SUCCESS;
+    return std::system(("mkdir -p " + folder).c_str()) == EXIT_SUCCESS;
 #    else  // !USE_SHELL_API
     return mkdir(folder.c_str(), 0777) == 0;
 #    endif  // !USE_SHELL_API
@@ -3259,10 +3259,11 @@ remote_download(const std::string& version)
     // Download folder should be always available for Windows
 #  else  // !_WIN32
     // Create download folder if it does not exist on UNIX system
-    auto download_folder = get_download_folder();
+    auto download_folder = get_install();
     if (!file_exists(download_folder))
     {
-        make_directory(download_folder);
+        if (!make_directory(download_folder))
+            return false;
     }
 #  endif  // _WIN32
 
