@@ -429,6 +429,9 @@ public:
 
     CONSTCD11 bool ok() const NOEXCEPT;
 
+    CONSTCD11 unsigned c_encoding() const NOEXCEPT;
+    CONSTCD11 unsigned iso_encoding() const NOEXCEPT;
+
     CONSTCD11 weekday_indexed operator[](unsigned index) const NOEXCEPT;
     CONSTCD11 weekday_last    operator[](last_spec)      const NOEXCEPT;
 
@@ -1762,6 +1765,20 @@ weekday::operator-=(const days& d) NOEXCEPT
 }
 
 CONSTCD11 inline bool weekday::ok() const NOEXCEPT {return wd_ <= 6;}
+
+CONSTCD11
+inline
+unsigned weekday::c_encoding() const NOEXCEPT
+{
+    return unsigned{wd_};
+}
+
+CONSTCD11
+inline
+unsigned weekday::iso_encoding() const NOEXCEPT
+{
+    return unsigned{((wd_ == 0u) ? 7u : wd_)};
+}
 
 CONSTCD11
 inline
