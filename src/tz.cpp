@@ -98,6 +98,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <cwchar>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -208,7 +209,14 @@ get_known_folder(const GUID& folderid)
     if (SUCCEEDED(hr))
     {
         co_task_mem_ptr folder_ptr(pfolder);
-        folder = std::string(folder_ptr.get(), folder_ptr.get() + wcslen(folder_ptr.get()));
+        const wchar_t* fptr = folder_ptr.get();
+        auto state = std::mbstate_t();
+        const auto required = std::wcsrtombs(nullptr, &fptr, 0, &state);
+        if (required != 0 && required != -1)
+        {
+            folder.resize(required);
+            std::wcsrtombs(folder.data(), &fptr, folder.size(), &state);
+        }
     }
     return folder;
 }
