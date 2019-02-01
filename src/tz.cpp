@@ -215,7 +215,7 @@ get_known_folder(const GUID& folderid)
         if (required != 0 && required != -1)
         {
             folder.resize(required);
-            std::wcsrtombs(folder.data(), &fptr, folder.size(), &state);
+            std::wcsrtombs(&folder[0], &fptr, folder.size(), &state);
         }
     }
     return folder;
