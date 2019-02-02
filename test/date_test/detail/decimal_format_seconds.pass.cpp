@@ -94,7 +94,6 @@ main()
     {
         using D = decimal_format_seconds<milliseconds>;
         static_assert(D::width == 3, "");
-        static_assert(is_same<D::precision, make_precision<D::rep, D::width>::type>{}, "");
         D dfs{seconds{3}};
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == seconds{3});
@@ -106,7 +105,6 @@ main()
     {
         using D = decimal_format_seconds<milliseconds>;
         static_assert(D::width == 3, "");
-        static_assert(is_same<D::precision, make_precision<D::rep, D::width>::type>{}, "");
         D dfs{milliseconds{3}};
         assert(dfs.seconds() == seconds{0});
         assert(dfs.to_duration() == milliseconds{3});
@@ -118,9 +116,8 @@ main()
     {
         using D = decimal_format_seconds<microfortnights>;
         static_assert(D::width == 4, "");
-        using S = make_precision<D::rep, D::width>::type;
-        static_assert(is_same<D::precision, S>{}, "");
         D dfs{microfortnights{3}};
+        using S = D::precision;
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == S{36288});
         assert(dfs.subseconds() == S{6288});
@@ -132,9 +129,8 @@ main()
         using CT = common_type<seconds, microfortnights>::type;
         using D = decimal_format_seconds<CT>;
         static_assert(D::width == 4, "");
-        using S = make_precision<D::rep, D::width>::type;
-        static_assert(is_same<D::precision, S>{}, "");
         D dfs{microfortnights{3}};
+        using S = D::precision;
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == S{36288});
         assert(dfs.subseconds() == S{6288});

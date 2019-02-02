@@ -1972,7 +1972,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     auto const sd = floor<days>(tp);
     year_month_day ymd = sd;
     auto time = make_time(tp - sys_seconds{sd});
-    time.seconds() += seconds{ls.first};
+    time.seconds(detail::undocumented{}) += seconds{ls.first};
     fields<CT> fds{ymd, time};
     return to_stream(os, fmt, fds, &abbrev, &offset);
 }
@@ -2004,7 +2004,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     {
         bool is_60_sec = fds.tod.seconds() == seconds{60};
         if (is_60_sec)
-            fds.tod.seconds() -= seconds{1};
+            fds.tod.seconds(detail::undocumented{}) -= seconds{1};
         auto tmp = utc_clock::from_sys(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
         if (is_60_sec)
             tmp += seconds{1};

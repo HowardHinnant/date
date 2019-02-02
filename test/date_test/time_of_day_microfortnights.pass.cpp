@@ -111,7 +111,7 @@ main()
     t2.make12();
     os.str("");
     os << t2;
-    assert(os.str() == "1:07:06.0480pm");
+    assert(os.str() == "1:07:06.0480PM");
     t2.make24();
     os.str("");
     os << t2;

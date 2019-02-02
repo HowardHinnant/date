@@ -27,27 +27,6 @@
 // time_of_day<std::chrono::duration<Rep, Period>>
 // make_time(std::chrono::duration<Rep, Period> d) noexcept;
 
-// constexpr
-// time_of_day<std::chrono::hours>
-// make_time(std::chrono::hours h, unsigned md) noexcept;
-
-// constexpr
-// time_of_day<std::chrono::minutes>
-// make_time(std::chrono::hours h, std::chrono::minutes m, unsigned md) noexcept;
-
-// constexpr
-// time_of_day<std::chrono::seconds>
-// make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-//           unsigned md) noexcept;
-
-// template <class Rep, class Period,
-//           class = typename std::enable_if<std::ratio_less<Period,
-//                                                           std::ratio<1>>::value>::type>
-// constexpr
-// time_of_day<std::chrono::duration<Rep, Period>>
-// make_time(std::chrono::hours h, std::chrono::minutes m, std::chrono::seconds s,
-//           std::chrono::duration<Rep, Period> sub_s, unsigned md) noexcept;
-
 #include "date.h"
 
 #include <cassert>
@@ -68,7 +47,6 @@ main()
         assert(tod.minutes() == minutes{7});
         assert(tod.seconds() == seconds{9});
         assert(tod.subseconds() == nanoseconds{22});
-        assert(tod.mode() == 0);
     }
     {
         static_assert(is_same<decltype(make_time(microseconds{18429000022})),
@@ -78,7 +56,6 @@ main()
         assert(tod.minutes() == minutes{7});
         assert(tod.seconds() == seconds{9});
         assert(tod.subseconds() == microseconds{22});
-        assert(tod.mode() == 0);
     }
     {
         static_assert(is_same<decltype(make_time(seconds{18429})),
@@ -87,7 +64,6 @@ main()
         assert(tod.hours() == hours{5});
         assert(tod.minutes() == minutes{7});
         assert(tod.seconds() == seconds{9});
-        assert(tod.mode() == 0);
     }
     {
         static_assert(is_same<decltype(make_time(minutes{307})),
@@ -95,70 +71,11 @@ main()
         auto tod = make_time(minutes{307});
         assert(tod.hours() == hours{5});
         assert(tod.minutes() == minutes{7});
-        assert(tod.mode() == 0);
     }
     {
         static_assert(is_same<decltype(make_time(hours{5})),
                               time_of_day<hours>>{}, "");
         auto tod = make_time(hours{5});
         assert(tod.hours() == hours{5});
-        assert(tod.mode() == 0);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, minutes{7}, seconds{9},
-                                                 nanoseconds{22}, pm)),
-                              time_of_day<nanoseconds>>{}, "");
-        auto tod = make_time(hours{5}, minutes{7}, seconds{9}, nanoseconds{22}, pm);
-        assert(tod.hours() == hours{5});
-        assert(tod.minutes() == minutes{7});
-        assert(tod.seconds() == seconds{9});
-        assert(tod.subseconds() == nanoseconds{22});
-        assert(tod.mode() == pm);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, minutes{7}, seconds{9},
-                                                 microseconds{22}, 0)),
-                              time_of_day<microseconds>>{}, "");
-        auto tod = make_time(hours{5}, minutes{7}, seconds{9}, microseconds{22}, 0);
-        assert(tod.hours() == hours{5});
-        assert(tod.minutes() == minutes{7});
-        assert(tod.seconds() == seconds{9});
-        assert(tod.subseconds() == microseconds{22});
-        assert(tod.mode() == 0);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, minutes{7}, seconds{9},
-                                                 milliseconds{22}, am)),
-                              time_of_day<milliseconds>>{}, "");
-        auto tod = make_time(hours{5}, minutes{7}, seconds{9}, milliseconds{22}, am);
-        assert(tod.hours() == hours{5});
-        assert(tod.minutes() == minutes{7});
-        assert(tod.seconds() == seconds{9});
-        assert(tod.subseconds() == milliseconds{22});
-        assert(tod.mode() == am);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, minutes{7}, seconds{9}, am)),
-                              time_of_day<seconds>>{}, "");
-        auto tod = make_time(hours{5}, minutes{7}, seconds{9}, am);
-        assert(tod.hours() == hours{5});
-        assert(tod.minutes() == minutes{7});
-        assert(tod.seconds() == seconds{9});
-        assert(tod.mode() == am);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, minutes{7}, pm)),
-                              time_of_day<minutes>>{}, "");
-        auto tod = make_time(hours{5}, minutes{7}, pm);
-        assert(tod.hours() == hours{5});
-        assert(tod.minutes() == minutes{7});
-        assert(tod.mode() == pm);
-    }
-    {
-        static_assert(is_same<decltype(make_time(hours{5}, 0)),
-                              time_of_day<hours>>{}, "");
-        auto tod = make_time(hours{5}, 0);
-        assert(tod.hours() == hours{5});
-        assert(tod.mode() == 0);
     }
 }
