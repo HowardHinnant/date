@@ -3732,7 +3732,8 @@ public:
 
     CONSTCD11 explicit decimal_format_seconds(const Duration& d) NOEXCEPT
         : s_(std::chrono::duration_cast<std::chrono::seconds>(d))
-        , sub_s_(std::chrono::duration_cast<precision>(d - s_))
+        , sub_s_(std::chrono::treat_as_floating_point<rep>::value ? d - s_ :
+                     std::chrono::duration_cast<precision>(d - s_))
         {}
 
     CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
@@ -3755,56 +3756,40 @@ public:
     std::basic_ostream<CharT, Traits>&
     operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
     {
+        return x.print(os, std::chrono::treat_as_floating_point<rep>{});
+    }
+
+    template <class CharT, class Traits>
+    std::basic_ostream<CharT, Traits>&
+    print(std::basic_ostream<CharT, Traits>& os, std::true_type) const
+    {
+        date::detail::save_ostream<CharT, Traits> _(os);
+        std::chrono::duration<rep> d = s_ + sub_s_;
+        if (d < std::chrono::seconds{10})
+            os << '0';
+        os << std::fixed << d.count();
+        return os;
+    }
+
+    template <class CharT, class Traits>
+    std::basic_ostream<CharT, Traits>&
+    print(std::basic_ostream<CharT, Traits>& os, std::false_type) const
+    {
         date::detail::save_ostream<CharT, Traits> _(os);
         os.fill('0');
         os.flags(std::ios::dec | std::ios::right);
         os.width(2);
-        os << x.s_.count();
+        os << s_.count();
         if (width > 0)
         {
+#if !ONLY_C_LOCALE
             os << std::use_facet<std::numpunct<CharT>>(os.getloc()).decimal_point();
+#else
+            os << '.';
+#endif
             os.width(width);
-            os << static_cast<std::int64_t>(x.sub_s_.count());
+            os << sub_s_.count();
         }
-        return os;
-    }
-};
-
-template <class Rep>
-class decimal_format_seconds<std::chrono::duration<Rep>>
-{
-public:
-    static unsigned constexpr width = 0u;
-    using precision = std::chrono::duration<Rep>;
-
-private:
-
-    precision s_;
-
-public:
-    CONSTCD11 decimal_format_seconds() : s_() {}
-    CONSTCD11 explicit decimal_format_seconds(const precision& s) NOEXCEPT
-        : s_(s)
-        {}
-
-    CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
-    CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_;}
-    CONSTCD14 precision to_duration() const NOEXCEPT {return s_;}
-
-    CONSTCD11 bool in_conventional_range() const NOEXCEPT
-    {
-        using namespace std::chrono;
-        return s_ < minutes{1};
-    }
-
-    template <class CharT, class Traits>
-    friend
-    std::basic_ostream<CharT, Traits>&
-    operator<<(std::basic_ostream<CharT, Traits>& os, const decimal_format_seconds& x)
-    {
-        if (x.s_ < std::chrono::seconds{10})
-            os << '0';
-        os << x.s_.count();
         return os;
     }
 };
