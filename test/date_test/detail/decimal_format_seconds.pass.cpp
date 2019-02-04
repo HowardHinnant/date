@@ -20,16 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// template <class Duration,
-//           unsigned w = width<std::common_type<
-//                                  Duration,
-//                                  std::chrono::seconds>::type::period::den>::value>
+// template <class Duration>
 // class decimal_format_seconds
 // {
+//     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+//     using rep = typename CT::rep;
 // public:
-//     using precision = typename make_precision<w>::type;
-//     static auto constexpr width = make_precision<w>::width;
-// 
+//     static unsigned constexpr width = detail::width<CT::period::den>::value < 19 ?
+//                                       detail::width<CT::period::den>::value : 6u;
+//     using precision = std::chrono::duration<rep,
+//                                             std::ratio<1, static_pow10<width>::value>>;
 // private:
 //     std::chrono::seconds s_;
 //     precision            sub_s_;

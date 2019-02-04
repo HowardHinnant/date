@@ -3694,21 +3694,6 @@ struct static_pow10<0>
     static CONSTDATA std::uint64_t value = 1;
 };
 
-template <class Rep, unsigned w, bool in_range = (w < 19)>
-struct make_precision
-{
-    using type = std::chrono::duration<Rep,
-                                       std::ratio<1, static_pow10<w>::value>>;
-    static CONSTDATA unsigned width = w;
-};
-
-template <class Rep, unsigned w>
-struct make_precision<Rep, w, false>
-{
-    using type = std::chrono::duration<Rep, std::micro>;
-    static CONSTDATA unsigned width = 6;
-};
-
 template <class Duration>
 class decimal_format_seconds
 {
