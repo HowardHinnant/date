@@ -212,7 +212,7 @@ get_known_folder(const GUID& folderid)
         const wchar_t* fptr = folder_ptr.get();
         auto state = std::mbstate_t();
         const auto required = std::wcsrtombs(nullptr, &fptr, 0, &state);
-        if (required != 0 && required != -1)
+        if (required != 0 && required != std::size_t(-1))
         {
             folder.resize(required);
             std::wcsrtombs(&folder[0], &fptr, folder.size(), &state);
@@ -221,6 +221,8 @@ get_known_folder(const GUID& folderid)
     return folder;
 }
 
+#      ifndef INSTALL
+
 // Usually something like "c:\Users\username\Downloads".
 static
 std::string
@@ -228,6 +230,8 @@ get_download_folder()
 {
     return get_known_folder(FOLDERID_Downloads);
 }
+
+#      endif  // !INSTALL
 
 #    endif // WINRT
 #  else // !_WIN32
