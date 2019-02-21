@@ -3836,7 +3836,7 @@ public:
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
     CONSTCD11 std::chrono::minutes minutes() const NOEXCEPT {return m_;}
     CONSTCD11 std::chrono::seconds seconds() const NOEXCEPT {return s_.seconds();}
-    CONSTCD11 std::chrono::seconds&
+    CONSTCD14 std::chrono::seconds&
         seconds(detail::undocumented) NOEXCEPT {return s_.seconds();}
     CONSTCD11 precision subseconds() const NOEXCEPT {return s_.subseconds();}
 

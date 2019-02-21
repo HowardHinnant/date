@@ -1922,6 +1922,20 @@ is_leap_second(date::utc_time<Duration> const& ut)
     return {ls, ds};
 }
 
+struct get_leap_second_info__t
+{
+    bool is_leap_second;
+    std::chrono::seconds elapsed;
+};
+
+template <class Duration>
+get_leap_second_info__t
+get_leap_second_info(date::utc_time<Duration> const& ut)
+{
+    auto p = is_leap_second(ut);
+    return {p.first, p.second};
+}
+
 template <class Duration>
 sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 utc_clock::to_sys(const utc_time<Duration>& ut)
