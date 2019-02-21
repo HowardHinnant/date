@@ -1929,7 +1929,7 @@ struct get_leap_second_info_t
 };
 
 template <class Duration>
-get_leap_second_info__t
+get_leap_second_info_t
 get_leap_second_info(date::utc_time<Duration> const& ut)
 {
     auto p = is_leap_second(ut);
