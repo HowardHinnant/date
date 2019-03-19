@@ -3650,7 +3650,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             fields<Duration>& fds, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
 
-// time_of_day
+// hh_mm_ss
 
 namespace detail
 {
@@ -3808,29 +3808,29 @@ abs(std::chrono::duration<Rep, Period> d)
 }  // namespace detail
 
 template <class Duration>
-class time_of_day
+class hh_mm_ss
 {
     using dfs = detail::decimal_format_seconds<typename std::common_type<Duration,
                                                std::chrono::seconds>::type>;
-
-    enum state {is_24, am, pm};
 
     std::chrono::hours h_;
     std::chrono::minutes m_;
     dfs s_;
     bool neg_;
-    state mode_ = is_24;
 
 public:
+    static unsigned CONSTDATA fractional_width = dfs::width;
     using precision = typename dfs::precision;
 
-    CONSTCD11 time_of_day() = default;
+    CONSTCD11 hh_mm_ss() NOEXCEPT
+        : hh_mm_ss(Duration::zero())
+        {}
 
-    CONSTCD11 explicit time_of_day(Duration d) NOEXCEPT
+    CONSTCD11 explicit hh_mm_ss(Duration d) NOEXCEPT
         : h_(std::chrono::duration_cast<std::chrono::hours>(detail::abs(d)))
         , m_(std::chrono::duration_cast<std::chrono::minutes>(detail::abs(d)) - h_)
         , s_(detail::abs(d) - h_ - m_)
-        , neg_(d < precision{})
+        , neg_(d < Duration::zero())
         {}
 
     CONSTCD11 std::chrono::hours hours() const NOEXCEPT {return h_;}
@@ -3839,17 +3839,11 @@ public:
     CONSTCD14 std::chrono::seconds&
         seconds(detail::undocumented) NOEXCEPT {return s_.seconds();}
     CONSTCD11 precision subseconds() const NOEXCEPT {return s_.subseconds();}
+    CONSTCD11 bool is_negative() const NOEXCEPT {return neg_;}
 
     CONSTCD11 explicit operator  precision()   const NOEXCEPT {return to_duration();}
     CONSTCD11          precision to_duration() const NOEXCEPT
-        {return (make_24(mode_, h_) + m_ + s_.to_duration()) * (1-2*neg_);}
-
-    CONSTCD14 void make24() NOEXCEPT
-        {
-            h_ = make_24(mode_, h_);
-            mode_ = is_24;
-        }
-    CONSTCD14 void make12() NOEXCEPT {make_12(mode_, h_);}
+        {return (h_ + m_ + s_.to_duration()) * (1-2*neg_);}
 
     CONSTCD11 bool in_conventional_range() const NOEXCEPT
     {
@@ -3860,89 +3854,21 @@ public:
 
 private:
 
-    CONSTCD14
-    static
-    std::chrono::hours
-    make_24(state mode, std::chrono::hours h) NOEXCEPT
-    {
-        using namespace std;
-        if (mode != is_24)
-        {
-            if (mode == am)
-            {
-                if (h == chrono::hours{12})
-                    h = chrono::hours{0};
-            }
-            else
-            {
-                if (h != chrono::hours{12})
-                    h += chrono::hours{12};
-            }
-        }
-        return h;
-    }
-
-    CONSTCD14
-    static
-    void
-    make_12(state& mode, std::chrono::hours& h) NOEXCEPT
-    {
-        using namespace std;
-        if (mode == is_24)
-        {
-            if (h < chrono::hours{12})
-            {
-                if (h == chrono::hours{0})
-                    h = chrono::hours{12};
-                mode = am;
-            }
-            else
-            {
-                if (h != chrono::hours{12})
-                    h -= chrono::hours{12};
-                mode = pm;
-            }
-        }
-    }
-
     template <class charT, class traits>
     friend
     std::basic_ostream<charT, traits>&
-    operator<<(std::basic_ostream<charT, traits>& os, time_of_day const& tod)
+    operator<<(std::basic_ostream<charT, traits>& os, hh_mm_ss const& tod)
     {
         using namespace detail;
         using namespace std;
-        if (tod.neg_)
+        if (tod.is_negative())
             os << '-';
-        if (tod.mode_ == is_24)
-        {
-            if (tod.h_ < chrono::hours{10})
-                os << '0';
-            os << tod.h_.count() << ':';
-            if (tod.m_ < chrono::minutes{10})
-                os << '0';
-            os << tod.m_.count() << ':' << tod.s_;
-        }
-        else
-        {
-            os << tod.h_.count() << ':';
-            if (tod.m_ < chrono::minutes{10})
-                os << '0';
-            os << tod.m_.count() << ':' << tod.s_;
-#if !ONLY_C_LOCALE
-            std::tm tm{};
-            tm.tm_hour = tod.make_24(tod.mode_, tod.h_).count();
-            auto& facet = use_facet<time_put<charT>>(os.getloc());
-            const charT f[] = {'%', 'p'};
-            facet.put(os, os, os.fill(), &tm, f, f+2);
-#else
-            if (tod.mode_ == am)
-                os << 'A';
-            else
-                os << 'P';
-            os << 'M';
-#endif
-        }
+        if (tod.h_ < chrono::hours{10})
+            os << '0';
+        os << tod.h_.count() << ':';
+        if (tod.m_ < chrono::minutes{10})
+            os << '0';
+        os << tod.m_.count() << ':' << tod.s_;
         return os;
     }
 
@@ -3961,15 +3887,71 @@ private:
           std::basic_string<CharT, Traits, Alloc>* abbrev, std::chrono::minutes* offset);
 };
 
+inline
+CONSTCD14
+bool
+is_am(std::chrono::hours const& h) NOEXCEPT
+{
+    using namespace std::chrono;
+    return hours{0} <= h && h < hours{12};
+}
+
+inline
+CONSTCD14
+bool
+is_pm(std::chrono::hours const& h) NOEXCEPT
+{
+    using namespace std::chrono;
+    return hours{12} <= h && h < hours{24};
+}
+
+inline
+CONSTCD14
+std::chrono::hours
+make12(std::chrono::hours h) NOEXCEPT
+{
+    using namespace std::chrono;
+    if (h < hours{12})
+    {
+        if (h == hours{0})
+            h = hours{12};
+    }
+    else
+    {
+        if (h != hours{12})
+            h -= hours{12};
+    }
+    return h;
+}
+
+inline
+CONSTCD14
+std::chrono::hours
+make24(std::chrono::hours h, bool is_pm) NOEXCEPT
+{
+    using namespace std::chrono;
+    if (is_pm)
+    {
+        if (h != hours{12})
+            h += hours{12};
+    }
+    else if (h == hours{12})
+        h = hours{0};
+    return h;
+}
+
+template <class Duration>
+using time_of_day = hh_mm_ss<Duration>;
+
 template <class Rep, class Period,
           class = typename std::enable_if
               <!std::chrono::treat_as_floating_point<Rep>::value>::type>
 CONSTCD11
 inline
-time_of_day<std::chrono::duration<Rep, Period>>
+hh_mm_ss<std::chrono::duration<Rep, Period>>
 make_time(const std::chrono::duration<Rep, Period>& d)
 {
-    return time_of_day<std::chrono::duration<Rep, Period>>(d);
+    return hh_mm_ss<std::chrono::duration<Rep, Period>>(d);
 }
 
 template <class CharT, class Traits, class Duration>
@@ -4555,22 +4537,22 @@ struct fields
 {
     year_month_day        ymd{nanyear/0/0};
     weekday               wd{8u};
-    time_of_day<Duration> tod{};
+    hh_mm_ss<Duration>    tod{};
     bool                  has_tod = false;
 
     fields() = default;
 
     fields(year_month_day ymd_) : ymd(ymd_) {}
     fields(weekday wd_) : wd(wd_) {}
-    fields(time_of_day<Duration> tod_) : tod(tod_), has_tod(true) {}
+    fields(hh_mm_ss<Duration> tod_) : tod(tod_), has_tod(true) {}
 
     fields(year_month_day ymd_, weekday wd_) : ymd(ymd_), wd(wd_) {}
-    fields(year_month_day ymd_, time_of_day<Duration> tod_) : ymd(ymd_), tod(tod_),
-                                                              has_tod(true) {}
+    fields(year_month_day ymd_, hh_mm_ss<Duration> tod_) : ymd(ymd_), tod(tod_),
+                                                           has_tod(true) {}
 
-    fields(weekday wd_, time_of_day<Duration> tod_) : wd(wd_), tod(tod_), has_tod(true) {}
+    fields(weekday wd_, hh_mm_ss<Duration> tod_) : wd(wd_), tod(tod_), has_tod(true) {}
 
-    fields(year_month_day ymd_, weekday wd_, time_of_day<Duration> tod_)
+    fields(year_month_day ymd_, weekday wd_, hh_mm_ss<Duration> tod_)
         : ymd(ymd_)
         , wd(wd_)
         , tod(tod_)
@@ -5146,11 +5128,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        if (*fmt == CharT{'I'})
-                            hms.make12();
-                        if (hms.hours() < hours{10})
+                        auto h = *fmt == CharT{'I'} ? make12(hms.hours()) : hms.hours();
+                        if (h < hours{10})
                             os << CharT{'0'};
-                        os << hms.hours().count();
+                        os << h.count();
                     }
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
@@ -5303,7 +5284,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
 #else
-                    if (fds.tod.hours() < hours{12})
+                    if (is_am(fds.tod.hours()))
                         os << ampm_names().first[0];
                     else
                         os << ampm_names().first[1];
@@ -5357,18 +5338,16 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
                     facet.put(os, os, os.fill(), &tm, begin(f), end(f));
 #else
-                    time_of_day<seconds> tod(duration_cast<seconds>(fds.tod.to_duration()));
-                    tod.make12();
+                    hh_mm_ss<seconds> tod(duration_cast<seconds>(fds.tod.to_duration()));
                     save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.width(2);
-                    os << tod.hours().count() << CharT{':'};
+                    os << make12(tod.hours()).count() << CharT{':'};
                     os.width(2);
                     os << tod.minutes().count() << CharT{':'};
                     os.width(2);
                     os << tod.seconds().count() << CharT{' '};
-                    tod.make24();
-                    if (tod.hours() < hours{12})
+                    if (is_am(tod.hours()))
                         os << ampm_names().first[0];
                     else
                         os << ampm_names().first[1];
@@ -5959,7 +5938,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<CT> fds{time_of_day<CT>{d}};
+    fields<CT> fds{hh_mm_ss<CT>{d}};
     return to_stream(os, fmt, fds);
 }
 
@@ -5971,7 +5950,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
     auto ld = floor<days>(tp);
-    fields<CT> fds{year_month_day{ld}, time_of_day<CT>{tp-local_seconds{ld}}};
+    fields<CT> fds{year_month_day{ld}, hh_mm_ss<CT>{tp-local_seconds{ld}}};
     return to_stream(os, fmt, fds, abbrev, offset_sec);
 }
 
@@ -5985,7 +5964,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     const std::string abbrev("UTC");
     CONSTDATA seconds offset{0};
     auto sd = floor<days>(tp);
-    fields<CT> fds{year_month_day{sd}, time_of_day<CT>{tp-sys_seconds{sd}}};
+    fields<CT> fds{year_month_day{sd}, hh_mm_ss<CT>{tp-sys_seconds{sd}}};
     return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
@@ -7590,7 +7569,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (H != not_a_hour)
             {
                 fds.has_tod = true;
-                fds.tod = time_of_day<Duration>{hours{H}};
+                fds.tod = hh_mm_ss<Duration>{hours{H}};
             }
             if (M != not_a_minute)
             {

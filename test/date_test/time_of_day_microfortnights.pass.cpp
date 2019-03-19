@@ -108,12 +108,4 @@ main()
     ostringstream os;
     os << t2;
     assert(os.str() == "13:07:06.0480");
-    t2.make12();
-    os.str("");
-    os << t2;
-    assert(os.str() == "1:07:06.0480PM");
-    t2.make24();
-    os.str("");
-    os << t2;
-    assert(os.str() == "13:07:06.0480");
 }

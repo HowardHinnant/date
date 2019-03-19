@@ -101,22 +101,4 @@ main()
     ostringstream os;
     os << t2;
     assert(os.str() == "13:07:05.022");
-    t2.make12();
-    os.str("");
-    assert(t2.hours() == hours{1});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.subseconds() == milliseconds{22});
-    assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "1:07:05.022PM");
-    t2.make24();
-    os.str("");
-    assert(t2.hours() == hours{13});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.subseconds() == milliseconds{22});
-    assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "13:07:05.022");
 }

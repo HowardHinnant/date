@@ -85,16 +85,10 @@ main()
     ostringstream os;
     os << t2;
     assert(os.str() == "13:00:00");
-    t2.make12();
+    auto h = make12(t2.hours());
     os.str("");
-    assert(t2.hours() == hours{1});
+    assert(h == hours{1});
     assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "1:00:00PM");
-    t2.make24();
-    os.str("");
-    assert(t2.hours() == hours{13});
-    assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "13:00:00");
+    assert(!is_am(t2.hours()));
+    assert(is_pm(t2.hours()));
 }
