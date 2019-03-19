@@ -1719,8 +1719,8 @@ inline
 unsigned char
 weekday::weekday_from_days(int z) NOEXCEPT
 {
-    return static_cast<unsigned char>(static_cast<unsigned>(
-        z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6));
+    auto u = static_cast<unsigned>(z);
+    return static_cast<unsigned char>(z >= -4 ? (u+4) % 7 : u % 7);
 }
 
 CONSTCD11
