@@ -45,7 +45,8 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+add_library(tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+set_property(TARGET tz PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if( USE_SYSTEM_TZ_DB )
 	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
@@ -69,11 +70,6 @@ endif( )
 
 if( DISABLE_STRING_VIEW )
     target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
-endif( )
-
-if( BUILD_SHARED_LIBS )
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
 endif( )
 
 target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
