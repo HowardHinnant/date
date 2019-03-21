@@ -77,6 +77,12 @@
 # endif
 #endif
 
+#ifdef _MSC_VER
+#   pragma warning(push)
+// warning C4127: conditional expression is constant
+#   pragma warning(disable : 4127)
+#endif
+
 namespace date
 {
 
@@ -7932,6 +7938,10 @@ operator<<(std::basic_ostream<CharT, Traits>& os,
 }
 
 }  // namespace date
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 #ifdef __GNUC__
 # pragma GCC diagnostic pop
