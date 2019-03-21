@@ -430,8 +430,8 @@ class weekday
 public:
     weekday() = default;
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
-    CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
-    CONSTCD11 explicit weekday(const local_days& dp) NOEXCEPT;
+    CONSTCD14 weekday(const sys_days& dp) NOEXCEPT;
+    CONSTCD14 explicit weekday(const local_days& dp) NOEXCEPT;
 
     CONSTCD14 weekday& operator++()    NOEXCEPT;
     CONSTCD14 weekday  operator++(int) NOEXCEPT;
@@ -450,7 +450,7 @@ public:
     CONSTCD11 weekday_last    operator[](last_spec)      const NOEXCEPT;
 
 private:
-    static CONSTCD11 unsigned char weekday_from_days(int z) NOEXCEPT;
+    static CONSTCD14 unsigned char weekday_from_days(int z) NOEXCEPT;
 
     friend CONSTCD11 bool operator==(const weekday& x, const weekday& y) NOEXCEPT;
     friend CONSTCD14 days operator-(const weekday& x, const weekday& y) NOEXCEPT;
@@ -1728,7 +1728,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 
 // weekday
 
-CONSTCD11
+CONSTCD14
 inline
 unsigned char
 weekday::weekday_from_days(int z) NOEXCEPT
@@ -1743,13 +1743,13 @@ weekday::weekday(unsigned wd) NOEXCEPT
     : wd_(static_cast<decltype(wd_)>(wd != 7 ? wd : 0))
     {}
 
-CONSTCD11
+CONSTCD14
 inline
 weekday::weekday(const sys_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
     {}
 
-CONSTCD11
+CONSTCD14
 inline
 weekday::weekday(const local_days& dp) NOEXCEPT
     : wd_(weekday_from_days(dp.time_since_epoch().count()))
