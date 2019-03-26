@@ -6248,7 +6248,7 @@ read(std::basic_istream<CharT, Traits>& is, int a0, Args&& ...args)
         auto e = buf;
         do
         {
-            *e++ = CharT(u % 10) + CharT{'0'};
+            *e++ = static_cast<CharT>(CharT(u % 10) + CharT{'0'});
             u /= 10;
         } while (u > 0);
         std::reverse(buf, e);
