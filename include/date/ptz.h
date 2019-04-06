@@ -102,13 +102,13 @@ rule::operator()(date::year y) const
     switch (mode_)
     {
     case J:
-        t = local_days{y/jan/0} + days{n_ + (y.is_leap() && n_ > 59)} + sec{time_};
+        t = local_days{y/January/0} + days{n_ + (y.is_leap() && n_ > 59)} + sec{time_};
         break;
     case M:
         t = (n_ == 5 ? local_days{y/m_/wd_[last]} : local_days{y/m_/wd_[n_]}) + sec{time_};
         break;
     case N:
-        t = local_days{y/jan/1} + days{n_} + sec{time_};
+        t = local_days{y/January/1} + days{n_} + sec{time_};
         break;
     default:
         assert(!"rule called with bad mode");
@@ -245,8 +245,8 @@ time_zone::get_info(date::sys_time<Duration> st) const
     }
     else  //  constant offset
     {
-        r.begin = sys_days{year::min()/jan/1};
-        r.end   = sys_days{year::max()/dec/last};
+        r.begin = sys_days{year::min()/January/1};
+        r.end   = sys_days{year::max()/December/last};
         r.abbrev = std_abbrev_;
     }
     return r;
@@ -323,8 +323,8 @@ time_zone::get_info(date::local_time<Duration> tp) const
     }
     else  //  constant offset
     {
-        r.first.begin = sys_days{year::min()/jan/1};
-        r.first.end   = sys_days{year::max()/dec/last};
+        r.first.begin = sys_days{year::min()/January/1};
+        r.first.end   = sys_days{year::max()/December/last};
         r.first.abbrev = std_abbrev_;
         r.first.offset = offset_;
     }
