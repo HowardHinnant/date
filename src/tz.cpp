@@ -2810,6 +2810,7 @@ download_to_string(const std::string& url, std::string& str)
     if (!curl)
         return false;
     std::string version;
+    curl_easy_setopt(curl.get(), CURLOPT_USERAGENT, "curl");
     curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
     curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
                                       void* userp) -> std::size_t
