@@ -1930,7 +1930,7 @@ load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
     // Read tzh_leapcnt pairs
     using namespace std::chrono;
     std::vector<leap> leap_seconds;
-    leap_seconds.reserve(tzh_leapcnt);
+    leap_seconds.reserve(static_cast<std::size_t>(tzh_leapcnt));
     for (std::int32_t i = 0; i < tzh_leapcnt; ++i)
     {
         TimeType     t0;
@@ -1952,7 +1952,8 @@ load_leap_data(std::istream& inf,
                std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
                std::int32_t tzh_typecnt, std::int32_t tzh_charcnt)
 {
-    inf.ignore(tzh_timecnt*sizeof(TimeType) + tzh_timecnt + tzh_typecnt*6 + tzh_charcnt);
+    inf.ignore(tzh_timecnt*static_cast<std::int32_t>(sizeof(TimeType)) + tzh_timecnt +
+               tzh_typecnt*6 + tzh_charcnt);
     return load_leaps<TimeType>(inf, tzh_leapcnt);
 }
 
