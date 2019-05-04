@@ -45,6 +45,8 @@ test_a()
         std::istringstream in{"Sun 2016-12-11"};
         sys_days tp;
         in >> parse("%A %F", tp);
+        // this may fail with libstdc++, see https://github.com/HowardHinnant/date/issues/388
+        // possible workaround: compile date.h with -DONLY_C_LOCALE=1
         assert(!in.fail());
         assert(!in.bad());
         assert(!in.eof());
