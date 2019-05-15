@@ -516,7 +516,7 @@ native_to_standard_timezone_name(const std::string& native_tz_name,
 }
 
 // Parse this XML file:
-// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml
 // The parsing method is designed to be simple and quick. It is not overly
 // forgiving of change but it should diagnose basic format issues.
 // See timezone_mapping structure for more info.
@@ -3285,8 +3285,9 @@ remote_download(const std::string& version)
     if (result)
     {
         auto mapping_file = get_download_mapping_file(version);
-        result = download_to_file("http://unicode.org/repos/cldr/trunk/common/"
-                                  "supplemental/windowsZones.xml",
+        result = download_to_file(
+			"https://raw.githubusercontent.com/unicode-org/cldr/master/"
+			"common/supplemental/windowsZones.xml",
             mapping_file, download_file_options::text);
     }
 #  endif  // _WIN32
