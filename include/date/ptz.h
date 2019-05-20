@@ -96,7 +96,10 @@ inline
 date::local_seconds
 rule::operator()(date::year y) const
 {
-    using namespace date;
+    using date::local_days;
+    using date::January;
+    using date::days;
+    using date::last;
     using sec = std::chrono::seconds;
     date::local_seconds t;
     switch (mode_)
@@ -180,7 +183,9 @@ public:
 inline
 time_zone::time_zone(const detail::string_t& s)
 {
-    using namespace detail;
+    using detail::read_name;
+    using detail::read_signed_time;
+    using detail::throw_invalid;
     auto i = read_name(s, 0, std_abbrev_);
     i = read_signed_time(s, i, offset_);
     offset_ = -offset_;
@@ -212,8 +217,19 @@ template <class Duration>
 date::sys_info
 time_zone::get_info(date::sys_time<Duration> st) const
 {
-    using namespace date;
-    using namespace std::chrono;
+    using date::sys_info;
+    using date::year_month_day;
+    using date::sys_seconds;
+    using date::sys_days;
+    using date::floor;
+    using date::ceil;
+    using date::days;
+    using date::years;
+    using date::year;
+    using date::January;
+    using date::December;
+    using date::last;
+    using std::chrono::minutes;
     sys_info r{};
     r.offset = offset_;
     if (start_rule_.ok())
@@ -256,9 +272,21 @@ template <class Duration>
 date::local_info
 time_zone::get_info(date::local_time<Duration> tp) const
 {
-    using namespace date;
-    using namespace std::chrono;
+    using date::local_info;
+    using date::year_month_day;
+    using date::days;
+    using date::sys_days;
+    using date::sys_seconds;
+    using date::years;
+    using date::year;
+    using date::ceil;
+    using date::January;
+    using date::December;
+    using date::last;
+    using std::chrono::seconds;
+    using std::chrono::minutes;
     local_info r{};
+    using date::floor;
     if (start_rule_.ok())
     {
         auto y = year_month_day{floor<days>(tp)}.year();
@@ -335,7 +363,9 @@ template <class Duration>
 date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 time_zone::to_sys(date::local_time<Duration> tp) const
 {
-    using namespace date;
+    using date::local_info;
+    using date::sys_time;
+    using date::ambiguous_local_time;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
         throw nonexistent_local_time(tp, i);
@@ -348,7 +378,9 @@ template <class Duration>
 date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 time_zone::to_sys(date::local_time<Duration> tp, date::choose z) const
 {
-    using namespace date;
+    using date::local_info;
+    using date::sys_time;
+    using date::choose;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
     {
@@ -366,8 +398,8 @@ template <class Duration>
 date::local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
 time_zone::to_local(date::sys_time<Duration> tp) const
 {
-    using namespace date;
-    using namespace std::chrono;
+    using date::local_time;
+    using std::chrono::seconds;
     using LT = local_time<typename std::common_type<Duration, seconds>::type>;
     auto i = get_info(tp);
     return LT{(tp + i.offset).time_since_epoch()};
@@ -404,7 +436,8 @@ inline
 unsigned
 read_date(const string_t& s, unsigned i, rule& r)
 {
-    using namespace date;
+    using date::month;
+    using date::weekday;
     if (i == s.size())
         throw_invalid(s, i, "Expected rule but found end of string");
     if (s[i] == 'J')
@@ -513,7 +546,9 @@ inline
 unsigned
 read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t)
 {
-    using namespace std::chrono;
+    using std::chrono::seconds;
+    using std::chrono::minutes;
+    using std::chrono::hours;
     if (i == s.size())
         throw_invalid(s, i, "Expected to read unsigned time, but found end of string");
     unsigned x;

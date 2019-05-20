@@ -451,7 +451,7 @@ weekday::weekday(unsigned wd) NOEXCEPT
 CONSTCD11
 inline
 weekday::weekday(date::weekday wd) NOEXCEPT
-    : wd_((wd-date::Monday).count() + 1)
+    : wd_(wd.iso_encoding())
     {}
 
 CONSTCD11
@@ -607,7 +607,10 @@ inline
 year
 year::min() NOEXCEPT
 {
-    using namespace std::chrono;
+    using std::chrono::seconds;
+    using std::chrono::minutes;
+    using std::chrono::hours;
+    using std::chrono::duration_cast;
     static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
     static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
     return sizeof(minutes)*CHAR_BIT < 34 ?
@@ -620,7 +623,10 @@ inline
 year
 year::max() NOEXCEPT
 {
-    using namespace std::chrono;
+    using std::chrono::seconds;
+    using std::chrono::minutes;
+    using std::chrono::hours;
+    using std::chrono::duration_cast;
     static_assert(sizeof(seconds)*CHAR_BIT >= 41, "seconds may overflow");
     static_assert(sizeof(hours)*CHAR_BIT >= 30, "hours may overflow");
     return sizeof(minutes)*CHAR_BIT < 34 ?
