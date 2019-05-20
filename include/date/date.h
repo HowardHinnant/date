@@ -98,7 +98,7 @@ namespace date
 // MSVC
 #  ifndef _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
 #    define _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
-#  endf
+#  endif
 #  if _MSC_VER < 1910
 //   before VS2017
 #    define CONSTDATA const
