@@ -7,7 +7,7 @@
 // Copyright (c) 2016 Adrian Colomitchi
 // Copyright (c) 2017 Florian Dang
 // Copyright (c) 2017 Paul Thompson
-// Copyright (c) 2018 Tomasz Kamiński
+// Copyright (c) 2018, 2019 Tomasz Kamiński
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -2536,7 +2536,7 @@ year_month_day_last::day() const NOEXCEPT
         date::day(31), date::day(31), date::day(30),
         date::day(31), date::day(30), date::day(31)
     };
-    return month() != February || !y_.is_leap() ?
+    return (month() != February || !y_.is_leap()) && mdl_.ok() ?
         d[static_cast<unsigned>(month()) - 1] : date::day{29};
 }
 
