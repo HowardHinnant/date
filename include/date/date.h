@@ -70,7 +70,9 @@
 
 #ifdef __GNUC__
 # pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wpedantic"
+# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR > 7)
+#  pragma GCC diagnostic ignored "-Wpedantic"
+# endif
 # if __GNUC__ < 5
    // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
 #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -162,16 +164,16 @@ namespace date
 // durations
 
 using days = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period>>;
+    <int, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period>::type>;
 
 using weeks = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<7>, days::period>>;
+    <int, std::ratio_multiply<std::ratio<7>, days::period>::type>;
 
 using years = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<146097, 400>, days::period>>;
+    <int, std::ratio_multiply<std::ratio<146097, 400>, days::period>::type>;
 
 using months = std::chrono::duration
-    <int, std::ratio_divide<years::period, std::ratio<12>>>;
+    <int, std::ratio_divide<years::period, std::ratio<12>>::type>;
 
 // time_point
 
@@ -404,8 +406,8 @@ public:
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
-    static CONSTCD11 year min() NOEXCEPT;
-    static CONSTCD11 year max() NOEXCEPT;
+    static CONSTCD11 year min() NOEXCEPT { return year{-32767}; }
+    static CONSTCD11 year max() NOEXCEPT { return year{32767}; }
 };
 
 CONSTCD11 bool operator==(const year& x, const year& y) NOEXCEPT;
@@ -1615,22 +1617,6 @@ bool
 year::ok() const NOEXCEPT
 {
     return y_ != std::numeric_limits<short>::min();
-}
-
-CONSTCD11
-inline
-year
-year::min() NOEXCEPT
-{
-    return year{-32767};
-}
-
-CONSTCD11
-inline
-year
-year::max() NOEXCEPT
-{
-    return year{32767};
 }
 
 CONSTCD11
