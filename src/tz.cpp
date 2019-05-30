@@ -236,7 +236,7 @@ get_download_folder()
 #    endif // WINRT
 #  else // !_WIN32
 
-#    if !defined(INSTALL) || HAS_REMOTE_API
+#    if !defined(INSTALL)
 
 static
 std::string
@@ -262,7 +262,7 @@ get_download_folder()
     return expand_path("~/Downloads");
 }
 
-#    endif // !defined(INSTALL) || HAS_REMOTE_API
+#    endif // !defined(INSTALL)
 
 #  endif  // !_WIN32
 
