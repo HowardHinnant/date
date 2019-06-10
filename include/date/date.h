@@ -1154,8 +1154,7 @@ private:
     static const std::intmax_t d1 = R1::den / gcd_d1_d2;
     static const std::intmax_t n2 = R2::num / gcd_n1_n2;
     static const std::intmax_t d2 = R2::den / gcd_d1_d2;
-    static const std::intmax_t max = -((std::intmax_t(1) <<
-                                       (sizeof(std::intmax_t) * CHAR_BIT - 1)) + 1);
+    static const std::intmax_t max = INTMAX_MAX;
 
     template <std::intmax_t Xp, std::intmax_t Yp, bool overflow>
     struct mul    // overflow == false
