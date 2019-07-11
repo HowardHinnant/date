@@ -50,8 +50,8 @@ add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 # This is  required in order to make iOSUtils available 
 if(IOS) 
     target_sources(tz PRIVATE ${SOURCE_FOLDER}/ios.mm)
-    add_definitions("-x objective-c++")
-    include_directories(${HEADER_FOLDER}/date)
+    target_compile_options(tz PRIVATE -x objective-c++)
+    target_include_directories(tz PRIVATE ${HEADER_FOLDER}/date)
 endif()
 
 if( USE_SYSTEM_TZ_DB )
