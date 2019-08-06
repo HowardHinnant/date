@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include "tz.h"
+#include "OffsetZone.h"
 #include <cassert>
 #include <type_traits>
 #include <string>
@@ -214,6 +215,14 @@ main()
        testDeductionFrom<time_zone const*>(tz);
        testDeductionFrom<time_zone const*>(to_const(tz));
        testDeductionFrom<time_zone const*>(std::move(tz));
+    }
+
+    // custom time zone
+    {
+       OffsetZone tz(minutes(45));
+       testDeductionFrom<OffsetZone>(tz);
+       testDeductionFrom<OffsetZone>(to_const(tz));
+       testDeductionFrom<OffsetZone>(std::move(tz));
     }
 
 #endif  // HAS_DEDUCTION_GUIDES
