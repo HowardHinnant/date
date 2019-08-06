@@ -127,6 +127,15 @@ private:
   std::string ms;
 };
 
+struct OnlyLValueString
+{
+  OnlyLValueString(std::string s) : ms(std::move(s)) {}
+
+  operator std::string_view() & { return ms; }
+
+private:
+  std::string ms;
+};
 
 #endif  // HAS_DEDUCTION_GUIDES
 
@@ -223,6 +232,14 @@ main()
        testDeductionFrom<OffsetZone>(tz);
        testDeductionFrom<OffsetZone>(to_const(tz));
        testDeductionFrom<OffsetZone>(std::move(tz));
+    }
+
+    // OnlyLValue
+    {
+       OnlyLValueString tz("Europe/Warsaw");
+       testDeductionFrom<time_zone const*>(tz);
+       //testDeductionFrom<time_zone const*>(to_const(tz));
+       //testDeductionFrom<time_zone const*>(std::move(tz));
     }
 
 #endif  // HAS_DEDUCTION_GUIDES
