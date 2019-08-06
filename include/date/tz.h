@@ -151,6 +151,15 @@ enum class choose {earliest, latest};
 namespace detail
 {
     struct undocumented;
+
+    template<typename T>
+    struct nodeduct
+    {
+       using type = T;
+    };
+
+    template<typename T>
+    using nodeduct_t = typename nodeduct<T>::type;
 }
 
 struct sys_info
@@ -447,7 +456,7 @@ public:
                       sys_time<Duration>
                   >::value
               >::type>
-        zoned_time(std::string_view name, const sys_time<Duration>& st);
+        zoned_time(std::string_view name, detail::nodeduct_t<const sys_time<Duration>&> st);
 
     template <class T = TimeZonePtr,
               class = typename std::enable_if
@@ -459,7 +468,7 @@ public:
                       local_time<Duration>
                   >::value
               >::type>
-        zoned_time(std::string_view name, const local_time<Duration>& tp);
+        zoned_time(std::string_view name, detail::nodeduct_t<const local_time<Duration>&> tp);
 
     template <class T = TimeZonePtr,
               class = typename std::enable_if
@@ -472,7 +481,7 @@ public:
                       choose
                   >::value
               >::type>
-        zoned_time(std::string_view name,   const local_time<Duration>& tp, choose c);
+        zoned_time(std::string_view name, detail::nodeduct_t<const local_time<Duration>&> tp, choose c);
 
     template <class Duration2, class TimeZonePtr2, class T = TimeZonePtr,
               class = typename std::enable_if
@@ -1448,7 +1457,7 @@ template <class Duration, class TimeZonePtr>
 template <class T, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
-                                              const sys_time<Duration>& st)
+                                              detail::nodeduct_t<const sys_time<Duration>&> st)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), st)
     {}
 
@@ -1456,7 +1465,7 @@ template <class Duration, class TimeZonePtr>
 template <class T, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
-                                              const local_time<Duration>& t)
+                                              detail::nodeduct_t<const local_time<Duration>&> t)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), t)
     {}
 
@@ -1464,7 +1473,7 @@ template <class Duration, class TimeZonePtr>
 template <class T, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(std::string_view name,
-                                              const local_time<Duration>& t, choose c)
+                                              detail::nodeduct_t<const local_time<Duration>&> t, choose c)
     : zoned_time(zoned_traits<TimeZonePtr>::locate_zone(name), t, c)
     {}
 
