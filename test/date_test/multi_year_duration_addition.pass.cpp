@@ -44,6 +44,27 @@
 template<typename T>
 constexpr T copy(T const& t) noexcept { return t; }
 
+struct ConvertibleToYears
+{
+   CONSTCD11 operator date::years() const NOEXCEPT
+   { return date::years{1}; };
+};
+
+struct ConvertibleToMonths
+{
+   CONSTCD11 operator date::months() const NOEXCEPT
+   { return date::months{1}; };
+};
+
+struct ConvertibleToYearsAndMonths
+{
+   CONSTCD11 operator date::years() const NOEXCEPT
+   { return date::years{1}; };
+
+   CONSTCD11 operator date::months() const NOEXCEPT
+   { return date::months{1}; };
+
+};
 
 int
 main()
@@ -58,6 +79,11 @@ main()
     constexpr years one_year{1};
     constexpr decades one_decade{1};
     constexpr decamonths one_decamonth{1};
+
+    constexpr ConvertibleToMonths custom_month;
+    constexpr ConvertibleToYears custom_year;
+    constexpr ConvertibleToYearsAndMonths prefer_year;
+    
 
     {
        constexpr year_month ym = 2001_y/feb;
@@ -104,6 +130,39 @@ main()
        NOEXCEPT_CONVERSION(copy(ym) += one_decamonth);
        CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr);
        NOEXCEPT_CONVERSION(copy(ym) -= one_decamonth);
+
+       CPP14_ASSERT(ym + custom_month == 2001_y/mar);
+       NOEXCEPT_ASSERT(ym + custom_month);
+       CPP14_ASSERT(custom_month + ym == 2001_y/mar);
+       NOEXCEPT_ASSERT(custom_month + ym);
+       CPP14_ASSERT(ym - custom_month == 2001_y/jan);
+       NOEXCEPT_ASSERT(ym - custom_month);
+       CPP14_ASSERT((copy(ym) += custom_month) == 2001_y/mar);
+       NOEXCEPT_ASSERT(copy(ym) += custom_month);
+       CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_month);
+      
+       CPP11_ASSERT(ym + custom_year == 2002_y/feb);
+       NOEXCEPT_ASSERT(ym + custom_year);
+       CPP11_ASSERT(custom_year + ym == 2002_y/feb);
+       NOEXCEPT_ASSERT(custom_year + ym);
+       CPP11_ASSERT(ym - custom_year == 2000_y/feb);
+       NOEXCEPT_ASSERT(ym - custom_year);
+       CPP14_ASSERT((copy(ym) += custom_year) == 2002_y/feb);
+       NOEXCEPT_ASSERT(copy(ym) += custom_year);
+       CPP14_ASSERT((copy(ym) -= custom_year) == 2000_y/feb);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_year);
+
+       CPP11_ASSERT(ym + prefer_year == 2002_y/feb);
+       NOEXCEPT_ASSERT(ym + prefer_year);
+       CPP11_ASSERT(prefer_year + ym == 2002_y/feb);
+       NOEXCEPT_ASSERT(prefer_year + ym);
+       CPP11_ASSERT(ym - prefer_year == 2000_y/feb);
+       NOEXCEPT_ASSERT(ym - prefer_year);
+       CPP14_ASSERT((copy(ym) += prefer_year) == 2002_y/feb);
+       NOEXCEPT_ASSERT(copy(ym) += prefer_year);
+       CPP14_ASSERT((copy(ym) -= prefer_year) == 2000_y/feb);
+       NOEXCEPT_ASSERT(copy(ym) -= prefer_year);
     }
 
     {
@@ -151,6 +210,39 @@ main()
        NOEXCEPT_CONVERSION(copy(ym) += one_decamonth);
        CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/10);
        NOEXCEPT_CONVERSION(copy(ym) -= one_decamonth);
+
+       CPP14_ASSERT(ym + custom_month == 2001_y/mar/10);
+       NOEXCEPT_ASSERT(ym + custom_month);
+       CPP14_ASSERT(custom_month + ym == 2001_y/mar/10);
+       NOEXCEPT_ASSERT(custom_month + ym);
+       CPP14_ASSERT(ym - custom_month == 2001_y/jan/10);
+       NOEXCEPT_ASSERT(ym - custom_month);
+       CPP14_ASSERT((copy(ym) += custom_month) == 2001_y/mar/10);
+       NOEXCEPT_ASSERT(copy(ym) += custom_month);
+       CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/10);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_month);
+      
+       CPP11_ASSERT(ym + custom_year == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(ym + custom_year);
+       CPP11_ASSERT(custom_year + ym == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(custom_year + ym);
+       CPP11_ASSERT(ym - custom_year == 2000_y/feb/10);
+       NOEXCEPT_ASSERT(ym - custom_year);
+       CPP14_ASSERT((copy(ym) += custom_year) == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(copy(ym) += custom_year);
+       CPP14_ASSERT((copy(ym) -= custom_year) == 2000_y/feb/10);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_year);
+
+       CPP11_ASSERT(ym + prefer_year == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(ym + prefer_year);
+       CPP11_ASSERT(prefer_year + ym == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(prefer_year + ym);
+       CPP11_ASSERT(ym - prefer_year == 2000_y/feb/10);
+       NOEXCEPT_ASSERT(ym - prefer_year);
+       CPP14_ASSERT((copy(ym) += prefer_year) == 2002_y/feb/10);
+       NOEXCEPT_ASSERT(copy(ym) += prefer_year);
+       CPP14_ASSERT((copy(ym) -= prefer_year) == 2000_y/feb/10);
+       NOEXCEPT_ASSERT(copy(ym) -= prefer_year);
     }
 
     {
@@ -198,6 +290,39 @@ main()
        NOEXCEPT_CONVERSION(copy(ym) += one_decamonth);
        CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/last);
        NOEXCEPT_CONVERSION(copy(ym) -= one_decamonth);
+
+       CPP14_ASSERT(ym + custom_month == 2001_y/mar/last);
+       NOEXCEPT_ASSERT(ym + custom_month);
+       CPP14_ASSERT(custom_month + ym == 2001_y/mar/last);
+       NOEXCEPT_ASSERT(custom_month + ym);
+       CPP14_ASSERT(ym - custom_month == 2001_y/jan/last);
+       NOEXCEPT_ASSERT(ym - custom_month);
+       CPP14_ASSERT((copy(ym) += custom_month) == 2001_y/mar/last);
+       NOEXCEPT_ASSERT(copy(ym) += custom_month);
+       CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/last);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_month);
+      
+       CPP11_ASSERT(ym + custom_year == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(ym + custom_year);
+       CPP11_ASSERT(custom_year + ym == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(custom_year + ym);
+       CPP11_ASSERT(ym - custom_year == 2000_y/feb/last);
+       NOEXCEPT_ASSERT(ym - custom_year);
+       CPP14_ASSERT((copy(ym) += custom_year) == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(copy(ym) += custom_year);
+       CPP14_ASSERT((copy(ym) -= custom_year) == 2000_y/feb/last);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_year);
+
+       CPP11_ASSERT(ym + prefer_year == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(ym + prefer_year);
+       CPP11_ASSERT(prefer_year + ym == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(prefer_year + ym);
+       CPP11_ASSERT(ym - prefer_year == 2000_y/feb/last);
+       NOEXCEPT_ASSERT(ym - prefer_year);
+       CPP14_ASSERT((copy(ym) += prefer_year) == 2002_y/feb/last);
+       NOEXCEPT_ASSERT(copy(ym) += prefer_year);
+       CPP14_ASSERT((copy(ym) -= prefer_year) == 2000_y/feb/last);
+       NOEXCEPT_ASSERT(copy(ym) -= prefer_year);
     }
 
     {
@@ -245,6 +370,39 @@ main()
        NOEXCEPT_CONVERSION(copy(ym) += one_decamonth);
        CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/fri[4]);
        NOEXCEPT_CONVERSION(copy(ym) -= one_decamonth);
+
+       CPP14_ASSERT(ym + custom_month == 2001_y/mar/fri[4]);
+       NOEXCEPT_ASSERT(ym + custom_month);
+       CPP14_ASSERT(custom_month + ym == 2001_y/mar/fri[4]);
+       NOEXCEPT_ASSERT(custom_month + ym);
+       CPP14_ASSERT(ym - custom_month == 2001_y/jan/fri[4]);
+       NOEXCEPT_ASSERT(ym - custom_month);
+       CPP14_ASSERT((copy(ym) += custom_month) == 2001_y/mar/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) += custom_month);
+       CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_month);
+      
+       CPP11_ASSERT(ym + custom_year == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(ym + custom_year);
+       CPP11_ASSERT(custom_year + ym == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(custom_year + ym);
+       CPP11_ASSERT(ym - custom_year == 2000_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(ym - custom_year);
+       CPP14_ASSERT((copy(ym) += custom_year) == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) += custom_year);
+       CPP14_ASSERT((copy(ym) -= custom_year) == 2000_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_year);
+
+       CPP11_ASSERT(ym + prefer_year == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(ym + prefer_year);
+       CPP11_ASSERT(prefer_year + ym == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(prefer_year + ym);
+       CPP11_ASSERT(ym - prefer_year == 2000_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(ym - prefer_year);
+       CPP14_ASSERT((copy(ym) += prefer_year) == 2002_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) += prefer_year);
+       CPP14_ASSERT((copy(ym) -= prefer_year) == 2000_y/feb/fri[4]);
+       NOEXCEPT_ASSERT(copy(ym) -= prefer_year);
     }
 
     {
@@ -292,6 +450,38 @@ main()
        NOEXCEPT_CONVERSION(copy(ym) += one_decamonth);
        CPP14_ASSERT((copy(ym) -= one_decamonth) == 2000_y/apr/fri[last]);
        NOEXCEPT_CONVERSION(copy(ym) -= one_decamonth);
-    }
 
+       CPP14_ASSERT(ym + custom_month == 2001_y/mar/fri[last]);
+       NOEXCEPT_ASSERT(ym + custom_month);
+       CPP14_ASSERT(custom_month + ym == 2001_y/mar/fri[last]);
+       NOEXCEPT_ASSERT(custom_month + ym);
+       CPP14_ASSERT(ym - custom_month == 2001_y/jan/fri[last]);
+       NOEXCEPT_ASSERT(ym - custom_month);
+       CPP14_ASSERT((copy(ym) += custom_month) == 2001_y/mar/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) += custom_month);
+       CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_month);
+      
+       CPP11_ASSERT(ym + custom_year == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(ym + custom_year);
+       CPP11_ASSERT(custom_year + ym == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(custom_year + ym);
+       CPP11_ASSERT(ym - custom_year == 2000_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(ym - custom_year);
+       CPP14_ASSERT((copy(ym) += custom_year) == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) += custom_year);
+       CPP14_ASSERT((copy(ym) -= custom_year) == 2000_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) -= custom_year);
+
+       CPP11_ASSERT(ym + prefer_year == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(ym + prefer_year);
+       CPP11_ASSERT(prefer_year + ym == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(prefer_year + ym);
+       CPP11_ASSERT(ym - prefer_year == 2000_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(ym - prefer_year);
+       CPP14_ASSERT((copy(ym) += prefer_year) == 2002_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) += prefer_year);
+       CPP14_ASSERT((copy(ym) -= prefer_year) == 2000_y/feb/fri[last]);
+       NOEXCEPT_ASSERT(copy(ym) -= prefer_year);
+    }
 }
