@@ -3917,7 +3917,7 @@ make12(std::chrono::hours h) NOEXCEPT
     else
     {
         if (h != hours{12})
-            h -= hours{12};
+            h = h - hours{12};
     }
     return h;
 }
@@ -3931,7 +3931,7 @@ make24(std::chrono::hours h, bool is_pm) NOEXCEPT
     if (is_pm)
     {
         if (h != hours{12})
-            h += hours{12};
+            h = h + hours{12};
     }
     else if (h == hours{12})
         h = hours{0};
