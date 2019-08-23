@@ -6347,7 +6347,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         using detail::ru;
         using detail::rld;
         using detail::checked_set;
-        for (; *fmt && is.rdstate() == std::ios::goodbit; ++fmt)
+        for (; *fmt != CharT{} && !is.fail(); ++fmt)
         {
             switch (*fmt)
             {
@@ -7348,14 +7348,18 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                 else  // !command
                 {
                     if (isspace(static_cast<unsigned char>(*fmt)))
-                        ws(is); // space matches 0 or more white space characters
+                    {
+                        // space matches 0 or more white space characters
+                        if (is.good())
+                           ws(is);
+                    }
                     else
                         read(is, *fmt);
                 }
                 break;
             }
         }
-        // is.rdstate() != ios::goodbit || *fmt == CharT{}
+        // is.fail() || *fmt == CharT{}
         if (is.rdstate() == ios::goodbit && command)
         {
             if (modified == CharT{})
@@ -7363,8 +7367,6 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             else
                 read(is, CharT{'%'}, width, modified);
         }
-        if (is.rdstate() != ios::goodbit && *fmt != CharT{} && !is.fail())
-            is.setstate(ios::failbit);
         if (!is.fail())
         {
             if (y != not_a_2digit_year)
