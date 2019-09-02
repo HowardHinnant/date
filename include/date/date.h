@@ -6237,7 +6237,7 @@ read(std::basic_istream<CharT, Traits>& is, int a0, Args&& ...args)
     if (a0 != -1)
     {
         auto u = static_cast<unsigned>(a0);
-        CharT buf[std::numeric_limits<unsigned>::digits10+2] = {};
+        CharT buf[std::numeric_limits<unsigned>::digits10+2u] = {};
         auto e = buf;
         do
         {
