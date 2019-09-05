@@ -3704,7 +3704,7 @@ tzdb::current_zone() const
             if (pos != result.npos)
                 result.erase(0, foldername.size() + 1 + pos);
             else
-                throw system_error(errno, system_category(), R"(failed to find "zoneinfo-part in path to local timezone file")");
+                throw system_error(errno, system_category(), R"(failed to find "zoneinfo"-part in path to local timezone file)");
 
             return locate_zone(result);
         }
