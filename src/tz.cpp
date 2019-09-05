@@ -3700,7 +3700,7 @@ tzdb::current_zone() const
             free(rp);
 
             const string foldername{"zoneinfo"};
-            const size_t pos = result.find(foldername);
+            const size_t pos = result.rfind(foldername);
             if (pos != result.npos)
                 result.erase(0, foldername.size() + 1 + pos);
             else
