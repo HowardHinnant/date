@@ -3694,14 +3694,18 @@ tzdb::current_zone() const
             
             auto rp = realpath(timezone, nullptr);
             if (rp == nullptr)
-                throw system_error(errno, system_category(), "realpath() failed");
+                throw system_error(errno, system_category(), R"(realpath("/etc/localtime") failed)");
             
             auto result = string(rp);
             free(rp);
 
-            const size_t pos = result.find(get_tz_dir());
+            const string foldername{"zoneinfo"};
+            const size_t pos = result.find(foldername);
             if (pos != result.npos)
-                result.erase(0, get_tz_dir().size() + 1 + pos);
+                result.erase(0, foldername.size() + 1 + pos);
+            else
+                throw system_error(errno, system_category(), R"(failed to find "zoneinfo-part in path to local timezone file")");
+
             return locate_zone(result);
         }
     }
