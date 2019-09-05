@@ -3692,16 +3692,26 @@ tzdb::current_zone() const
         CONSTDATA auto timezone = "/etc/localtime";
         if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
             using namespace std;
-            string result;
             char rp[PATH_MAX+1] = {};
-            if (readlink(timezone, rp, sizeof(rp)-1) > 0)
-                result = string(rp);
-            else
-                throw system_error(errno, system_category(), "readlink() failed");
-
-            const size_t pos = result.find(get_tz_dir());
-            if (pos != result.npos)
-                result.erase(0, get_tz_dir().size() + 1 + pos);
+            if (realpath(timezone, rp) == nullptr)
+                throw system_error(errno, system_category(), "realpath() failed");
+#if HAS_STRING_VIEW
+            string_view result = rp;
+            CONSTDATA string_view zoneinfo = "/zoneinfo/";
+            const size_t pos = result.rfind(zoneinfo);
+            if (pos == result.npos)
+                throw runtime_error(
+                    "current_zone() failed to find \"/zoneinfo/\" in " + string(result));
+            result.remove_prefix(pos + zoneinfo.size());
+#else
+            string result = rp;
+            CONSTDATA char zoneinfo[] = "/zoneinfo/";
+            const size_t pos = result.rfind(zoneinfo);
+            if (pos == result.npos)
+                throw runtime_error(
+                    "current_zone() failed to find \"/zoneinfo/\" in " + result);
+            result.erase(0, pos + sizeof(zoneinfo) - 1);
+#endif
             return locate_zone(result);
         }
     }
