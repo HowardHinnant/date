@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.1.0 )
 
 project( date_prj )
-set(DATE_LIBRARY_VERSION 1.0.0)
+set(DATE_LIBRARY_VERSION 2.4.1)
 
 include( GNUInstallDirs )
 
