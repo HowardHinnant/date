@@ -1,5 +1,6 @@
 # Date
 
+[![Build Status](https://travis-ci.org/miketsukerman/date.svg?branch=add-continues-integration)](https://travis-ci.org/miketsukerman/date)
 [![Join the chat at https://gitter.im/HowardHinnant/date](https://badges.gitter.im/HowardHinnant/date.svg)](https://gitter.im/HowardHinnant/date?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ---
