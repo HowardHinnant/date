@@ -1,7 +1,6 @@
 cmake_minimum_required( VERSION 3.1.0 )
 
-project( date_prj )
-set(DATE_LIBRARY_VERSION 2.4.1)
+project( date VERSION 2.4.1 )
 
 include( GNUInstallDirs )
 
@@ -46,30 +45,30 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/date/tz_private.h
 )
 
-add_library( timezone ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
+add_library( tz ${HEADER_FILES} ${SOURCE_FOLDER}/tz.cpp )
 
 if( USE_SYSTEM_TZ_DB )
-	target_compile_definitions( timezone PRIVATE -DUSE_AUTOLOAD=0 )
-	target_compile_definitions( timezone PRIVATE -DHAS_REMOTE_API=0 )
+	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=0 )
+	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=0 )
 	# cannot set USE_OS_TZDB to 1 on Windows
 	if( NOT WIN32 )
-		target_compile_definitions( timezone PUBLIC -DUSE_OS_TZDB=1 )
+		target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=1 )
 	endif( )
 else( )
-	target_compile_definitions( timezone PRIVATE -DUSE_AUTOLOAD=1 )
-	target_compile_definitions( timezone PRIVATE -DHAS_REMOTE_API=1 )
-	target_compile_definitions( timezone PUBLIC -DUSE_OS_TZDB=0 )
+	target_compile_definitions( tz PRIVATE -DUSE_AUTOLOAD=1 )
+	target_compile_definitions( tz PRIVATE -DHAS_REMOTE_API=1 )
+	target_compile_definitions( tz PUBLIC -DUSE_OS_TZDB=0 )
 	find_package( CURL REQUIRED )
 	include_directories( SYSTEM ${CURL_INCLUDE_DIRS} )
 	set( OPTIONAL_LIBRARIES ${CURL_LIBRARIES} )
 endif( )
 
 if( USE_TZ_DB_IN_DOT )
-	target_compile_definitions( timezone PRIVATE -DINSTALL=. )
+	target_compile_definitions( tz PRIVATE -DINSTALL=. )
 endif( )
 
 if( DISABLE_STRING_VIEW )
-    target_compile_definitions( timezone PRIVATE -DHAS_STRING_VIEW=0 )
+    target_compile_definitions( tz PRIVATE -DHAS_STRING_VIEW=0 )
 endif( )
 
 if( BUILD_SHARED_LIBS )
@@ -77,23 +76,25 @@ if( BUILD_SHARED_LIBS )
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
 endif( )
 
-target_link_libraries( timezone ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
+target_link_libraries( tz ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_LIBRARIES} )
 
 # add include folders to the library and targets that consume it
-target_include_directories(timezone PUBLIC
+target_include_directories(tz PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_FOLDER}>
     $<INSTALL_INTERFACE:include>
 )
 set(version_config "${CMAKE_CURRENT_BINARY_DIR}/dateConfigVersion.cmake")
-set_target_properties(timezone PROPERTIES VERSION "${DATE_LIBRARY_VERSION}"  SOVERSION "${DATE_LIBRARY_VERSION}")
+set_target_properties(tz PROPERTIES VERSION "${PROJECT_VERSION}"  SOVERSION "${PROJECT_VERSION}")
 
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file("${version_config}" VERSION ${DATE_LIBRARY_VERSION} COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file("${version_config}" VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
     
-add_library(interface INTERFACE) # an interface (not a library), to enable automatic include_directory (for when just date.h, but not "timezone.h and its lib" are needed)
+# An interface library (not a compiled library), to enable automatic include_directory (for when just date.h,
+# but not "tz.h and its lib" are needed)
+add_library(date INTERFACE)
 
 # add include folders to the INTERFACE and targets that consume it
-target_include_directories(interface INTERFACE
+target_include_directories(date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -104,14 +105,14 @@ else()
     set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/date)
 endif()
 
-install( TARGETS timezone EXPORT dateConfig 
+install( TARGETS tz EXPORT dateConfig
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 
-export(TARGETS interface timezone NAMESPACE date:: FILE dateConfig.cmake)
+export(TARGETS date tz NAMESPACE date:: FILE dateConfig.cmake)
     
-install(TARGETS interface EXPORT dateConfig)
+install(TARGETS date EXPORT dateConfig)
 install(EXPORT dateConfig NAMESPACE date:: DESTINATION ${DEF_INSTALL_CMAKE_DIR})
 install(DIRECTORY ${HEADER_FOLDER}/ DESTINATION include/)
 
@@ -121,7 +122,7 @@ if ( ENABLE_DATE_TESTING )
 
     add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
 
-    add_dependencies( testit timezone )
+    add_dependencies( testit tz )
     function( add_pass_tests TEST_GLOB TEST_PREFIX )
         file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
         include_directories( "${HEADER_FOLDER}/date" )
@@ -135,7 +136,7 @@ if ( ENABLE_DATE_TESTING )
                 set( TST_NAME ${PREFIX}_test )
                 add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
                 add_test( ${TST_NAME} ${BIN_NAME} )
-                target_link_libraries( ${BIN_NAME} timezone )
+                target_link_libraries( ${BIN_NAME} tz )
                 add_dependencies( testit ${BIN_NAME} )
             endif( )
         endforeach( )
