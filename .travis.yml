@@ -3,7 +3,9 @@ language: cpp
 matrix:
   include:
    
-    - os: linux
+    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 7" 
+      dist: xenial
+      os: linux
       addons:
         apt:
           sources:
@@ -13,7 +15,8 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
-    - os: linux
+    - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) GCC 7" 
+      os: linux
       dist: bionic
       addons:
         apt:
@@ -24,7 +27,9 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
-    - os: linux
+    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 8" 
+      dist: xenial
+      os: linux
       addons:
         apt:
           sources:
@@ -34,7 +39,9 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
-    - os: linux
+    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 9" 
+      dist: xenial
+      os: linux
       addons:
         apt:
           sources:
@@ -44,7 +51,8 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
 
-    - os: linux
+    - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) Clang 6" 
+      os: linux
       dist: bionic
       addons:
         apt:
