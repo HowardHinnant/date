@@ -4,8 +4,8 @@ matrix:
   include:
    
     - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 7" 
-      dist: xenial
       os: linux
+      dist: xenial
       addons:
         apt:
           sources:
@@ -14,6 +14,30 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 8" 
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+
+    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 9" 
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
 
     - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) GCC 7" 
       os: linux
@@ -27,9 +51,9 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
-    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 8" 
-      dist: xenial
+    - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) GCC 8" 
       os: linux
+      dist: bionic
       addons:
         apt:
           sources:
@@ -38,18 +62,6 @@ matrix:
             - g++-8
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-
-    - name: "Ubuntu 16.04.6 LTS (Xenial Xerus) GCC 9" 
-      dist: xenial
-      os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-9
-      env:
-        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
 
     - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) Clang 6" 
       os: linux
