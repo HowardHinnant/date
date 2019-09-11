@@ -69,11 +69,36 @@ matrix:
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-bionic-6.0
           packages:
             - clang-6.0
       env:
         - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+
+    - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) Clang 7" 
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-bionic-7
+          packages:
+            - clang-7
+      env:
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+
+    - name: "Ubuntu 18.04.3 LTS (Bionic Beaver) Clang 8" 
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-bionic-8
+          packages:
+            - clang-8
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+
 
 before_install:
     - eval "${MATRIX_EVAL}"
