@@ -137,7 +137,7 @@ namespace date
 #endif
 
 #ifndef HAS_UNCAUGHT_EXCEPTIONS
-#  if __cplusplus > 201703
+#  if __cplusplus > 201703 || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
 #    define HAS_UNCAUGHT_EXCEPTIONS 1
 #  else
 #    define HAS_UNCAUGHT_EXCEPTIONS 0
@@ -145,7 +145,7 @@ namespace date
 #endif  // HAS_UNCAUGHT_EXCEPTIONS
 
 #ifndef HAS_VOID_T
-#  if __cplusplus >= 201703
+#  if __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
 #    define HAS_VOID_T 1
 #  else
 #    define HAS_VOID_T 0
