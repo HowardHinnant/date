@@ -5136,7 +5136,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
-                        auto h = *fmt == CharT{'I'} ? make12(hms.hours()) : hms.hours();
+                        auto h = *fmt == CharT{'I'} ? date::make12(hms.hours()) : hms.hours();
                         if (h < hours{10})
                             os << CharT{'0'};
                         os << h.count();
@@ -5292,7 +5292,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
                     facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
 #else
-                    if (is_am(fds.tod.hours()))
+                    if (date::is_am(fds.tod.hours()))
                         os << ampm_names().first[0];
                     else
                         os << ampm_names().first[1];
@@ -5350,12 +5350,12 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     save_ostream<CharT, Traits> _(os);
                     os.fill('0');
                     os.width(2);
-                    os << make12(tod.hours()).count() << CharT{':'};
+                    os << date::make12(tod.hours()).count() << CharT{':'};
                     os.width(2);
                     os << tod.minutes().count() << CharT{':'};
                     os.width(2);
                     os << tod.seconds().count() << CharT{' '};
-                    if (is_am(tod.hours()))
+                    if (date::is_am(tod.hours()))
                         os << ampm_names().first[0];
                     else
                         os << ampm_names().first[1];
