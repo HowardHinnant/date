@@ -1,5 +1,7 @@
 cmake_minimum_required( VERSION 3.1.0 )
 
+cmake_policy( VERSION 3.12 )
+
 project( date VERSION 2.4.1 )
 
 include( GNUInstallDirs )
