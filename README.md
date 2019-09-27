@@ -43,6 +43,16 @@ Slightly modified versions of `"date.h"` and `"tz.h"` were voted into the C++20 
 
 ## Build & Test
 
+You can download and install Date using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    vcpkg install date
+
+The Date port in vcpkg is updated by Microsoft team members and community contributors. If the version falls behind, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 You can optionally build using [CMake](https://cmake.org/). Here is a guide of how to build and test using the CMake Makefile generator.
 
 ```bash
