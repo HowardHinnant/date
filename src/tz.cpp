@@ -3697,20 +3697,22 @@ tzdb::current_zone() const
                 throw system_error(errno, system_category(), "realpath() failed");
 #if HAS_STRING_VIEW
             string_view result = rp;
-            CONSTDATA string_view zoneinfo = "/zoneinfo/";
-            const size_t pos = result.rfind(zoneinfo);
+            CONSTDATA string_view zoneinfo = "zoneinfo";
+            size_t pos = result.rfind(zoneinfo);
             if (pos == result.npos)
                 throw runtime_error(
-                    "current_zone() failed to find \"/zoneinfo/\" in " + string(result));
-            result.remove_prefix(pos + zoneinfo.size());
+                    "current_zone() failed to find \"zoneinfo\" in " + string(result));
+            pos = result.find('/', pos);
+            result.remove_prefix(pos + 1);
 #else
             string result = rp;
-            CONSTDATA char zoneinfo[] = "/zoneinfo/";
-            const size_t pos = result.rfind(zoneinfo);
+            CONSTDATA char zoneinfo[] = "zoneinfo";
+            size_t pos = result.rfind(zoneinfo);
             if (pos == result.npos)
                 throw runtime_error(
-                    "current_zone() failed to find \"/zoneinfo/\" in " + result);
-            result.erase(0, pos + sizeof(zoneinfo) - 1);
+                    "current_zone() failed to find \"zoneinfo\" in " + result);
+            pos = result.find('/', pos);
+            result.erase(0, pos + 1);
 #endif
             return locate_zone(result);
         }
