@@ -16,7 +16,7 @@ option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF 
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" ON )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
-option( COMPILE_WITH_C_LOCALE "pass -DONLY_C_LOCALE=1 to copiler")
+option( COMPILE_WITH_C_LOCALE "pass -DONLY_C_LOCALE=1 to compiler")
 
 if(COMPILE_WITH_C_LOCALE)
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
