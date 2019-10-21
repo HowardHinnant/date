@@ -3670,7 +3670,7 @@ tzdb::current_zone() const
 }
 
 #else  // !_WIN32
-
+# ifndef TZDB_NO_CURRENT_ZONE
 const time_zone*
 tzdb::current_zone() const
 {
@@ -3807,14 +3807,16 @@ tzdb::current_zone() const
     }
     throw std::runtime_error("Could not get current timezone");
 }
-
+# endif
 #endif  // !_WIN32
 
+#ifndef TZDB_NO_CURRENT_ZONE
 const time_zone*
 current_zone()
 {
     return get_tzdb().current_zone();
 }
+#endif
 
 }  // namespace date
 

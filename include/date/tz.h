@@ -288,7 +288,9 @@ DATE_API const time_zone* locate_zone(std::string_view tz_name);
 DATE_API const time_zone* locate_zone(const std::string& tz_name);
 #endif
 
+#ifndef TZDB_NO_CURRENT_ZONE
 DATE_API const time_zone* current_zone();
+#endif
 
 template <class T>
 struct zoned_traits
@@ -1200,7 +1202,10 @@ struct tzdb
 #else
     const time_zone* locate_zone(const std::string& tz_name) const;
 #endif
+
+#ifndef TZDB_NO_CURRENT_ZONE
     const time_zone* current_zone() const;
+#endif
 };
 
 using TZ_DB = tzdb;
