@@ -8,6 +8,7 @@
 // Copyright (c) 2017 Florian Dang
 // Copyright (c) 2017 Paul Thompson
 // Copyright (c) 2018, 2019 Tomasz Kamiński
+// Copyright (c) 2019 Jiangang Zhuang
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -3844,7 +3845,7 @@ public:
 
     CONSTCD11 explicit operator  precision()   const NOEXCEPT {return to_duration();}
     CONSTCD11          precision to_duration() const NOEXCEPT
-        {return (h_ + m_ + s_.to_duration()) * (1-2*neg_);}
+        {return (s_.to_duration() + m_ + h_) * (1-2*neg_);}
 
     CONSTCD11 bool in_conventional_range() const NOEXCEPT
     {
