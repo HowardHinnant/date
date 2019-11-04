@@ -79,6 +79,24 @@ target_compile_definitions( date INTERFACE
     $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
 
 #[===================================================================[
+   iso_week (header only) library
+#]===================================================================]
+add_library( iso_week INTERFACE )
+add_library( date::iso_week ALIAS iso_week )
+target_include_directories( iso_week INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include> )
+target_sources( iso_week INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/iso_week.h
+        )
+# public headers will get installed:
+set_target_properties( iso_week PROPERTIES PUBLIC_HEADER include/date/iso_week.h )
+target_compile_definitions( iso_week INTERFACE
+        #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
+        ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
+        $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
+
+#[===================================================================[
    tz (compiled) library
 #]===================================================================]
 if( BUILD_TZ_LIB )
@@ -140,6 +158,10 @@ install( TARGETS date
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
 export( TARGETS date NAMESPACE date:: FILE dateConfig.cmake )
 
+install( TARGETS iso_week
+        EXPORT isoWeekConfig
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+export( TARGETS iso_week NAMESPACE date:: FILE isoWeekConfig.cmake )
 if( BUILD_TZ_LIB )
     install( TARGETS tz
         EXPORT dateConfig

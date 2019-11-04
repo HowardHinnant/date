@@ -422,7 +422,7 @@ inline
 unsigned char
 weekday::to_iso_encoding(unsigned char z) NOEXCEPT
 {
-    return z != 0 ? z : (unsigned char)7;
+    return z != 0 ? z : static_cast<unsigned char>(7);
 }
 
 CONSTCD11
