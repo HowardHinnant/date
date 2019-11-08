@@ -990,27 +990,27 @@ inline bool operator>=(const link& x, const link& y) {return !(x < y);}
 
 #if !MISSING_LEAP_SECONDS
 
-class leap
+class leap_second
 {
 private:
     sys_seconds date_;
 
 public:
 #if USE_OS_TZDB
-    DATE_API explicit leap(const sys_seconds& s, detail::undocumented);
+    DATE_API explicit leap_second(const sys_seconds& s, detail::undocumented);
 #else
-    DATE_API explicit leap(const std::string& s, detail::undocumented);
+    DATE_API explicit leap_second(const std::string& s, detail::undocumented);
 #endif
 
     sys_seconds date() const {return date_;}
 
-    friend bool operator==(const leap& x, const leap& y) {return x.date_ == y.date_;}
-    friend bool operator< (const leap& x, const leap& y) {return x.date_ < y.date_;}
+    friend bool operator==(const leap_second& x, const leap_second& y) {return x.date_ == y.date_;}
+    friend bool operator< (const leap_second& x, const leap_second& y) {return x.date_ < y.date_;}
 
     template <class Duration>
     friend
     bool
-    operator==(const leap& x, const sys_time<Duration>& y)
+    operator==(const leap_second& x, const sys_time<Duration>& y)
     {
         return x.date_ == y;
     }
@@ -1018,7 +1018,7 @@ public:
     template <class Duration>
     friend
     bool
-    operator< (const leap& x, const sys_time<Duration>& y)
+    operator< (const leap_second& x, const sys_time<Duration>& y)
     {
         return x.date_ < y;
     }
@@ -1026,23 +1026,23 @@ public:
     template <class Duration>
     friend
     bool
-    operator< (const sys_time<Duration>& x, const leap& y)
+    operator< (const sys_time<Duration>& x, const leap_second& y)
     {
         return x < y.date_;
     }
 
-    friend DATE_API std::ostream& operator<<(std::ostream& os, const leap& x);
+    friend DATE_API std::ostream& operator<<(std::ostream& os, const leap_second& x);
 };
 
-inline bool operator!=(const leap& x, const leap& y) {return !(x == y);}
-inline bool operator> (const leap& x, const leap& y) {return   y < x;}
-inline bool operator<=(const leap& x, const leap& y) {return !(y < x);}
-inline bool operator>=(const leap& x, const leap& y) {return !(x < y);}
+inline bool operator!=(const leap_second& x, const leap_second& y) {return !(x == y);}
+inline bool operator> (const leap_second& x, const leap_second& y) {return   y < x;}
+inline bool operator<=(const leap_second& x, const leap_second& y) {return !(y < x);}
+inline bool operator>=(const leap_second& x, const leap_second& y) {return !(x < y);}
 
 template <class Duration>
 inline
 bool
-operator==(const sys_time<Duration>& x, const leap& y)
+operator==(const sys_time<Duration>& x, const leap_second& y)
 {
     return y == x;
 }
@@ -1050,7 +1050,7 @@ operator==(const sys_time<Duration>& x, const leap& y)
 template <class Duration>
 inline
 bool
-operator!=(const leap& x, const sys_time<Duration>& y)
+operator!=(const leap_second& x, const sys_time<Duration>& y)
 {
     return !(x == y);
 }
@@ -1058,7 +1058,7 @@ operator!=(const leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator!=(const sys_time<Duration>& x, const leap& y)
+operator!=(const sys_time<Duration>& x, const leap_second& y)
 {
     return !(x == y);
 }
@@ -1066,7 +1066,7 @@ operator!=(const sys_time<Duration>& x, const leap& y)
 template <class Duration>
 inline
 bool
-operator> (const leap& x, const sys_time<Duration>& y)
+operator> (const leap_second& x, const sys_time<Duration>& y)
 {
     return y < x;
 }
@@ -1074,7 +1074,7 @@ operator> (const leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator> (const sys_time<Duration>& x, const leap& y)
+operator> (const sys_time<Duration>& x, const leap_second& y)
 {
     return y < x;
 }
@@ -1082,7 +1082,7 @@ operator> (const sys_time<Duration>& x, const leap& y)
 template <class Duration>
 inline
 bool
-operator<=(const leap& x, const sys_time<Duration>& y)
+operator<=(const leap_second& x, const sys_time<Duration>& y)
 {
     return !(y < x);
 }
@@ -1090,7 +1090,7 @@ operator<=(const leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator<=(const sys_time<Duration>& x, const leap& y)
+operator<=(const sys_time<Duration>& x, const leap_second& y)
 {
     return !(y < x);
 }
@@ -1098,7 +1098,7 @@ operator<=(const sys_time<Duration>& x, const leap& y)
 template <class Duration>
 inline
 bool
-operator>=(const leap& x, const sys_time<Duration>& y)
+operator>=(const leap_second& x, const sys_time<Duration>& y)
 {
     return !(x < y);
 }
@@ -1106,10 +1106,12 @@ operator>=(const leap& x, const sys_time<Duration>& y)
 template <class Duration>
 inline
 bool
-operator>=(const sys_time<Duration>& x, const leap& y)
+operator>=(const sys_time<Duration>& x, const leap_second& y)
 {
     return !(x < y);
 }
+
+using leap = leap_second;
 
 #endif  // !MISSING_LEAP_SECONDS
 
@@ -1159,7 +1161,7 @@ struct tzdb
     std::vector<link>         links;
 #endif
 #if !MISSING_LEAP_SECONDS
-    std::vector<leap>         leaps;
+    std::vector<leap_second>  leap_seconds;
 #endif
 #if !USE_OS_TZDB
     std::vector<detail::Rule> rules;
@@ -1178,7 +1180,7 @@ struct tzdb
         : version(std::move(src.version))
         , zones(std::move(src.zones))
         , links(std::move(src.links))
-        , leaps(std::move(src.leaps))
+        , leap_seconds(std::move(src.leap_seconds))
         , rules(std::move(src.rules))
         , mappings(std::move(src.mappings))
     {}
@@ -1188,7 +1190,7 @@ struct tzdb
         version = std::move(src.version);
         zones = std::move(src.zones);
         links = std::move(src.links);
-        leaps = std::move(src.leaps);
+        leap_seconds = std::move(src.leap_seconds);
         rules = std::move(src.rules);
         mappings = std::move(src.mappings);
         return *this;
@@ -1879,7 +1881,7 @@ utc_clock::from_sys(const sys_time<Duration>& st)
 {
     using std::chrono::seconds;
     using CD = typename std::common_type<Duration, seconds>::type;
-    auto const& leaps = get_tzdb().leaps;
+    auto const& leaps = get_tzdb().leap_seconds;
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), st);
     return utc_time<CD>{st.time_since_epoch() + seconds{lt-leaps.begin()}};
 }
@@ -1893,7 +1895,7 @@ is_leap_second(date::utc_time<Duration> const& ut)
 {
     using std::chrono::seconds;
     using duration = typename std::common_type<Duration, seconds>::type;
-    auto const& leaps = get_tzdb().leaps;
+    auto const& leaps = get_tzdb().leap_seconds;
     auto tp = sys_time<duration>{ut.time_since_epoch()};
     auto const lt = std::upper_bound(leaps.begin(), leaps.end(), tp);
     auto ds = seconds{lt-leaps.begin()};

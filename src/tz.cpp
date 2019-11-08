@@ -1924,12 +1924,12 @@ load_abbreviations(std::istream& inf, std::int32_t tzh_charcnt)
 
 template <class TimeType>
 static
-std::vector<leap>
+std::vector<leap_second>
 load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
 {
     // Read tzh_leapcnt pairs
     using namespace std::chrono;
-    std::vector<leap> leap_seconds;
+    std::vector<leap_second> leap_seconds;
     leap_seconds.reserve(static_cast<std::size_t>(tzh_leapcnt));
     for (std::int32_t i = 0; i < tzh_leapcnt; ++i)
     {
@@ -1947,7 +1947,7 @@ load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
 
 template <class TimeType>
 static
-std::vector<leap>
+std::vector<leap_second>
 load_leap_data(std::istream& inf,
                std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
                std::int32_t tzh_typecnt, std::int32_t tzh_charcnt)
@@ -1958,7 +1958,7 @@ load_leap_data(std::istream& inf,
 }
 
 static
-std::vector<leap>
+std::vector<leap_second>
 load_just_leaps(std::istream& inf)
 {
     // Read tzh_leapcnt pairs
@@ -2004,7 +2004,7 @@ time_zone::load_data(std::istream& inf,
     auto infos = load_ttinfo(inf, tzh_typecnt);
     auto abbrev = load_abbreviations(inf, tzh_charcnt);
 #if !MISSING_LEAP_SECONDS
-    auto& leap_seconds = get_tzdb_list().front().leaps;
+    auto& leap_seconds = get_tzdb_list().front().leap_seconds;
     if (leap_seconds.empty() && tzh_leapcnt > 0)
         leap_seconds = load_leaps<TimeType>(inf, tzh_leapcnt);
 #endif
@@ -2072,7 +2072,7 @@ time_zone::init_impl()
 #if !MISSING_LEAP_SECONDS
     if (tzh_leapcnt > 0)
     {
-        auto& leap_seconds = get_tzdb_list().front().leaps;
+        auto& leap_seconds = get_tzdb_list().front().leap_seconds;
         auto itr = leap_seconds.begin();
         auto l = itr->date();
         seconds leap_count{0};
@@ -2207,7 +2207,7 @@ operator<<(std::ostream& os, const time_zone& z)
 
 #if !MISSING_LEAP_SECONDS
 
-leap::leap(const sys_seconds& s, detail::undocumented)
+leap_second::leap_second(const sys_seconds& s, detail::undocumented)
     : date_(s)
 {
 }
@@ -2613,7 +2613,7 @@ operator<<(std::ostream& os, const time_zone& z)
 #if !MISSING_LEAP_SECONDS
 
 std::ostream&
-operator<<(std::ostream& os, const leap& x)
+operator<<(std::ostream& os, const leap_second& x)
 {
     using namespace date;
     return os << x.date_ << "  +";
@@ -2699,7 +2699,7 @@ init_tzdb()
     if (in)
     {
         in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leaps = load_just_leaps(in);
+        db->leap_seconds = load_just_leaps(in);
     }
     else
     {
@@ -2709,7 +2709,7 @@ init_tzdb()
         if (!in)
             throw std::runtime_error("Unable to extract leap second information");
         in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leaps = load_just_leaps(in);
+        db->leap_seconds = load_just_leaps(in);
     }
 #  endif  // !MISSING_LEAP_SECONDS
 #  ifdef __APPLE__
@@ -2742,9 +2742,9 @@ operator<<(std::ostream& os, const link& x)
     return os << x.name_ << " --> " << x.target_;
 }
 
-// leap
+// leap_second
 
-leap::leap(const std::string& s, detail::undocumented)
+leap_second::leap_second(const std::string& s, detail::undocumented)
 {
     using namespace date;
     std::istringstream in(s);
@@ -3443,7 +3443,7 @@ init_tzdb()
                 }
                 else if (word == "Leap")
                 {
-                    db->leaps.push_back(leap(line, detail::undocumented{}));
+                    db->leap_seconds.push_back(leap_second(line, detail::undocumented{}));
                     continue_zone = false;
                 }
                 else if (word == "Zone")
@@ -3468,8 +3468,8 @@ init_tzdb()
     db->zones.shrink_to_fit();
     std::sort(db->links.begin(), db->links.end());
     db->links.shrink_to_fit();
-    std::sort(db->leaps.begin(), db->leaps.end());
-    db->leaps.shrink_to_fit();
+    std::sort(db->leap_seconds.begin(), db->leap_seconds.end());
+    db->leap_seconds.shrink_to_fit();
 
 #ifdef _WIN32
     std::string mapping_file = get_install() + folder_delimiter + "windowsZones.xml";
@@ -3564,7 +3564,7 @@ operator<<(std::ostream& os, const tzdb& db)
         os << x << '\n';
 #if !MISSING_LEAP_SECONDS
     os << '\n';
-    for (const auto& x : db.leaps)
+    for (const auto& x : db.leap_seconds)
         os << x << '\n';
 #endif  // !MISSING_LEAP_SECONDS
     return os;
@@ -3624,7 +3624,7 @@ operator<<(std::ostream& os, const tzdb& db)
                         "---------------------------------------------------------"
                         "--------------------------------------------------------\n");
     os << title;
-    for (const auto& x : db.leaps)
+    for (const auto& x : db.leap_seconds)
         os << x << '\n';
     return os;
 }
