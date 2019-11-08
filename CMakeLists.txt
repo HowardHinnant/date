@@ -154,22 +154,23 @@ write_basic_package_version_file( "${version_config}"
     COMPATIBILITY SameMajorVersion )
 
 install( TARGETS date
-    EXPORT dateConfig
+    EXPORT dateTargets
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
-export( TARGETS date NAMESPACE date:: FILE dateConfig.cmake )
+export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
 
 install( TARGETS iso_week
-        EXPORT isoWeekConfig
+        EXPORT dateTargets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
-export( TARGETS iso_week NAMESPACE date:: FILE isoWeekConfig.cmake )
+export( TARGETS iso_week NAMESPACE date:: APPEND FILE dateTargets.cmake )
+
 if( BUILD_TZ_LIB )
     install( TARGETS tz
-        EXPORT dateConfig
+        EXPORT dateTargets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
-    export( TARGETS tz NAMESPACE date:: APPEND FILE dateConfig.cmake )
+    export( TARGETS tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
 endif( )
 
 if( WIN32 AND NOT CYGWIN)
@@ -177,9 +178,15 @@ if( WIN32 AND NOT CYGWIN)
 else( )
     set( CONFIG_LOC "${CMAKE_INSTALL_LIBDIR}/cmake/date" )
 endif( )
-install( EXPORT dateConfig
+install( EXPORT dateTargets
   NAMESPACE date::
   DESTINATION ${CONFIG_LOC} )
+
+configure_file(cmake/dateConfig.cmake.in dateConfig.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dateConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/dateConfigVersion.cmake"
+        DESTINATION ${CONFIG_LOC}
+        )
 
 #[===================================================================[
    testing
