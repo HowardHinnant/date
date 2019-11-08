@@ -2720,9 +2720,9 @@ init_tzdb()
 
 #else  // !USE_OS_TZDB
 
-// link
+// time_zone_link
 
-link::link(const std::string& s)
+time_zone_link::time_zone_link(const std::string& s)
 {
     using namespace date;
     std::istringstream in(s);
@@ -2732,7 +2732,7 @@ link::link(const std::string& s)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const link& x)
+operator<<(std::ostream& os, const time_zone_link& x)
 {
     using namespace date;
     detail::save_ostream<char> _(os);
@@ -3438,7 +3438,7 @@ init_tzdb()
                 }
                 else if (word == "Link")
                 {
-                    db->links.push_back(link(line));
+                    db->links.push_back(time_zone_link(line));
                     continue_zone = false;
                 }
                 else if (word == "Leap")
@@ -3521,9 +3521,9 @@ tzdb::locate_zone(const std::string& tz_name) const
 #if !USE_OS_TZDB
         auto li = std::lower_bound(links.begin(), links.end(), tz_name,
 #if HAS_STRING_VIEW
-        [](const link& z, const std::string_view& nm)
+        [](const time_zone_link& z, const std::string_view& nm)
 #else
-        [](const link& z, const std::string& nm)
+        [](const time_zone_link& z, const std::string& nm)
 #endif
         {
             return z.name() < nm;

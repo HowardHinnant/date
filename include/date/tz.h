@@ -964,27 +964,29 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
 
 #if !USE_OS_TZDB
 
-class link
+class time_zone_link
 {
 private:
     std::string name_;
     std::string target_;
 public:
-    DATE_API explicit link(const std::string& s);
+    DATE_API explicit time_zone_link(const std::string& s);
 
     const std::string& name() const {return name_;}
     const std::string& target() const {return target_;}
 
-    friend bool operator==(const link& x, const link& y) {return x.name_ == y.name_;}
-    friend bool operator< (const link& x, const link& y) {return x.name_ < y.name_;}
+    friend bool operator==(const time_zone_link& x, const time_zone_link& y) {return x.name_ == y.name_;}
+    friend bool operator< (const time_zone_link& x, const time_zone_link& y) {return x.name_ < y.name_;}
 
-    friend DATE_API std::ostream& operator<<(std::ostream& os, const link& x);
+    friend DATE_API std::ostream& operator<<(std::ostream& os, const time_zone_link& x);
 };
 
-inline bool operator!=(const link& x, const link& y) {return !(x == y);}
-inline bool operator> (const link& x, const link& y) {return   y < x;}
-inline bool operator<=(const link& x, const link& y) {return !(y < x);}
-inline bool operator>=(const link& x, const link& y) {return !(x < y);}
+using link = time_zone_link;
+
+inline bool operator!=(const time_zone_link& x, const time_zone_link& y) {return !(x == y);}
+inline bool operator> (const time_zone_link& x, const time_zone_link& y) {return   y < x;}
+inline bool operator<=(const time_zone_link& x, const time_zone_link& y) {return !(y < x);}
+inline bool operator>=(const time_zone_link& x, const time_zone_link& y) {return !(x < y);}
 
 #endif  // !USE_OS_TZDB
 
@@ -1155,16 +1157,16 @@ struct timezone_mapping
 
 struct tzdb
 {
-    std::string               version = "unknown";
-    std::vector<time_zone>    zones;
+    std::string                 version = "unknown";
+    std::vector<time_zone>      zones;
 #if !USE_OS_TZDB
-    std::vector<link>         links;
+    std::vector<time_zone_link> links;
 #endif
 #if !MISSING_LEAP_SECONDS
-    std::vector<leap_second>  leap_seconds;
+    std::vector<leap_second>    leap_seconds;
 #endif
 #if !USE_OS_TZDB
-    std::vector<detail::Rule> rules;
+    std::vector<detail::Rule>   rules;
 #endif
 #ifdef _WIN32
     std::vector<detail::timezone_mapping> mappings;
