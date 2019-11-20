@@ -158,6 +158,17 @@ namespace date
 #  undef sun
 #endif
 
+// Work around for a NVCC compiler bug which causes it to fail
+// to compile std::ratio_{multiply,divide} when used directly
+// in the std::chrono::duration template instantiations below
+namespace detail {
+template <typename R1, typename R2>
+using ratio_multiply = decltype(std::ratio_multiply<R1, R2>{});
+
+template <typename R1, typename R2>
+using ratio_divide = decltype(std::ratio_divide<R1, R2>{});
+}  // namespace detail
+
 //-----------+
 // Interface |
 //-----------+
@@ -165,16 +176,16 @@ namespace date
 // durations
 
 using days = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period>::type>;
+    <int, detail::ratio_multiply<std::ratio<24>, std::chrono::hours::period>>;
 
 using weeks = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<7>, days::period>::type>;
+    <int, detail::ratio_multiply<std::ratio<7>, days::period>>;
 
 using years = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<146097, 400>, days::period>::type>;
+    <int, detail::ratio_multiply<std::ratio<146097, 400>, days::period>>;
 
 using months = std::chrono::duration
-    <int, std::ratio_divide<years::period, std::ratio<12>>::type>;
+    <int, detail::ratio_divide<years::period, std::ratio<12>>>;
 
 // time_point
 
