@@ -72,8 +72,8 @@ main()
     using namespace date;
     using namespace std::chrono;
 
-    using decades = duration<int, std::ratio_multiply<std::ratio<10>, years::period>>;
-    using decamonths = duration<int, std::ratio_multiply<std::ratio<10>, months::period>>;
+    using decades = duration<int, date::detail::ratio_multiply<std::ratio<10>, years::period>>;
+    using decamonths = duration<int, date::detail::ratio_multiply<std::ratio<10>, months::period>>;
 
     constexpr months one_month{1};
     constexpr years one_year{1};

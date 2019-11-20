@@ -39,10 +39,10 @@ using days = date::days;
 using weeks = date::weeks;
 
 using years = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<10631, 30>, days::period>>;
+    <int, date::detail::ratio_multiply<std::ratio<10631, 30>, days::period>>;
 
 using months = std::chrono::duration
-    <int, std::ratio_divide<years::period, std::ratio<12>>>;
+    <int, date::detail::ratio_divide<years::period, std::ratio<12>>>;
 
 // time_point
 

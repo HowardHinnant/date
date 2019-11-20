@@ -27,12 +27,12 @@
 #include <type_traits>
 
 using fortnights = std::chrono::duration<date::weeks::rep,
-                                         std::ratio_multiply<std::ratio<2>,
-                                                             date::weeks::period>>;
+                                         date::detail::ratio_multiply<std::ratio<2>,
+                                                                      date::weeks::period>>;
 
 using microfortnights = std::chrono::duration<std::int64_t,
-                                              std::ratio_multiply<fortnights::period,
-                                                                  std::micro>>;
+                                              date::detail::ratio_multiply<fortnights::period,
+                                                                           std::micro>>;
 
 int
 main()
