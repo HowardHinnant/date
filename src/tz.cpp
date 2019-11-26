@@ -2836,13 +2836,15 @@ namespace
 static
 bool
 download_to_file(const std::string& url, const std::string& local_filename,
-                 download_file_options opts)
+                 download_file_options opts, char* error_buffer)
 {
     auto curl = curl_init();
     if (!curl)
         return false;
     curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, false);
+    if (error_buffer)
+       curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, error_buffer);
     curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
                                       void* userp) -> std::size_t
     {
@@ -3262,7 +3264,7 @@ extract_gz_file(const std::string&, const std::string& gz_file, const std::strin
 #  endif // !_WIN32
 
 bool
-remote_download(const std::string& version)
+remote_download(const std::string& version, char* error_buffer)
 {
     assert(!version.empty());
 
@@ -3281,7 +3283,7 @@ remote_download(const std::string& version)
     auto url = "https://data.iana.org/time-zones/releases/tzdata" + version +
                ".tar.gz";
     bool result = download_to_file(url, get_download_gz_file(version),
-                                   download_file_options::binary);
+                                   download_file_options::binary, error_buffer);
 #  ifdef _WIN32
     if (result)
     {
@@ -3289,7 +3291,7 @@ remote_download(const std::string& version)
         result = download_to_file(
 			"https://raw.githubusercontent.com/unicode-org/cldr/master/"
 			"common/supplemental/windowsZones.xml",
-            mapping_file, download_file_options::text);
+            mapping_file, download_file_options::text, error_buffer);
     }
 #  endif  // _WIN32
     return result;
