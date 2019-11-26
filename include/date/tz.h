@@ -1314,7 +1314,8 @@ DATE_API void        set_install(const std::string& install);
 #if HAS_REMOTE_API
 
 DATE_API std::string remote_version();
-DATE_API bool        remote_download(const std::string& version);
+// if provided error_buffer size should be at least CURL_ERROR_SIZE
+DATE_API bool        remote_download(const std::string& version, char* error_buffer = nullptr);
 DATE_API bool        remote_install(const std::string& version);
 
 #endif
