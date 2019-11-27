@@ -1683,6 +1683,7 @@ make_zoned(const sys_time<Duration>& tp)
 
 template <class TimeZonePtr
 #if !defined(_MSC_VER) || (_MSC_VER > 1916)
+#if !defined(__INTEL_COMPILER) || (__INTEL_COMPILER > 1600)
           , class = typename std::enable_if
           <
             std::is_class
@@ -1693,6 +1694,7 @@ template <class TimeZonePtr
                 >::type
             >{}
           >::type
+#endif
 #endif
          >
 inline
@@ -1711,10 +1713,12 @@ make_zoned(const std::string& name)
 
 template <class Duration, class TimeZonePtr
 #if !defined(_MSC_VER) || (_MSC_VER > 1916)
+#if !defined(__INTEL_COMPILER) || (__INTEL_COMPILER > 1600)
           , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
 #endif
          >
 inline
@@ -1727,10 +1731,12 @@ make_zoned(TimeZonePtr zone, const local_time<Duration>& tp)
 
 template <class Duration, class TimeZonePtr
 #if !defined(_MSC_VER) || (_MSC_VER > 1916)
+#if !defined(__INTEL_COMPILER) || (__INTEL_COMPILER > 1600)
           , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
 #endif
          >
 inline
@@ -1793,10 +1799,12 @@ make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt,
 
 template <class Duration, class TimeZonePtr
 #if !defined(_MSC_VER) || (_MSC_VER > 1916)
+#if !defined(__INTEL_COMPILER) || (__INTEL_COMPILER > 1600)
           , class = typename std::enable_if
           <
             std::is_class<typename std::decay<decltype(*std::declval<TimeZonePtr&>())>::type>{}
           >::type
+#endif
 #endif
          >
 inline
