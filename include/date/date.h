@@ -1367,7 +1367,7 @@ trunc(const std::chrono::time_point<Clock, FromDuration>& tp)
 
 // day
 
-CONSTCD11 inline day::day(unsigned d) NOEXCEPT : d_(static_cast<unsigned char>(d)) {}
+CONSTCD11 inline day::day(unsigned d) NOEXCEPT : d_(static_cast<decltype(d_)>(d)) {}
 CONSTCD14 inline day& day::operator++() NOEXCEPT {++d_; return *this;}
 CONSTCD14 inline day day::operator++(int) NOEXCEPT {auto tmp(*this); ++(*this); return tmp;}
 CONSTCD14 inline day& day::operator--() NOEXCEPT {--d_; return *this;}
