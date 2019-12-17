@@ -2288,6 +2288,7 @@ template <>
 struct clock_time_conversion<std::chrono::system_clock, std::chrono::system_clock>
 {
     template <class Duration>
+    CONSTCD14
     sys_time<Duration>
     operator()(const sys_time<Duration>& st) const
     {
@@ -2299,6 +2300,7 @@ template <>
 struct clock_time_conversion<utc_clock, utc_clock>
 {
     template <class Duration>
+    CONSTCD14
     utc_time<Duration>
     operator()(const utc_time<Duration>& ut) const
     {
@@ -2310,6 +2312,7 @@ template<>
 struct clock_time_conversion<local_t, local_t>
 {
     template <class Duration>
+    CONSTCD14
     local_time<Duration>
     operator()(const local_time<Duration>& lt) const
     {
@@ -2343,6 +2346,7 @@ template<>
 struct clock_time_conversion<local_t, std::chrono::system_clock>
 {
     template <class Duration>
+    CONSTCD14
     local_time<Duration>
     operator()(const sys_time<Duration>& st) const
     {
@@ -2354,6 +2358,7 @@ template<>
 struct clock_time_conversion<std::chrono::system_clock, local_t>
 {
     template <class Duration>
+    CONSTCD14
     sys_time<Duration>
     operator()(const local_time<Duration>& lt) const
     {
@@ -2387,6 +2392,7 @@ template<typename Clock>
 struct clock_time_conversion<Clock, Clock>
 {
     template <class Duration>
+    CONSTCD14
     std::chrono::time_point<Clock, Duration>
     operator()(const std::chrono::time_point<Clock, Duration>& tp) const
     {
@@ -2533,6 +2539,7 @@ template <class SrcClock>
 struct clock_time_conversion<std::chrono::system_clock, SrcClock>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_to_sys<SrcClock, Duration>::type
     operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
     {
@@ -2544,6 +2551,7 @@ template <class DstClock>
 struct clock_time_conversion<DstClock, std::chrono::system_clock>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_from_sys<DstClock, Duration>::type
     operator()(const sys_time<Duration>& st) const
     {
@@ -2555,6 +2563,7 @@ template <class SrcClock>
 struct clock_time_conversion<utc_clock, SrcClock>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_to_utc<SrcClock, Duration>::type
     operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
     {
@@ -2566,6 +2575,7 @@ template <class DstClock>
 struct clock_time_conversion<DstClock, utc_clock>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_from_utc<DstClock, Duration>::type
     operator()(const utc_time<Duration>& ut) const
     {
@@ -2577,6 +2587,7 @@ template<typename SrcClock>
 struct clock_time_conversion<local_t, SrcClock>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_to_local<SrcClock, Duration>::type
     operator()(const std::chrono::time_point<SrcClock, Duration>& tp) const
     {
@@ -2588,6 +2599,7 @@ template<typename DstClock>
 struct clock_time_conversion<DstClock, local_t>
 {
     template <class Duration>
+    CONSTCD14
     typename ctc_detail::return_from_local<DstClock, Duration>::type
     operator()(const local_time<Duration>& lt) const
     {
@@ -2603,6 +2615,7 @@ template <class Clock, class Duration>
 using std::chrono::system_clock;
 
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 conv_clock(const time_point<SrcClock, Duration>& t)
     -> decltype(std::declval<clock_time_conversion<DstClock, SrcClock>>()(t))
@@ -2612,6 +2625,7 @@ conv_clock(const time_point<SrcClock, Duration>& t)
 
 //direct trait conversion, 1st candidate
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, const time_point<SrcClock, Duration>*)
     -> decltype(conv_clock<DstClock>(t))
@@ -2621,6 +2635,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, const time_point<SrcClock, Dura
 
 //conversion through sys, 2nd candidate
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, const void*)
     -> decltype(conv_clock<DstClock>(conv_clock<system_clock>(t)))
@@ -2630,6 +2645,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, const void*)
 
 //conversion through utc, 2nd candidate
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, const void*)
     -> decltype(0,  // MSVC_WORKAROUND
@@ -2640,6 +2656,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, const void*)
 
 //conversion through sys and utc, 3rd candidate
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, ...)
     -> decltype(conv_clock<DstClock>(conv_clock<utc_clock>(conv_clock<system_clock>(t))))
@@ -2649,6 +2666,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, ...)
 
 //conversion through utc and sys, 3rd candidate
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 cc_impl(const time_point<SrcClock, Duration>& t, ...)
     -> decltype(0,  // MSVC_WORKAROUND
@@ -2660,6 +2678,7 @@ cc_impl(const time_point<SrcClock, Duration>& t, ...)
 }  // namespace clock_cast_detail
 
 template <class DstClock, class SrcClock, class Duration>
+CONSTCD14
 auto
 clock_cast(const std::chrono::time_point<SrcClock, Duration>& tp)
     -> decltype(clock_cast_detail::cc_impl<DstClock>(tp, &tp))
