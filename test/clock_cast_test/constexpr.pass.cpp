@@ -62,6 +62,14 @@ int main()
   using const_days = time_point<const_clock, days>;
 
   CONSTCD11 sys_days sys { days { 1024 } };
+  static_assert(sys.time_since_epoch().count() == 1024);
+
   CONSTCD14 const_days c {clock_cast<const_clock>(sys)};
+  static_assert(c.time_since_epoch().count() == 24);
+
   CONSTCD14 sys_days sys2 {clock_cast<system_clock>(c)};
+  static_assert(sys2.time_since_epoch().count() == 1024);
+
+  CONSTCD14 sys_days sys3 { clock_cast<system_clock>(const_days(days(48))) };
+  static_assert(sys3.time_since_epoch().count() == 1048);
 }
