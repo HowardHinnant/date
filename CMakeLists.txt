@@ -138,7 +138,7 @@ write_basic_package_version_file( "${version_config}"
 install( TARGETS date
     EXPORT dateConfig
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
-export( TARGETS date NAMESPACE date:: FILE dateConfig.cmake )
+export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
 if (CMAKE_VERSION VERSION_LESS 3.15)
     install(
         FILES include/date/date.h
@@ -152,7 +152,7 @@ if( BUILD_TZ_LIB )
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
-    export( TARGETS tz NAMESPACE date:: APPEND FILE dateConfig.cmake )
+    export( TARGETS tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
 endif( )
 
 if( WIN32 AND NOT CYGWIN)
@@ -161,8 +161,12 @@ else( )
     set( CONFIG_LOC "${CMAKE_INSTALL_LIBDIR}/cmake/date" )
 endif( )
 install( EXPORT dateConfig
+  FILE dateTargets.cmake
   NAMESPACE date::
   DESTINATION ${CONFIG_LOC} )
+install (
+  FILES cmake/dateConfig.cmake "${version_config}"
+  DESTINATION ${CONFIG_LOC})
 
 #[===================================================================[
    testing
