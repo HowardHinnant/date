@@ -15,9 +15,7 @@
 
 #]===================================================================]
 
-cmake_minimum_required( VERSION 3.1.0 )
-
-cmake_policy( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.7 )
 
 project( date VERSION 2.4.1 )
 
@@ -71,8 +69,10 @@ target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
 )
-# public headers will get installed:
-set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+    # public headers will get installed:
+    set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
+endif ()
 target_compile_definitions( date INTERFACE
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
     ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
@@ -138,7 +138,12 @@ write_basic_package_version_file( "${version_config}"
 install( TARGETS date
     EXPORT dateConfig
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
-export( TARGETS date NAMESPACE date:: FILE dateConfig.cmake )
+export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
+if (CMAKE_VERSION VERSION_LESS 3.15)
+    install(
+        FILES include/date/date.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+endif ()
 
 if( BUILD_TZ_LIB )
     install( TARGETS tz
@@ -147,7 +152,7 @@ if( BUILD_TZ_LIB )
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
-    export( TARGETS tz NAMESPACE date:: APPEND FILE dateConfig.cmake )
+    export( TARGETS tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
 endif( )
 
 if( WIN32 AND NOT CYGWIN)
@@ -156,8 +161,12 @@ else( )
     set( CONFIG_LOC "${CMAKE_INSTALL_LIBDIR}/cmake/date" )
 endif( )
 install( EXPORT dateConfig
+  FILE dateTargets.cmake
   NAMESPACE date::
   DESTINATION ${CONFIG_LOC} )
+install (
+  FILES cmake/dateConfig.cmake "${version_config}"
+  DESTINATION ${CONFIG_LOC})
 
 #[===================================================================[
    testing
