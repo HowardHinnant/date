@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2018-06-03<br/>
+2019-12-31<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -1332,8 +1332,8 @@ limit(const std::string&amp; msg)
     using namespace std;
     using namespace std::chrono;
     using dsecs = sys_time&lt;duration&lt;double&gt;&gt;;
-    constexpr auto ymin = sys_days{year::min()}/January/1};
-    constexpr auto ymax = sys_days{year::max()}/12/last};
+    constexpr auto ymin = sys_days{year::min()/January/1};
+    constexpr auto ymax = sys_days{year::max()/12/last};
     constexpr auto dmin = sys_time&lt;D&gt;::min();
     constexpr auto dmax = sys_time&lt;D&gt;::max();
     cout &lt;&lt; left &lt;&lt; setw(24) &lt;&lt; msg &lt;&lt; " : [";
