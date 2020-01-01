@@ -1719,7 +1719,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
     os.fill('0');
     os.flags(std::ios::dec | std::ios::internal);
     os.width(4 + (y < year{0}));
-	os.imbue(std::locale::classic());
+    os.imbue(std::locale::classic());
     os << static_cast<int>(y);
     if (!y.ok())
         os << " is not a valid year";
@@ -2845,6 +2845,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
+    os.imbue(std::locale::classic());
     os << ymd.year() << '-';
     os.width(2);
     os << static_cast<unsigned>(ymd.month()) << '-';
@@ -3785,6 +3786,8 @@ public:
 #else
             os << '.';
 #endif
+            date::detail::save_ostream<CharT, Traits> _s(os);
+            os.imbue(std::locale::classic());
             os.width(width);
             os << sub_s_.count();
         }
@@ -5074,6 +5077,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.setstate(std::ios::failbit);
                     auto const& ymd = fds.ymd;
                     save_ostream<CharT, Traits> _(os);
+                    os.imbue(std::locale::classic());
                     os.fill('0');
                     os.flags(std::ios::dec | std::ios::right);
                     os.width(4);
@@ -5748,6 +5752,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (modified == CharT{})
 #endif
                     {
+                        save_ostream<CharT, Traits> _(os);
+                        os.imbue(std::locale::classic());
                         os << y;
                     }
 #if !ONLY_C_LOCALE
