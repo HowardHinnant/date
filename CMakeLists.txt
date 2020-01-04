@@ -98,7 +98,7 @@ if( BUILD_TZ_LIB )
         $<INSTALL_INTERFACE:include> )
     target_compile_definitions( tz
         PRIVATE
-            USE_AUTOLOAD=$<IF:$<BOOL:${USE_SYSTEM_TZ_DB}>,0,1>
+            AUTO_DOWNLOAD=$<IF:$<BOOL:${USE_SYSTEM_TZ_DB}>,0,1>
             HAS_REMOTE_API=$<IF:$<BOOL:${USE_SYSTEM_TZ_DB}>,0,1>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_BUILD_DLL=1>
             $<$<BOOL:${USE_TZ_DB_IN_DOT}>:INSTALL=.>
