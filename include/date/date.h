@@ -1564,7 +1564,7 @@ inline
 month
 operator+(const month& x, const months& y) NOEXCEPT
 {
-    auto const mu = static_cast<long long>(static_cast<unsigned>(x)) + (y.count() - 1);
+    auto const mu = static_cast<long long>(static_cast<unsigned>(x)) + ((int64_t)y.count() - 1);
     auto const yr = (mu >= 0 ? mu : mu-11) / 12;
     return month{static_cast<unsigned>(mu - yr * 12 + 1)};
 }
