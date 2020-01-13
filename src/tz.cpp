@@ -1502,10 +1502,9 @@ find_next_rule(const Rule* first_rule, const Rule* last_rule, const Rule* r, dat
 //     r->starting_year() <= y && y <= r->ending_year()
 static
 std::pair<const Rule*, date::year>
-find_next_rule(const Rule* r, date::year y)
+find_next_rule(const Rule* r, date::year y, const std::vector<date::detail::Rule>& rules)
 {
     using namespace date;
-    auto const& rules = get_tzdb().rules;
     if (y == r->ending_year())
     {
         if (r == &rules.back() || r->name() != r[1].name())
@@ -1620,14 +1619,23 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
 {
     using namespace std::chrono;
     using namespace date;
+    auto const& rules = get_tzdb().rules;
     auto r = first_rule.first;
     auto ry = first_rule.second;
     sys_info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
                seconds{0}, initial_save, initial_abbrev};
+    auto tx_base = mdt.to_sys(y, seconds(0), seconds(0));
+    auto tx_zone = mdt.zone();
     while (r != nullptr)
     {
         auto tr = r->mdt().to_sys(ry, offset, x.save);
-        auto tx = mdt.to_sys(y, offset, x.save);
+
+        auto tx = tx_base;
+        if (tx_zone == tz::standard)
+            tx -= offset;
+        else if (tx_zone == tz::local)
+            tx -= offset + x.save;
+
         // Find last rule where tx >= tr
         if (tx <= tr || (r == last_rule.first && ry == last_rule.second))
         {
@@ -1650,7 +1658,7 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
             x.abbrev = r->abbrev();
             if (!(r == last_rule.first && ry == last_rule.second))
             {
-                std::tie(r, ry) = find_next_rule(r, ry);  // can't return nullptr for r
+                std::tie(r, ry) = find_next_rule(r, ry, rules);  // can't return nullptr for r
                 assert(r != nullptr);
                 x.end = r->mdt().to_sys(ry, offset, x.save);
             }
@@ -1659,7 +1667,7 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
             break;
         }
         x.save = r->save();
-        std::tie(r, ry) = find_next_rule(r, ry);  // Can't return nullptr for r
+        std::tie(r, ry) = find_next_rule(r, ry, rules);  // Can't return nullptr for r
         assert(r != nullptr);
     }
     return x;
