@@ -27,6 +27,7 @@ get_directory_property( has_parent PARENT_DIRECTORY )
 set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
+option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
@@ -48,6 +49,7 @@ function( print_option OPT )
 endfunction( )
 
 print_option( USE_SYSTEM_TZ_DB )
+print_option( MANUAL_TZ_DB )
 print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_SHARED_LIBS  )
 print_option( ENABLE_DATE_TESTING )
@@ -98,12 +100,12 @@ if( BUILD_TZ_LIB )
         $<INSTALL_INTERFACE:include> )
     target_compile_definitions( tz
         PRIVATE
-            AUTO_DOWNLOAD=$<IF:$<BOOL:${USE_SYSTEM_TZ_DB}>,0,1>
-            HAS_REMOTE_API=$<IF:$<BOOL:${USE_SYSTEM_TZ_DB}>,0,1>
+            AUTO_DOWNLOAD=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
+            HAS_REMOTE_API=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_BUILD_DLL=1>
             $<$<BOOL:${USE_TZ_DB_IN_DOT}>:INSTALL=.>
         PUBLIC
-            USE_OS_TZDB=$<IF:$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>>,1,0>
+            USE_OS_TZDB=$<IF:$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${MANUAL_TZ_DB}>>>,1,0>
         INTERFACE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_USE_DLL=1> )
     set(TZ_HEADERS include/date/tz.h)
@@ -119,7 +121,7 @@ if( BUILD_TZ_LIB )
         find_package( Threads )
         target_link_libraries( tz PUBLIC Threads::Threads )
     endif( )
-    if( NOT USE_SYSTEM_TZ_DB )
+    if( NOT USE_SYSTEM_TZ_DB AND NOT MANUAL_TZ_DB )
         find_package( CURL REQUIRED )
         target_link_libraries( tz PRIVATE CURL::libcurl )
     endif( )
