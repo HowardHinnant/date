@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_BINDIR@
+libdir=@CMAKE_INSTALL_LIB@
+includedir=@CMAKE_INSTALL_INCLUDE@
+
+Name: date
+Description: A date and time library based on the C++11/14/17 <chrono> header
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -ltz
+Cflags: -I${includedir} @TZ_COMPILE_DEFINITIONS@
