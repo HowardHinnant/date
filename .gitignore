@@ -192,3 +192,4 @@ nbproject/*
 *.cd
 a.out
 cmake-build-debug/*
+.ccls-cache/*
