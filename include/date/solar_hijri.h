@@ -541,7 +541,7 @@ public:
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-  static days days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT;
+  static days CONSTCD14 days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT;
   static CONSTCD14 year_month_day from_days(days dp) NOEXCEPT;
   CONSTCD14 days to_days() const NOEXCEPT;
 };
@@ -2295,6 +2295,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     return os;
 }
 
+CONSTCD14
 inline
 days
 year_month_day::days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT
