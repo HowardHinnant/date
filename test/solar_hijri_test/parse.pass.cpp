@@ -37,11 +37,11 @@ test_d() {
   std::cout << ymd << ' ' << time << '\n';
 }
 
-void
-test_e() {
-  auto today = solar_hijri::year_month_weekday{floor<solar_hijri::days>(std::chrono::system_clock::now())};
-  std::cout << today << '\n';
-}
+// void
+// test_e() {
+//   auto today = solar_hijri::year_month_weekday{floor<solar_hijri::days>(std::chrono::system_clock::now())};
+//   std::cout << today << '\n';
+// }
 
 void
 test_f() {
@@ -92,7 +92,7 @@ main()
   test_b();
   test_c();
   test_d();
-  test_e();
+  // test_e();
   test_f();
   test_g();
 }
