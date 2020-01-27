@@ -2316,7 +2316,7 @@ year_month_day::from_days(days dp) NOEXCEPT
              "This algorithm has not been ported to a 16 bit signed integer");
 
     auto const z = dp.count() + unix_time_shift;
-    auto const delta = z - epoch;
+    auto const delta = static_cast<int>(z - epoch);
     auto const era = (delta >= 0 ? delta : delta - (days_in_era-1)) / days_in_era;
 
     auto const fdoe = epoch + era * days_in_era;
