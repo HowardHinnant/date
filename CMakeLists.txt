@@ -30,7 +30,7 @@ option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
-option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
+option( ENABLE_DATE_TESTING "Enable unit tests" ON )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
@@ -54,6 +54,7 @@ print_option( USE_TZ_DB_IN_DOT )
 print_option( BUILD_SHARED_LIBS  )
 print_option( ENABLE_DATE_TESTING )
 print_option( DISABLE_STRING_VIEW )
+print_option( BUILD_TZ_LIB )
 
 #[===================================================================[
    date (header only) library
@@ -67,6 +68,7 @@ target_include_directories( date INTERFACE
 target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/date.h
     # the rest of these are not currently part of the public interface of the library:
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/solar_hijri.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/islamic.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
