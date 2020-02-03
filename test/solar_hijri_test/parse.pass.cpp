@@ -37,11 +37,12 @@ test_d() {
   std::cout << ymd << ' ' << time << '\n';
 }
 
-// void
-// test_e() {
-//   auto today = solar_hijri::year_month_weekday{floor<solar_hijri::days>(std::chrono::system_clock::now())};
-//   std::cout << today << '\n';
-// }
+void
+test_e() {
+  auto today = solar_hijri::year_month_day{date::floor<solar_hijri::days>(std::chrono::system_clock::now())};
+  std::cout << today << '\n';
+  std::cout << solar_hijri::year_month_weekday{today}.weekday() << std::endl;
+}
 
 void
 test_f() {
@@ -54,6 +55,8 @@ test_g() {
   using namespace date;
   using namespace date::literals;
   solar_hijri::year_month_day ymds[] = {
+    solar_hijri::year_month_day{1583_y/November/21},
+    solar_hijri::year_month_day{1583_y/November/22},
     solar_hijri::year_month_day{1583_y/December/6},
     solar_hijri::year_month_day{1591_y/December/26},
     solar_hijri::year_month_day{1616_y/October/20},
@@ -74,6 +77,7 @@ test_g() {
     solar_hijri::year_month_day{1850_y/September/9},
     solar_hijri::year_month_day{1865_y/November/4},
     solar_hijri::year_month_day{1902_y/December/21},
+    solar_hijri::year_month_day{1926_y/March/21},
     solar_hijri::year_month_day{1926_y/March/22},
     solar_hijri::year_month_day{1957_y/June/1},
     solar_hijri::year_month_day{1977_y/March/7},
@@ -82,7 +86,7 @@ test_g() {
   };
 
   for (auto ymd: ymds)
-    std::cout << ymd << ' ' << ymd.year().is_leap() << ' ' << ymd.month() << ' ' << solar_hijri::year_month_weekday{ymd} << "\t\t" << date::year_month_weekday{ymd} << std::endl;
+    std::cout << ymd << ' ' << ymd.year().is_leap() << ' ' << ymd.month() << ' ' << solar_hijri::year_month_weekday{ymd} << "\t\t" << date::year_month_day{ymd} << std::endl;
 }
 
 int
@@ -92,7 +96,7 @@ main()
   test_b();
   test_c();
   test_d();
-  // test_e();
+  test_e();
   test_f();
   test_g();
 }
