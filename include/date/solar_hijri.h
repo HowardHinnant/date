@@ -1064,8 +1064,7 @@ inline
 bool
 year::is_leap() const NOEXCEPT
 {
-  auto const tempy = static_cast<int>(y_);
-  auto const y = tempy < 0 ? tempy + 1 : tempy;
+  auto const y = static_cast<int>(y_);
   auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);
   auto const yoe = static_cast<unsigned>(y - 475 - era * years_in_era);
 
@@ -2190,8 +2189,7 @@ year_month_day::to_days() const NOEXCEPT
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
 
-    auto const tempy = static_cast<int>(y_);
-    auto const y = tempy < 0 ? tempy + 1 : tempy;
+    auto const y = static_cast<int>(y_);
     auto const m = static_cast<unsigned>(m_);
     auto const d = static_cast<unsigned>(d_);
     auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);

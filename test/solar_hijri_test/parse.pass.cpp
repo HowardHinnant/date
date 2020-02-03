@@ -15,7 +15,8 @@ test_a() {
 void
 test_b() {
   using namespace solar_hijri::literals;
-  std::cout << date::year_month_day{1398_y/bah/7} << '\n';
+  std::cout << date::year_month_day{475_y/far/1} << '\n';
+  std::cout << date::year_month_weekday{475_y/far/1} << '\n';
 }
 
 void
