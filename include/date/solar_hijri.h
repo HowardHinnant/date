@@ -181,6 +181,7 @@ class day
     unsigned char d_;
 
 public:
+    day() = default;
     explicit CONSTCD11 day(unsigned d) NOEXCEPT;
 
     CONSTCD14 day& operator++()    NOEXCEPT;
@@ -218,6 +219,7 @@ class month
     unsigned char m_;
 
 public:
+    month() = default;
     explicit CONSTCD11 month(unsigned m) NOEXCEPT;
 
     CONSTCD14 month& operator++()    NOEXCEPT;
@@ -255,6 +257,7 @@ class year
     short y_;
 
 public:
+    year() = default;
     explicit CONSTCD11 year(int y) NOEXCEPT;
 
     CONSTCD14 year& operator++()    NOEXCEPT;
@@ -339,6 +342,7 @@ class weekday_indexed
     unsigned char index_ : 4;
 
 public:
+    weekday_indexed() = default;
     CONSTCD11 weekday_indexed(const solar_hijri::weekday& wd, unsigned index) NOEXCEPT;
 
     CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
@@ -448,6 +452,7 @@ class month_day_last
     solar_hijri::month m_;
 
 public:
+    month_day_last() = default;
     CONSTCD11 explicit month_day_last(const solar_hijri::month& m) NOEXCEPT;
 
     CONSTCD11 solar_hijri::month month() const NOEXCEPT;
@@ -472,6 +477,7 @@ class month_weekday
     solar_hijri::month           m_;
     solar_hijri::weekday_indexed wdi_;
 public:
+    month_weekday() = default;
     CONSTCD11 month_weekday(const solar_hijri::month& m,
                             const solar_hijri::weekday_indexed& wdi) NOEXCEPT;
 
@@ -523,6 +529,7 @@ class year_month_day
     solar_hijri::day   d_;
 
 public:
+    year_month_day() = default;
     CONSTCD11 year_month_day(const solar_hijri::year& y, const solar_hijri::month& m,
                              const solar_hijri::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
@@ -544,7 +551,7 @@ public:
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-  static days CONSTCD14 days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT;
+  // static days CONSTCD14 days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT;
   static CONSTCD14 year_month_day from_days(days dp) NOEXCEPT;
   CONSTCD14 days to_days() const NOEXCEPT;
 };
@@ -575,6 +582,7 @@ class year_month_day_last
     solar_hijri::month_day_last mdl_;
 
 public:
+    year_month_day_last() = default;
     CONSTCD11 year_month_day_last(const solar_hijri::year& y,
                                   const solar_hijri::month_day_last& mdl) NOEXCEPT;
 
@@ -1068,6 +1076,7 @@ year::is_leap() const NOEXCEPT
   auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);
   auto const yoe = static_cast<unsigned>(y - 475 - era * years_in_era);
 
+  // Reference: https://www.timeanddate.com/date/iran-leap-year.html
   // 29 + 33 + 33 + 33 = 128
   // 22 * 128 + 4
   auto const yoc = (yoe < (22 * 128)) ? ((yoe%128) < 29 ? yoe%128 : (yoe%128 - 29)%33) : yoe - (22 * 128) + 33;
@@ -2292,15 +2301,15 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     return os;
 }
 
-CONSTCD14
-inline
-days
-year_month_day::days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT
-{
-  CONSTDATA unsigned d[] =
-      {31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29};
-  return days{static_cast<int>(m != esf || !y.is_leap() ? d[static_cast<unsigned>(m)-1] : 30)};
-}
+// CONSTCD14
+// inline
+// days
+// year_month_day::days_in_month(solar_hijri::year y, solar_hijri::month m) NOEXCEPT
+// {
+//   CONSTDATA unsigned d[] =
+//       {31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29};
+//   return days{static_cast<int>(m != esf || !y.is_leap() ? d[static_cast<unsigned>(m)-1] : 30)};
+// }
 
 CONSTCD14
 inline
