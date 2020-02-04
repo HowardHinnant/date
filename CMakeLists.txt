@@ -32,7 +32,7 @@ option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF 
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" ON )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
-option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
+option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" ON )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
 
 if( ENABLE_DATE_TESTING AND NOT BUILD_TZ_LIB )

@@ -1985,8 +1985,8 @@ year_month_day_last::day() const NOEXCEPT
 {
     CONSTDATA solar_hijri::day d[] =
         {31_d, 31_d, 31_d, 31_d, 31_d, 31_d, 30_d, 30_d, 30_d, 30_d, 30_d, 29_d};
-    return month() != esf || !y_.is_leap() ?
-               d[static_cast<unsigned>(month())-1] : 30_d;
+    return month() == esf && y_.is_leap() ?
+        30_d : d[static_cast<unsigned>(month())-1];
 }
 
 CONSTCD14
