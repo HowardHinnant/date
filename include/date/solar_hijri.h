@@ -452,7 +452,7 @@ class month_day_last
     solar_hijri::month m_;
 
 public:
-    month_day_last() = default;
+    // month_day_last() = default;
     CONSTCD11 explicit month_day_last(const solar_hijri::month& m) NOEXCEPT;
 
     CONSTCD11 solar_hijri::month month() const NOEXCEPT;
@@ -582,7 +582,7 @@ class year_month_day_last
     solar_hijri::month_day_last mdl_;
 
 public:
-    year_month_day_last() = default;
+    // year_month_day_last() = default;
     CONSTCD11 year_month_day_last(const solar_hijri::year& y,
                                   const solar_hijri::month_day_last& mdl) NOEXCEPT;
 
