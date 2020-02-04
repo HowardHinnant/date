@@ -130,7 +130,7 @@ void
 test_day_point_conversion()
 {
     using namespace solar_hijri;
-    year y   = year{-10000};
+    year y   = year{-2820};
     year end =       30000_y;
     sys_days prev_dp = sys_days(year_month_day{y, far, 1_d}) - days{1};
     weekday   prev_wd = weekday{prev_dp};
