@@ -40,8 +40,8 @@ namespace solar_hijri
 static const auto epoch = static_cast<unsigned>(2121446);
 static const auto days_in_era = static_cast<unsigned>(1029983);
 static const auto years_in_era = static_cast<unsigned>(2820);
-static constexpr auto days_in_year = 365.24219858156028368;
-static constexpr auto leap_threshold = 0.24219858156028368;
+static constexpr auto days_in_year = 365.24219; // 858156028368;
+static constexpr auto leap_threshold = 0.24219; // 858156028368;
 static const auto unix_time_shift = static_cast<unsigned>(2440588);
 
 // durations
@@ -342,7 +342,7 @@ class weekday_indexed
     unsigned char index_ : 4;
 
 public:
-    weekday_indexed() = default;
+    // weekday_indexed() = default;
     CONSTCD11 weekday_indexed(const solar_hijri::weekday& wd, unsigned index) NOEXCEPT;
 
     CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
@@ -477,7 +477,7 @@ class month_weekday
     solar_hijri::month           m_;
     solar_hijri::weekday_indexed wdi_;
 public:
-    month_weekday() = default;
+    // month_weekday() = default;
     CONSTCD11 month_weekday(const solar_hijri::month& m,
                             const solar_hijri::weekday_indexed& wdi) NOEXCEPT;
 
@@ -529,7 +529,7 @@ class year_month_day
     solar_hijri::day   d_;
 
 public:
-    year_month_day() = default;
+    // year_month_day() = default;
     CONSTCD11 year_month_day(const solar_hijri::year& y, const solar_hijri::month& m,
                              const solar_hijri::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
@@ -1072,9 +1072,10 @@ inline
 bool
 year::is_leap() const NOEXCEPT
 {
-  auto const y = static_cast<int>(y_);
-  auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);
-  auto const yoe = static_cast<unsigned>(y - 475 - era * years_in_era);
+  auto const y = static_cast<int>(y_)-475;
+  auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
+  auto const era = static_cast<int>(era_d);
+  auto const yoe = static_cast<unsigned>(y - era * years_in_era);
 
   // Reference: https://www.timeanddate.com/date/iran-leap-year.html
   // 29 + 33 + 33 + 33 = 128
@@ -1202,14 +1203,17 @@ inline
 unsigned char
 weekday::weekday_from_days(int z) NOEXCEPT
 {
-    return static_cast<unsigned char>(static_cast<unsigned>(
-        z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6));
+  auto u = static_cast<unsigned>(z);
+  return static_cast<unsigned char>(z >= -4 ? (u+4) % 7 : u % 7);
+    // return static_cast<unsigned char>(static_cast<unsigned>(
+    //     z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6));
 }
 
 CONSTCD11
 inline
 weekday::weekday(unsigned wd) NOEXCEPT
-    : wd_(static_cast<decltype(wd_)>(wd))
+    : wd_(static_cast<decltype(wd_)>(wd != 7 ? wd : 0))
+    // : wd_(static_cast<decltype(wd_)>(wd))
     {}
 
 CONSTCD11
@@ -2198,16 +2202,46 @@ year_month_day::to_days() const NOEXCEPT
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
 
-    auto const y = static_cast<int>(y_);
+    auto const y = static_cast<int>(y_) - 475;
     auto const m = static_cast<unsigned>(m_);
     auto const d = static_cast<unsigned>(d_);
-    auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);
+    auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
+    auto const era = static_cast<int>(era_d);
     auto const fdoe = static_cast<int>(epoch + era * days_in_era);
-    auto const yoe = static_cast<unsigned>(y - 475 - era * years_in_era);
-    auto const fdoyoe = static_cast<unsigned>(yoe*days_in_year);
+    auto const yoe = static_cast<unsigned>(y - era * years_in_era);
+
+    auto const years_in_first_cycle = static_cast<unsigned>(29);
+    auto const years_in_other_cycles = static_cast<unsigned>(33);
+    auto const years_in_period = static_cast<unsigned>(128);        // 29   + 3*33
+    auto const days_in_first_cycle = static_cast<unsigned>(10592);  // 28/4 + 29*365
+    auto const days_in_other_cycles = static_cast<unsigned>(12053); // 32/4 + 33*365
+    auto const days_in_period = static_cast<unsigned>(46751);       // days_in_first_cycle + 3*days_in_other_cycles;
+    auto const period_d = static_cast<double>(yoe/years_in_period);
+    auto const period = static_cast<unsigned>(period_d);
+    auto const yop = yoe%years_in_period;
+    auto const fdop = period*days_in_period;
+    auto const cycle = yop < 29 ? 0 : static_cast<unsigned>((yop-29)/years_in_other_cycles + 1);
+    auto const yoc = yop < 29 ? yop : (yop-29)%years_in_other_cycles;
+    auto const fdoc = cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0;
+    auto const group = yoc < 1 ? 0 : static_cast<unsigned>((yoc-1) / 4);
+    auto const yog = static_cast<int>(yoc < 1 ? -1 : (yoc-1) % 4); // yoc < 1 ? -1 : (yoc-1) % 4;
+    auto const fdoyog = group*1461 + (yog+1)*365;
+    auto const fdoyoe = fdop + fdoc + fdoyog;
+
     auto const doy = 30*(m-1) + ((m > 6) ? 6 : m-1) + d-1;                     // [0, 365]
     auto const doe = fdoe + fdoyoe + doy;
     return days{doe - unix_time_shift};
+    // auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
+    // auto const era = static_cast<int>(era_d);
+    // // auto const era = static_cast<int>(((y-475) >= 0 ? (y-475) : (y-475)-(years_in_era-1)) / years_in_era);
+    // auto const fdoe = static_cast<int>(epoch + era * days_in_era);
+    // auto const yoe = static_cast<unsigned>(y - era * years_in_era);
+    // auto const fdoyoe = static_cast<double>(yoe*days_in_year);
+    // // auto const fdoyoe = static_cast<unsigned>(yoe*days_in_year);
+    // auto const fdoyoe_i = static_cast<int>(fdoyoe);
+    // auto const doy = 30*(m-1) + ((m > 6) ? 6 : m-1) + d-1;                     // [0, 365]
+    // auto const doe = fdoe + fdoyoe_i + doy;
+    // return days{doe - unix_time_shift};
 }
 
 CONSTCD14
@@ -2323,21 +2357,116 @@ year_month_day::from_days(days dp) NOEXCEPT
 
     auto const z = dp.count() + unix_time_shift;
     auto const delta = static_cast<int>(z - epoch);
-    auto const era = static_cast<int>((delta >= 0 ? delta : delta - (days_in_era-1)) / days_in_era);
+    auto const era = static_cast<int>(delta >= 0 ? delta : delta-days_in_era+1) / static_cast<double>(days_in_era);
+    auto const era_i = static_cast<int>(era);
+    auto const fdoe = static_cast<int>(epoch + static_cast<int>(era_i * days_in_era));
 
-    auto const fdoe = static_cast<int>(epoch + era * days_in_era);
-    auto const yoe = static_cast<int>(((z - fdoe) >= 0 ? (z-fdoe) : (z-fdoe) - (days_in_year-1))/ days_in_year);
-
-    auto const fdoyoe = static_cast<int>(yoe*days_in_year - ((yoe < 0) ? 1 : 0));
-    auto const tempdoy = static_cast<unsigned>(z-(fdoe + fdoyoe));
-    auto const tempy = static_cast<sys_days::rep>(yoe) + 475 + era * years_in_era;
-    auto const is_next_year = tempdoy > (solar_hijri::year(tempy).is_leap() ? 365 : 364);
-    auto const doy = is_next_year ? 0 : tempdoy;
-    auto const y = (tempy + is_next_year) <= 0 ? tempy + is_next_year - 1 : tempy + is_next_year;
+    auto const doe_fdoe = z - fdoe;
+    auto const years_in_first_cycle = static_cast<unsigned>(29);
+    auto const years_in_other_cycles = static_cast<unsigned>(33);
+    auto const years_in_period = static_cast<unsigned>(128);        // 29   + 3*33
+    auto const days_in_first_cycle = static_cast<unsigned>(10592);  // 28/4 + 29*365
+    auto const days_in_other_cycles = static_cast<unsigned>(12053); // 32/4 + 33*365
+    auto const days_in_period = static_cast<unsigned>(46751);       // days_in_first_cycle + 3*days_in_other_cycles;
+    auto const period = static_cast<unsigned>(doe_fdoe < 22*days_in_period ? doe_fdoe / days_in_period : 22);
+    auto const dop = doe_fdoe % days_in_period;
+    auto const cycle = dop < days_in_first_cycle ? 0 : (dop-days_in_first_cycle) / days_in_other_cycles + 1;
+    auto const doc = dop < days_in_first_cycle ? dop : (dop-days_in_first_cycle) % days_in_other_cycles;
+    auto const group = doc < 365 && period != 22 ? -1 : static_cast<int>(((doc < 365 ? 365 : doc)-365)/1461);
+    auto const yog =   doc < 365 && period != 22 ? -1 : static_cast<int>( (period != 22 ? ((doc-365 )%1461) : doc)/365);
+    auto const yoc = group == -1 ?  0 : (period != 22 ? 1 : 0) + group*4 + (yog == 4 ? 3 : yog);
+    auto const doy = group == -1 ? doc : (period != 22 ? ((yoc-1)%4 == 0 ? (group >= 0 ? (doe_fdoe -
+                                                                                         (period*days_in_period) -
+                                                                                         (cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0) -
+                                                                                         (group*1461 + ((yog == 4 ? 3 : yog)+1)*365))
+                                                                                      : 365)
+                                                                         : doe_fdoe -
+                                                                           (period*days_in_period) -
+                                                                           (cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0) -
+                                                                           (group*1461 + ((yog == 4 ? 3 : yog)+1)*365))
+                                                       : (yog == 4 ? 365 : doe_fdoe - (period*days_in_period) - yog*365));
+    auto const yoe = period != 22 ? period*years_in_period +
+                                    (cycle > 0 ? years_in_first_cycle +
+                                                (cycle-1)*years_in_other_cycles
+                                              : 0) +
+                                    yoc
+                                  : 22*years_in_period + ((yog == 4) ? 3 : yog);
+    auto const y = static_cast<int>(static_cast<sys_days::rep>(yoe) + 475 + era_i * years_in_era);
     auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
     auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
 
+
+    // auto const z = dp.count() + unix_time_shift;
+    // auto const delta = static_cast<int>(z - epoch);
+    // auto const era = static_cast<int>(delta >= 0 ? delta : delta-days_in_era+1) / static_cast<double>(days_in_era);
+    // auto const era_i = static_cast<int>(era);
+    // auto const fdoe = static_cast<int>(epoch + static_cast<int>(era_i * days_in_era));
+    // auto const yoe_d = static_cast<int>(z-fdoe >= 0 ? z-fdoe : z-fdoe-days_in_year+1) / static_cast<double>(days_in_year);
+    // auto const yoe_i = static_cast<int>(yoe_d);
+    // auto const yoe = static_cast<double>(yoe_d - yoe_i) < (leap_threshold) ? yoe_i + 1 : yoe_i;
+    // auto const fdoyoe_d = static_cast<double>(yoe*days_in_year);
+    // auto const fdoyoe_i = static_cast<int>(fdoyoe_d);
+    // auto const fdoyoe = static_cast<double>(fdoyoe_d - fdoyoe_i) < (leap_threshold) ? fdoyoe_i + 1 : fdoyoe_i;
+    // auto const tempdoy = static_cast<int>(z-(fdoe + fdoyoe));
+    // auto const tempy = static_cast<int>(yoe + 475 + era_i * years_in_era);
+    // auto const is_next_year = static_cast<int>(tempdoy > (solar_hijri::year(tempy).is_leap() ? 365 : 364));
+    // auto const doy = is_next_year ? 0 : tempdoy;
+    // auto const y = tempy + is_next_year; // (tempy + is_next_year) >= 0 ? tempy + is_next_year : tempy + is_next_year - 1;
+    // auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
+    // auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
+
+    // auto const z = dp.count() + unix_time_shift;
+    // auto const delta = static_cast<int>(z - epoch);
+    // auto const era = static_cast<int>(delta >= 0 ? delta : delta-days_in_era+1) / static_cast<double>(days_in_era);
+    // auto const era_i = static_cast<int>(era);
+    // auto const fdoe = static_cast<int>(epoch + era_i * days_in_era);
+    // auto const yoe_d = static_cast<int>(z-fdoe >= 0 ? z-fdoe : z-fdoe-days_in_year+1) / static_cast<double>(days_in_year);
+    // auto const yoe_i = static_cast<int>(yoe_d);
+    // auto const yoe = static_cast<double>(yoe_d - yoe_i) > 0.0 ? yoe_i + 1 : yoe_i;
+    // auto const fdoyoe_d = static_cast<double>(yoe*days_in_year);
+    // auto const fdoyoe = static_cast<int>(fdoyoe_d);
+    // auto const tempdoy = static_cast<unsigned>(z-(fdoe + fdoyoe));
+    // auto const tempy = yoe + 475 + era_i * years_in_era;
+    // auto const is_next_year = static_cast<int>(tempdoy > (solar_hijri::year(tempy).is_leap() ? 365 : 364));
+    // auto const doy = is_next_year ? 0 : tempdoy;
+    // auto const y = (tempy + is_next_year) >= 0 ? tempy + is_next_year : tempy + is_next_year - 1;
+    // auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
+    // auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
+
+    // auto const delta = static_cast<int>(z - epoch);
+    // auto const era = static_cast<int>((delta >= 0 ? delta : delta - (days_in_era-1)) / days_in_era);
+
+    // auto const fdoe = static_cast<int>(epoch + era * days_in_era);
+    // auto const yoe = static_cast<int>(((z - fdoe) >= 0 ? (z-fdoe) : (z-fdoe) - (days_in_year-1))/ days_in_year);
+
+    // auto const fdoyoe = static_cast<int>(yoe*days_in_year - ((yoe < 0) ? 1 : 0));
+    // auto const tempdoy = static_cast<unsigned>(z-(fdoe + fdoyoe));
+    // auto const tempy = static_cast<sys_days::rep>(yoe) + 475 + era * years_in_era;
+    // auto const is_next_year = tempdoy > (solar_hijri::year(tempy).is_leap() ? 365 : 364);
+    // auto const doy = is_next_year ? 0 : tempdoy;
+    // auto const y = (tempy + is_next_year) <= 0 ? tempy + is_next_year - 1 : tempy + is_next_year;
+    // auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
+    // auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
+
     return year_month_day{solar_hijri::year(y), solar_hijri::month(m), solar_hijri::day(d)};
+
+    // auto const z = dp.count() + unix_time_shift;
+    // auto const delta = static_cast<int>(z - epoch);
+    // auto const era = static_cast<int>((delta >= 0 ? delta : delta - (days_in_era-1)) / days_in_era);
+
+    // auto const fdoe = static_cast<int>(epoch + era * days_in_era);
+    // auto const yoe = static_cast<int>(((z - fdoe) >= 0 ? (z-fdoe) : (z-fdoe) - (days_in_year-1))/ days_in_year);
+
+    // auto const fdoyoe = static_cast<int>(yoe*days_in_year - ((yoe < 0) ? 1 : 0));
+    // auto const tempdoy = static_cast<unsigned>(z-(fdoe + fdoyoe));
+    // auto const tempy = static_cast<sys_days::rep>(yoe) + 475 + era * years_in_era;
+    // auto const is_next_year = tempdoy > (solar_hijri::year(tempy).is_leap() ? 365 : 364);
+    // auto const doy = is_next_year ? 0 : tempdoy;
+    // auto const y = (tempy + is_next_year) <= 0 ? tempy + is_next_year - 1 : tempy + is_next_year;
+    // auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
+    // auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
+
+    // return year_month_day{solar_hijri::year(y), solar_hijri::month(m), solar_hijri::day(d)};
 }
 
 CONSTCD14

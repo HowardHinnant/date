@@ -21,10 +21,14 @@ test_b() {
 
 void
 test_c() {
-  using namespace solar_hijri::literals;
+  using namespace solar_hijri;
   auto date = solar_hijri::year_month_day{1398_y/bah/6};
   for (auto i = 0; i < 24; i++) {
-    std::cout << date << ' ' << date.month() << ' ' << solar_hijri::weekday{date} << std::endl;
+    auto weekday = solar_hijri::weekday{date};
+    std::cout << date << ' ' << date.month() << ' ' << weekday << std::endl;
+    for (auto j = 0; j < 14; j++) {
+      std::cout << "\t\t" << weekday + days{j} << std::endl;
+    }
     date+=solar_hijri::months(1);
   }
 }
