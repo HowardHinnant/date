@@ -66,7 +66,7 @@
 #include <type_traits>
 
 static_assert( std::is_trivially_destructible<solar_hijri::year_month_day>{}, "");
-// static_assert( std::is_default_constructible<solar_hijri::year_month_day>{}, "");
+static_assert( std::is_default_constructible<solar_hijri::year_month_day>{}, "");
 static_assert( std::is_trivially_copy_constructible<solar_hijri::year_month_day>{}, "");
 static_assert( std::is_trivially_copy_assignable<solar_hijri::year_month_day>{}, "");
 static_assert( std::is_trivially_move_constructible<solar_hijri::year_month_day>{}, "");
@@ -131,31 +131,23 @@ void
 test_day_point_conversion()
 {
     using namespace solar_hijri;
-    year y   = year{-5000};
-    year end =       5000_y;
+    year y   = year{-30000};
+    year end =       30000_y;
     sys_days prev_dp = sys_days(year_month_day{y, far, 1_d}) - days{1};
     weekday  prev_wd = weekday{prev_dp};
     for (; y <= end; ++y)
     {
-        // std::cout << y << " is leap? " << (y.is_leap() ? "yes" : "no") << std::endl;
         month m = far;
         do
         {
             day last_day = year_month_day_last{y, month_day_last{m}}.day();
             for (day d = 1_d; d <= last_day; ++d)
             {
-                // std::cout << "y: " << y << ", m: " << m << ", d: " << d << std::endl;
                 year_month_day ymd = {y, m, d};
-                // std::cout << "ymd: " << ymd << std::endl;
                 assert(ymd.ok());
                 sys_days dp = sys_days(ymd);
-                // std::cout << "dp.count(): " << dp.time_since_epoch().count() << std::endl;
-                // std::cout << "prev_dp: " << prev_dp.time_since_epoch().count() << std::endl;
                 assert(dp == prev_dp + days{1});
                 year_month_day ymd2 = dp;
-                // std::cout << "ymd2: " << ymd2 << std::endl;
-                sys_days dp2 = ymd2;
-                // std::cout << "dp2.count(): " << dp2.time_since_epoch().count() << std::endl;
                 assert(ymd2 == ymd);
                 weekday wd = dp;
                 assert(wd.ok());
