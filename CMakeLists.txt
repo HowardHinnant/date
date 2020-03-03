@@ -15,7 +15,7 @@
 
 #]===================================================================]
 
-cmake_minimum_required( VERSION 3.7 )
+cmake_minimum_required( VERSION 3.5 )
 
 project( date VERSION 2.4.1 )
 
@@ -24,7 +24,12 @@ include( GNUInstallDirs )
 get_directory_property( has_parent PARENT_DIRECTORY )
 
 # Override by setting on CMake command line.
-set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
+if( NOT CMAKE_VERSION VERSION_LESS 3.8 )
+    set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
+else( )
+    # 17 isn't understood before cmake 3.8, so fall back to 14
+    set( CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ standard whose features are requested." )
+endif( )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
@@ -71,13 +76,13 @@ target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
 )
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+if (NOT CMAKE_VERSION VERSION_LESS 3.15)
     # public headers will get installed:
     set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
 endif ()
 target_compile_definitions( date INTERFACE
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
-    ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
+    ONLY_C_LOCALE=$<BOOL:${COMPILE_WITH_C_LOCALE}>
     $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
 
 #[===================================================================[
@@ -100,12 +105,12 @@ if( BUILD_TZ_LIB )
         $<INSTALL_INTERFACE:include> )
     target_compile_definitions( tz
         PRIVATE
-            AUTO_DOWNLOAD=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
-            HAS_REMOTE_API=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
+            AUTO_DOWNLOAD=$<NOT:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>>
+            HAS_REMOTE_API=$<NOT:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_BUILD_DLL=1>
             $<$<BOOL:${USE_TZ_DB_IN_DOT}>:INSTALL=.>
         PUBLIC
-            USE_OS_TZDB=$<IF:$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${MANUAL_TZ_DB}>>>,1,0>
+            USE_OS_TZDB=$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${MANUAL_TZ_DB}>>>
         INTERFACE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_USE_DLL=1> )
     set(TZ_HEADERS include/date/tz.h)
