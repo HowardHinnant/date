@@ -44,8 +44,8 @@ static const auto days_in_era = static_cast<unsigned>(1029983);
 static const auto years_in_era = static_cast<unsigned>(2820);
 static const auto unix_time_shift = static_cast<unsigned>(2440588);
 auto const years_in_first_cycle = static_cast<unsigned>(29);
-auto const years_in_other_cycles = static_cast<unsigned>(33);
-auto const years_in_period = static_cast<unsigned>(128);        // 29   + 3*33
+auto const years_in_other_cycles = static_cast<int>(33);
+auto const years_in_period = static_cast<int>(128);        // 29   + 3*33
 auto const days_in_first_cycle = static_cast<unsigned>(10592);  // 28/4 + 29*365
 auto const days_in_other_cycles = static_cast<unsigned>(12053); // 32/4 + 33*365
 auto const days_in_period = static_cast<unsigned>(46751);       // days_in_first_cycle + 3*days_in_other_cycles;
@@ -2220,7 +2220,7 @@ year_month_day::to_days() const NOEXCEPT
     auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
     auto const era = static_cast<int>(era_d);
     auto const fdoe = static_cast<int>(epoch + era * days_in_era);
-    auto const yoe = static_cast<unsigned>(y - era * years_in_era);
+    auto const yoe = static_cast<int>(y - era * years_in_era);
 
     auto const period_d = static_cast<double>(yoe/years_in_period);
     auto const period = static_cast<unsigned>(period_d);
