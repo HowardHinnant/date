@@ -451,7 +451,7 @@ weekday::weekday(unsigned wd) NOEXCEPT
 CONSTCD11
 inline
 weekday::weekday(date::weekday wd) NOEXCEPT
-    : wd_(wd.iso_encoding())
+    : wd_(static_cast<decltype(wd_)>(wd.iso_encoding()))
     {}
 
 CONSTCD11
