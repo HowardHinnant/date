@@ -71,7 +71,7 @@
 
 #ifdef __GNUC__
 # pragma GCC diagnostic push
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR > 7)
+# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 7)
 #  pragma GCC diagnostic ignored "-Wpedantic"
 # endif
 # if __GNUC__ < 5
