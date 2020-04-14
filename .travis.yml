@@ -143,5 +143,5 @@ script:
   - cd build
   - eval cmake -DENABLE_DATE_TESTING=ON -DBUILD_SHARED_LIBS=ON ${CMAKE_EXTRA_CONF} ..
   - cmake --build . --parallel
-  - cmake --build . --parallel --target testit
+  - ctest
 
