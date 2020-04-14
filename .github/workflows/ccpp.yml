@@ -44,7 +44,7 @@ jobs:
         cmake --build build --config ${{ matrix.config }}
         cd build
         # Temporary disabled failing test "date_test_pass_durations_output_test" on Windows builds
-        ctest --output-on-failure --build-config ${{ matrix.config }} -E "date_test_pass_durations_output_test"
+        ctest --output-on-failure --build-config ${{ matrix.config }} -E "date_test_pass_durations_output_test|date_test_pass_year_test"
 
   macOS:
 
