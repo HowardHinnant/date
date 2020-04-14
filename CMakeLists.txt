@@ -78,6 +78,8 @@ target_compile_definitions( date INTERFACE
     ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
     $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
 target_compile_features(date INTERFACE cxx_std_14)
+target_compile_options(date INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus> 
+    $<$<CXX_COMPILER_ID:MSVC>:/permissive->)
 
 #[===================================================================[
    tz (compiled) library
@@ -108,6 +110,8 @@ if( BUILD_TZ_LIB )
         INTERFACE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_USE_DLL=1> )
     target_compile_features(tz INTERFACE cxx_std_14)
+    target_compile_options(tz INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>
+        $<$<CXX_COMPILER_ID:MSVC>:/permissive->)
     set(TZ_HEADERS include/date/tz.h)
     if( IOS )
         list(APPEND TZ_HEADERS include/date/ios.h)
