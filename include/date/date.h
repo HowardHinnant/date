@@ -98,10 +98,6 @@ namespace date
 #endif
 
 #if defined(_MSC_VER) && (!defined(__clang__) || (_MSC_VER < 1910))
-// MSVC
-#  ifndef _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
-#    define _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
-#  endif
 #  if _MSC_VER < 1910
 //   before VS2017
 #    define CONSTDATA const
@@ -138,7 +134,7 @@ namespace date
 #endif
 
 #ifndef HAS_UNCAUGHT_EXCEPTIONS
-#  if __cplusplus > 201703 || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
+#  if __cpp_lib_uncaught_exceptions
 #    define HAS_UNCAUGHT_EXCEPTIONS 1
 #  else
 #    define HAS_UNCAUGHT_EXCEPTIONS 0
@@ -146,7 +142,7 @@ namespace date
 #endif  // HAS_UNCAUGHT_EXCEPTIONS
 
 #ifndef HAS_VOID_T
-#  if __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#  if __cpp_lib_void_t
 #    define HAS_VOID_T 1
 #  else
 #    define HAS_VOID_T 0
