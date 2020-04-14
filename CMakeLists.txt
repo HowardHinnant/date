@@ -17,14 +17,11 @@
 
 cmake_minimum_required( VERSION 3.7 )
 
-project( date VERSION 2.4.1 )
+project( date VERSION 2.4.1 LANGUAGES CXX)
 
 include( GNUInstallDirs )
 
 get_directory_property( has_parent PARENT_DIRECTORY )
-
-# Override by setting on CMake command line.
-set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
@@ -80,6 +77,7 @@ target_compile_definitions( date INTERFACE
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
     ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
     $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
+target_compile_features(date INTERFACE cxx_std_14)
 
 #[===================================================================[
    tz (compiled) library
@@ -109,6 +107,7 @@ if( BUILD_TZ_LIB )
             USE_OS_TZDB=$<IF:$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${MANUAL_TZ_DB}>>>,1,0>
         INTERFACE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_USE_DLL=1> )
+    target_compile_features(tz INTERFACE cxx_std_14)
     set(TZ_HEADERS include/date/tz.h)
     if( IOS )
         list(APPEND TZ_HEADERS include/date/ios.h)
