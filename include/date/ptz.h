@@ -195,7 +195,10 @@ time_zone::time_zone(const detail::string_t& s)
         if (i != s.size())
         {
             if (s[i] != ',')
+            {
                 i = read_signed_time(s, i, save_);
+                save_ = -save_ - offset_;
+            }
             if (i != s.size())
             {
                 if (s[i] != ',')
