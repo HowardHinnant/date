@@ -3732,8 +3732,7 @@ public:
 
     CONSTCD11 explicit decimal_format_seconds(const Duration& d) NOEXCEPT
         : s_(std::chrono::duration_cast<std::chrono::seconds>(d))
-        , sub_s_(std::chrono::treat_as_floating_point<rep>::value ? d - s_ :
-                     std::chrono::duration_cast<precision>(d - s_))
+        , sub_s_(std::chrono::duration_cast<precision>(d - s_))
         {}
 
     CONSTCD14 std::chrono::seconds& seconds() NOEXCEPT {return s_;}
