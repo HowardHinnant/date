@@ -87,6 +87,7 @@ public:
 
     bool ok() const {return mode_ != off;}
     date::local_seconds operator()(date::year y) const;
+    std::string to_string() const;
 
     friend std::ostream& operator<<(std::ostream& os, const rule& r);
     friend unsigned read_date(const string_t& s, unsigned i, rule& r);
@@ -117,6 +118,62 @@ rule::operator()(date::year y) const
         assert(!"rule called with bad mode");
     }
     return t;
+}
+
+inline
+std::string
+rule::to_string() const
+{
+    using namespace std::chrono;
+    auto print_offset = [](seconds off)
+        {
+            std::string nm;
+            if (off != hours{2})
+            {
+                date::hh_mm_ss offset{off};
+                nm = '/';
+                nm += std::to_string(offset.hours().count());
+                if (offset.minutes() != minutes{0} || offset.seconds() != seconds{0})
+                {
+                    nm += ':';
+                    if (offset.minutes() < minutes{10})
+                        nm += '0';
+                    nm += std::to_string(offset.minutes().count());
+                    if (offset.seconds() != seconds{0})
+                    {
+                        nm += ':';
+                        if (offset.seconds() < seconds{10})
+                            nm += '0';
+                        nm += std::to_string(offset.seconds().count());
+                    }
+                }
+            }
+            return nm;
+        };
+
+    std::string nm;
+    switch (mode_)
+    {
+    case rule::J:
+        nm = 'J';
+        nm += std::to_string(n_);
+        break;
+    case rule::M:
+        nm = 'M';
+        nm += std::to_string(static_cast<unsigned>(m_));
+        nm += '.';
+        nm += std::to_string(n_);
+        nm += '.';
+        nm += std::to_string(wd_.c_encoding());
+        break;
+    case rule::N:
+        nm = std::to_string(n_);
+        break;
+    default:
+        break;
+    }
+    nm += print_offset(time_);
+    return nm;
 }
 
 inline
@@ -178,6 +235,8 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
     const time_zone* operator->() const {return this;}
+
+    std::string name() const;
 };
 
 inline
@@ -417,6 +476,53 @@ operator<<(std::ostream& os, const time_zone& z)
     os << z.std_abbrev_ << ", " << z.dst_abbrev_ << date::format(", %T, ", z.offset_)
        << date::format("%T, [", z.save_) << z.start_rule_ << ", " << z.end_rule_ << ")}";
     return os;
+}
+
+inline
+std::string
+time_zone::name() const
+{
+    using namespace date;
+    using namespace std::chrono;
+    auto nm = std_abbrev_;
+    auto print_offset = [](seconds off)
+        {
+            std::string nm;
+            hh_mm_ss<seconds> offset{-off};
+            if (offset.is_negative())
+                nm += '-';
+            nm += std::to_string(offset.hours().count());
+            if (offset.minutes() != minutes{0} || offset.seconds() != seconds{0})
+            {
+                nm += ':';
+                if (offset.minutes() < minutes{10})
+                    nm += '0';
+                nm += std::to_string(offset.minutes().count());
+                if (offset.seconds() != seconds{0})
+                {
+                    nm += ':';
+                    if (offset.seconds() < seconds{10})
+                        nm += '0';
+                    nm += std::to_string(offset.seconds().count());
+                }
+            }
+            return nm;
+        };
+    nm += print_offset(offset_);
+    if (!dst_abbrev_.empty())
+    {
+        nm += dst_abbrev_;
+        if (save_ != hours{1})
+            nm += print_offset(offset_+save_);
+        if (start_rule_.ok())
+        {
+            nm += ',';
+            nm += start_rule_.to_string();
+            nm += ',';
+            nm += end_rule_.to_string();
+        }
+    }
+    return nm;
 }
 
 namespace detail
