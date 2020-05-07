@@ -57,7 +57,7 @@ main()
 
     using tod = time_of_day<hours>;
 
-    static_assert(is_same<tod::precision::period, hours::period>{}, "");
+    static_assert(is_same<tod::precision::period, seconds::period>{}, "");
 
     static_assert( is_trivially_destructible<tod>{}, "");
     static_assert( is_default_constructible<tod>{}, "");
@@ -74,7 +74,6 @@ main()
 
     constexpr tod t1 = tod{hours{13}};
     static_assert(t1.hours() == hours{13}, "");
-    static_assert(t1.mode() == 0, "");
 #if __cplusplus >= 201402
     static_assert(static_cast<tod::precision>(t1) == hours{13}, "");
     static_assert(t1.to_duration() == hours{13}, "");
@@ -82,23 +81,14 @@ main()
 
     auto t2 = t1;
     assert(t2.hours() == t1.hours());
-    assert(t2.mode() == t1.mode());
     assert(t2.to_duration() == t1.to_duration());
     ostringstream os;
     os << t2;
-    assert(os.str() == "1300");
-    t2.make12();
+    assert(os.str() == "13:00:00");
+    auto h = make12(t2.hours());
     os.str("");
-    assert(t2.hours() == hours{1});
-    assert(t2.mode() == pm);
+    assert(h == hours{1});
     assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "1pm");
-    t2.make24();
-    os.str("");
-    assert(t2.hours() == hours{13});
-    assert(t2.mode() == 0);
-    assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "1300");
+    assert(!is_am(t2.hours()));
+    assert(is_pm(t2.hours()));
 }

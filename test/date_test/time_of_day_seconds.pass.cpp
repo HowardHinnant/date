@@ -79,7 +79,6 @@ main()
     static_assert(t1.hours() == hours{13}, "");
     static_assert(t1.minutes() == minutes{7}, "");
     static_assert(t1.seconds() == seconds{5}, "");
-    static_assert(t1.mode() == 0, "");
 #if __cplusplus >= 201402
     static_assert(static_cast<tod::precision>(t1) == hours{13} + minutes{7}
                                                      + seconds{5}, "");
@@ -90,27 +89,8 @@ main()
     assert(t2.hours() == t1.hours());
     assert(t2.minutes() == t1.minutes());
     assert(t2.seconds() == t1.seconds());
-    assert(t2.mode() == t1.mode());
     assert(t2.to_duration() == t1.to_duration());
     ostringstream os;
-    os << t2;
-    assert(os.str() == "13:07:05");
-    t2.make12();
-    os.str("");
-    assert(t2.hours() == hours{1});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.mode() == pm);
-    assert(t2.to_duration() == t1.to_duration());
-    os << t2;
-    assert(os.str() == "1:07:05pm");
-    t2.make24();
-    os.str("");
-    assert(t2.hours() == hours{13});
-    assert(t2.minutes() == minutes{7});
-    assert(t2.seconds() == seconds{5});
-    assert(t2.mode() == 0);
-    assert(t2.to_duration() == t1.to_duration());
     os << t2;
     assert(os.str() == "13:07:05");
 }

@@ -77,11 +77,9 @@ static_assert( std::is_trivially_move_assignable<date::weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<date::weekday, unsigned>{}, "");
 static_assert( std::is_nothrow_constructible<date::weekday, date::sys_days>{}, "");
-static_assert( std::is_nothrow_constructible<unsigned, date::weekday>{}, "");
 static_assert(!std::is_convertible<unsigned, date::weekday>{}, "");
 static_assert( std::is_convertible<date::sys_days, date::weekday>{}, "");
 static_assert(!std::is_convertible<date::weekday, unsigned>{}, "");
-static_assert(static_cast<unsigned>(date::weekday{1u}) == 1, "");
 
 static_assert( date::weekday{0u}.ok(), "");
 static_assert( date::weekday{1u}.ok(), "");
@@ -90,7 +88,8 @@ static_assert( date::weekday{3u}.ok(), "");
 static_assert( date::weekday{4u}.ok(), "");
 static_assert( date::weekday{5u}.ok(), "");
 static_assert( date::weekday{6u}.ok(), "");
-static_assert(!date::weekday{7u}.ok(), "");
+static_assert( date::weekday{7u}.ok(), "");
+static_assert(!date::weekday{8u}.ok(), "");
 
 void
 test_weekday_arithmetic()

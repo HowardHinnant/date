@@ -27,12 +27,12 @@
 #include <type_traits>
 
 using fortnights = std::chrono::duration<date::weeks::rep,
-                                         std::ratio_multiply<std::ratio<2>,
-                                                             date::weeks::period>>;
+                                         date::detail::ratio_multiply<std::ratio<2>,
+                                                                      date::weeks::period>>;
 
 using microfortnights = std::chrono::duration<std::int64_t,
-                                              std::ratio_multiply<fortnights::period,
-                                                                  std::micro>>;
+                                              date::detail::ratio_multiply<fortnights::period,
+                                                                           std::micro>>;
 
 int
 main()
@@ -69,10 +69,10 @@ main()
     assert(os.str() == "32767-12-31 00:00:01.2096");
     os.str("");
 
-    os << format("%F %T", jan/1/year::min());
-    assert(os.str() == "-32767-01-01 00:00:00");
+    os << format("%F", jan/1/year::min());
+    assert(os.str() == "-32767-01-01");
     os.str("");
-    os << format("%F %T", dec/last/year::max());
-    assert(os.str() == "32767-12-31 00:00:00");
+    os << format("%F", dec/last/year::max());
+    assert(os.str() == "32767-12-31");
     os.str("");
 }

@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2017 Tomasz Kamiński
+// Copyright (c) 2017, 2018 Tomasz Kamiński
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ struct bad_clock
   date::utc_time<Duration>
   to_sys(std::chrono::time_point<bad_clock, Duration> const& tp)
   {
-    return utc_time<Duration>(tp.time_since_epoch());
+    return date::utc_time<Duration>(tp.time_since_epoch());
   }
 };
 

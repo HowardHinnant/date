@@ -1,21 +1,15 @@
-To test: * Install tz.cpp by downloading the IANA timezone database
-at: http://www.iana.org/time-zones You only need the data, not the
-code.
+# TZ Test
 
-* Change the string `install` in tz.cpp to point to your downloaded
-IANA database.
+## How to Test
 
+* Install tz.cpp by downloading the IANA timezone database at: http://www.iana.org/time-zones You only need the data, not the code.
+* Change the string `install` in tz.cpp to point to your downloaded IANA database.
 * Compile validate.cpp along with tz.cpp.
-
 * Run the binary and direct the terminal output to a temporary file.
+* Unzip the tzdata file that has the version corresponding to the IANA database you downloaded (e.g. tzdata2015f.txt.zip).
+* Compare the unzipped txt file with the output of your validate test program. If they are identical, the test passes, else it fails.
 
-* Unzip the tzdata file that has the version corresponding to the IANA
-database you downloaded (e.g. tzdata2015f.txt.zip).
-
-* Compare the unzipped txt file with the output of your validate test
-program. If they are identical, the test passes, else it fails.
-
-Miscellaneous:
+## Miscellaneous
 
 You can also compare one version of the tzdatabase with another using
 these uncompressed text files.  The text files contain for each

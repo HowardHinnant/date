@@ -1,0 +1,147 @@
+language: cpp
+
+env:
+  global:
+    - CMAKE_EXTRA_CONF="-DCOMPILE_WITH_C_LOCALE=ON"
+    - CTEST_OUTPUT_ON_FAILURE=1
+
+matrix:
+  include:
+
+    - name: "Ubuntu 16.04 LTS (Xenial Xerus) GCC 7"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - name: "Ubuntu 16.04 LTS (Xenial Xerus) GCC 8"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+
+    - name: "Ubuntu 16.04 LTS (Xenial Xerus) GCC 9"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+
+    - name: "Ubuntu 18.04 LTS (Bionic Beaver) GCC 7"
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - name: "Ubuntu 18.04 LTS (Bionic Beaver) GCC 8"
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+
+    - name: "Ubuntu 18.04 LTS (Bionic Beaver) Clang 6"
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-bionic-6.0
+          packages:
+            - clang-6.0
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+
+    - name: "Ubuntu 18.04 LTS (Bionic Beaver) Clang 7"
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-bionic-7
+          packages:
+            - clang-7
+      env:
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+
+    - name: "Ubuntu 18.04 LTS (Bionic Beaver) Clang 8"
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-bionic-8
+          packages:
+            - clang-8
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+
+    - &macos
+      name: xcode10
+      os: osx
+      osx_image: xcode10.2
+      env:
+        - CMAKE_EXTRA_CONF=""
+      addons:
+        homebrew:
+          packages:
+            - bash
+            - ninja
+
+    - <<: *macos
+      name: xcode9
+      # xcode 9 only works if we tell it to use c++14 explicitly
+      env:
+        - CMAKE_EXTRA_CONF="-DCMAKE_CXX_STANDARD=14"
+      osx_image: xcode9.4
+
+    - <<: *macos
+      osx_image: xcode11
+      name: xcode11
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - ci/install_cmake.sh 3.15.2
+  - export OPENSSL_ROOT=$(brew --prefix openssl@1.1)
+  - if [ "$(uname)" = "Darwin" ] ; then export PATH="$HOME/cmake/CMake.app/Contents/bin:${PATH}"; fi
+  - if [ "$(uname)" = "Linux" ] ; then export PATH="$HOME/cmake/bin:${PATH}"; fi
+
+cache:
+  directories:
+    - $HOME/cmake
+
+script:
+  - mkdir -p build
+  - cd build
+  - eval cmake -DENABLE_DATE_TESTING=ON -DBUILD_SHARED_LIBS=ON ${CMAKE_EXTRA_CONF} ..
+  - cmake --build . --parallel
+  - cmake --build . --parallel --target testit
+

@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2017 Tomasz Kamiński
+// Copyright (c) 2017, 2018 Tomasz Kamiński
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -194,6 +194,8 @@ main()
 
     //steady_clock (must be different that sys_clock)
     static_assert(is_clock_castable<steady_clock, steady_clock>::value, "steady_clock -> steady_clock");
+    static_assert(!is_clock_castable<steady_clock, local_t>::value, "steady_clock -> local_t");
+    static_assert(!is_clock_castable<local_t, steady_clock>::value, "local_t -> steady_clock");
     static_assert(!is_clock_castable<steady_clock, sys_clock>::value, "steady_clock -> sys_clock");
     static_assert(!is_clock_castable<sys_clock, steady_clock>::value, "sys_clock -> steady_clock");
     static_assert(!is_clock_castable<steady_clock, utc_clock>::value, "steady_clock -> utc_clock");
@@ -203,6 +205,8 @@ main()
 
     //steady_based_clock (unrelated to sys_clock and utc_clocks)
     static_assert(is_clock_castable<steady_based_clock, steady_based_clock>::value, "steady_based_clock -> steady_based_clock");
+    static_assert(!is_clock_castable<steady_based_clock, local_t>::value, "steady_based_clock -> local_t");
+    static_assert(!is_clock_castable<local_t, steady_based_clock>::value, "local_t -> steady_based_clock");
     static_assert(!is_clock_castable<steady_based_clock, sys_clock>::value, "steady_based_clock -> sys_clock");
     static_assert(!is_clock_castable<sys_clock, steady_based_clock>::value, "sys_clock -> steady_based_clock");
     static_assert(!is_clock_castable<steady_based_clock, utc_clock>::value, "steady_based_clock -> utc_clock");

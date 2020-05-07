@@ -20,16 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// template <class Duration,
-//           unsigned w = width<std::common_type<
-//                                  Duration,
-//                                  std::chrono::seconds>::type::period::den>::value>
+// template <class Duration>
 // class decimal_format_seconds
 // {
+//     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+//     using rep = typename CT::rep;
 // public:
-//     using precision = typename make_precision<w>::type;
-//     static auto constexpr width = make_precision<w>::width;
-// 
+//     static unsigned constexpr width = detail::width<CT::period::den>::value < 19 ?
+//                                       detail::width<CT::period::den>::value : 6u;
+//     using precision = std::chrono::duration<rep,
+//                                             std::ratio<1, static_pow10<width>::value>>;
 // private:
 //     std::chrono::seconds s_;
 //     precision            sub_s_;
@@ -55,12 +55,12 @@
 #include <type_traits>
 
 using fortnights = std::chrono::duration<date::weeks::rep,
-                                         std::ratio_multiply<std::ratio<2>,
-                                                             date::weeks::period>>;
+                                         date::detail::ratio_multiply<std::ratio<2>,
+                                                                      date::weeks::period>>;
 
 using microfortnights = std::chrono::duration<std::int64_t,
-                                              std::ratio_multiply<fortnights::period,
-                                                                  std::micro>>;
+                                              date::detail::ratio_multiply<fortnights::period,
+                                                                           std::micro>>;
 
 int
 main()
@@ -94,7 +94,6 @@ main()
     {
         using D = decimal_format_seconds<milliseconds>;
         static_assert(D::width == 3, "");
-        static_assert(is_same<D::precision, make_precision<D::rep, D::width>::type>{}, "");
         D dfs{seconds{3}};
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == seconds{3});
@@ -106,7 +105,6 @@ main()
     {
         using D = decimal_format_seconds<milliseconds>;
         static_assert(D::width == 3, "");
-        static_assert(is_same<D::precision, make_precision<D::rep, D::width>::type>{}, "");
         D dfs{milliseconds{3}};
         assert(dfs.seconds() == seconds{0});
         assert(dfs.to_duration() == milliseconds{3});
@@ -118,9 +116,8 @@ main()
     {
         using D = decimal_format_seconds<microfortnights>;
         static_assert(D::width == 4, "");
-        using S = make_precision<D::rep, D::width>::type;
-        static_assert(is_same<D::precision, S>{}, "");
         D dfs{microfortnights{3}};
+        using S = D::precision;
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == S{36288});
         assert(dfs.subseconds() == S{6288});
@@ -132,9 +129,8 @@ main()
         using CT = common_type<seconds, microfortnights>::type;
         using D = decimal_format_seconds<CT>;
         static_assert(D::width == 4, "");
-        using S = make_precision<D::rep, D::width>::type;
-        static_assert(is_same<D::precision, S>{}, "");
         D dfs{microfortnights{3}};
+        using S = D::precision;
         assert(dfs.seconds() == seconds{3});
         assert(dfs.to_duration() == S{36288});
         assert(dfs.subseconds() == S{6288});

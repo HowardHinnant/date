@@ -57,12 +57,12 @@
 #include <type_traits>
 
 using fortnights = std::chrono::duration<date::weeks::rep,
-                                         std::ratio_multiply<std::ratio<2>,
-                                                             date::weeks::period>>;
+                                         date::detail::ratio_multiply<std::ratio<2>,
+                                                                      date::weeks::period>>;
 
 using microfortnights = std::chrono::duration<std::int64_t,
-                                              std::ratio_multiply<fortnights::period,
-                                                                  std::micro>>;
+                                              date::detail::ratio_multiply<fortnights::period,
+                                                                           std::micro>>;
 
 int
 main()
@@ -106,14 +106,6 @@ main()
     assert(t2.subseconds() == t1.subseconds());
     assert(t2.to_duration() == t1.to_duration());
     ostringstream os;
-    os << t2;
-    assert(os.str() == "13:07:06.0480");
-    t2.make12();
-    os.str("");
-    os << t2;
-    assert(os.str() == "1:07:06.0480pm");
-    t2.make24();
-    os.str("");
     os << t2;
     assert(os.str() == "13:07:06.0480");
 }

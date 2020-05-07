@@ -107,7 +107,7 @@ main()
     static_assert(year::max().ok(), "");
 
 #if __cplusplus >= 201402
-    using int64_t = std::int64_t;
+    using std::int64_t;
     static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)
         >= as<int64_t>(days::min()), "");
     static_assert(sys_days(year::min()/jan/1)  - sys_days(1970_y/jan/1)

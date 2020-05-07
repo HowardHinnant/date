@@ -109,6 +109,90 @@ test_arithmetic()
     }
 }
 
+
+void test_arithemtic_not_ok()
+{
+  using namespace date;
+  using namespace std::chrono;
+
+  year_month ym{2018_y, month{14}};
+
+  {
+    year_month ym2{2019_y, month{2}};
+    assert(ym + months{0} == ym2);
+    assert(ym - months{0} == ym2);
+    assert(ym - ym2 == months{0});
+    assert(ym2 - ym == months{0});
+   
+    auto ymc = ym;
+    ymc += months{0};
+    assert(ymc.ok());
+    assert(ymc == ym2);
+  }
+
+  {
+    year_month ym2{2019_y, month{6}};
+    assert(ym + months{4} == ym2);
+    assert(ym2 - ym == months{4});
+    assert(ym - ym2 == -months{4});
+
+    auto ymc = ym;
+    ymc += months{4};
+    assert(ymc.ok());
+    assert(ymc == ym2);
+  }
+
+  {
+    year_month ym2{2018_y, month{10}};
+    assert(ym - months{4} == ym2);
+    assert(ym2 - ym == -months{4});
+    assert(ym - ym2 == months{4});
+
+    auto ymc = ym;
+    ymc -= months{4};
+    assert(ymc.ok());
+    assert(ymc == ym2);
+  }
+
+
+  {
+    year_month ym2{2020_y, month{6}};
+    assert(ym + months{16} == ym2);
+    assert(ym2 - ym == months{16});
+    assert(ym - ym2 == -months{16});
+
+    auto ymc = ym;
+    ymc += months{16};
+    assert(ymc.ok());
+    assert(ymc == ym2);
+  }
+
+  {
+    year_month ym2{2017_y, month{10}};
+    assert(ym - months{16} == ym2);
+    assert(ym2 - ym == -months{16});
+    assert(ym - ym2 == months(16));
+
+    auto ymc = ym;
+    ymc -= months{16};
+    assert(ymc.ok());
+    assert(ymc == ym2);
+  }
+
+  {
+    year_month ym2{2018_y, month{25}};
+    assert(ym2 - ym == months{11});
+    assert(ym - ym2 == -months{11});
+  }
+
+  {
+    year_month ym2{2019_y, month{25}};
+    assert(ym2 - ym == months{23});
+    assert(ym - ym2 == -months{23});
+  }
+
+}
+
 int
 main()
 {
@@ -135,6 +219,7 @@ main()
     static_assert(ym1 - ym2 == -months{11}, "");
 
     test_arithmetic();
+    test_arithemtic_not_ok();
 
     std::ostringstream os;
     os << ym1;
