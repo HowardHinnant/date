@@ -89,6 +89,7 @@
 #  include "date/ios.h"
 #else
 #  define TARGET_OS_IPHONE 0
+#  define TARGET_OS_SIMULATOR 0
 #endif
 
 #if USE_OS_TZDB
@@ -361,7 +362,11 @@ discover_tz_dir()
         throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
 #  else  // __APPLE__
 #      if TARGET_OS_IPHONE
+#          if TARGET_OS_SIMULATOR
+    return "/usr/share/zoneinfo";
+#          else
     return "/var/db/timezone/zoneinfo";
+#          endif
 #      else
     CONSTDATA auto timezone = "/etc/localtime";
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
