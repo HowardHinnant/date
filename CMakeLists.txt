@@ -85,8 +85,8 @@ target_compile_definitions( date INTERFACE
    tz (compiled) library
 #]===================================================================]
 if( BUILD_TZ_LIB )
-    add_library( tz )
-    target_sources( tz
+    add_library( date-tz )
+    target_sources( date-tz
       PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/tz.h
         $<$<BOOL:${IOS}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h>
@@ -94,12 +94,12 @@ if( BUILD_TZ_LIB )
         include/date/tz_private.h
         $<$<BOOL:${IOS}>:src/ios.mm>
         src/tz.cpp )
-    add_library( date::tz ALIAS tz )
-    target_link_libraries( tz PUBLIC date )
-    target_include_directories( tz PUBLIC
+    add_library( date::tz ALIAS date-tz )
+    target_link_libraries( date-tz PUBLIC date )
+    target_include_directories( date-tz PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include> )
-    target_compile_definitions( tz
+    target_compile_definitions( date-tz
         PRIVATE
             AUTO_DOWNLOAD=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
             HAS_REMOTE_API=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
@@ -113,19 +113,19 @@ if( BUILD_TZ_LIB )
     if( IOS )
         list(APPEND TZ_HEADERS include/date/ios.h)
     endif( )
-    set_target_properties( tz PROPERTIES
+    set_target_properties( date-tz PROPERTIES
         POSITION_INDEPENDENT_CODE ON
         PUBLIC_HEADER "${TZ_HEADERS}"
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${PROJECT_VERSION}" )
     if( NOT MSVC )
         find_package( Threads )
-        target_link_libraries( tz PUBLIC Threads::Threads )
+        target_link_libraries( date-tz PUBLIC Threads::Threads )
     endif( )
     if( NOT USE_SYSTEM_TZ_DB AND NOT MANUAL_TZ_DB )
         find_package( CURL REQUIRED )
-        target_include_directories( tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
-        target_link_libraries( tz PRIVATE ${CURL_LIBRARIES} )
+        target_include_directories( date-tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
+        target_link_libraries( date-tz PRIVATE ${CURL_LIBRARIES} )
     endif( )
 endif( )
 
@@ -150,13 +150,13 @@ if (CMAKE_VERSION VERSION_LESS 3.15)
 endif ()
 
 if( BUILD_TZ_LIB )
-    install( TARGETS tz
+    install( TARGETS date-tz
         EXPORT dateConfig
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
-    export( TARGETS tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
+    export( TARGETS date-tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
 endif( )
 
 if( WIN32 AND NOT CYGWIN)
@@ -179,7 +179,7 @@ if( ENABLE_DATE_TESTING )
     enable_testing( )
 
     add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
-    add_dependencies( testit tz )
+    add_dependencies( testit date-tz )
 
     function( add_pass_tests TEST_GLOB TEST_PREFIX )
         file( GLOB_RECURSE FILENAMES ${TEST_GLOB} )
@@ -193,7 +193,7 @@ if( ENABLE_DATE_TESTING )
                 set( TST_NAME ${PREFIX}_test )
                 add_executable( ${BIN_NAME} EXCLUDE_FROM_ALL ${TEST_FILE} )
                 add_test( ${TST_NAME} ${BIN_NAME} )
-                target_link_libraries( ${BIN_NAME} tz )
+                target_link_libraries( ${BIN_NAME} date-tz )
                 # HACK: because the test files don't use FQ includes:
                 target_include_directories( ${BIN_NAME} PRIVATE include/date )
                 add_dependencies( testit ${BIN_NAME} )
