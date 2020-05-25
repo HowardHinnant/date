@@ -91,7 +91,33 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const rule& r);
     friend unsigned read_date(const string_t& s, unsigned i, rule& r);
+    friend bool operator==(const rule& x, const rule& y);
 };
+
+inline
+bool
+operator==(const rule& x, const rule& y)
+{
+    if (x.mode_ != y.mode_)
+        return false;
+    switch (x.mode_)
+    {
+    case rule::J:
+    case rule::N:
+        return x.n_ == y.n_;
+    case rule::M:
+        return x.m_ == y.m_ && x.n_ == y.n_ && x.wd_ == y.wd_;
+    default:
+        return true;
+    }
+}
+
+inline
+bool
+operator!=(const rule& x, const rule& y)
+{
+    return !(x == y);
+}
 
 inline
 date::local_seconds
@@ -130,7 +156,7 @@ rule::to_string() const
             std::string nm;
             if (off != hours{2})
             {
-                date::hh_mm_ss offset{off};
+                date::hh_mm_ss<seconds> offset{off};
                 nm = '/';
                 nm += std::to_string(offset.hours().count());
                 if (offset.minutes() != minutes{0} || offset.seconds() != seconds{0})
@@ -237,6 +263,8 @@ public:
     const time_zone* operator->() const {return this;}
 
     std::string name() const;
+
+    friend bool operator==(const time_zone& x, const time_zone& y);
 };
 
 inline
@@ -523,6 +551,25 @@ time_zone::name() const
         }
     }
     return nm;
+}
+
+inline
+bool
+operator==(const time_zone& x, const time_zone& y)
+{
+    return x.std_abbrev_ == y.std_abbrev_ &&
+           x.dst_abbrev_ == y. dst_abbrev_ &&
+           x.offset_ == y.offset_ &&
+           x.save_ == y.save_ &&
+           x.start_rule_ == y.start_rule_ &&
+           x.end_rule_ == y.end_rule_;
+}
+
+inline
+bool
+operator!=(const time_zone& x, const time_zone& y)
+{
+    return !(x == y);
 }
 
 namespace detail
