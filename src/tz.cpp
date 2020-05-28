@@ -349,6 +349,13 @@ discover_tz_dir()
 {
     struct stat sb;
     using namespace std;
+
+#if !TARGET_OS_IPHONE
+    auto tz_dir_env = getenv("TZDIR");
+    if (tz_dir_env != nullptr)
+        return tz_dir_env;
+#endif
+
 #  ifndef __APPLE__
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
     CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
@@ -3731,6 +3738,14 @@ sniff_realpath(const char* timezone)
 const time_zone*
 tzdb::current_zone() const
 {
+    // If used in a docker instance with no timezone info set in the regular place,
+    // provide an environment variable to set the current timezone
+    {
+        static auto tz_local_env = getenv("TZ");
+        if (tz_local_env != nullptr)
+            return locate_zone(tz_local_env);
+    }
+
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
     // containing time zone details or a symlink to such a file.
