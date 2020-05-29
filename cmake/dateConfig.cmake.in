@@ -3,9 +3,7 @@ include(CMakeFindDependencyMacro)
 set(USE_SYSTEM_TZ_DB @USE_SYSTEM_TZ_DB@)
 set(BUILD_TZ_LIB @BUILD_TZ_LIB@)
 
-if( MSVC )
-  find_dependency( Threads REQUIRED )
-endif( )
+find_dependency( Threads REQUIRED )
 
 if( NOT USE_SYSTEM_TZ_DB )
   find_dependency( CURL REQUIRED )
