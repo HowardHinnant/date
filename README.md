@@ -81,6 +81,7 @@ cd build-armhf/
 export CC=arm-linux-gnueabihf-gcc
 export CXX=arm-linux-gnueabihf-g++
 export CPACK_DEBIAN_PACKAGE_ARCHITECTURE=armhf
+export BUILD_NUMBER=dev
 cmake ..
 cpack ..
 ```

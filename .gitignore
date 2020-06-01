@@ -192,3 +192,5 @@ nbproject/*
 *.cd
 a.out
 cmake-build-debug/*
+build/
+build-armhf/

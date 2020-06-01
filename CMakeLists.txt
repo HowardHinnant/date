@@ -33,7 +33,7 @@ option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
-option( BUILD_TZ_LIB "build/install of TZ library" OFF )
+option( BUILD_TZ_LIB "build/install of TZ library" ON )
 
 if( ENABLE_DATE_TESTING AND NOT BUILD_TZ_LIB )
     message(WARNING "Testing requested, bug BUILD_TZ_LIB not ON - forcing the latter")
@@ -246,3 +246,27 @@ if( ENABLE_DATE_TESTING )
         endif( )
     endforeach( )
 endif( )
+
+
+if( UNIX )
+    set( CPACK_PACKAGE_NAME howardhinnant-date )
+    set( CPACK_PACKAGE_VERSION "${PROJECT_VERSION}-$ENV{BUILD_NUMBER}-buster" )
+    set( CPACK_PACKAGE_CONTACT "Cornerstone Solutions <maintainer@cornerstonesolutions.com.au>" )
+    set( CPACK_DEBIAN_PACKAGE_DESCRIPTION "A date and time library based on the C++11/14/17 <chrono> header" )
+    set( CPACK_DEBIAN_PACKAGE_DEPENDS "libcurl4, libstdc++6" )
+    set( CPACK_DEBIAN_PACKAGE_SECTION main )
+    set( CPACK_DEBIAN_PACKAGE_HOMEPAGE https://github.com/HowardHinnant/date )
+    set( CPACK_GENERATOR DEB )
+    if ( NOT "$ENV{CPACK_DEBIAN_PACKAGE_ARCHITECTURE}" STREQUAL "" )
+        set( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "$ENV{CPACK_DEBIAN_PACKAGE_ARCHITECTURE}" )
+    else( )
+        execute_process(
+            COMMAND dpkg --print-architecture
+            OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+    endif( )
+    set( CPACK_SYSTEM_NAME "${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}" )
+endif( )
+
+include(CPack)
