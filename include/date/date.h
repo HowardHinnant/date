@@ -4148,10 +4148,10 @@ operator+(std::basic_string<CharT, Traits, Alloc> x, const string_literal<CharT,
                            && (!defined(__SUNPRO_CC) || __SUNPRO_CC > 0x5150)
 
 template <class CharT,
-          class = std::enable_if_t<std::is_same<CharT, char>{} ||
-                                   std::is_same<CharT, wchar_t>{} ||
-                                   std::is_same<CharT, char16_t>{} ||
-                                   std::is_same<CharT, char32_t>{}>>
+          class = std::enable_if_t<std::is_same<CharT, char>::value ||
+                                   std::is_same<CharT, wchar_t>::value ||
+                                   std::is_same<CharT, char16_t>::value ||
+                                   std::is_same<CharT, char32_t>::value>>
 CONSTCD14
 inline
 string_literal<CharT, 2>
