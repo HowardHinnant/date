@@ -1447,7 +1447,11 @@ find_previous_rule(const Rule* r, date::year y)
     if (y == r->starting_year())
     {
         if (r == &rules.front() || r->name() != r[-1].name())
-            std::terminate();  // never called with first rule
+        {
+            throw std::runtime_error("find_previous_rule called but no previous rule");
+            Rule *noRule;
+            return {noRule, date::year::min()};
+        }
         --r;
         if (y == r->starting_year())
             return {r, y};
