@@ -703,6 +703,11 @@ public:
 
 private:
     template <class D, class T> friend class zoned_time;
+
+    template <class TimeZonePtr2>
+    static
+    TimeZonePtr2&&
+    check(TimeZonePtr2&& p);
 };
 
 using zoned_seconds = zoned_time<std::chrono::seconds>;
@@ -1345,12 +1350,24 @@ to_raw_pointer(Pointer p) noexcept
 }  // namespace detail
 
 template <class Duration, class TimeZonePtr>
+template <class TimeZonePtr2>
+inline
+TimeZonePtr2&&
+zoned_time<Duration, TimeZonePtr>::check(TimeZonePtr2&& p)
+{
+    if (detail::to_raw_pointer(p) == nullptr)
+        throw std::runtime_error(
+            "zoned_time constructed with a time zone pointer == nullptr");
+    return std::forward<TimeZonePtr2>(p);
+}
+
+template <class Duration, class TimeZonePtr>
 #if !defined(_MSC_VER) || (_MSC_VER > 1916)
 template <class T, class>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time()
-    : zone_(zoned_traits<TimeZonePtr>::default_zone())
+    : zone_(check(zoned_traits<TimeZonePtr>::default_zone()))
     {}
 
 template <class Duration, class TimeZonePtr>
@@ -1359,15 +1376,15 @@ template <class T, class>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(const sys_time<Duration>& st)
-    : zone_(zoned_traits<TimeZonePtr>::default_zone())
+    : zone_(check(zoned_traits<TimeZonePtr>::default_zone()))
     , tp_(st)
     {}
 
 template <class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z)
-    : zone_(std::move(z))
-    {assert(detail::to_raw_pointer(zone_) != nullptr);}
+    : zone_(check(std::move(z)))
+    {}
 
 #if HAS_STRING_VIEW
 
@@ -1402,7 +1419,7 @@ zoned_time<Duration, TimeZonePtr>::zoned_time(const zoned_time<Duration2, TimeZo
 template <class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const sys_time<Duration>& st)
-    : zone_(std::move(z))
+    : zone_(check(std::move(z)))
     , tp_(st)
     {}
 
@@ -1412,7 +1429,7 @@ template <class T, class>
 #endif
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Duration>& t)
-    : zone_(std::move(z))
+    : zone_(check(std::move(z)))
     , tp_(zone_->to_sys(t))
     {}
 
@@ -1423,7 +1440,7 @@ template <class T, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z, const local_time<Duration>& t,
                                               choose c)
-    : zone_(std::move(z))
+    : zone_(check(std::move(z)))
     , tp_(zone_->to_sys(t, c))
     {}
 
@@ -1432,7 +1449,7 @@ template <class Duration2, class TimeZonePtr2, class>
 inline
 zoned_time<Duration, TimeZonePtr>::zoned_time(TimeZonePtr z,
                                               const zoned_time<Duration2, TimeZonePtr2>& zt)
-    : zone_(std::move(z))
+    : zone_(check(std::move(z)))
     , tp_(zt.tp_)
     {}
 
