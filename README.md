@@ -69,5 +69,6 @@ cmake --build . --target testit # Consider '-- -j4' for multithreading
 * https://routinghub.com
 * https://github.com/valhalla
 * https://github.com/siodb/siodb
+* https://github.com/KomodoPlatform/atomicDEX-Pro
 
 If you would like your project (or product) on this list, just let me know.
