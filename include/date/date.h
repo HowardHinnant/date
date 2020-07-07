@@ -3715,7 +3715,7 @@ class decimal_format_seconds
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
     using rep = typename CT::rep;
 public:
-    static unsigned constexpr width = detail::width<CT::period::den>::value < 19 ?
+    static unsigned CONSTDATA width = detail::width<CT::period::den>::value < 19 ?
                                       detail::width<CT::period::den>::value : 6u;
     using precision = std::chrono::duration<rep,
                                             std::ratio<1, static_pow10<width>::value>>;
