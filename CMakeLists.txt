@@ -76,10 +76,21 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     # public headers will get installed:
     set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
 endif ()
+
+if ("${COMPILE_WITH_C_LOCALE}")
+  SET(ONLY_C_LOCALE 1)
+else()
+  SET(ONLY_C_LOCALE 0)
+endif()
+if ("${DISABLE_STRING_VIEW}")
+  SET(HAS_STRING_VIEW 0)
+else()
+  SET(HAS_STRING_VIEW 1)
+endif()
 target_compile_definitions( date INTERFACE
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
-    ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
-    $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
+    ONLY_C_LOCALE=${ONLY_C_LOCALE}
+    HAS_STRING_VIEW=${HAS_STRING_VIEW} )
 
 #[===================================================================[
    tz (compiled) library
