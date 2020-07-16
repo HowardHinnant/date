@@ -77,6 +77,15 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
 endif ()
 
+# These used to be set with generator expressions,
+#
+#   ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
+#
+# which expand in the output target file to, e.g.
+#
+#   ONLY_C_LOCALE=$<IF:$<BOOL:FALSE>,1,0>
+#
+# This string is then (somtimes?) not correctly inte
 if ("${COMPILE_WITH_C_LOCALE}")
   SET(ONLY_C_LOCALE 1)
 else()
