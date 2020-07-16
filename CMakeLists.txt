@@ -86,30 +86,35 @@ endif ()
 #   ONLY_C_LOCALE=$<IF:$<BOOL:FALSE>,1,0>
 #
 # This string is then (somtimes?) not correctly inte
-if ("${COMPILE_WITH_C_LOCALE}")
+if (${COMPILE_WITH_C_LOCALE})
   SET(ONLY_C_LOCALE 1)
 else()
   SET(ONLY_C_LOCALE 0)
 endif()
-if ("${DISABLE_STRING_VIEW}")
-  SET(HAS_STRING_VIEW 0)
+if (${DISABLE_STRING_VIEW})
+  SET(has_string_view "HAS_STRING_VIEW=0")
 else()
-  SET(HAS_STRING_VIEW 1)
+  SET(has_string_view)
 endif()
 target_compile_definitions( date INTERFACE
     #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
     ONLY_C_LOCALE=${ONLY_C_LOCALE}
-    HAS_STRING_VIEW=${HAS_STRING_VIEW} )
+    ${HAS_STRING_VIEW} )
 
 #[===================================================================[
    tz (compiled) library
 #]===================================================================]
 if( BUILD_TZ_LIB )
     add_library( date-tz )
+    if ("${IOS}")
+      set(ios_h $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h>)
+    else()
+      set(ios_h)
+    endif()
     target_sources( date-tz
       PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/tz.h
-        $<$<BOOL:${IOS}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h>
+        ${ios_h}
       PRIVATE
         include/date/tz_private.h
         $<$<BOOL:${IOS}>:src/ios.mm>
@@ -119,6 +124,18 @@ if( BUILD_TZ_LIB )
     target_include_directories( date-tz PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include> )
+
+    if ("${USE_SYSTEM_TZ_DB}" AND NOT "${WIN32}" AND NOT "${MANUAL_TZ_DB}")
+      set(USE_OS_TZDB 1)
+    else()
+      set(USE_OS_TZDB 0)
+    endif()
+    if ("${WIN32}" AND "${BUILD_SHARED_LIBS}")
+      set(date_use_dll "DATE_USE_DLL=1")
+    else()
+      set(date_use_dll)
+    endif()
+
     target_compile_definitions( date-tz
         PRIVATE
             AUTO_DOWNLOAD=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
@@ -126,9 +143,9 @@ if( BUILD_TZ_LIB )
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_BUILD_DLL=1>
             $<$<BOOL:${USE_TZ_DB_IN_DOT}>:INSTALL=.>
         PUBLIC
-            USE_OS_TZDB=$<IF:$<AND:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${MANUAL_TZ_DB}>>>,1,0>
+        USE_OS_TZDB=${USE_OS_TZDB}
         INTERFACE
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_USE_DLL=1> )
+            ${date_use_dll} )
     set(TZ_HEADERS include/date/tz.h)
     if( IOS )
         list(APPEND TZ_HEADERS include/date/ios.h)
