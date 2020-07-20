@@ -85,68 +85,59 @@ endif ()
 #
 #   ONLY_C_LOCALE=$<IF:$<BOOL:FALSE>,1,0>
 #
-# This string is then (somtimes?) not correctly inte
-if (${COMPILE_WITH_C_LOCALE})
-  SET(ONLY_C_LOCALE 1)
+# This string is then (somtimes?) not correctly interpreted.
+if ( COMPILE_WITH_C_LOCALE )
+  # To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
+  target_compile_definitions( date INTERFACE ONLY_C_LOCALE=1 )
 else()
-  SET(ONLY_C_LOCALE 0)
+  target_compile_definitions( date INTERFACE ONLY_C_LOCALE=0 )
 endif()
-if (${DISABLE_STRING_VIEW})
-  SET(has_string_view "HAS_STRING_VIEW=0")
-else()
-  SET(has_string_view)
+if ( DISABLE_STRING_VIEW )
+  target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 )
 endif()
-target_compile_definitions( date INTERFACE
-    #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
-    ONLY_C_LOCALE=${ONLY_C_LOCALE}
-    ${HAS_STRING_VIEW} )
 
 #[===================================================================[
    tz (compiled) library
 #]===================================================================]
 if( BUILD_TZ_LIB )
     add_library( date-tz )
-    if ("${IOS}")
-      set(ios_h $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h>)
-    else()
-      set(ios_h)
-    endif()
     target_sources( date-tz
       PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/tz.h
-        ${ios_h}
       PRIVATE
         include/date/tz_private.h
-        $<$<BOOL:${IOS}>:src/ios.mm>
         src/tz.cpp )
+    if ( IOS )
+      target_sources( date-tz
+        PUBLIC
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h
+        PRIVATE
+          src/ios.mm )
+    endif()
     add_library( date::tz ALIAS date-tz )
     target_link_libraries( date-tz PUBLIC date )
     target_include_directories( date-tz PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include> )
 
-    if ("${USE_SYSTEM_TZ_DB}" AND NOT "${WIN32}" AND NOT "${MANUAL_TZ_DB}")
-      set(USE_OS_TZDB 1)
+    if ( USE_SYSTEM_TZ_DB OR MANUAL_TZ_DB )
+      target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0 )
     else()
-      set(USE_OS_TZDB 0)
-    endif()
-    if ("${WIN32}" AND "${BUILD_SHARED_LIBS}")
-      set(date_use_dll "DATE_USE_DLL=1")
-    else()
-      set(date_use_dll)
+      target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=1 HAS_REMOTE_API=1 )
     endif()
 
-    target_compile_definitions( date-tz
-        PRIVATE
-            AUTO_DOWNLOAD=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
-            HAS_REMOTE_API=$<IF:$<OR:$<BOOL:${USE_SYSTEM_TZ_DB}>,$<BOOL:${MANUAL_TZ_DB}>>,0,1>
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${BUILD_SHARED_LIBS}>>:DATE_BUILD_DLL=1>
-            $<$<BOOL:${USE_TZ_DB_IN_DOT}>:INSTALL=.>
-        PUBLIC
-        USE_OS_TZDB=${USE_OS_TZDB}
-        INTERFACE
-            ${date_use_dll} )
+    if ( USE_SYSTEM_TZ_DB AND NOT WIN32 AND NOT MANUAL_TZ_DB )
+      target_compile_definitions( date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=1 )
+    else()
+      target_compile_definitions( date-tz PUBLIC USE_OS_TZDB=0 )
+    endif()
+
+    if ( WIN32 AND BUILD_SHARED_LIBS )
+      target_compile_definitions( date-tz PUBLIC DATE_BUILD_DLL=1 )
+    endif()
+
     set(TZ_HEADERS include/date/tz.h)
+
     if( IOS )
         list(APPEND TZ_HEADERS include/date/ios.h)
     endif( )
