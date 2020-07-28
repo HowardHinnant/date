@@ -43,6 +43,14 @@ Slightly modified versions of `"date.h"` and `"tz.h"` were voted into the C++20 
 
 ## Build & Test
 
+The recommended way to use any of these libraries besides `"tz.h"` is to just include it.  These are header-only libraries (except `"tz.h"`).
+
+To use `"tz.h"`, there is a single source file (`src/tz.cpp`) that needs to be compiled. Here are the recommended directions:  https://howardhinnant.github.io/date/tz.html#Installation.
+
+One can run tests by cd'ing into the `test` subdirectory and running `testit`.  There are known failures on all platforms except for macOS.  And even on macOS if C++11 is used.  If any of these failures present problems for you, there exist workarounds.
+
+Additionally there is unsupported support for [vcpkg](https://github.com/Microsoft/vcpkg) and [CMake](https://cmake.org/).  I don't personally use or maintain these systems as for me they cause more problems than they solve (for this small project).  If you would like to contribute to these build systems please feel free to file a PR.
+
 You can download and install Date using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 
     git clone https://github.com/Microsoft/vcpkg.git
