@@ -36,6 +36,9 @@
 // Posix::time_zone tz{"EST5EDT,M3.2.0,M11.1.0"};
 // zoned_time<system_clock::duration, Posix::time_zone> zt{tz, system_clock::now()};
 //
+// If the rule set is missing (everything starting with ','), then the rule is that the
+// alternate offset is never enabled.
+//
 // Note, Posix-style time zones are not recommended for all of the reasons described here:
 // https://stackoverflow.com/tags/timezone/info
 //
@@ -70,7 +73,8 @@ unsigned read_date(const string_t& s, unsigned i, rule& r);
 unsigned read_name(const string_t& s, unsigned i, std::string& name);
 unsigned read_signed_time(const string_t& s, unsigned i, std::chrono::seconds& t);
 unsigned read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t);
-unsigned read_unsigned(const string_t& s, unsigned i,  unsigned limit, unsigned& u);
+unsigned read_unsigned(const string_t& s, unsigned i,  unsigned limit, unsigned& u,
+                       const string_t& message = string_t{});
 
 class rule
 {
@@ -584,7 +588,7 @@ throw_invalid(const string_t& s, unsigned i, const string_t& message)
                              std::string(s) + '\n' +
                              "\x1b[1;32m" +
                              std::string(i, '~') + '^' +
-                             std::string(s.size()-i-1, '~') +
+                             std::string(i < s.size() ? s.size()-i-1 : 0, '~') +
                              "\x1b[0m");
 }
 
@@ -600,7 +604,7 @@ read_date(const string_t& s, unsigned i, rule& r)
     {
         ++i;
         unsigned n;
-        i = read_unsigned(s, i, 3, n);
+        i = read_unsigned(s, i, 3, n, "Expected to find the Julian day [1, 365]");
         r.mode_ = rule::J;
         r.n_ = n;
     }
@@ -608,17 +612,17 @@ read_date(const string_t& s, unsigned i, rule& r)
     {
         ++i;
         unsigned m;
-        i = read_unsigned(s, i, 2, m);
+        i = read_unsigned(s, i, 2, m, "Expected to find month [1, 12]");
         if (i == s.size() || s[i] != '.')
             throw_invalid(s, i, "Expected '.' after month");
         ++i;
         unsigned n;
-        i = read_unsigned(s, i, 1, n);
+        i = read_unsigned(s, i, 1, n, "Expected to find week number [1, 5]");
         if (i == s.size() || s[i] != '.')
             throw_invalid(s, i, "Expected '.' after weekday index");
         ++i;
         unsigned wd;
-        i = read_unsigned(s, i, 1, wd);
+        i = read_unsigned(s, i, 1, wd, "Expected to find day of week [0, 6]");
         r.mode_ = rule::M;
         r.m_ = month{m};
         r.wd_ = weekday{wd};
@@ -708,17 +712,17 @@ read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t)
     if (i == s.size())
         throw_invalid(s, i, "Expected to read unsigned time, but found end of string");
     unsigned x;
-    i = read_unsigned(s, i, 2, x);
+    i = read_unsigned(s, i, 2, x, "Expected to find hours [0, 24]");
     t = hours{x};
     if (i != s.size() && s[i] == ':')
     {
         ++i;
-        i = read_unsigned(s, i, 2, x);
+        i = read_unsigned(s, i, 2, x, "Expected to find minutes [0, 59]");
         t += minutes{x};
         if (i != s.size() && s[i] == ':')
         {
             ++i;
-            i = read_unsigned(s, i, 2, x);
+            i = read_unsigned(s, i, 2, x, "Expected to find seconds [0, 59]");
             t += seconds{x};
         }
     }
@@ -727,10 +731,11 @@ read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t)
 
 inline
 unsigned
-read_unsigned(const string_t& s, unsigned i, unsigned limit, unsigned& u)
+read_unsigned(const string_t& s, unsigned i, unsigned limit, unsigned& u,
+              const string_t& message)
 {
     if (i == s.size() || !std::isdigit(s[i]))
-        throw_invalid(s, i, "Expected to find a decimal digit");
+        throw_invalid(s, i, message);
     u = static_cast<unsigned>(s[i] - '0');
     unsigned count = 1;
     for (++i; count < limit && i != s.size() && std::isdigit(s[i]); ++i, ++count)
