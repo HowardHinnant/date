@@ -2125,14 +2125,25 @@ time_zone::load_sys_info(std::vector<detail::transition>::const_iterator i) cons
 {
     using namespace std::chrono;
     assert(!transitions_.empty());
-    assert(i != transitions_.begin());
     sys_info r;
-    r.begin = i[-1].timepoint;
-    r.end = i != transitions_.end() ? i->timepoint :
-                                      sys_seconds(sys_days(year::max()/max_day));
-    r.offset = i[-1].info->offset;
-    r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
-    r.abbrev = i[-1].info->abbrev;
+    if (i != transitions_.begin())
+    {
+        r.begin = i[-1].timepoint;
+        r.end = i != transitions_.end() ? i->timepoint :
+                                          sys_seconds(sys_days(year::max()/max_day));
+        r.offset = i[-1].info->offset;
+        r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
+        r.abbrev = i[-1].info->abbrev;
+    }
+    else
+    {
+        r.begin = sys_days(year::min()/min_day);
+        r.end = i+1 != transitions_.end() ? i[1].timepoint :
+                                          sys_seconds(sys_days(year::max()/max_day));
+        r.offset = i[0].info->offset;
+        r.save = i[0].info->is_dst ? minutes{1} : minutes{0};
+        r.abbrev = i[0].info->abbrev;
+    }
     return r;
 }
 
@@ -2167,7 +2178,7 @@ time_zone::get_info_impl(local_seconds tp) const
     {
         i.second = load_sys_info(--tr);
         tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
-        if (tps < i.second.end)
+        if (tps < i.second.end && i.first.end != i.second.end)
         {
            i.result = local_info::ambiguous;
            std::swap(i.first, i.second);
