@@ -420,20 +420,20 @@ tzdb_list::~tzdb_list()
     }
 }
 
-tzdb_list::tzdb_list(tzdb_list&& x) noexcept
+tzdb_list::tzdb_list(tzdb_list&& x) NOEXCEPT
    : head_{x.head_.exchange(nullptr)}
 {
 }
 
 void
-tzdb_list::push_front(tzdb* tzdb) noexcept
+tzdb_list::push_front(tzdb* tzdb) NOEXCEPT
 {
     tzdb->next = head_;
     head_ = tzdb;
 }
 
 tzdb_list::const_iterator
-tzdb_list::erase_after(const_iterator p) noexcept
+tzdb_list::erase_after(const_iterator p) NOEXCEPT
 {
     auto t = p.p_->next;
     p.p_->next = p.p_->next->next;
@@ -443,7 +443,7 @@ tzdb_list::erase_after(const_iterator p) noexcept
 
 struct tzdb_list::undocumented_helper
 {
-    static void push_front(tzdb_list& db_list, tzdb* tzdb) noexcept
+	static void push_front(tzdb_list& db_list, tzdb* tzdb) NOEXCEPT
     {
         db_list.push_front(tzdb);
     }
