@@ -1166,7 +1166,11 @@ private:
     static const std::intmax_t d1 = R1::den / gcd_d1_d2;
     static const std::intmax_t n2 = R2::num / gcd_n1_n2;
     static const std::intmax_t d2 = R2::den / gcd_d1_d2;
+#ifdef __cpp_constexpr
     static const std::intmax_t max = std::numeric_limits<std::intmax_t>::max();
+#else
+    static const std::intmax_t max = LLONG_MAX;
+#endif
 
     template <std::intmax_t Xp, std::intmax_t Yp, bool overflow>
     struct mul    // overflow == false
