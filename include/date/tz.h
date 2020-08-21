@@ -1226,31 +1226,31 @@ class tzdb_list
 public:
     ~tzdb_list();
     tzdb_list() = default;
-    tzdb_list(tzdb_list&& x) noexcept;
+    tzdb_list(tzdb_list&& x) NOEXCEPT;
 
-    const tzdb& front() const noexcept {return *head_;}
-          tzdb& front()       noexcept {return *head_;}
+    const tzdb& front() const NOEXCEPT {return *head_;}
+          tzdb& front()       NOEXCEPT {return *head_;}
 
     class const_iterator;
 
-    const_iterator begin() const noexcept;
-    const_iterator end() const noexcept;
+    const_iterator begin() const NOEXCEPT;
+    const_iterator end() const NOEXCEPT;
 
-    const_iterator cbegin() const noexcept;
-    const_iterator cend() const noexcept;
+    const_iterator cbegin() const NOEXCEPT;
+    const_iterator cend() const NOEXCEPT;
 
-    const_iterator erase_after(const_iterator p) noexcept;
+    const_iterator erase_after(const_iterator p) NOEXCEPT;
 
     struct undocumented_helper;
 private:
-    void push_front(tzdb* tzdb) noexcept;
+    void push_front(tzdb* tzdb) NOEXCEPT;
 };
 
 class tzdb_list::const_iterator
 {
     tzdb* p_ = nullptr;
 
-    explicit const_iterator(tzdb* p) noexcept : p_{p} {}
+    explicit const_iterator(tzdb* p) NOEXCEPT : p_{p} {}
 public:
     const_iterator() = default;
 
@@ -1260,20 +1260,20 @@ public:
     using pointer           = const value_type*;
     using difference_type   = std::ptrdiff_t;
 
-    reference operator*() const noexcept {return *p_;}
-    pointer  operator->() const noexcept {return p_;}
+    reference operator*() const NOEXCEPT {return *p_;}
+    pointer  operator->() const NOEXCEPT {return p_;}
 
-    const_iterator& operator++() noexcept {p_ = p_->next; return *this;}
-    const_iterator  operator++(int) noexcept {auto t = *this; ++(*this); return t;}
+    const_iterator& operator++() NOEXCEPT {p_ = p_->next; return *this;}
+    const_iterator  operator++(int) NOEXCEPT {auto t = *this; ++(*this); return t;}
 
     friend
     bool
-    operator==(const const_iterator& x, const const_iterator& y) noexcept
+    operator==(const const_iterator& x, const const_iterator& y) NOEXCEPT
         {return x.p_ == y.p_;}
 
     friend
     bool
-    operator!=(const const_iterator& x, const const_iterator& y) noexcept
+    operator!=(const const_iterator& x, const const_iterator& y) NOEXCEPT
         {return !(x == y);}
 
     friend class tzdb_list;
@@ -1281,28 +1281,28 @@ public:
 
 inline
 tzdb_list::const_iterator
-tzdb_list::begin() const noexcept
+tzdb_list::begin() const NOEXCEPT
 {
     return const_iterator{head_};
 }
 
 inline
 tzdb_list::const_iterator
-tzdb_list::end() const noexcept
+tzdb_list::end() const NOEXCEPT
 {
     return const_iterator{nullptr};
 }
 
 inline
 tzdb_list::const_iterator
-tzdb_list::cbegin() const noexcept
+tzdb_list::cbegin() const NOEXCEPT
 {
     return begin();
 }
 
 inline
 tzdb_list::const_iterator
-tzdb_list::cend() const noexcept
+tzdb_list::cend() const NOEXCEPT
 {
     return end();
 }
@@ -1333,7 +1333,7 @@ namespace detail
 template <class T>
 inline
 T*
-to_raw_pointer(T* p) noexcept
+to_raw_pointer(T* p) NOEXCEPT
 {
     return p;
 }
@@ -1341,7 +1341,7 @@ to_raw_pointer(T* p) noexcept
 template <class Pointer>
 inline
 auto
-to_raw_pointer(Pointer p) noexcept
+to_raw_pointer(Pointer p) NOEXCEPT
     -> decltype(detail::to_raw_pointer(p.operator->()))
 {
     return detail::to_raw_pointer(p.operator->());

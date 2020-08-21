@@ -420,20 +420,20 @@ tzdb_list::~tzdb_list()
     }
 }
 
-tzdb_list::tzdb_list(tzdb_list&& x) noexcept
+tzdb_list::tzdb_list(tzdb_list&& x) NOEXCEPT
    : head_{x.head_.exchange(nullptr)}
 {
 }
 
 void
-tzdb_list::push_front(tzdb* tzdb) noexcept
+tzdb_list::push_front(tzdb* tzdb) NOEXCEPT
 {
     tzdb->next = head_;
     head_ = tzdb;
 }
 
 tzdb_list::const_iterator
-tzdb_list::erase_after(const_iterator p) noexcept
+tzdb_list::erase_after(const_iterator p) NOEXCEPT
 {
     auto t = p.p_->next;
     p.p_->next = p.p_->next->next;
@@ -443,7 +443,7 @@ tzdb_list::erase_after(const_iterator p) noexcept
 
 struct tzdb_list::undocumented_helper
 {
-    static void push_front(tzdb_list& db_list, tzdb* tzdb) noexcept
+    static void push_front(tzdb_list& db_list, tzdb* tzdb) NOEXCEPT
     {
         db_list.push_front(tzdb);
     }
@@ -3305,8 +3305,8 @@ remote_download(const std::string& version, char* error_buffer)
     {
         auto mapping_file = get_download_mapping_file(version);
         result = download_to_file(
-			"https://raw.githubusercontent.com/unicode-org/cldr/master/"
-			"common/supplemental/windowsZones.xml",
+            "https://raw.githubusercontent.com/unicode-org/cldr/master/"
+            "common/supplemental/windowsZones.xml",
             mapping_file, download_file_options::text, error_buffer);
     }
 #  endif  // _WIN32
