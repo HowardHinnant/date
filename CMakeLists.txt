@@ -18,6 +18,7 @@
 cmake_minimum_required( VERSION 3.7 )
 
 project( date VERSION 3.0.0 )
+set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
 
 include( GNUInstallDirs )
 
@@ -114,7 +115,7 @@ if( BUILD_TZ_LIB )
         PRIVATE
           src/ios.mm )
     endif()
-    add_library( date::tz ALIAS date-tz )
+    add_library( date::date-tz ALIAS date-tz )
     target_link_libraries( date-tz PUBLIC date )
     target_include_directories( date-tz PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -145,7 +146,7 @@ if( BUILD_TZ_LIB )
         POSITION_INDEPENDENT_CODE ON
         PUBLIC_HEADER "${TZ_HEADERS}"
         VERSION "${PROJECT_VERSION}"
-        SOVERSION "${PROJECT_VERSION}" )
+        SOVERSION "${ABI_VERSION}" )
     if( NOT MSVC )
         find_package( Threads )
         target_link_libraries( date-tz PUBLIC Threads::Threads )
@@ -250,7 +251,7 @@ if( ENABLE_DATE_TESTING )
                     ${CMAKE_CXX_COMPILER}
                     -std=c++14
                     -L${CMAKE_BINARY_DIR}/
-                    -ltz
+                    -ldate-tz
                     -I${PROJECT_SOURCE_DIR}/include
                     -I${PROJECT_SOURCE_DIR}/include/date
                     -o ${BIN_NAME}
