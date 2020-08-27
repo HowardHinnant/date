@@ -3702,8 +3702,9 @@ extract_tz_name(char const* rp)
     if (pos == result.npos)
         throw runtime_error(
             "current_zone() failed to find \"zoneinfo\" in " + string(result));
-    pos = result.find('/', pos);
-    result.remove_prefix(pos + 1);
+    pos = result.find(get_tz_dir());
+    if (pos != result.npos)
+        result.erase(0, get_tz_dir().size() + 1 + pos);
     return result;
 }
 
@@ -3720,8 +3721,9 @@ extract_tz_name(char const* rp)
     if (pos == result.npos)
         throw runtime_error(
             "current_zone() failed to find \"zoneinfo\" in " + result);
-    pos = result.find('/', pos);
-    result.erase(0, pos + 1);
+    pos = result.find(get_tz_dir());
+    if (pos != result.npos)
+        result.erase(0, get_tz_dir().size() + 1 + pos);
     return result;
 }
 
@@ -3791,17 +3793,11 @@ tzdb::current_zone() const
         CONSTDATA auto timezone = "/etc/TZ";
         if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
             using namespace std;
-            string result;
             char rp[PATH_MAX+1] = {};
             if (readlink(timezone, rp, sizeof(rp)-1) > 0)
-                result = string(rp);
+                return locate_zone(extract_tz_name(rp));
             else
                 throw system_error(errno, system_category(), "readlink() failed");
-
-            const size_t pos = result.find(get_tz_dir());
-            if (pos != result.npos)
-                result.erase(0, get_tz_dir().size() + 1 + pos);
-            return locate_zone(result);
         }
     }
     {
