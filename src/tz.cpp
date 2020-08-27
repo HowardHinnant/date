@@ -351,11 +351,14 @@ discover_tz_dir()
     using namespace std;
 #  ifndef __APPLE__
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
-    CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
+    CONSTDATA auto tz_dir_buildroot_uclibc = "/usr/share/zoneinfo/uclibc";
+    CONSTDATA auto tz_dir_buildroot_glibc = "/usr/share/zoneinfo/posix";
 
-    // Check special path which is valid for buildroot with uclibc builds
-    if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
-        return tz_dir_buildroot;
+    // Check special paths which are valid for buildroot with uclibc/glibc builds
+    if(stat(tz_dir_buildroot_uclibc, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_buildroot_uclibc;
+    else if(stat(tz_dir_buildroot_glibc, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_buildroot_glibc;
     else if(stat(tz_dir_default, &sb) == 0 && S_ISDIR(sb.st_mode))
         return tz_dir_default;
     else
