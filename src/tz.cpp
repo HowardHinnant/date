@@ -3707,7 +3707,7 @@ extract_tz_name(char const* rp)
             "current_zone() failed to find \"zoneinfo\" in " + string(result));
     pos = result.find(get_tz_dir());
     if (pos != result.npos)
-        result.erase(0, get_tz_dir().size() + 1 + pos);
+        result.remove_prefix(get_tz_dir().size() + 1 + pos);
     return result;
 }
 
