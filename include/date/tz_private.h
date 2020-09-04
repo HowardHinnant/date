@@ -247,8 +247,8 @@ struct zonelet
     local_seconds                      until_loc_;
     std::chrono::minutes               initial_save_{0};
     std::string                        initial_abbrev_;
-    std::pair<const Rule*, date::year> first_rule_{nullptr, date::year::min()};
-    std::pair<const Rule*, date::year> last_rule_{nullptr, date::year::max()};
+    std::pair<const Rule*, date::year> first_rule_{nullptr, (date::year::min)()};
+    std::pair<const Rule*, date::year> last_rule_{nullptr, (date::year::max)()};
 
     ~zonelet();
     zonelet();
