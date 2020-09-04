@@ -1167,7 +1167,7 @@ private:
     static const std::intmax_t n2 = R2::num / gcd_n1_n2;
     static const std::intmax_t d2 = R2::den / gcd_d1_d2;
 #ifdef __cpp_constexpr
-    static const std::intmax_t max = std::numeric_limits<std::intmax_t>::max();
+    static const std::intmax_t max = (std::numeric_limits<std::intmax_t>::max)();
 #else
     static const std::intmax_t max = LLONG_MAX;
 #endif
@@ -6107,7 +6107,7 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
         {
             if (c == '-' || c == '+')
                 (void)is.get();
-            auto x = static_cast<int>(read_unsigned(is, std::max(m, 1u), M));
+            auto x = static_cast<int>(read_unsigned(is, (std::max)(m, 1u), M));
             if (!is.fail())
             {
                 if (c == '-')
