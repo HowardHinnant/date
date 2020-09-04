@@ -418,8 +418,8 @@ public:
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
-    static CONSTCD11 year min() NOEXCEPT { return year{-32767}; }
-    static CONSTCD11 year max() NOEXCEPT { return year{32767}; }
+    static CONSTCD11 year (min)() NOEXCEPT { return year{-32767}; }
+    static CONSTCD11 year (max)() NOEXCEPT { return year{32767}; }
 };
 
 CONSTCD11 bool operator==(const year& x, const year& y) NOEXCEPT;
@@ -1631,7 +1631,7 @@ inline
 bool
 year::ok() const NOEXCEPT
 {
-    return y_ != std::numeric_limits<short>::min();
+    return y_ != (std::numeric_limits<short>::min)();
 }
 
 CONSTCD11
@@ -6328,20 +6328,20 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         auto modified = CharT{};
         auto width = -1;
 
-        CONSTDATA int not_a_year = numeric_limits<short>::min();
+        CONSTDATA int not_a_year = (numeric_limits<short>::min)();
         CONSTDATA int not_a_2digit_year = 100;
         CONSTDATA int not_a_century = not_a_year / 100;
         CONSTDATA int not_a_month = 0;
         CONSTDATA int not_a_day = 0;
-        CONSTDATA int not_a_hour = numeric_limits<int>::min();
+        CONSTDATA int not_a_hour = (numeric_limits<int>::min)();
         CONSTDATA int not_a_hour_12_value = 0;
         CONSTDATA int not_a_minute = not_a_hour;
-        CONSTDATA Duration not_a_second = Duration::min();
+        CONSTDATA Duration not_a_second = (Duration::min)();
         CONSTDATA int not_a_doy = -1;
         CONSTDATA int not_a_weekday = 8;
         CONSTDATA int not_a_week_num = 100;
         CONSTDATA int not_a_ampm = -1;
-        CONSTDATA minutes not_a_offset = minutes::min();
+        CONSTDATA minutes not_a_offset = (minutes::min)();
 
         int Y = not_a_year;             // c, F, Y                   *
         int y = not_a_2digit_year;      // D, x, y                   *
@@ -7446,7 +7446,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 G = tG;
             }
-            if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
+            if (Y < static_cast<int>((year::min)()) || Y > static_cast<int>((year::max)()))
                 Y = not_a_year;
             bool computed = false;
             if (G != not_a_year && V != not_a_week_num && wd != not_a_weekday)
