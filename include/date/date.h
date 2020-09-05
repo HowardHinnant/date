@@ -3685,11 +3685,12 @@ struct undocumented {explicit undocumented() = default;};
 // Example:  width<4>::value    ==  2
 // Example:  width<10>::value   ==  1
 // Example:  width<1000>::value ==  3
-template <std::uint64_t n, std::uint64_t d = 10, unsigned w = 0,
-          bool should_continue = !(n < 2) && d != 0 && (w < 19)>
+template <std::uint64_t n, std::uint64_t d, unsigned w = 0,
+          bool should_continue = n%d != 0 && w < 19>
 struct width
 {
-    static CONSTDATA unsigned value = 1 + width<n, d%n*10, w+1>::value;
+    static_assert(d > 0, "width called with zero denominator");
+    static CONSTDATA unsigned value = 1 + width<n%d*10, d, w+1>::value;
 };
 
 template <std::uint64_t n, std::uint64_t d, unsigned w>
@@ -3718,9 +3719,10 @@ class decimal_format_seconds
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
     using rep = typename CT::rep;
+    static unsigned CONSTDATA trial_width =
+        detail::width<CT::period::num, CT::period::den>::value;
 public:
-    static unsigned CONSTDATA width = detail::width<CT::period::den>::value < 19 ?
-                                      detail::width<CT::period::den>::value : 6u;
+    static unsigned CONSTDATA width = trial_width < 19 ? trial_width : 6u;
     using precision = std::chrono::duration<rep,
                                             std::ratio<1, static_pow10<width>::value>>;
 
