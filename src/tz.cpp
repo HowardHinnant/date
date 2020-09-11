@@ -465,6 +465,32 @@ get_tzdb_list()
     return tz_db;
 }
 
+static
+std::string
+parse3(std::istream& in)
+{
+    std::string r(3, ' ');
+    ws(in);
+    r[0] = static_cast<char>(in.get());
+    r[1] = static_cast<char>(in.get());
+    r[2] = static_cast<char>(in.get());
+    return r;
+}
+
+static
+unsigned
+parse_month(std::istream& in)
+{
+    CONSTDATA char*const month_names[] =
+        {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    auto s = parse3(in);
+    auto m = std::find(std::begin(month_names), std::end(month_names), s) - month_names;
+    if (m >= std::end(month_names) - std::begin(month_names))
+        throw std::runtime_error("oops: bad month name: " + s);
+    return static_cast<unsigned>(++m);
+}
+
 #if !USE_OS_TZDB
 
 #ifdef _WIN32
@@ -680,18 +706,6 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
 // Parsing helpers
 
 static
-std::string
-parse3(std::istream& in)
-{
-    std::string r(3, ' ');
-    ws(in);
-    r[0] = static_cast<char>(in.get());
-    r[1] = static_cast<char>(in.get());
-    r[2] = static_cast<char>(in.get());
-    return r;
-}
-
-static
 unsigned
 parse_dow(std::istream& in)
 {
@@ -702,20 +716,6 @@ parse_dow(std::istream& in)
     if (dow >= std::end(dow_names) - std::begin(dow_names))
         throw std::runtime_error("oops: bad dow name: " + s);
     return static_cast<unsigned>(dow);
-}
-
-static
-unsigned
-parse_month(std::istream& in)
-{
-    CONSTDATA char*const month_names[] =
-        {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    auto s = parse3(in);
-    auto m = std::find(std::begin(month_names), std::end(month_names), s) - month_names;
-    if (m >= std::end(month_names) - std::begin(month_names))
-        throw std::runtime_error("oops: bad month name: " + s);
-    return static_cast<unsigned>(++m);
 }
 
 static
@@ -2221,14 +2221,10 @@ operator<<(std::ostream& os, const time_zone& z)
     return os;
 }
 
-#if !MISSING_LEAP_SECONDS
-
 leap_second::leap_second(const sys_seconds& s, detail::undocumented)
     : date_(s)
 {
 }
-
-#endif  // !MISSING_LEAP_SECONDS
 
 #else  // !USE_OS_TZDB
 
@@ -2626,16 +2622,12 @@ operator<<(std::ostream& os, const time_zone& z)
 
 #endif  // !USE_OS_TZDB
 
-#if !MISSING_LEAP_SECONDS
-
 std::ostream&
 operator<<(std::ostream& os, const leap_second& x)
 {
     using namespace date;
     return os << x.date_ << "  +";
 }
-
-#endif  // !MISSING_LEAP_SECONDS
 
 #if USE_OS_TZDB
 
@@ -2654,6 +2646,85 @@ get_version()
     return version;
 }
 # endif
+
+static
+std::vector<leap_second>
+find_read_and_leap_seconds()
+{
+    std::ifstream in(get_tz_dir() + std::string(1, folder_delimiter) + "leapseconds",
+                     std::ios_base::binary);
+    if (in)
+    {
+        std::vector<leap_second> leap_seconds;
+        std::string line;
+        while (in)
+        {
+            std::getline(in, line);
+            if (!line.empty() && line[0] != '#')
+            {
+                std::istringstream in(line);
+                in.exceptions(std::ios::failbit | std::ios::badbit);
+                std::string word;
+                in >> word;
+                if (word == "Leap")
+                {
+                    int y, m, d;
+                    in >> y;
+                    m = static_cast<int>(parse_month(in));
+                    in >> d;
+                    leap_seconds.push_back(leap_second(sys_days{year{y}/m/d} + days{1},
+                                                                 detail::undocumented{}));
+                }
+                else
+                {
+                    std::cerr << line << '\n';
+                }
+            }
+        }
+        return leap_seconds;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "leap-seconds.list",
+                     std::ios_base::binary);
+    if (in)
+    {
+        std::vector<leap_second> leap_seconds;
+        std::string line;
+        const auto offset = sys_days{1970_y/1/1}-sys_days{1900_y/1/1};
+        while (in)
+        {
+            std::getline(in, line);
+            if (!line.empty() && line[0] != '#')
+            {
+                std::istringstream in(line);
+                in.exceptions(std::ios::failbit | std::ios::badbit);
+                using seconds = std::chrono::seconds;
+                seconds::rep s;
+                in >> s;
+                if (s == 2272060800)
+                    continue;
+                leap_seconds.push_back(leap_second(sys_seconds{seconds{s}} - offset,
+                                                                 detail::undocumented{}));
+            }
+        }
+        return leap_seconds;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
+                     std::ios_base::binary);
+    if (in)
+    {
+        return load_just_leaps(in);
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "UTC",
+                     std::ios_base::binary);
+    if (in)
+    {
+        return load_just_leaps(in);
+    }
+    return {};
+}
 
 static
 std::unique_ptr<tzdb>
@@ -2709,25 +2780,7 @@ init_tzdb()
     }
     db->zones.shrink_to_fit();
     std::sort(db->zones.begin(), db->zones.end());
-#  if !MISSING_LEAP_SECONDS
-    std::ifstream in(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
-                     std::ios_base::binary);
-    if (in)
-    {
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leap_seconds = load_just_leaps(in);
-    }
-    else
-    {
-        in.clear();
-        in.open(get_tz_dir() + std::string(1, folder_delimiter) +
-                "UTC", std::ios_base::binary);
-        if (!in)
-            throw std::runtime_error("Unable to extract leap second information");
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leap_seconds = load_just_leaps(in);
-    }
-#  endif  // !MISSING_LEAP_SECONDS
+    db->leap_seconds = find_read_and_leap_seconds();
 #  ifdef __APPLE__
     db->version = get_version();
 #  endif
@@ -3580,11 +3633,9 @@ operator<<(std::ostream& os, const tzdb& db)
     os << "Version: " << db.version << "\n\n";
     for (const auto& x : db.zones)
         os << x << '\n';
-#if !MISSING_LEAP_SECONDS
     os << '\n';
     for (const auto& x : db.leap_seconds)
         os << x << '\n';
-#endif  // !MISSING_LEAP_SECONDS
     return os;
 }
 

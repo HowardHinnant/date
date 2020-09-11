@@ -86,15 +86,6 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  ifdef _WIN32
 #    error "USE_OS_TZDB can not be used on Windows"
 #  endif
-#  ifndef MISSING_LEAP_SECONDS
-#    ifdef __APPLE__
-#      define MISSING_LEAP_SECONDS 1
-#    else
-#      define MISSING_LEAP_SECONDS 0
-#    endif
-#  endif
-#else
-#  define MISSING_LEAP_SECONDS 0
 #endif
 
 #ifndef HAS_DEDUCTION_GUIDES
@@ -995,8 +986,6 @@ inline bool operator>=(const time_zone_link& x, const time_zone_link& y) {return
 
 #endif  // !USE_OS_TZDB
 
-#if !MISSING_LEAP_SECONDS
-
 class leap_second
 {
 private:
@@ -1120,8 +1109,6 @@ operator>=(const sys_time<Duration>& x, const leap_second& y)
 
 using leap = leap_second;
 
-#endif  // !MISSING_LEAP_SECONDS
-
 #ifdef _WIN32
 
 namespace detail
@@ -1167,9 +1154,7 @@ struct tzdb
 #if !USE_OS_TZDB
     std::vector<time_zone_link> links;
 #endif
-#if !MISSING_LEAP_SECONDS
     std::vector<leap_second>    leap_seconds;
-#endif
 #if !USE_OS_TZDB
     std::vector<detail::Rule>   rules;
 #endif
@@ -1863,8 +1848,6 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const zoned_time<Duration, Tim
     const CharT fmt[] = {'%', 'F', ' ', '%', 'T', ' ', '%', 'Z', CharT{}};
     return to_stream(os, fmt, t);
 }
-
-#if !MISSING_LEAP_SECONDS
 
 class utc_clock
 {
@@ -2803,8 +2786,6 @@ to_gps_time(const tai_time<Duration>& t)
 {
     return gps_clock::from_utc(tai_clock::to_utc(t));
 }
-
-#endif  // !MISSING_LEAP_SECONDS
 
 }  // namespace date
 
