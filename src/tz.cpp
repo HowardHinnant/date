@@ -2631,7 +2631,6 @@ operator<<(std::ostream& os, const leap_second& x)
 
 #if USE_OS_TZDB
 
-# ifdef __APPLE__
 static
 std::string
 get_version()
@@ -2640,12 +2639,20 @@ get_version()
     auto path = get_tz_dir() + string("/+VERSION");
     ifstream in{path};
     string version;
-    in >> version;
-    if (in.fail())
-        throw std::runtime_error("Unable to get Timezone database version from " + path);
+    if (in)
+    {
+        in >> version;
+        return version;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "version");
+    if (in)
+    {
+        in >> version;
+        return version;
+    }
     return version;
 }
-# endif
 
 static
 std::vector<leap_second>
@@ -2781,9 +2788,7 @@ init_tzdb()
     db->zones.shrink_to_fit();
     std::sort(db->zones.begin(), db->zones.end());
     db->leap_seconds = find_read_and_leap_seconds();
-#  ifdef __APPLE__
     db->version = get_version();
-#  endif
     return db;
 }
 
