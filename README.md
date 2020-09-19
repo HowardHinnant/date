@@ -79,5 +79,6 @@ cmake --build . --target testit # Consider '-- -j4' for multithreading
 * https://github.com/siodb/siodb
 * https://github.com/KomodoPlatform/atomicDEX-Pro
 * https://github.com/Kotlin/kotlinx-datetime
+* https://github.com/royalbee/jewish_date
 
 If you would like your project (or product) on this list, just let me know.
