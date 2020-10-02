@@ -3686,7 +3686,7 @@ struct undocumented {explicit undocumented() = default;};
 // Example:  width<10>::value   ==  1
 // Example:  width<1000>::value ==  3
 template <std::uint64_t n, std::uint64_t d, unsigned w = 0,
-          bool should_continue = n%d != 0 && w < 19>
+          bool should_continue = n%d != 0 && (w < 19)>
 struct width
 {
     static_assert(d > 0, "width called with zero denominator");
