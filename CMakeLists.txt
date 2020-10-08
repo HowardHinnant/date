@@ -156,6 +156,9 @@ if( BUILD_TZ_LIB )
         target_include_directories( date-tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
         target_link_libraries( date-tz PRIVATE ${CURL_LIBRARIES} )
     endif( )
+    if( DISABLE_STRING_VIEW )
+      target_compile_definitions( date-tz PRIVATE -DHAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
+    endif( )
 endif( )
 
 #[===================================================================[
