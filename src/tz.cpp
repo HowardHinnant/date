@@ -141,7 +141,7 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  if !USE_OS_TZDB
+#  if !USE_OS_TZDB && !defined(INSTALL)
 #    include <wordexp.h>
 #  endif
 #  include <limits.h>
