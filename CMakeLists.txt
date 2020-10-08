@@ -94,7 +94,7 @@ else()
   target_compile_definitions( date INTERFACE ONLY_C_LOCALE=0 )
 endif()
 if ( DISABLE_STRING_VIEW )
-  target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 )
+  target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
 endif()
 
 #[===================================================================[
@@ -155,9 +155,6 @@ if( BUILD_TZ_LIB )
         find_package( CURL REQUIRED )
         target_include_directories( date-tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
         target_link_libraries( date-tz PRIVATE ${CURL_LIBRARIES} )
-    endif( )
-    if( DISABLE_STRING_VIEW )
-      target_compile_definitions( date-tz PRIVATE -DHAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
     endif( )
 endif( )
 
