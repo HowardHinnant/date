@@ -81,6 +81,10 @@
 #  endif  // __MINGW32__
 
 #  include <windows.h>
+#  include <regex>
+#  if !defined(S_ISDIR) && defined(S_IFMT) && defined(_S_IFDIR)
+#    define S_ISDIR(m) (((m) & S_IFMT) == _S_IFDIR)
+#  endif
 #endif  // _WIN32
 
 #include "date/tz_private.h"
@@ -93,7 +97,12 @@
 #endif
 
 #if USE_OS_TZDB
-#  include <dirent.h>
+#  if !WIN32
+#    include <dirent.h>
+#  else
+#    include <windef.h>
+#    include <fstream>
+#  endif
 #endif
 #include <algorithm>
 #include <cctype>
@@ -141,7 +150,7 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  if !USE_OS_TZDB && !defined(INSTALL)
+#  if !USE_OS_TZDB
 #    include <wordexp.h>
 #  endif
 #  include <limits.h>
@@ -299,6 +308,14 @@ access_install()
     #undef STRINGIZE
 #endif  // !INSTALL
 
+    {
+        static char* tz_local_env = getenv("TZDATA_DIR");
+        if (tz_local_env != nullptr) {
+            static std::string tz_local_env_s = tz_local_env;
+            return tz_local_env_s;
+        }
+    }
+
     return install;
 }
 
@@ -341,7 +358,6 @@ CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 
 #endif  // USE_OS_TZDB
 
-#ifndef _WIN32
 
 static
 std::string
@@ -352,6 +368,16 @@ discover_tz_dir()
 #  ifndef __APPLE__
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
     CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
+
+    {
+        // TZDIR is from the posix naming
+        // https://man7.org/linux/man-pages/man3/tzset.3.html
+        static char* tz_local_env = getenv("TZDIR");
+        if (tz_local_env != nullptr) {
+            static std::string tz_local_env_s = tz_local_env;
+            return tz_local_env_s;
+        }
+    }
 
     // Check special path which is valid for buildroot with uclibc builds
     if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
@@ -396,7 +422,6 @@ get_tz_dir()
     return tz_dir;
 }
 
-#endif
 
 // +-------------------+
 // | End Configuration |
@@ -490,8 +515,6 @@ parse_month(std::istream& in)
         throw std::runtime_error("oops: bad month name: " + s);
     return static_cast<unsigned>(++m);
 }
-
-#if !USE_OS_TZDB
 
 #ifdef _WIN32
 
@@ -703,6 +726,8 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
 
 #endif  // _WIN32
 
+
+#if !USE_OS_TZDB
 // Parsing helpers
 
 static
@@ -1732,9 +1757,15 @@ time_zone::time_zone(const std::string& s, detail::undocumented)
 
 enum class endian
 {
-    native = __BYTE_ORDER__,
+#ifdef _WIN32
+    little = 0,
+    big    = 1,
+    native = little
+#else
     little = __ORDER_LITTLE_ENDIAN__,
-    big    = __ORDER_BIG_ENDIAN__
+    big    = __ORDER_BIG_ENDIAN__,
+    native = __BYTE_ORDER__
+#endif
 };
 
 static
@@ -2041,8 +2072,10 @@ time_zone::init_impl()
 {
     using namespace std;
     using namespace std::chrono;
-    auto name = get_tz_dir() + ('/' + name_);
-    std::ifstream inf(name);
+    auto name = get_tz_dir() + (folder_delimiter + name_);
+    // Some platforms will open the inf stream in text mode. Specify binary
+    // to avoid confusion.
+    std::ifstream inf(name, std::ios::in | std::ios::binary);
     if (!inf.is_open())
         throw std::runtime_error{"Unable to open " + name};
     inf.exceptions(std::ios::failbit | std::ios::badbit);
@@ -2742,8 +2775,10 @@ init_tzdb()
     //Iterate through folders
     std::queue<std::string> subfolders;
     subfolders.emplace(get_tz_dir());
-    struct dirent* d;
+
     struct stat s;
+#if !WIN32 // !WIN32
+    struct dirent* d;
     while (!subfolders.empty())
     {
         auto dirname = std::move(subfolders.front());
@@ -2785,6 +2820,56 @@ init_tzdb()
         }
         closedir(dir);
     }
+#else // WIN32
+    // POSIX dirent is not availible in Visual C++
+    // Use Windows file API instead
+    WIN32_FIND_DATA hFindData;
+    while (!subfolders.empty())
+    {
+        auto dirname = std::move(subfolders.front());
+        subfolders.pop();
+        HANDLE hFind = FindFirstFile((dirname + "\\\\*").c_str(), &hFindData);
+        if (hFind == INVALID_HANDLE_VALUE)
+        {
+            continue;
+        }
+
+        do
+        {
+            // Ignore these files:
+            if (hFindData.cFileName[0]                      == '.'    || // curdir, prevdir, hidden
+                memcmp(hFindData.cFileName, "posix", 5)     == 0      || // starts with posix
+                strcmp(hFindData.cFileName, "Factory")      == 0      ||
+                strcmp(hFindData.cFileName, "iso3166.tab")  == 0      ||
+                strcmp(hFindData.cFileName, "right")        == 0      ||
+                strcmp(hFindData.cFileName, "+VERSION")     == 0      ||
+                strcmp(hFindData.cFileName, "zone.tab")     == 0      ||
+                strcmp(hFindData.cFileName, "zone1970.tab") == 0      ||
+                strcmp(hFindData.cFileName, "tzdata.zi")    == 0      ||
+                strcmp(hFindData.cFileName, "leapseconds")  == 0      ||
+                strcmp(hFindData.cFileName, "leap-seconds.list") == 0   )
+            {
+                continue;
+            }
+            auto subname = dirname + folder_delimiter + hFindData.cFileName;
+            if(stat(subname.c_str(), &s) == 0)
+            {
+                if(S_ISDIR(s.st_mode))
+                {
+                    subfolders.push(subname);
+                }
+                else
+                {
+                    std::string zone = subname.substr(get_tz_dir().size()+1);
+                    db->zones.emplace_back(zone,
+                                           detail::undocumented{});
+                }
+            }
+        }
+        while (FindNextFile(hFind, &hFindData ));
+        FindClose(hFind);
+    }
+#endif // WIN32
     db->zones.shrink_to_fit();
     std::sort(db->zones.begin(), db->zones.end());
     db->leap_seconds = find_read_and_leap_seconds();
@@ -3627,7 +3712,17 @@ locate_zone(std::string_view tz_name)
 locate_zone(const std::string& tz_name)
 #endif
 {
-    return get_tzdb().locate_zone(tz_name);
+    return get_tzdb().locate_zone(
+#if WIN32 && USE_OS_TZDB
+    // When USE_OS_TZDB=ON, the tz_name needs to be a valid path.
+    // For timezone labeling consistency in Windows, switch "/" to "\".
+    // This will allow for tz_name to have consistent naming regardless of
+    // if USE_OS_TZDB is ON.
+    std::regex_replace(tz_name, std::regex("\\/"), "\\")
+#else
+    tz_name
+#endif
+    );
 }
 
 #if USE_OS_TZDB

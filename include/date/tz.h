@@ -82,12 +82,6 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  define USE_SHELL_API 1
 #endif
 
-#if USE_OS_TZDB
-#  ifdef _WIN32
-#    error "USE_OS_TZDB can not be used on Windows"
-#  endif
-#endif
-
 #ifndef HAS_DEDUCTION_GUIDES
 #  if __cplusplus >= 201703
 #    define HAS_DEDUCTION_GUIDES 1
