@@ -6966,7 +6966,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 #else
                         auto nm = detail::ampm_names();
                         auto i = detail::scan_keyword(is, nm.first, nm.second) - nm.first;
-                        tp = i;
+                        tp = static_cast<decltype(tp)>(i);
 #endif
                         checked_set(p, tp, not_a_ampm, is);
                     }
