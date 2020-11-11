@@ -35,6 +35,7 @@ option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
+# Only works when MANUAL_TZ_DB = ON
 option( USE_CUSTOM_TZDB_INSTALL_PATH "Use a custom path for finding the tzdata folder" OFF )
 # The location of the database is CUSTOM_TZDB_INSTALL_PATH/tzdata (CUSTOM_TZDB_INSTALL_PATH\tzdata on Windows)
 set(CUSTOM_TZDB_INSTALL_PATH ".")
@@ -104,7 +105,7 @@ if ( DISABLE_STRING_VIEW )
   target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
 endif()
 if ( USE_CUSTOM_TZDB_INSTALL_PATH )
-  target_compile_definitions( date INTERFACE TZDB_INSTALL_PATH=${CUSTOM_TZDB_INSTALL_PATH} )
+  target_compile_definitions( date INTERFACE INSTALL=${CUSTOM_TZDB_INSTALL_PATH} )
 endif()
 
 #[===================================================================[
