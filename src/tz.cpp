@@ -123,7 +123,7 @@
 #    include <winapifamily.h>
 #    if WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP
 #      define WINRT
-#      define INSTALL .
+#      define TZDB_INSTALL_PATH .
 #    endif
 #  endif
 
@@ -141,7 +141,7 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  if !USE_OS_TZDB && !defined(INSTALL)
+#  if !USE_OS_TZDB && !defined(TZDB_INSTALL_PATH)
 #    include <wordexp.h>
 #  endif
 #  include <limits.h>
@@ -222,7 +222,7 @@ get_known_folder(const GUID& folderid)
     return folder;
 }
 
-#      ifndef INSTALL
+#      ifndef TZDB_INSTALL_PATH
 
 // Usually something like "c:\Users\username\Downloads".
 static
@@ -232,12 +232,12 @@ get_download_folder()
     return get_known_folder(FOLDERID_Downloads);
 }
 
-#      endif  // !INSTALL
+#      endif  // !TZDB_INSTALL_PATH
 
 #    endif // WINRT
 #  else // !_WIN32
 
-#    if !defined(INSTALL)
+#    if !defined(TZDB_INSTALL_PATH)
 
 static
 std::string
@@ -263,7 +263,7 @@ get_download_folder()
     return expand_path("~/Downloads");
 }
 
-#    endif // !defined(INSTALL)
+#    endif // !defined(TZDB_INSTALL_PATH)
 
 #  endif  // !_WIN32
 
@@ -284,20 +284,20 @@ std::string&
 access_install()
 {
     static std::string install
-#ifndef INSTALL
+#ifndef TZDB_INSTALL_PATH
 
     = get_download_folder() + folder_delimiter + "tzdata";
 
-#else   // !INSTALL
+#else   // !TZDB_INSTALL_PATH
 
 #  define STRINGIZEIMP(x) #x
 #  define STRINGIZE(x) STRINGIZEIMP(x)
 
-    = STRINGIZE(INSTALL) + std::string(1, folder_delimiter) + "tzdata";
+    = STRINGIZE(TZDB_INSTALL_PATH) + std::string(1, folder_delimiter) + "tzdata";
 
     #undef STRINGIZEIMP
     #undef STRINGIZE
-#endif  // !INSTALL
+#endif  // !TZDB_INSTALL_PATH
 
     return install;
 }
