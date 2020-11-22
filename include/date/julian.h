@@ -39,10 +39,10 @@ using days = date::days;
 using weeks = date::weeks;
 
 using years = std::chrono::duration
-    <int, std::ratio_multiply<std::ratio<1461, 4>, days::period>>;
+    <int, date::detail::ratio_multiply<std::ratio<1461, 4>, days::period>>;
 
 using months = std::chrono::duration
-    <int, std::ratio_divide<years::period, std::ratio<12>>>;
+    <int, date::detail::ratio_divide<years::period, std::ratio<12>>>;
 
 // time_point
 
@@ -1655,9 +1655,12 @@ inline
 bool
 month_day::ok() const NOEXCEPT
 {
-    CONSTDATA julian::day d[] =
-        {31_d, 29_d, 31_d, 30_d, 31_d, 30_d, 31_d, 31_d, 30_d, 31_d, 30_d, 31_d};
-    return m_.ok() && 1_d <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
+    CONSTDATA julian::day d[] = { 
+        julian::day(31), julian::day(29), julian::day(31), julian::day(30), 
+        julian::day(31), julian::day(30), julian::day(31), julian::day(31), 
+        julian::day(30), julian::day(31), julian::day(30), julian::day(31) 
+    };
+    return m_.ok() && julian::day(1) <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
 
 CONSTCD11
@@ -1946,9 +1949,12 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-    CONSTDATA julian::day d[] =
-        {31_d, 28_d, 31_d, 30_d, 31_d, 30_d, 31_d, 31_d, 30_d, 31_d, 30_d, 31_d};
-    return month() != feb || !y_.is_leap() ? d[static_cast<unsigned>(month())-1] : 29_d;
+    CONSTDATA julian::day d[] = { 
+        julian::day(31), julian::day(28), julian::day(31), julian::day(30), 
+        julian::day(31), julian::day(30), julian::day(31), julian::day(31), 
+        julian::day(30), julian::day(31), julian::day(30), julian::day(31) 
+    };
+    return month() != feb || !y_.is_leap() ? d[static_cast<unsigned>(month())-1] : julian::day(29);
 }
 
 CONSTCD14
@@ -2190,7 +2196,7 @@ year_month_day::ok() const NOEXCEPT
 {
     if (!(y_.ok() && m_.ok()))
         return false;
-    return 1_d <= d_ && d_ <= (y_/m_/last).day();
+    return julian::day(1) <= d_ && d_ <= (y_/m_/last).day();
 }
 
 CONSTCD11

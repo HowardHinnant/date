@@ -1,9 +1,14 @@
-#ifndef ISLAMIC_H
-#define ISLAMIC_H
+#ifndef SOLAR_HIJRI_H
+#define SOLAR_HIJRI_H
 
 // The MIT License (MIT)
 //
 // Copyright (c) 2016 Howard Hinnant
+// Copyright (c) 2019 Asad. Gharighi
+//
+// Calculations are based on:
+// https://www.timeanddate.com/calendar/persian-calendar.html
+// and follow <date.h> style
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +34,22 @@
 
 #include "date.h"
 
-namespace islamic
+namespace solar_hijri
 {
+
+namespace internal
+{
+static const auto epoch = static_cast<unsigned>(2121446);
+static const auto days_in_era = static_cast<unsigned>(1029983);
+static const auto years_in_era = static_cast<unsigned>(2820);
+static const auto unix_time_shift = static_cast<unsigned>(2440588);
+auto const years_in_first_cycle = static_cast<unsigned>(29);
+auto const years_in_other_cycles = static_cast<int>(33);
+auto const years_in_period = static_cast<int>(128);        // 29   + 3*33
+auto const days_in_first_cycle = static_cast<unsigned>(10592);  // 28/4 + 29*365
+auto const days_in_other_cycles = static_cast<unsigned>(12053); // 32/4 + 33*365
+auto const days_in_period = static_cast<unsigned>(46751);       // days_in_first_cycle + 3*days_in_other_cycles;
+}
 
 // durations
 
@@ -39,7 +58,7 @@ using days = date::days;
 using weeks = date::weeks;
 
 using years = std::chrono::duration
-    <int, date::detail::ratio_multiply<std::ratio<10631, 30>, days::period>>;
+              <int, date::detail::ratio_multiply<std::ratio<internal::days_in_era, internal::years_in_era>, days::period>>;
 
 using months = std::chrono::duration
     <int, date::detail::ratio_divide<years::period, std::ratio<12>>>;
@@ -169,6 +188,7 @@ class day
     unsigned char d_;
 
 public:
+    day() = default;
     explicit CONSTCD11 day(unsigned d) NOEXCEPT;
 
     CONSTCD14 day& operator++()    NOEXCEPT;
@@ -206,6 +226,7 @@ class month
     unsigned char m_;
 
 public:
+    month() = default;
     explicit CONSTCD11 month(unsigned m) NOEXCEPT;
 
     CONSTCD14 month& operator++()    NOEXCEPT;
@@ -243,6 +264,7 @@ class year
     short y_;
 
 public:
+    year() = default;
     explicit CONSTCD11 year(int y) NOEXCEPT;
 
     CONSTCD14 year& operator++()    NOEXCEPT;
@@ -284,6 +306,7 @@ class weekday
 {
     unsigned char wd_;
 public:
+    weekday() = default;
     explicit CONSTCD11 weekday(unsigned wd) NOEXCEPT;
     explicit weekday(int) = delete;
     CONSTCD11 weekday(const sys_days& dp) NOEXCEPT;
@@ -327,9 +350,10 @@ class weekday_indexed
     unsigned char index_ : 4;
 
 public:
-    CONSTCD11 weekday_indexed(const islamic::weekday& wd, unsigned index) NOEXCEPT;
+    weekday_indexed() = default;
+    CONSTCD11 weekday_indexed(const solar_hijri::weekday& wd, unsigned index) NOEXCEPT;
 
-    CONSTCD11 islamic::weekday weekday() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
     CONSTCD11 unsigned index() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
@@ -345,12 +369,13 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi);
 
 class weekday_last
 {
-    islamic::weekday wd_;
+    solar_hijri::weekday wd_;
 
 public:
-    explicit CONSTCD11 weekday_last(const islamic::weekday& wd) NOEXCEPT;
+    weekday_last() = default;
+    explicit CONSTCD11 weekday_last(const solar_hijri::weekday& wd) NOEXCEPT;
 
-    CONSTCD11 islamic::weekday weekday() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -365,14 +390,15 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_last& wdl);
 
 class year_month
 {
-    islamic::year  y_;
-    islamic::month m_;
+    solar_hijri::year  y_;
+    solar_hijri::month m_;
 
 public:
-    CONSTCD11 year_month(const islamic::year& y, const islamic::month& m) NOEXCEPT;
+    year_month() = default;
+    CONSTCD11 year_month(const solar_hijri::year& y, const solar_hijri::month& m) NOEXCEPT;
 
-    CONSTCD11 islamic::year  year()  const NOEXCEPT;
-    CONSTCD11 islamic::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::year  year()  const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
 
     CONSTCD14 year_month& operator+=(const months& dm) NOEXCEPT;
     CONSTCD14 year_month& operator-=(const months& dm) NOEXCEPT;
@@ -406,14 +432,15 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month& ym);
 
 class month_day
 {
-    islamic::month m_;
-    islamic::day   d_;
+    solar_hijri::month m_;
+    solar_hijri::day   d_;
 
 public:
-    CONSTCD11 month_day(const islamic::month& m, const islamic::day& d) NOEXCEPT;
+    month_day() = default;
+    CONSTCD11 month_day(const solar_hijri::month& m, const solar_hijri::day& d) NOEXCEPT;
 
-    CONSTCD11 islamic::month month() const NOEXCEPT;
-    CONSTCD11 islamic::day   day() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::day   day() const NOEXCEPT;
 
     CONSTCD14 bool ok() const NOEXCEPT;
 };
@@ -433,12 +460,13 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_day& md);
 
 class month_day_last
 {
-    islamic::month m_;
+    solar_hijri::month m_;
 
 public:
-    CONSTCD11 explicit month_day_last(const islamic::month& m) NOEXCEPT;
+    month_day_last() = default;
+    CONSTCD11 explicit month_day_last(const solar_hijri::month& m) NOEXCEPT;
 
-    CONSTCD11 islamic::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 };
 
@@ -457,14 +485,15 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl);
 
 class month_weekday
 {
-    islamic::month           m_;
-    islamic::weekday_indexed wdi_;
+    solar_hijri::month           m_;
+    solar_hijri::weekday_indexed wdi_;
 public:
-    CONSTCD11 month_weekday(const islamic::month& m,
-                            const islamic::weekday_indexed& wdi) NOEXCEPT;
+    month_weekday() = default;
+    CONSTCD11 month_weekday(const solar_hijri::month& m,
+                            const solar_hijri::weekday_indexed& wdi) NOEXCEPT;
 
-    CONSTCD11 islamic::month           month()           const NOEXCEPT;
-    CONSTCD11 islamic::weekday_indexed weekday_indexed() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month           month()           const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday_indexed weekday_indexed() const NOEXCEPT;
 
     CONSTCD11 bool ok() const NOEXCEPT;
 };
@@ -480,15 +509,16 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd);
 
 class month_weekday_last
 {
-    islamic::month        m_;
-    islamic::weekday_last wdl_;
+    solar_hijri::month        m_;
+    solar_hijri::weekday_last wdl_;
 
 public:
-    CONSTCD11 month_weekday_last(const islamic::month& m,
-                                 const islamic::weekday_last& wd) NOEXCEPT;
+    month_weekday_last() = default;
+    CONSTCD11 month_weekday_last(const solar_hijri::month& m,
+                                 const solar_hijri::weekday_last& wd) NOEXCEPT;
 
-    CONSTCD11 islamic::month        month()        const NOEXCEPT;
-    CONSTCD11 islamic::weekday_last weekday_last() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month        month()        const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday_last weekday_last() const NOEXCEPT;
 
     CONSTCD11 bool ok() const NOEXCEPT;
 };
@@ -506,13 +536,14 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl
 
 class year_month_day
 {
-    islamic::year  y_;
-    islamic::month m_;
-    islamic::day   d_;
+    solar_hijri::year  y_;
+    solar_hijri::month m_;
+    solar_hijri::day   d_;
 
 public:
-    CONSTCD11 year_month_day(const islamic::year& y, const islamic::month& m,
-                             const islamic::day& d) NOEXCEPT;
+    year_month_day() = default;
+    CONSTCD11 year_month_day(const solar_hijri::year& y, const solar_hijri::month& m,
+                             const solar_hijri::day& d) NOEXCEPT;
     CONSTCD14 year_month_day(const year_month_day_last& ymdl) NOEXCEPT;
 
     CONSTCD14 year_month_day(sys_days dp) NOEXCEPT;
@@ -523,17 +554,17 @@ public:
     CONSTCD14 year_month_day& operator+=(const years& y)  NOEXCEPT;
     CONSTCD14 year_month_day& operator-=(const years& y)  NOEXCEPT;
 
-    CONSTCD11 islamic::year  year()  const NOEXCEPT;
-    CONSTCD11 islamic::month month() const NOEXCEPT;
-    CONSTCD11 islamic::day   day()   const NOEXCEPT;
+    CONSTCD11 solar_hijri::year  year()  const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::day   day()   const NOEXCEPT;
 
     CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD14 explicit operator local_days() const NOEXCEPT;
     CONSTCD14 bool ok() const NOEXCEPT;
 
 private:
-    static CONSTCD14 year_month_day from_days(days dp) NOEXCEPT;
-    CONSTCD14 days to_days() const NOEXCEPT;
+  static CONSTCD14 year_month_day from_days(days dp) NOEXCEPT;
+  CONSTCD14 days to_days() const NOEXCEPT;
 };
 
 CONSTCD11 bool operator==(const year_month_day& x, const year_month_day& y) NOEXCEPT;
@@ -558,22 +589,23 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd);
 
 class year_month_day_last
 {
-    islamic::year           y_;
-    islamic::month_day_last mdl_;
+    solar_hijri::year           y_;
+    solar_hijri::month_day_last mdl_;
 
 public:
-    CONSTCD11 year_month_day_last(const islamic::year& y,
-                                  const islamic::month_day_last& mdl) NOEXCEPT;
+    year_month_day_last() = default;
+    CONSTCD11 year_month_day_last(const solar_hijri::year& y,
+                                  const solar_hijri::month_day_last& mdl) NOEXCEPT;
 
     CONSTCD14 year_month_day_last& operator+=(const months& m) NOEXCEPT;
     CONSTCD14 year_month_day_last& operator-=(const months& m) NOEXCEPT;
     CONSTCD14 year_month_day_last& operator+=(const years& y)  NOEXCEPT;
     CONSTCD14 year_month_day_last& operator-=(const years& y)  NOEXCEPT;
 
-    CONSTCD11 islamic::year           year()           const NOEXCEPT;
-    CONSTCD11 islamic::month          month()          const NOEXCEPT;
-    CONSTCD11 islamic::month_day_last month_day_last() const NOEXCEPT;
-    CONSTCD14 islamic::day            day()            const NOEXCEPT;
+    CONSTCD11 solar_hijri::year           year()           const NOEXCEPT;
+    CONSTCD11 solar_hijri::month          month()          const NOEXCEPT;
+    CONSTCD11 solar_hijri::month_day_last month_day_last() const NOEXCEPT;
+    CONSTCD14 solar_hijri::day            day()            const NOEXCEPT;
 
     CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD14 explicit operator local_days() const NOEXCEPT;
@@ -625,13 +657,14 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymd
 
 class year_month_weekday
 {
-    islamic::year            y_;
-    islamic::month           m_;
-    islamic::weekday_indexed wdi_;
+    solar_hijri::year            y_;
+    solar_hijri::month           m_;
+    solar_hijri::weekday_indexed wdi_;
 
 public:
-    CONSTCD11 year_month_weekday(const islamic::year& y, const islamic::month& m,
-                                   const islamic::weekday_indexed& wdi) NOEXCEPT;
+    year_month_weekday() = default;
+    CONSTCD11 year_month_weekday(const solar_hijri::year& y, const solar_hijri::month& m,
+                                   const solar_hijri::weekday_indexed& wdi) NOEXCEPT;
     CONSTCD14 year_month_weekday(const sys_days& dp) NOEXCEPT;
     CONSTCD14 explicit year_month_weekday(const local_days& dp) NOEXCEPT;
 
@@ -640,11 +673,11 @@ public:
     CONSTCD14 year_month_weekday& operator+=(const years& y)  NOEXCEPT;
     CONSTCD14 year_month_weekday& operator-=(const years& y)  NOEXCEPT;
 
-    CONSTCD11 islamic::year year() const NOEXCEPT;
-    CONSTCD11 islamic::month month() const NOEXCEPT;
-    CONSTCD11 islamic::weekday weekday() const NOEXCEPT;
+    CONSTCD11 solar_hijri::year year() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
     CONSTCD11 unsigned index() const NOEXCEPT;
-    CONSTCD11 islamic::weekday_indexed weekday_indexed() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday_indexed weekday_indexed() const NOEXCEPT;
 
     CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD14 explicit operator local_days() const NOEXCEPT;
@@ -692,23 +725,24 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday& ymwd
 
 class year_month_weekday_last
 {
-    islamic::year y_;
-    islamic::month m_;
-    islamic::weekday_last wdl_;
+    solar_hijri::year y_;
+    solar_hijri::month m_;
+    solar_hijri::weekday_last wdl_;
 
 public:
-    CONSTCD11 year_month_weekday_last(const islamic::year& y, const islamic::month& m,
-                                      const islamic::weekday_last& wdl) NOEXCEPT;
+    year_month_weekday_last() = default;
+    CONSTCD11 year_month_weekday_last(const solar_hijri::year& y, const solar_hijri::month& m,
+                                      const solar_hijri::weekday_last& wdl) NOEXCEPT;
 
     CONSTCD14 year_month_weekday_last& operator+=(const months& m) NOEXCEPT;
     CONSTCD14 year_month_weekday_last& operator-=(const months& m) NOEXCEPT;
     CONSTCD14 year_month_weekday_last& operator+=(const years& y) NOEXCEPT;
     CONSTCD14 year_month_weekday_last& operator-=(const years& y) NOEXCEPT;
 
-    CONSTCD11 islamic::year year() const NOEXCEPT;
-    CONSTCD11 islamic::month month() const NOEXCEPT;
-    CONSTCD11 islamic::weekday weekday() const NOEXCEPT;
-    CONSTCD11 islamic::weekday_last weekday_last() const NOEXCEPT;
+    CONSTCD11 solar_hijri::year year() const NOEXCEPT;
+    CONSTCD11 solar_hijri::month month() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday weekday() const NOEXCEPT;
+    CONSTCD11 solar_hijri::weekday_last weekday_last() const NOEXCEPT;
 
     CONSTCD14 operator sys_days() const NOEXCEPT;
     CONSTCD14 explicit operator local_days() const NOEXCEPT;
@@ -758,8 +792,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last&
 inline namespace literals
 {
 
-CONSTCD11 islamic::day  operator "" _d(unsigned long long d) NOEXCEPT;
-CONSTCD11 islamic::year operator "" _y(unsigned long long y) NOEXCEPT;
+CONSTCD11 solar_hijri::day  operator "" _d(unsigned long long d) NOEXCEPT;
+CONSTCD11 solar_hijri::year operator "" _y(unsigned long long y) NOEXCEPT;
 
 }  // inline namespace literals
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -994,40 +1028,40 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
     switch (static_cast<unsigned>(m))
     {
     case 1:
-        os << "Muharram";
+        os << "Farvardin";
         break;
     case 2:
-        os << "Safar";
+        os << "Ordibehesht";
         break;
     case 3:
-        os << "Rabi' al-awwal";
+        os << "Khordad";
         break;
     case 4:
-        os << "Rabi' al-thani";
+        os << "Tir";
         break;
     case 5:
-        os << "Jumada al-awwal";
+        os << "Mordad";
         break;
     case 6:
-        os << "Jumada al-Thani";
+        os << "Shahrivar";
         break;
     case 7:
-        os << "Rajab";
+        os << "Mehr";
         break;
     case 8:
-        os << "Sha'ban";
+        os << "Aban";
         break;
     case 9:
-        os << "Ramadan";
+        os << "Azar";
         break;
     case 10:
-        os << "Shawwal";
+        os << "Dey";
         break;
     case 11:
-        os << "Dhu al-Qi'dah";
+        os << "Bahman";
         break;
     case 12:
-        os << "Dhu al-Hijjah";
+        os << "Esfand";
         break;
     default:
         os << static_cast<unsigned>(m) << " is not a valid month";
@@ -1051,26 +1085,17 @@ inline
 bool
 year::is_leap() const NOEXCEPT
 {
-    int y = y_ - 1;
-    const int era = (y >= 0 ? y : y-29) / 30;
-    const unsigned yoe = static_cast<unsigned>(y - era * 30);
-    switch (yoe)
-    {
-    case 1:
-    case 4:
-    case 6:
-    case 9:
-    case 12:
-    case 15:
-    case 17:
-    case 20:
-    case 23:
-    case 25:
-    case 28:
-        return true;
-    default:
-        return false;
-    }
+  using namespace internal;
+  auto const y = static_cast<int>(y_)-475;
+  auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
+  auto const era = static_cast<int>(era_d);
+  auto const yoe = static_cast<unsigned>(y - era * years_in_era);
+
+  // Reference: https://www.timeanddate.com/date/iran-leap-year.html
+  // 29 + 33 + 33 + 33 = 128
+  // 22 * 128 + 4
+  auto const yoc = (yoe < (22 * 128)) ? ((yoe%128) < 29 ? yoe%128 : (yoe%128 - 29)%33) : yoe - (22 * 128) + 33;
+  return (yoc != 0 && (yoc%4)==0);
 }
 
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
@@ -1192,14 +1217,14 @@ inline
 unsigned char
 weekday::weekday_from_days(int z) NOEXCEPT
 {
-    return static_cast<unsigned char>(static_cast<unsigned>(
-        z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6));
+  auto u = static_cast<unsigned>(z);
+  return static_cast<unsigned char>(z >= -4 ? (u+4) % 7 : u % 7);
 }
 
 CONSTCD11
 inline
 weekday::weekday(unsigned wd) NOEXCEPT
-    : wd_(static_cast<decltype(wd_)>(wd))
+    : wd_(static_cast<decltype(wd_)>(wd != 7 ? wd : 0))
     {}
 
 CONSTCD11
@@ -1305,25 +1330,25 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
     switch (static_cast<unsigned>(wd))
     {
     case 0:
-        os << "al-Aḥad";
+        os << "Yekshanbe";
         break;
     case 1:
-        os << "al-Ithnayn";
+        os << "Doshanbe";
         break;
     case 2:
-        os << "ath-Thulāthā’";
+        os << "Seshanbe";
         break;
     case 3:
-        os << "al-Arba‘ā’";
+        os << "Chaharshanbe";
         break;
     case 4:
-        os << "al-Khamīs";
+        os << "Panjshanbe";
         break;
     case 5:
-        os << "al-Jum‘ah";
+        os << "Adine";
         break;
     case 6:
-        os << "as-Sabt";
+        os << "Shanbe";
         break;
     default:
         os << static_cast<unsigned>(wd) << " is not a valid weekday";
@@ -1338,22 +1363,64 @@ inline namespace literals
 
 CONSTCD11
 inline
-islamic::day
+solar_hijri::day
 operator "" _d(unsigned long long d) NOEXCEPT
 {
-    return islamic::day{static_cast<unsigned>(d)};
+    return solar_hijri::day{static_cast<unsigned>(d)};
 }
 
 CONSTCD11
 inline
-islamic::year
+solar_hijri::year
 operator "" _y(unsigned long long y) NOEXCEPT
 {
-    return islamic::year(static_cast<int>(y));
+    return solar_hijri::year(static_cast<int>(y));
 }
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
 
-CONSTDATA islamic::last_spec last{};
+CONSTDATA solar_hijri::last_spec last{};
+
+CONSTDATA solar_hijri::month far            {1};
+CONSTDATA solar_hijri::month ord            {2};
+CONSTDATA solar_hijri::month kho            {3};
+CONSTDATA solar_hijri::month tir            {4};
+CONSTDATA solar_hijri::month mor            {5};
+CONSTDATA solar_hijri::month sha            {6};
+CONSTDATA solar_hijri::month meh            {7};
+CONSTDATA solar_hijri::month aba            {8};
+CONSTDATA solar_hijri::month aza            {9};
+CONSTDATA solar_hijri::month dey            {10};
+CONSTDATA solar_hijri::month bah            {11};
+CONSTDATA solar_hijri::month esf            {12};
+
+CONSTDATA solar_hijri::month Farvardin      {1};
+CONSTDATA solar_hijri::month Ordibehesht    {2};
+CONSTDATA solar_hijri::month Khordad        {3};
+CONSTDATA solar_hijri::month Tir            {4};
+CONSTDATA solar_hijri::month Mordad         {5};
+CONSTDATA solar_hijri::month Shahrivar      {6};
+CONSTDATA solar_hijri::month Mehr           {7};
+CONSTDATA solar_hijri::month Aban           {8};
+CONSTDATA solar_hijri::month Azar           {9};
+CONSTDATA solar_hijri::month Dey            {10};
+CONSTDATA solar_hijri::month Bahman         {11};
+CONSTDATA solar_hijri::month Esfand         {12};
+
+CONSTDATA solar_hijri::weekday yek          {0u};
+CONSTDATA solar_hijri::weekday dos          {1u};
+CONSTDATA solar_hijri::weekday ses          {2u};
+CONSTDATA solar_hijri::weekday cha          {3u};
+CONSTDATA solar_hijri::weekday pan          {4u};
+CONSTDATA solar_hijri::weekday adi          {5u};
+CONSTDATA solar_hijri::weekday shn          {6u};
+
+CONSTDATA solar_hijri::weekday Yekshanbe    {0u};
+CONSTDATA solar_hijri::weekday Doshanbe     {1u};
+CONSTDATA solar_hijri::weekday Seshanbe     {2u};
+CONSTDATA solar_hijri::weekday Chaharshanbe {3u};
+CONSTDATA solar_hijri::weekday Panjshanbe   {4u};
+CONSTDATA solar_hijri::weekday Adine        {5u};
+CONSTDATA solar_hijri::weekday Shanbe       {6u};
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1900)
 }  // inline namespace literals
@@ -1366,7 +1433,7 @@ inline
 weekday
 weekday_indexed::weekday() const NOEXCEPT
 {
-    return islamic::weekday{static_cast<unsigned>(wd_)};
+    return solar_hijri::weekday{static_cast<unsigned>(wd_)};
 }
 
 CONSTCD11 inline unsigned weekday_indexed::index() const NOEXCEPT {return index_;}
@@ -1381,7 +1448,7 @@ weekday_indexed::ok() const NOEXCEPT
 
 CONSTCD11
 inline
-weekday_indexed::weekday_indexed(const islamic::weekday& wd, unsigned index) NOEXCEPT
+weekday_indexed::weekday_indexed(const solar_hijri::weekday& wd, unsigned index) NOEXCEPT
     : wd_(static_cast<decltype(wd_)>(static_cast<unsigned>(wd)))
     , index_(static_cast<decltype(index_)>(index))
     {}
@@ -1420,9 +1487,9 @@ operator!=(const weekday_indexed& x, const weekday_indexed& y) NOEXCEPT
 
 // weekday_last
 
-CONSTCD11 inline islamic::weekday weekday_last::weekday() const NOEXCEPT {return wd_;}
+CONSTCD11 inline solar_hijri::weekday weekday_last::weekday() const NOEXCEPT {return wd_;}
 CONSTCD11 inline bool weekday_last::ok() const NOEXCEPT {return wd_.ok();}
-CONSTCD11 inline weekday_last::weekday_last(const islamic::weekday& wd) NOEXCEPT : wd_(wd) {}
+CONSTCD11 inline weekday_last::weekday_last(const solar_hijri::weekday& wd) NOEXCEPT : wd_(wd) {}
 
 CONSTCD11
 inline
@@ -1460,7 +1527,7 @@ weekday::operator[](last_spec) const NOEXCEPT
 
 CONSTCD11
 inline
-year_month::year_month(const islamic::year& y, const islamic::month& m) NOEXCEPT
+year_month::year_month(const solar_hijri::year& y, const solar_hijri::month& m) NOEXCEPT
     : y_(y)
     , m_(m)
     {}
@@ -1627,22 +1694,26 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month& ym)
 
 CONSTCD11
 inline
-month_day::month_day(const islamic::month& m, const islamic::day& d) NOEXCEPT
+month_day::month_day(const solar_hijri::month& m, const solar_hijri::day& d) NOEXCEPT
     : m_(m)
     , d_(d)
     {}
 
-CONSTCD11 inline islamic::month month_day::month() const NOEXCEPT {return m_;}
-CONSTCD11 inline islamic::day month_day::day() const NOEXCEPT {return d_;}
+CONSTCD11 inline solar_hijri::month month_day::month() const NOEXCEPT {return m_;}
+CONSTCD11 inline solar_hijri::day month_day::day() const NOEXCEPT {return d_;}
 
 CONSTCD14
 inline
 bool
 month_day::ok() const NOEXCEPT
 {
-    CONSTDATA islamic::day d[] =
-        {30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 30_d};
-    return m_.ok() && 1_d <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
+    CONSTDATA solar_hijri::day d[] = { 
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30), 
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30) 
+    };
+    return m_.ok() && solar_hijri::day(1) <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
 
 CONSTCD11
@@ -1707,7 +1778,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_day& md)
 
 CONSTCD11 inline month month_day_last::month() const NOEXCEPT {return m_;}
 CONSTCD11 inline bool month_day_last::ok() const NOEXCEPT {return m_.ok();}
-CONSTCD11 inline month_day_last::month_day_last(const islamic::month& m) NOEXCEPT : m_(m) {}
+CONSTCD11 inline month_day_last::month_day_last(const solar_hijri::month& m) NOEXCEPT : m_(m) {}
 
 CONSTCD11
 inline
@@ -1769,8 +1840,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl)
 
 CONSTCD11
 inline
-month_weekday::month_weekday(const islamic::month& m,
-                             const islamic::weekday_indexed& wdi) NOEXCEPT
+month_weekday::month_weekday(const solar_hijri::month& m,
+                             const solar_hijri::weekday_indexed& wdi) NOEXCEPT
     : m_(m)
     , wdi_(wdi)
     {}
@@ -1821,8 +1892,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd)
 
 CONSTCD11
 inline
-month_weekday_last::month_weekday_last(const islamic::month& m,
-                                       const islamic::weekday_last& wdl) NOEXCEPT
+month_weekday_last::month_weekday_last(const solar_hijri::month& m,
+                                       const solar_hijri::weekday_last& wdl) NOEXCEPT
     : m_(m)
     , wdl_(wdl)
     {}
@@ -1873,8 +1944,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl
 
 CONSTCD11
 inline
-year_month_day_last::year_month_day_last(const islamic::year& y,
-                                         const islamic::month_day_last& mdl) NOEXCEPT
+year_month_day_last::year_month_day_last(const solar_hijri::year& y,
+                                         const solar_hijri::month_day_last& mdl) NOEXCEPT
     : y_(y)
     , mdl_(mdl)
     {}
@@ -1931,10 +2002,14 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-    CONSTDATA islamic::day d[] =
-        {30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d};
-    return month() != islamic::month(12) || !y_.is_leap() ?
-               d[static_cast<unsigned>(month())-1] : 30_d;
+    CONSTDATA solar_hijri::day d[] = { 
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30), 
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(29) 
+    };
+    return month() != esf || !y_.is_leap() ?
+        d[static_cast<unsigned>(month()) - 1] : solar_hijri::day(30);
 }
 
 CONSTCD14
@@ -2069,8 +2144,8 @@ operator-(const year_month_day_last& ymdl, const years& dy) NOEXCEPT
 
 CONSTCD11
 inline
-year_month_day::year_month_day(const islamic::year& y, const islamic::month& m,
-                               const islamic::day& d) NOEXCEPT
+year_month_day::year_month_day(const solar_hijri::year& y, const solar_hijri::month& m,
+                               const solar_hijri::day& d) NOEXCEPT
     : y_(y)
     , m_(m)
     , d_(d)
@@ -2145,14 +2220,31 @@ year_month_day::to_days() const NOEXCEPT
              "This algorithm has not been ported to a 16 bit unsigned integer");
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
-    auto const y = static_cast<int>(y_) - 1;
+
+    using namespace internal;
+    auto const y = static_cast<int>(y_) - 475;
     auto const m = static_cast<unsigned>(m_);
     auto const d = static_cast<unsigned>(d_);
-    auto const era = (y >= 0 ? y : y-29) / 30;
-    auto const yoe = static_cast<unsigned>(y - era * 30);      // [0, 29]
-    auto const doy = 29*(m-1) + m/2 + d-1;                     // [0, 354]
-    auto const doe = yoe * 354 + (11*(yoe+1)+3)/30 + doy;      // [0, 10630]
-    return days{era * 10631 + static_cast<int>(doe) - 492148};
+    auto const era_d = static_cast<int>(y >= 0 ? y : y-years_in_era+1) / static_cast<double>(years_in_era);
+    auto const era = static_cast<int>(era_d);
+    auto const fdoe = static_cast<int>(epoch + era * days_in_era);
+    auto const yoe = static_cast<int>(y - era * years_in_era);
+
+    auto const period_d = static_cast<double>(yoe/years_in_period);
+    auto const period = static_cast<unsigned>(period_d);
+    auto const yop = yoe%years_in_period;
+    auto const fdop = period*days_in_period;
+    auto const cycle = yop < 29 ? 0 : static_cast<unsigned>((yop-29)/years_in_other_cycles + 1);
+    auto const yoc = yop < 29 ? yop : (yop-29)%years_in_other_cycles;
+    auto const fdoc = cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0;
+    auto const group = yoc < 1 ? 0 : static_cast<unsigned>((yoc-1) / 4);
+    auto const yog = static_cast<int>(yoc < 1 ? -1 : (yoc-1) % 4);
+    auto const fdoyog = group*1461 + (yog+1)*365;
+    auto const fdoyoe = fdop + fdoc + fdoyog;
+
+    auto const doy = 30*(m-1) + ((m > 6) ? 6 : m-1) + d-1;                     // [0, 365]
+    auto const doe = fdoe + fdoyoe + doy;
+    return days{doe - unix_time_shift};
 }
 
 CONSTCD14
@@ -2176,7 +2268,7 @@ year_month_day::ok() const NOEXCEPT
 {
     if (!(y_.ok() && m_.ok()))
         return false;
-    return 1_d <= d_ && d_ <= (y_/m_/last).day();
+    return solar_hijri::day(1) <= d_ && d_ <= (y_/m_/last).day();
 }
 
 CONSTCD11
@@ -2255,15 +2347,43 @@ year_month_day::from_days(days dp) NOEXCEPT
              "This algorithm has not been ported to a 16 bit unsigned integer");
     static_assert(std::numeric_limits<int>::digits >= 20,
              "This algorithm has not been ported to a 16 bit signed integer");
-    auto const z = dp.count() + 492148;
-    auto const era = (z >= 0 ? z : z - 10630) / 10631;
-    auto const doe = static_cast<unsigned>(z - era * 10631);         // [0, 10630]
-    auto const yoe = (30*doe + 10646)/10631 - 1;                     // [0, 29]
-    auto const y = static_cast<sys_days::rep>(yoe) + era * 30 + 1;
-    auto const doy = doe - (yoe * 354 + (11*(yoe+1)+3)/30);          // [0, 354]
-    auto const m = (11*doy + 330) / 325;                             // [1, 12]
-    auto const d = doy - (29*(m-1) + m/2) + 1;                       // [1, 30]
-    return year_month_day{islamic::year{y}, islamic::month(m), islamic::day(d)};
+
+    using namespace internal;
+    auto const z = dp.count() + unix_time_shift;
+    auto const delta = static_cast<int>(z - epoch);
+    auto const era = static_cast<int>(delta >= 0 ? delta : delta-days_in_era+1) / static_cast<double>(days_in_era);
+    auto const era_i = static_cast<int>(era);
+    auto const fdoe = static_cast<int>(epoch + static_cast<int>(era_i * days_in_era));
+
+    auto const doe_fdoe = z - fdoe;
+    auto const period = static_cast<unsigned>(doe_fdoe < 22*days_in_period ? doe_fdoe / days_in_period : 22);
+    auto const dop = doe_fdoe % days_in_period;
+    auto const cycle = dop < days_in_first_cycle ? 0 : (dop-days_in_first_cycle) / days_in_other_cycles + 1;
+    auto const doc = dop < days_in_first_cycle ? dop : (dop-days_in_first_cycle) % days_in_other_cycles;
+    auto const group = doc < 365 && period != 22 ? -1 : static_cast<int>(((doc < 365 ? 365 : doc)-365)/1461);
+    auto const yog =   doc < 365 && period != 22 ? -1 : static_cast<int>( (period != 22 ? ((doc-365 )%1461) : doc)/365);
+    auto const yoc = group == -1 ?  0 : (period != 22 ? 1 : 0) + group*4 + (yog == 4 ? 3 : yog);
+    auto const doy = group == -1 ? doc : (period != 22 ? ((yoc-1)%4 == 0 ? (group >= 0 ? (doe_fdoe -
+                                                                                         (period*days_in_period) -
+                                                                                         (cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0) -
+                                                                                         (group*1461 + ((yog == 4 ? 3 : yog)+1)*365))
+                                                                                      : 365)
+                                                                         : doe_fdoe -
+                                                                           (period*days_in_period) -
+                                                                           (cycle > 0 ? days_in_first_cycle + (cycle-1)*days_in_other_cycles : 0) -
+                                                                           (group*1461 + ((yog == 4 ? 3 : yog)+1)*365))
+                                                       : (yog == 4 ? 365 : doe_fdoe - (period*days_in_period) - yog*365));
+    auto const yoe = period != 22 ? period*years_in_period +
+                                    (cycle > 0 ? years_in_first_cycle +
+                                                (cycle-1)*years_in_other_cycles
+                                              : 0) +
+                                    yoc
+                                  : 22*years_in_period + ((yog == 4) ? 3 : yog);
+    auto const y = static_cast<int>(static_cast<sys_days::rep>(yoe) + 475 + era_i * years_in_era);
+    auto const m = doy < 186 ? doy/31 + 1 : (doy-186)/30 + 7;           // [1, 12]
+    auto const d = doy - (30*(m-1) + ((m > 6) ? 6 : m-1) - 1);          // [1, 31]
+
+    return year_month_day{solar_hijri::year(y), solar_hijri::month(m), solar_hijri::day(d)};
 }
 
 CONSTCD14
@@ -2318,8 +2438,8 @@ operator-(const year_month_day& ymd, const years& dy) NOEXCEPT
 
 CONSTCD11
 inline
-year_month_weekday::year_month_weekday(const islamic::year& y, const islamic::month& m,
-                                       const islamic::weekday_indexed& wdi)
+year_month_weekday::year_month_weekday(const solar_hijri::year& y, const solar_hijri::month& m,
+                                       const solar_hijri::weekday_indexed& wdi)
         NOEXCEPT
     : y_(y)
     , m_(m)
@@ -2424,7 +2544,7 @@ year_month_weekday::ok() const NOEXCEPT
         return false;
     if (wdi_.index() <= 4)
         return true;
-    auto d2 = wdi_.weekday() - islamic::weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
+    auto d2 = wdi_.weekday() - solar_hijri::weekday(y_/m_/1) + days((wdi_.index()-1)*7 + 1);
     return static_cast<unsigned>(d2.count()) <= static_cast<unsigned>((y_/m_/last).day());
 }
 
@@ -2434,7 +2554,7 @@ year_month_weekday
 year_month_weekday::from_days(days d) NOEXCEPT
 {
     sys_days dp{d};
-    auto const wd = islamic::weekday(dp);
+    auto const wd = solar_hijri::weekday(dp);
     auto const ymd = year_month_day(dp);
     return {ymd.year(), ymd.month(), wd[(static_cast<unsigned>(ymd.day())-1)/7+1]};
 }
@@ -2445,7 +2565,7 @@ days
 year_month_weekday::to_days() const NOEXCEPT
 {
     auto d = sys_days(y_/m_/1);
-    return (d + (wdi_.weekday() - islamic::weekday(d) + days{(wdi_.index()-1)*7})
+    return (d + (wdi_.weekday() - solar_hijri::weekday(d) + days{(wdi_.index()-1)*7})
            ).time_since_epoch();
 }
 
@@ -2527,9 +2647,9 @@ operator-(const year_month_weekday& ymwd, const years& dy) NOEXCEPT
 
 CONSTCD11
 inline
-year_month_weekday_last::year_month_weekday_last(const islamic::year& y,
-                                                 const islamic::month& m,
-                                                 const islamic::weekday_last& wdl) NOEXCEPT
+year_month_weekday_last::year_month_weekday_last(const solar_hijri::year& y,
+                                                 const solar_hijri::month& m,
+                                                 const solar_hijri::weekday_last& wdl) NOEXCEPT
     : y_(y)
     , m_(m)
     , wdl_(wdl)
@@ -2618,7 +2738,7 @@ days
 year_month_weekday_last::to_days() const NOEXCEPT
 {
     auto const d = sys_days(y_/m_/last);
-    return (d - (islamic::weekday{d} - wdl_.weekday())).time_since_epoch();
+    return (d - (solar_hijri::weekday{d} - wdl_.weekday())).time_since_epoch();
 }
 
 CONSTCD11
@@ -3026,6 +3146,6 @@ operator/(const month_weekday_last& mwdl, int y) NOEXCEPT
     return year(y) / mwdl;
 }
 
-}  // namespace islamic
+}  // namespace solar_hijri
 
-#endif  // ISLAMIC_H
+#endif  // SOLAR_HIJRI_H

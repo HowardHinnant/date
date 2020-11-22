@@ -89,6 +89,7 @@
 #  include "date/ios.h"
 #else
 #  define TARGET_OS_IPHONE 0
+#  define TARGET_OS_SIMULATOR 0
 #endif
 
 #if USE_OS_TZDB
@@ -140,7 +141,7 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  if !USE_OS_TZDB
+#  if !USE_OS_TZDB && !defined(INSTALL)
 #    include <wordexp.h>
 #  endif
 #  include <limits.h>
@@ -361,7 +362,11 @@ discover_tz_dir()
         throw runtime_error("discover_tz_dir failed to find zoneinfo\n");
 #  else  // __APPLE__
 #      if TARGET_OS_IPHONE
+#          if TARGET_OS_SIMULATOR
+    return "/usr/share/zoneinfo";
+#          else
     return "/var/db/timezone/zoneinfo";
+#          endif
 #      else
     CONSTDATA auto timezone = "/etc/localtime";
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
@@ -415,20 +420,20 @@ tzdb_list::~tzdb_list()
     }
 }
 
-tzdb_list::tzdb_list(tzdb_list&& x) noexcept
+tzdb_list::tzdb_list(tzdb_list&& x) NOEXCEPT
    : head_{x.head_.exchange(nullptr)}
 {
 }
 
 void
-tzdb_list::push_front(tzdb* tzdb) noexcept
+tzdb_list::push_front(tzdb* tzdb) NOEXCEPT
 {
     tzdb->next = head_;
     head_ = tzdb;
 }
 
 tzdb_list::const_iterator
-tzdb_list::erase_after(const_iterator p) noexcept
+tzdb_list::erase_after(const_iterator p) NOEXCEPT
 {
     auto t = p.p_->next;
     p.p_->next = p.p_->next->next;
@@ -438,7 +443,7 @@ tzdb_list::erase_after(const_iterator p) noexcept
 
 struct tzdb_list::undocumented_helper
 {
-    static void push_front(tzdb_list& db_list, tzdb* tzdb) noexcept
+    static void push_front(tzdb_list& db_list, tzdb* tzdb) NOEXCEPT
     {
         db_list.push_front(tzdb);
     }
@@ -458,6 +463,32 @@ get_tzdb_list()
 {
     static tzdb_list tz_db = create_tzdb();
     return tz_db;
+}
+
+static
+std::string
+parse3(std::istream& in)
+{
+    std::string r(3, ' ');
+    ws(in);
+    r[0] = static_cast<char>(in.get());
+    r[1] = static_cast<char>(in.get());
+    r[2] = static_cast<char>(in.get());
+    return r;
+}
+
+static
+unsigned
+parse_month(std::istream& in)
+{
+    CONSTDATA char*const month_names[] =
+        {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    auto s = parse3(in);
+    auto m = std::find(std::begin(month_names), std::end(month_names), s) - month_names;
+    if (m >= std::end(month_names) - std::begin(month_names))
+        throw std::runtime_error("oops: bad month name: " + s);
+    return static_cast<unsigned>(++m);
 }
 
 #if !USE_OS_TZDB
@@ -675,18 +706,6 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
 // Parsing helpers
 
 static
-std::string
-parse3(std::istream& in)
-{
-    std::string r(3, ' ');
-    ws(in);
-    r[0] = static_cast<char>(in.get());
-    r[1] = static_cast<char>(in.get());
-    r[2] = static_cast<char>(in.get());
-    return r;
-}
-
-static
 unsigned
 parse_dow(std::istream& in)
 {
@@ -697,20 +716,6 @@ parse_dow(std::istream& in)
     if (dow >= std::end(dow_names) - std::begin(dow_names))
         throw std::runtime_error("oops: bad dow name: " + s);
     return static_cast<unsigned>(dow);
-}
-
-static
-unsigned
-parse_month(std::istream& in)
-{
-    CONSTDATA char*const month_names[] =
-        {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    auto s = parse3(in);
-    auto m = std::find(std::begin(month_names), std::end(month_names), s) - month_names;
-    if (m >= std::end(month_names) - std::begin(month_names))
-        throw std::runtime_error("oops: bad month name: " + s);
-    return static_cast<unsigned>(++m);
 }
 
 static
@@ -1924,12 +1929,12 @@ load_abbreviations(std::istream& inf, std::int32_t tzh_charcnt)
 
 template <class TimeType>
 static
-std::vector<leap>
+std::vector<leap_second>
 load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
 {
     // Read tzh_leapcnt pairs
     using namespace std::chrono;
-    std::vector<leap> leap_seconds;
+    std::vector<leap_second> leap_seconds;
     leap_seconds.reserve(static_cast<std::size_t>(tzh_leapcnt));
     for (std::int32_t i = 0; i < tzh_leapcnt; ++i)
     {
@@ -1947,7 +1952,7 @@ load_leaps(std::istream& inf, std::int32_t tzh_leapcnt)
 
 template <class TimeType>
 static
-std::vector<leap>
+std::vector<leap_second>
 load_leap_data(std::istream& inf,
                std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
                std::int32_t tzh_typecnt, std::int32_t tzh_charcnt)
@@ -1958,7 +1963,7 @@ load_leap_data(std::istream& inf,
 }
 
 static
-std::vector<leap>
+std::vector<leap_second>
 load_just_leaps(std::istream& inf)
 {
     // Read tzh_leapcnt pairs
@@ -2004,7 +2009,7 @@ time_zone::load_data(std::istream& inf,
     auto infos = load_ttinfo(inf, tzh_typecnt);
     auto abbrev = load_abbreviations(inf, tzh_charcnt);
 #if !MISSING_LEAP_SECONDS
-    auto& leap_seconds = get_tzdb_list().front().leaps;
+    auto& leap_seconds = get_tzdb_list().front().leap_seconds;
     if (leap_seconds.empty() && tzh_leapcnt > 0)
         leap_seconds = load_leaps<TimeType>(inf, tzh_leapcnt);
 #endif
@@ -2072,7 +2077,7 @@ time_zone::init_impl()
 #if !MISSING_LEAP_SECONDS
     if (tzh_leapcnt > 0)
     {
-        auto& leap_seconds = get_tzdb_list().front().leaps;
+        auto& leap_seconds = get_tzdb_list().front().leap_seconds;
         auto itr = leap_seconds.begin();
         auto l = itr->date();
         seconds leap_count{0};
@@ -2120,14 +2125,25 @@ time_zone::load_sys_info(std::vector<detail::transition>::const_iterator i) cons
 {
     using namespace std::chrono;
     assert(!transitions_.empty());
-    assert(i != transitions_.begin());
     sys_info r;
-    r.begin = i[-1].timepoint;
-    r.end = i != transitions_.end() ? i->timepoint :
-                                      sys_seconds(sys_days(year::max()/max_day));
-    r.offset = i[-1].info->offset;
-    r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
-    r.abbrev = i[-1].info->abbrev;
+    if (i != transitions_.begin())
+    {
+        r.begin = i[-1].timepoint;
+        r.end = i != transitions_.end() ? i->timepoint :
+                                          sys_seconds(sys_days(year::max()/max_day));
+        r.offset = i[-1].info->offset;
+        r.save = i[-1].info->is_dst ? minutes{1} : minutes{0};
+        r.abbrev = i[-1].info->abbrev;
+    }
+    else
+    {
+        r.begin = sys_days(year::min()/min_day);
+        r.end = i+1 != transitions_.end() ? i[1].timepoint :
+                                          sys_seconds(sys_days(year::max()/max_day));
+        r.offset = i[0].info->offset;
+        r.save = i[0].info->is_dst ? minutes{1} : minutes{0};
+        r.abbrev = i[0].info->abbrev;
+    }
     return r;
 }
 
@@ -2162,7 +2178,7 @@ time_zone::get_info_impl(local_seconds tp) const
     {
         i.second = load_sys_info(--tr);
         tps = sys_seconds{(tp - i.second.offset).time_since_epoch()};
-        if (tps < i.second.end)
+        if (tps < i.second.end && i.first.end != i.second.end)
         {
            i.result = local_info::ambiguous;
            std::swap(i.first, i.second);
@@ -2205,14 +2221,10 @@ operator<<(std::ostream& os, const time_zone& z)
     return os;
 }
 
-#if !MISSING_LEAP_SECONDS
-
-leap::leap(const sys_seconds& s, detail::undocumented)
+leap_second::leap_second(const sys_seconds& s, detail::undocumented)
     : date_(s)
 {
 }
-
-#endif  // !MISSING_LEAP_SECONDS
 
 #else  // !USE_OS_TZDB
 
@@ -2610,20 +2622,15 @@ operator<<(std::ostream& os, const time_zone& z)
 
 #endif  // !USE_OS_TZDB
 
-#if !MISSING_LEAP_SECONDS
-
 std::ostream&
-operator<<(std::ostream& os, const leap& x)
+operator<<(std::ostream& os, const leap_second& x)
 {
     using namespace date;
     return os << x.date_ << "  +";
 }
 
-#endif  // !MISSING_LEAP_SECONDS
-
 #if USE_OS_TZDB
 
-# ifdef __APPLE__
 static
 std::string
 get_version()
@@ -2632,12 +2639,99 @@ get_version()
     auto path = get_tz_dir() + string("/+VERSION");
     ifstream in{path};
     string version;
-    in >> version;
-    if (in.fail())
-        throw std::runtime_error("Unable to get Timezone database version from " + path);
-    return version;
+    if (in)
+    {
+        in >> version;
+        return version;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "version");
+    if (in)
+    {
+        in >> version;
+        return version;
+    }
+    return "unknown";
 }
-# endif
+
+static
+std::vector<leap_second>
+find_read_and_leap_seconds()
+{
+    std::ifstream in(get_tz_dir() + std::string(1, folder_delimiter) + "leapseconds",
+                     std::ios_base::binary);
+    if (in)
+    {
+        std::vector<leap_second> leap_seconds;
+        std::string line;
+        while (in)
+        {
+            std::getline(in, line);
+            if (!line.empty() && line[0] != '#')
+            {
+                std::istringstream in(line);
+                in.exceptions(std::ios::failbit | std::ios::badbit);
+                std::string word;
+                in >> word;
+                if (word == "Leap")
+                {
+                    int y, m, d;
+                    in >> y;
+                    m = static_cast<int>(parse_month(in));
+                    in >> d;
+                    leap_seconds.push_back(leap_second(sys_days{year{y}/m/d} + days{1},
+                                                                 detail::undocumented{}));
+                }
+                else
+                {
+                    std::cerr << line << '\n';
+                }
+            }
+        }
+        return leap_seconds;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "leap-seconds.list",
+                     std::ios_base::binary);
+    if (in)
+    {
+        std::vector<leap_second> leap_seconds;
+        std::string line;
+        const auto offset = sys_days{1970_y/1/1}-sys_days{1900_y/1/1};
+        while (in)
+        {
+            std::getline(in, line);
+            if (!line.empty() && line[0] != '#')
+            {
+                std::istringstream in(line);
+                in.exceptions(std::ios::failbit | std::ios::badbit);
+                using seconds = std::chrono::seconds;
+                seconds::rep s;
+                in >> s;
+                if (s == 2272060800)
+                    continue;
+                leap_seconds.push_back(leap_second(sys_seconds{seconds{s}} - offset,
+                                                                 detail::undocumented{}));
+            }
+        }
+        return leap_seconds;
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
+                     std::ios_base::binary);
+    if (in)
+    {
+        return load_just_leaps(in);
+    }
+    in.clear();
+    in.open(get_tz_dir() + std::string(1, folder_delimiter) + "UTC",
+                     std::ios_base::binary);
+    if (in)
+    {
+        return load_just_leaps(in);
+    }
+    return {};
+}
 
 static
 std::unique_ptr<tzdb>
@@ -2666,6 +2760,7 @@ init_tzdb()
                 strcmp(d->d_name, "iso3166.tab")  == 0      ||
                 strcmp(d->d_name, "right")        == 0      ||
                 strcmp(d->d_name, "+VERSION")     == 0      ||
+                strcmp(d->d_name, "version")      == 0      ||
                 strcmp(d->d_name, "zone.tab")     == 0      ||
                 strcmp(d->d_name, "zone1970.tab") == 0      ||
                 strcmp(d->d_name, "tzdata.zi")    == 0      ||
@@ -2693,36 +2788,16 @@ init_tzdb()
     }
     db->zones.shrink_to_fit();
     std::sort(db->zones.begin(), db->zones.end());
-#  if !MISSING_LEAP_SECONDS
-    std::ifstream in(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
-                     std::ios_base::binary);
-    if (in)
-    {
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leaps = load_just_leaps(in);
-    }
-    else
-    {
-        in.clear();
-        in.open(get_tz_dir() + std::string(1, folder_delimiter) +
-                "UTC", std::ios_base::binary);
-        if (!in)
-            throw std::runtime_error("Unable to extract leap second information");
-        in.exceptions(std::ios::failbit | std::ios::badbit);
-        db->leaps = load_just_leaps(in);
-    }
-#  endif  // !MISSING_LEAP_SECONDS
-#  ifdef __APPLE__
+    db->leap_seconds = find_read_and_leap_seconds();
     db->version = get_version();
-#  endif
     return db;
 }
 
 #else  // !USE_OS_TZDB
 
-// link
+// time_zone_link
 
-link::link(const std::string& s)
+time_zone_link::time_zone_link(const std::string& s)
 {
     using namespace date;
     std::istringstream in(s);
@@ -2732,7 +2807,7 @@ link::link(const std::string& s)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const link& x)
+operator<<(std::ostream& os, const time_zone_link& x)
 {
     using namespace date;
     detail::save_ostream<char> _(os);
@@ -2742,9 +2817,9 @@ operator<<(std::ostream& os, const link& x)
     return os << x.name_ << " --> " << x.target_;
 }
 
-// leap
+// leap_second
 
-leap::leap(const std::string& s, detail::undocumented)
+leap_second::leap_second(const std::string& s, detail::undocumented)
 {
     using namespace date;
     std::istringstream in(s);
@@ -2836,13 +2911,15 @@ namespace
 static
 bool
 download_to_file(const std::string& url, const std::string& local_filename,
-                 download_file_options opts)
+                 download_file_options opts, char* error_buffer)
 {
     auto curl = curl_init();
     if (!curl)
         return false;
     curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, false);
+    if (error_buffer)
+       curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, error_buffer);
     curl_write_callback write_cb = [](char* contents, std::size_t size, std::size_t nmemb,
                                       void* userp) -> std::size_t
     {
@@ -3262,7 +3339,7 @@ extract_gz_file(const std::string&, const std::string& gz_file, const std::strin
 #  endif // !_WIN32
 
 bool
-remote_download(const std::string& version)
+remote_download(const std::string& version, char* error_buffer)
 {
     assert(!version.empty());
 
@@ -3281,15 +3358,15 @@ remote_download(const std::string& version)
     auto url = "https://data.iana.org/time-zones/releases/tzdata" + version +
                ".tar.gz";
     bool result = download_to_file(url, get_download_gz_file(version),
-                                   download_file_options::binary);
+                                   download_file_options::binary, error_buffer);
 #  ifdef _WIN32
     if (result)
     {
         auto mapping_file = get_download_mapping_file(version);
         result = download_to_file(
-			"https://raw.githubusercontent.com/unicode-org/cldr/master/"
-			"common/supplemental/windowsZones.xml",
-            mapping_file, download_file_options::text);
+            "https://raw.githubusercontent.com/unicode-org/cldr/master/"
+            "common/supplemental/windowsZones.xml",
+            mapping_file, download_file_options::text, error_buffer);
     }
 #  endif  // _WIN32
     return result;
@@ -3438,12 +3515,12 @@ init_tzdb()
                 }
                 else if (word == "Link")
                 {
-                    db->links.push_back(link(line));
+                    db->links.push_back(time_zone_link(line));
                     continue_zone = false;
                 }
                 else if (word == "Leap")
                 {
-                    db->leaps.push_back(leap(line, detail::undocumented{}));
+                    db->leap_seconds.push_back(leap_second(line, detail::undocumented{}));
                     continue_zone = false;
                 }
                 else if (word == "Zone")
@@ -3468,8 +3545,8 @@ init_tzdb()
     db->zones.shrink_to_fit();
     std::sort(db->links.begin(), db->links.end());
     db->links.shrink_to_fit();
-    std::sort(db->leaps.begin(), db->leaps.end());
-    db->leaps.shrink_to_fit();
+    std::sort(db->leap_seconds.begin(), db->leap_seconds.end());
+    db->leap_seconds.shrink_to_fit();
 
 #ifdef _WIN32
     std::string mapping_file = get_install() + folder_delimiter + "windowsZones.xml";
@@ -3521,9 +3598,9 @@ tzdb::locate_zone(const std::string& tz_name) const
 #if !USE_OS_TZDB
         auto li = std::lower_bound(links.begin(), links.end(), tz_name,
 #if HAS_STRING_VIEW
-        [](const link& z, const std::string_view& nm)
+        [](const time_zone_link& z, const std::string_view& nm)
 #else
-        [](const link& z, const std::string& nm)
+        [](const time_zone_link& z, const std::string& nm)
 #endif
         {
             return z.name() < nm;
@@ -3562,11 +3639,9 @@ operator<<(std::ostream& os, const tzdb& db)
     os << "Version: " << db.version << "\n\n";
     for (const auto& x : db.zones)
         os << x << '\n';
-#if !MISSING_LEAP_SECONDS
     os << '\n';
-    for (const auto& x : db.leaps)
+    for (const auto& x : db.leap_seconds)
         os << x << '\n';
-#endif  // !MISSING_LEAP_SECONDS
     return os;
 }
 
@@ -3624,7 +3699,7 @@ operator<<(std::ostream& os, const tzdb& db)
                         "---------------------------------------------------------"
                         "--------------------------------------------------------\n");
     os << title;
-    for (const auto& x : db.leaps)
+    for (const auto& x : db.leap_seconds)
         os << x << '\n';
     return os;
 }
@@ -3671,6 +3746,56 @@ tzdb::current_zone() const
 
 #else  // !_WIN32
 
+#if HAS_STRING_VIEW
+
+static
+std::string_view
+extract_tz_name(char const* rp)
+{
+    using namespace std;
+    string_view result = rp;
+    CONSTDATA string_view zoneinfo = "zoneinfo";
+    size_t pos = result.rfind(zoneinfo);
+    if (pos == result.npos)
+        throw runtime_error(
+            "current_zone() failed to find \"zoneinfo\" in " + string(result));
+    pos = result.find('/', pos);
+    result.remove_prefix(pos + 1);
+    return result;
+}
+
+#else  // !HAS_STRING_VIEW
+
+static
+std::string
+extract_tz_name(char const* rp)
+{
+    using namespace std;
+    string result = rp;
+    CONSTDATA char zoneinfo[] = "zoneinfo";
+    size_t pos = result.rfind(zoneinfo);
+    if (pos == result.npos)
+        throw runtime_error(
+            "current_zone() failed to find \"zoneinfo\" in " + result);
+    pos = result.find('/', pos);
+    result.erase(0, pos + 1);
+    return result;
+}
+
+#endif  // HAS_STRING_VIEW
+
+static
+bool
+sniff_realpath(const char* timezone)
+{
+    using namespace std;
+    char rp[PATH_MAX+1] = {};
+    if (realpath(timezone, rp) == nullptr)
+        throw system_error(errno, system_category(), "realpath() failed");
+    auto result = extract_tz_name(rp);
+    return result != "posixrules";
+}
+
 const time_zone*
 tzdb::current_zone() const
 {
@@ -3690,31 +3815,22 @@ tzdb::current_zone() const
     {
         struct stat sb;
         CONSTDATA auto timezone = "/etc/localtime";
-        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
+        if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0)
+        {
             using namespace std;
+            static const bool use_realpath = sniff_realpath(timezone);
             char rp[PATH_MAX+1] = {};
-            if (realpath(timezone, rp) == nullptr)
-                throw system_error(errno, system_category(), "realpath() failed");
-#if HAS_STRING_VIEW
-            string_view result = rp;
-            CONSTDATA string_view zoneinfo = "zoneinfo";
-            size_t pos = result.rfind(zoneinfo);
-            if (pos == result.npos)
-                throw runtime_error(
-                    "current_zone() failed to find \"zoneinfo\" in " + string(result));
-            pos = result.find('/', pos);
-            result.remove_prefix(pos + 1);
-#else
-            string result = rp;
-            CONSTDATA char zoneinfo[] = "zoneinfo";
-            size_t pos = result.rfind(zoneinfo);
-            if (pos == result.npos)
-                throw runtime_error(
-                    "current_zone() failed to find \"zoneinfo\" in " + result);
-            pos = result.find('/', pos);
-            result.erase(0, pos + 1);
-#endif
-            return locate_zone(result);
+            if (use_realpath)
+            {
+                if (realpath(timezone, rp) == nullptr)
+                    throw system_error(errno, system_category(), "realpath() failed");
+            }
+            else
+            {
+                if (readlink(timezone, rp, sizeof(rp)-1) <= 0)
+                    throw system_error(errno, system_category(), "readlink() failed");
+            }
+            return locate_zone(extract_tz_name(rp));
         }
     }
     // On embedded systems e.g. buildroot with uclibc the timezone is linked
