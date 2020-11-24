@@ -326,6 +326,20 @@ get_download_gz_file(const std::string& version)
 }
 #endif  // HAS_REMOTE_API
 
+#else // USE_OS_TZDB
+
+static
+std::string& get_user_tz_dir()
+{
+    static std::string tz_dir = "/usr/share/zoneinfo";
+    return tz_dir;
+}
+
+void
+set_tz_dir(const std::string& tz_dir)
+{
+    get_user_tz_dir() = tz_dir;
+}
 #endif  // !USE_OS_TZDB
 
 // These can be used to reduce the range of the database to save memory
@@ -350,11 +364,14 @@ discover_tz_dir()
     struct stat sb;
     using namespace std;
 #  ifndef __APPLE__
+    auto tz_dir_user = get_user_tz_dir().c_str();
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
     CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
 
     // Check special path which is valid for buildroot with uclibc builds
-    if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
+    if (stat(tz_dir_user, &sb) == 0 && S_ISDIR(sb.st_mode))
+        return tz_dir_user;
+    else if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
         return tz_dir_buildroot;
     else if(stat(tz_dir_default, &sb) == 0 && S_ISDIR(sb.st_mode))
         return tz_dir_default;
