@@ -5,7 +5,7 @@
 
 ---
 
-**[Try it out on wandbox!](https://wandbox.org/permlink/L8MwjzSSC3fXXrMd)**
+**[Try it out on wandbox!](https://wandbox.org/permlink/oyXjibyF680HHoyS)**
 
 ## Summary
 
