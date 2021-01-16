@@ -355,8 +355,8 @@ time_zone::get_info(date::sys_time<Duration> st) const
     }
     else  //  constant offset
     {
-        r.begin = sys_days{year::min()/January/1};
-        r.end   = sys_days{year::max()/December/last};
+        r.begin = sys_days{(year::min)()/January/1};
+        r.end   = sys_days{(year::max)()/December/last};
         r.abbrev = std_abbrev_;
     }
     return r;
@@ -445,8 +445,8 @@ time_zone::get_info(date::local_time<Duration> tp) const
     }
     else  //  constant offset
     {
-        r.first.begin = sys_days{year::min()/January/1};
-        r.first.end   = sys_days{year::max()/December/last};
+        r.first.begin = sys_days{(year::min)()/January/1};
+        r.first.end   = sys_days{(year::max)()/December/last};
         r.first.abbrev = std_abbrev_;
         r.first.offset = offset_;
     }

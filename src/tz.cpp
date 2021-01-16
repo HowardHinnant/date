@@ -36,9 +36,6 @@
    // more than we need and do it early so windows.h doesn't get included
    // without these macros having been defined.
    // min/max macros interfere with the C++ versions.
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
    // We don't need all that Windows has to offer.
 #  ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN
@@ -329,8 +326,8 @@ get_download_gz_file(const std::string& version)
 #endif  // !USE_OS_TZDB
 
 // These can be used to reduce the range of the database to save memory
-CONSTDATA auto min_year = date::year::min();
-CONSTDATA auto max_year = date::year::max();
+CONSTDATA auto min_year = (date::year::min)();
+CONSTDATA auto max_year = (date::year::max)();
 
 CONSTDATA auto min_day = date::January/1;
 CONSTDATA auto max_day = date::December/31;
@@ -1112,7 +1109,7 @@ detail::Rule::Rule(const std::string& s)
             in >> word;
             if (word == "min")
             {
-                starting_year_ = year::min();
+                starting_year_ = (year::min)();
             }
             else
                 throw std::runtime_error("Didn't find expected word: " + word);
@@ -1562,7 +1559,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
     auto r = eqr.first;
     auto ry = r->starting_year();
     auto prev_save = minutes{0};
-    auto prev_year = year::min();
+    auto prev_year = (year::min)();
     const Rule* prev_rule = nullptr;
     while (r != nullptr)
     {
@@ -1588,7 +1585,7 @@ find_rule_for_zone(const std::pair<const Rule*, const Rule*>& eqr,
     auto r = eqr.first;
     auto ry = r->starting_year();
     auto prev_save = minutes{0};
-    auto prev_year = year::min();
+    auto prev_year = (year::min)();
     const Rule* prev_rule = nullptr;
     while (r != nullptr)
     {
@@ -1627,7 +1624,7 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
     using namespace date;
     auto r = first_rule.first;
     auto ry = first_rule.second;
-    sys_info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
+    sys_info x{sys_days((year::min)()/min_day), sys_days((year::max)()/max_day),
                seconds{0}, initial_save, initial_abbrev};
     while (r != nullptr)
     {
@@ -2137,7 +2134,7 @@ time_zone::load_sys_info(std::vector<detail::transition>::const_iterator i) cons
     }
     else
     {
-        r.begin = sys_days(year::min()/min_day);
+        r.begin = sys_days((year::min)()/min_day);
         r.end = i+1 != transitions_.end() ? i[1].timepoint :
                                           sys_seconds(sys_days(year::max()/max_day));
         r.offset = i[0].info->offset;
@@ -2415,8 +2412,8 @@ time_zone::adjust_infos(const std::vector<Rule>& rules)
                     }
                     else
                     {
-                        z.first_rule_ = std::make_pair(nullptr, year::min());
-                        z.last_rule_ = std::make_pair(nullptr, year::max());
+                        z.first_rule_ = std::make_pair(nullptr, (year::min)());
+                        z.last_rule_ = std::make_pair(nullptr, (year::max)());
                     }
                 }
             }
@@ -2430,9 +2427,9 @@ time_zone::adjust_infos(const std::vector<Rule>& rules)
 #ifndef NDEBUG
         if (z.first_rule_.first == nullptr)
         {
-            assert(z.first_rule_.second == year::min());
+            assert(z.first_rule_.second == (year::min)());
             assert(z.last_rule_.first == nullptr);
-            assert(z.last_rule_.second == year::max());
+            assert(z.last_rule_.second == (year::max)());
         }
         else
         {
@@ -2535,7 +2532,7 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
             if (i != zonelets_.begin())
                 r.begin = i[-1].until_utc_;
             else
-                r.begin = sys_days(year::min()/min_day);
+                r.begin = sys_days((year::min)()/min_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_ + i->u.save_;
             r.save = i->u.save_;
@@ -2545,7 +2542,7 @@ time_zone::get_info_impl(sys_seconds tp, int tz_int) const
             if (i != zonelets_.begin())
                 r.begin = i[-1].until_utc_;
             else
-                r.begin = sys_days(year::min()/min_day);
+                r.begin = sys_days((year::min)()/min_day);
             r.end = i->until_utc_;
             r.offset = i->gmtoff_;
         }

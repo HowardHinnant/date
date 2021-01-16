@@ -258,8 +258,8 @@ public:
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
-    static CONSTCD11 year min() NOEXCEPT;
-    static CONSTCD11 year max() NOEXCEPT;
+    static CONSTCD11 year (min)() NOEXCEPT;
+    static CONSTCD11 year (max)() NOEXCEPT;
 };
 
 CONSTCD11 bool operator==(const year& x, const year& y) NOEXCEPT;
@@ -1073,17 +1073,17 @@ CONSTCD11 inline bool year::ok() const NOEXCEPT {return true;}
 CONSTCD11
 inline
 year
-year::min() NOEXCEPT
+(year::min)() NOEXCEPT
 {
-    return year{std::numeric_limits<short>::min()};
+    return year{(std::numeric_limits<short>::min)()};
 }
 
 CONSTCD11
 inline
 year
-year::max() NOEXCEPT
+(year::max)() NOEXCEPT
 {
-    return year{std::numeric_limits<short>::max()};
+    return year{(std::numeric_limits<short>::max)()};
 }
 
 CONSTCD11

@@ -416,8 +416,8 @@ public:
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
-    static CONSTCD11 year min() NOEXCEPT { return year{-32767}; }
-    static CONSTCD11 year max() NOEXCEPT { return year{32767}; }
+    static CONSTCD11 year (min)() NOEXCEPT { return year{-32767}; }
+    static CONSTCD11 year (max)() NOEXCEPT { return year{32767}; }
 };
 
 CONSTCD11 bool operator==(const year& x, const year& y) NOEXCEPT;
@@ -1165,7 +1165,7 @@ private:
     static const std::intmax_t n2 = R2::num / gcd_n1_n2;
     static const std::intmax_t d2 = R2::den / gcd_d1_d2;
 #ifdef __cpp_constexpr
-    static const std::intmax_t max = std::numeric_limits<std::intmax_t>::max();
+    static const std::intmax_t max = (std::numeric_limits<std::intmax_t>::max)();
 #else
     static const std::intmax_t max = LLONG_MAX;
 #endif
@@ -1670,7 +1670,7 @@ inline
 bool
 year::ok() const NOEXCEPT
 {
-    return y_ != std::numeric_limits<short>::min();
+    return y_ != (std::numeric_limits<short>::min)();
 }
 
 CONSTCD11
@@ -6148,7 +6148,7 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
         {
             if (c == '-' || c == '+')
                 (void)is.get();
-            auto x = static_cast<int>(read_unsigned(is, std::max(m, 1u), M));
+            auto x = static_cast<int>(read_unsigned(is, (std::max)(m, 1u), M));
             if (!is.fail())
             {
                 if (c == '-')
@@ -6384,20 +6384,20 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         auto modified = CharT{};
         auto width = -1;
 
-        CONSTDATA int not_a_year = numeric_limits<short>::min();
+        CONSTDATA int not_a_year = (numeric_limits<short>::min)();
         CONSTDATA int not_a_2digit_year = 100;
         CONSTDATA int not_a_century = not_a_year / 100;
         CONSTDATA int not_a_month = 0;
         CONSTDATA int not_a_day = 0;
-        CONSTDATA int not_a_hour = numeric_limits<int>::min();
+        CONSTDATA int not_a_hour = (numeric_limits<int>::min)();
         CONSTDATA int not_a_hour_12_value = 0;
         CONSTDATA int not_a_minute = not_a_hour;
-        CONSTDATA Duration not_a_second = Duration::min();
+        CONSTDATA Duration not_a_second = (Duration::min)();
         CONSTDATA int not_a_doy = -1;
         CONSTDATA int not_a_weekday = 8;
         CONSTDATA int not_a_week_num = 100;
         CONSTDATA int not_a_ampm = -1;
-        CONSTDATA minutes not_a_offset = minutes::min();
+        CONSTDATA minutes not_a_offset = (minutes::min)();
 
         int Y = not_a_year;             // c, F, Y                   *
         int y = not_a_2digit_year;      // D, x, y                   *
@@ -7502,7 +7502,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     goto broken;
                 G = tG;
             }
-            if (Y < static_cast<int>(year::min()) || Y > static_cast<int>(year::max()))
+            if (Y < static_cast<int>((year::min)()) || Y > static_cast<int>((year::max)()))
                 Y = not_a_year;
             bool computed = false;
             if (G != not_a_year && V != not_a_week_num && wd != not_a_weekday)
