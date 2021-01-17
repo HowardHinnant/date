@@ -341,7 +341,7 @@ CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 
 #endif  // USE_BINARY_TZDB
 
-#ifndef _WIN32
+#if USE_OS_TZDB
 
 static
 std::string
@@ -396,7 +396,33 @@ get_tz_dir()
     return tz_dir;
 }
 
-#endif
+#elif USE_BINARY_TZDB // !USE_OS_TZDB
+
+static
+std::string&
+access_tz_dir()
+{
+    static std::string tz_dir;
+    return tz_dir;
+}
+
+void
+set_tz_dir(const std::string& tz_dir)
+{
+    access_tz_dir() = tz_dir;
+}
+
+static
+const std::string&
+get_tz_dir()
+{
+    static const std::string& tz_dir = access_tz_dir();
+    if (tz_dir.empty())
+        throw std::runtime_error("set_tz_dir() must set a directory path before calling get_tz_dir().");
+    return tz_dir;
+}
+
+#endif // USE_OS_TZDB
 
 // +-------------------+
 // | End Configuration |
@@ -3833,7 +3859,7 @@ tzdb::current_zone() const
             return locate_zone(extract_tz_name(rp));
         }
     }
-#if USE_BINARY_TZDB
+#if USE_OS_TZDB
     // On embedded systems e.g. buildroot with uclibc the timezone is linked
     // into /etc/TZ which is a symlink to path like this:
     // "/usr/share/zoneinfo/uclibc/America/Los_Angeles"
@@ -3862,7 +3888,7 @@ tzdb::current_zone() const
             return locate_zone(result);
         }
     }
-#endif // USE_BINARY_TZDB
+#endif // USE_OS_TZDB
     {
     // On some versions of some linux distro's (e.g. Ubuntu),
     // the current timezone might be in the first line of

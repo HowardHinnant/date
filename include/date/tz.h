@@ -43,8 +43,16 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
+#ifndef USE_OS_TZDB
+#  define USE_OS_TZDB 0
+#endif
+
 #ifndef USE_BINARY_TZDB
-#  define USE_BINARY_TZDB 0
+#  define USE_BINARY_TZDB USE_OS_TZDB
+#endif
+
+#if (!USE_BINARY_TZDB) && (USE_OS_TZDB)
+#  define error "If USE_OS_TZDB is used, then USE_BINARY_TZDB must also be used."
 #endif
 
 #ifndef HAS_REMOTE_API
@@ -82,9 +90,9 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  define USE_SHELL_API 1
 #endif
 
-#if USE_BINARY_TZDB
+#if USE_OS_TZDB || USE_BINARY_TZDB
 #  ifdef _WIN32
-#    error "USE_BINARY_TZDB can not be used on Windows"
+#    error "USE_OS_TZDB and USE_BINARY_TZDB can not be used on Windows"
 #  endif
 #endif
 
@@ -1294,12 +1302,14 @@ tzdb_list::cend() const NOEXCEPT
 
 DATE_API tzdb_list& get_tzdb_list();
 
-#if !USE_BINARY_TZDB
-
+#if USE_BINARY_TZDB
+#  if !USE_OS_TZDB
+DATE_API void set_tz_dir(const std::string& tz_dir);
+#  endif // !USE_OS_TZDB
+#else // !USE_BINARY_TZDB
 DATE_API const tzdb& reload_tzdb();
 DATE_API void        set_install(const std::string& install);
-
-#endif  // !USE_BINARY_TZDB
+#endif // USE_BINARY_TZDB
 
 #if HAS_REMOTE_API
 
