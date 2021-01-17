@@ -43,12 +43,12 @@
 // required. On Windows, the names are never "Standard" so mapping is always required.
 // Technically any OS may use the mapping process but currently only Windows does use it.
 
-#ifndef USE_OS_TZDB
-#  define USE_OS_TZDB 0
+#ifndef USE_BINARY_TZDB
+#  define USE_BINARY_TZDB 0
 #endif
 
 #ifndef HAS_REMOTE_API
-#  if USE_OS_TZDB == 0
+#  if USE_BINARY_TZDB == 0
 #    ifdef _WIN32
 #      define HAS_REMOTE_API 0
 #    else
@@ -64,8 +64,8 @@
 # pragma clang diagnostic ignored "-Wconstant-logical-operand"
 #endif
 
-static_assert(!(USE_OS_TZDB && HAS_REMOTE_API),
-              "USE_OS_TZDB and HAS_REMOTE_API can not be used together");
+static_assert(!(USE_BINARY_TZDB && HAS_REMOTE_API),
+              "USE_BINARY_TZDB and HAS_REMOTE_API can not be used together");
 
 #ifdef __clang__
 # pragma clang diagnostic pop
@@ -82,9 +82,9 @@ static_assert(HAS_REMOTE_API == 0 ? AUTO_DOWNLOAD == 0 : true,
 #  define USE_SHELL_API 1
 #endif
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 #  ifdef _WIN32
-#    error "USE_OS_TZDB can not be used on Windows"
+#    error "USE_BINARY_TZDB can not be used on Windows"
 #  endif
 #endif
 
@@ -764,13 +764,13 @@ operator!=(const zoned_time<Duration1, TimeZonePtr>& x,
 
 namespace detail
 {
-#  if USE_OS_TZDB
+#  if USE_BINARY_TZDB
     struct transition;
     struct expanded_ttinfo;
-#  else  // !USE_OS_TZDB
+#  else  // !USE_BINARY_TZDB
     struct zonelet;
     class Rule;
-#  endif  // !USE_OS_TZDB
+#  endif  // !USE_BINARY_TZDB
 }
 
 #endif  // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -779,12 +779,12 @@ class time_zone
 {
 private:
     std::string                          name_;
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
     std::vector<detail::transition>      transitions_;
     std::vector<detail::expanded_ttinfo> ttinfos_;
-#else  // !USE_OS_TZDB
+#else  // !USE_BINARY_TZDB
     std::vector<detail::zonelet>         zonelets_;
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
     std::unique_ptr<std::once_flag>      adjusted_;
 
 public:
@@ -819,9 +819,9 @@ public:
     friend bool operator< (const time_zone& x, const time_zone& y) NOEXCEPT;
     friend DATE_API std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
     DATE_API void add(const std::string& s);
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 private:
     DATE_API sys_info   get_info_impl(sys_seconds tp) const;
@@ -834,7 +834,7 @@ private:
         sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
         to_sys_impl(local_time<Duration> tp, choose, std::true_type) const;
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
     DATE_API void init() const;
     DATE_API void init_impl();
     DATE_API sys_info
@@ -844,11 +844,11 @@ private:
     DATE_API void
     load_data(std::istream& inf, std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
                                  std::int32_t tzh_typecnt, std::int32_t tzh_charcnt);
-#else  // !USE_OS_TZDB
+#else  // !USE_BINARY_TZDB
     DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
     DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
     DATE_API void parse_info(std::istream& in);
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 };
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -958,7 +958,7 @@ time_zone::to_sys_impl(local_time<Duration> tp, choose, std::true_type) const
     return sys_time<Duration>{tp.time_since_epoch()} - i.first.offset;
 }
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 class time_zone_link
 {
@@ -984,7 +984,7 @@ inline bool operator> (const time_zone_link& x, const time_zone_link& y) {return
 inline bool operator<=(const time_zone_link& x, const time_zone_link& y) {return !(y < x);}
 inline bool operator>=(const time_zone_link& x, const time_zone_link& y) {return !(x < y);}
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 class leap_second
 {
@@ -992,7 +992,7 @@ private:
     sys_seconds date_;
 
 public:
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
     DATE_API explicit leap_second(const sys_seconds& s, detail::undocumented);
 #else
     DATE_API explicit leap_second(const std::string& s, detail::undocumented);
@@ -1151,11 +1151,11 @@ struct tzdb
 {
     std::string                 version = "unknown";
     std::vector<time_zone>      zones;
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
     std::vector<time_zone_link> links;
 #endif
     std::vector<leap_second>    leap_seconds;
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
     std::vector<detail::Rule>   rules;
 #endif
 #ifdef _WIN32
@@ -1294,12 +1294,12 @@ tzdb_list::cend() const NOEXCEPT
 
 DATE_API tzdb_list& get_tzdb_list();
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 DATE_API const tzdb& reload_tzdb();
 DATE_API void        set_install(const std::string& install);
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 #if HAS_REMOTE_API
 

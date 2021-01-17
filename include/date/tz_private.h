@@ -40,7 +40,7 @@ namespace date
 namespace detail
 {
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 enum class tz {utc, local, standard};
 
@@ -256,7 +256,7 @@ struct zonelet
     zonelet& operator=(const zonelet&) = delete;
 };
 
-#else  // USE_OS_TZDB
+#else  // USE_BINARY_TZDB
 
 struct ttinfo
 {
@@ -303,7 +303,7 @@ struct transition
     }
 };
 
-#endif  // USE_OS_TZDB
+#endif  // USE_BINARY_TZDB
 
 }  // namespace detail
 

@@ -92,7 +92,7 @@
 #  define TARGET_OS_SIMULATOR 0
 #endif
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 #  include <dirent.h>
 #endif
 #include <algorithm>
@@ -105,7 +105,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 #  include <queue>
 #endif
 #include <sstream>
@@ -141,7 +141,7 @@
 #  endif  // HAS_REMOTE_API
 #else   // !_WIN32
 #  include <unistd.h>
-#  if !USE_OS_TZDB && !defined(INSTALL)
+#  if !USE_BINARY_TZDB && !defined(INSTALL)
 #    include <wordexp.h>
 #  endif
 #  include <limits.h>
@@ -180,7 +180,7 @@ static CONSTDATA char folder_delimiter = '/';
 #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif  // defined(__GNUC__) && __GNUC__ < 5
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 #  ifdef _WIN32
 #    ifndef WINRT
@@ -267,7 +267,7 @@ get_download_folder()
 
 #  endif  // !_WIN32
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 namespace date
 {
@@ -277,7 +277,7 @@ namespace date
 
 using namespace detail;
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 static
 std::string&
@@ -326,7 +326,7 @@ get_download_gz_file(const std::string& version)
 }
 #endif  // HAS_REMOTE_API
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 // These can be used to reduce the range of the database to save memory
 CONSTDATA auto min_year = date::year::min();
@@ -335,11 +335,11 @@ CONSTDATA auto max_year = date::year::max();
 CONSTDATA auto min_day = date::January/1;
 CONSTDATA auto max_day = date::December/31;
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 
 CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 
-#endif  // USE_OS_TZDB
+#endif  // USE_BINARY_TZDB
 
 #ifndef _WIN32
 
@@ -491,7 +491,7 @@ parse_month(std::istream& in)
     return static_cast<unsigned>(++m);
 }
 
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
 
 #ifdef _WIN32
 
@@ -1718,11 +1718,11 @@ detail::zonelet::zonelet(const zonelet& i)
 #endif
 }
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 // time_zone
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 
 time_zone::time_zone(const std::string& s, detail::undocumented)
     : name_(s)
@@ -2226,7 +2226,7 @@ leap_second::leap_second(const sys_seconds& s, detail::undocumented)
 {
 }
 
-#else  // !USE_OS_TZDB
+#else  // !USE_BINARY_TZDB
 
 time_zone::time_zone(const std::string& s, detail::undocumented)
     : adjusted_(new std::once_flag{})
@@ -2620,7 +2620,7 @@ operator<<(std::ostream& os, const time_zone& z)
     return os;
 }
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 std::ostream&
 operator<<(std::ostream& os, const leap_second& x)
@@ -2629,7 +2629,7 @@ operator<<(std::ostream& os, const leap_second& x)
     return os << x.date_ << "  +";
 }
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 
 static
 std::string
@@ -2793,7 +2793,7 @@ init_tzdb()
     return db;
 }
 
-#else  // !USE_OS_TZDB
+#else  // !USE_BINARY_TZDB
 
 // time_zone_link
 
@@ -3569,7 +3569,7 @@ reload_tzdb()
     return get_tzdb_list().front();
 }
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 const tzdb&
 get_tzdb()
@@ -3595,7 +3595,7 @@ tzdb::locate_zone(const std::string& tz_name) const
         });
     if (zi == zones.end() || zi->name() != tz_name)
     {
-#if !USE_OS_TZDB
+#if !USE_BINARY_TZDB
         auto li = std::lower_bound(links.begin(), links.end(), tz_name,
 #if HAS_STRING_VIEW
         [](const time_zone_link& z, const std::string_view& nm)
@@ -3615,7 +3615,7 @@ tzdb::locate_zone(const std::string& tz_name) const
             if (zi != zones.end() && zi->name() == li->target())
                 return &*zi;
         }
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
         throw std::runtime_error(std::string(tz_name) + " not found in timezone database");
     }
     return &*zi;
@@ -3631,7 +3631,7 @@ locate_zone(const std::string& tz_name)
     return get_tzdb().locate_zone(tz_name);
 }
 
-#if USE_OS_TZDB
+#if USE_BINARY_TZDB
 
 std::ostream&
 operator<<(std::ostream& os, const tzdb& db)
@@ -3645,7 +3645,7 @@ operator<<(std::ostream& os, const tzdb& db)
     return os;
 }
 
-#else  // !USE_OS_TZDB
+#else  // !USE_BINARY_TZDB
 
 std::ostream&
 operator<<(std::ostream& os, const tzdb& db)
@@ -3704,7 +3704,7 @@ operator<<(std::ostream& os, const tzdb& db)
     return os;
 }
 
-#endif  // !USE_OS_TZDB
+#endif  // !USE_BINARY_TZDB
 
 // -----------------------
 
