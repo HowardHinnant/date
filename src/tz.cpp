@@ -3833,6 +3833,7 @@ tzdb::current_zone() const
             return locate_zone(extract_tz_name(rp));
         }
     }
+#if USE_BINARY_TZDB
     // On embedded systems e.g. buildroot with uclibc the timezone is linked
     // into /etc/TZ which is a symlink to path like this:
     // "/usr/share/zoneinfo/uclibc/America/Los_Angeles"
@@ -3861,6 +3862,7 @@ tzdb::current_zone() const
             return locate_zone(result);
         }
     }
+#endif // USE_BINARY_TZDB
     {
     // On some versions of some linux distro's (e.g. Ubuntu),
     // the current timezone might be in the first line of
