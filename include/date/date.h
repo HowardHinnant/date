@@ -33,7 +33,7 @@
 // We did not mean to shout.
 
 #ifndef HAS_STRING_VIEW
-#  if __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#  if __cpp_lib_string_view
 #    define HAS_STRING_VIEW 1
 #  else
 #    define HAS_STRING_VIEW 0
@@ -136,7 +136,7 @@ namespace date
 #endif
 
 #ifndef HAS_UNCAUGHT_EXCEPTIONS
-#  if __cplusplus > 201703 || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
+#  if __cpp_lib_uncaught_exceptions
 #    define HAS_UNCAUGHT_EXCEPTIONS 1
 #  else
 #    define HAS_UNCAUGHT_EXCEPTIONS 0
@@ -144,7 +144,7 @@ namespace date
 #endif  // HAS_UNCAUGHT_EXCEPTIONS
 
 #ifndef HAS_VOID_T
-#  if __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#  if __cpp_lib_void_t
 #    define HAS_VOID_T 1
 #  else
 #    define HAS_VOID_T 0
