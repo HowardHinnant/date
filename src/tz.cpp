@@ -196,6 +196,22 @@ namespace
         }
     };
     using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
+
+    std::string to_utf8(const std::wstring & wstring)
+    {
+        int length = WideCharToMultiByte(CP_UTF8, 0, wstring.c_str(), -1, 0, 0, 0, 0) - 1;
+        std::string string(length, 0);
+        WideCharToMultiByte(CP_UTF8, 0, wstring.c_str(), length, string.data(), length, 0, 0);
+        return string;
+    }
+
+    std::wstring to_wstring(const std::string & string)
+    {
+        int length = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, NULL, 0) - 1;
+        std::wstring wideString(length, 0);
+        MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, wideString.data(), length);
+        return wideString;
+    }
 }
 
 // We might need to know certain locations even if not using the remote API,
