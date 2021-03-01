@@ -2863,6 +2863,7 @@ struct curl_deleter
     void operator()(CURL* p) const
     {
         ::curl_easy_cleanup(p);
+        ::curl_global_cleanup();
     }
 };
 
