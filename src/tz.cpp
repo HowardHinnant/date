@@ -314,7 +314,7 @@ access_install()
 void
 set_install(const std::string& s)
 {
-    access_install() = s;
+    access_install() = s + folder_delimiter + "tzdata";
 }
 
 static
