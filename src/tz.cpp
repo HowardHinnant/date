@@ -217,23 +217,16 @@ namespace
 // We might need to know certain locations even if not using the remote API,
 // so keep these routines out of that block for now.
 static
-std::string
+std::wstring
 get_known_folder(const GUID& folderid)
 {
-    std::string folder;
+    std::wstring folder;
     PWSTR pfolder = nullptr;
     HRESULT hr = SHGetKnownFolderPath(folderid, KF_FLAG_DEFAULT, nullptr, &pfolder);
     if (SUCCEEDED(hr))
     {
         co_task_mem_ptr folder_ptr(pfolder);
-        const wchar_t* fptr = folder_ptr.get();
-        auto state = std::mbstate_t();
-        const auto required = std::wcsrtombs(nullptr, &fptr, 0, &state);
-        if (required != 0 && required != std::size_t(-1))
-        {
-            folder.resize(required);
-            std::wcsrtombs(&folder[0], &fptr, folder.size(), &state);
-        }
+        folder = std::wstring(folder_ptr.get());
     }
     return folder;
 }
@@ -245,7 +238,7 @@ static
 std::string
 get_download_folder()
 {
-    return get_known_folder(FOLDERID_Downloads);
+    return ::to_utf8(get_known_folder(FOLDERID_Downloads));
 }
 
 #      endif  // !INSTALL
@@ -549,7 +542,7 @@ load_timezone_mappings_from_xml_file(const std::string& input_path)
     std::vector<detail::timezone_mapping> mappings;
     std::string line;
 
-    std::ifstream is(input_path);
+    std::ifstream is(::to_wstring(input_path));
     if (!is.is_open())
     {
         // We don't emit file exceptions because that's an implementation detail.
@@ -2782,7 +2775,7 @@ bool
 file_exists(const std::string& filename)
 {
 #ifdef _WIN32
-    return ::_access(filename.c_str(), 0) == 0;
+    return ::_waccess(::to_wstring(filename).c_str(), 0) == 0;
 #else
     return ::access(filename.c_str(), F_OK) == 0;
 #endif
@@ -2877,10 +2870,17 @@ download_to_file(const std::string& url, const std::string& local_filename,
     curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, write_cb);
     decltype(curl_easy_perform(curl.get())) res;
     {
+#  ifdef _WIN32
+        std::ofstream of(::to_wstring(local_filename),
+                         opts == download_file_options::binary ?
+                             std::ofstream::out | std::ofstream::binary :
+                             std::ofstream::out);
+#  else // !WIN32
         std::ofstream of(local_filename,
                          opts == download_file_options::binary ?
                              std::ofstream::out | std::ofstream::binary :
                              std::ofstream::out);
+#  endif // !WIN32
         of.exceptions(std::ios::badbit);
         curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &of);
         res = curl_easy_perform(curl.get());
@@ -2920,10 +2920,10 @@ remove_folder_and_subfolders(const std::string& folder)
 #  ifdef _WIN32
 #    if USE_SHELL_API
     // Delete the folder contents by deleting the folder.
-    std::string cmd = "rd /s /q \"";
-    cmd += folder;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+    std::wstring cmd = L"rd /s /q \"";
+    cmd += ::to_wstring(folder);
+    cmd += L'\"';
+    return _wsystem(cmd.c_str()) == EXIT_SUCCESS;
 #    else  // !USE_SHELL_API
     // Create a buffer containing the path to delete. It must be terminated
     // by two nuls. Who designs these API's...
@@ -2999,12 +2999,12 @@ make_directory(const std::string& folder)
 #  ifdef _WIN32
 #    if USE_SHELL_API
     // Re-create the folder.
-    std::string cmd = "mkdir \"";
-    cmd += folder;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+    std::wstring cmd = L"mkdir \"";
+    cmd += ::to_wstring(folder);
+    cmd += L'\"';
+    return _wsystem(cmd.c_str()) == EXIT_SUCCESS;
 #    else  // !USE_SHELL_API
-    return _mkdir(folder.c_str()) == 0;
+    return _wmkdir(::to_wstring(folder).c_str()) == 0;
 #    endif // !USE_SHELL_API
 #  else  // !_WIN32
 #    if USE_SHELL_API
@@ -3021,12 +3021,12 @@ delete_file(const std::string& file)
 {
 #  ifdef _WIN32
 #    if USE_SHELL_API
-    std::string cmd = "del \"";
-    cmd += file;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == 0;
+    std::wstring cmd = L"del \"";
+    cmd += ::to_wstring(file);
+    cmd += L'\"';
+    return _wsystem(cmd.c_str()) == 0;
 #    else  // !USE_SHELL_API
-    return _unlink(file.c_str()) == 0;
+    return _wunlink(::to_wstring(file).c_str()) == 0;
 #    endif // !USE_SHELL_API
 #  else  // !_WIN32
 #    if USE_SHELL_API
@@ -3044,20 +3044,20 @@ bool
 move_file(const std::string& from, const std::string& to)
 {
 #    if USE_SHELL_API
-    std::string cmd = "move \"";
-    cmd += from;
-    cmd += "\" \"";
-    cmd += to;
-    cmd += '\"';
-    return std::system(cmd.c_str()) == EXIT_SUCCESS;
+    std::wstring cmd = L"move \"";
+    cmd += ::to_wstring(from);
+    cmd += L"\" \"";
+    cmd += ::to_wstring(to);
+    cmd += L'\"';
+    return _wsystem(cmd.c_str()) == EXIT_SUCCESS;
 #    else  // !USE_SHELL_API
-    return !!::MoveFile(from.c_str(), to.c_str());
+    return !!::MoveFileW(::to_wstring(from).c_str(), ::to_wstring(to).c_str());
 #    endif // !USE_SHELL_API
 }
 
 // Usually something like "c:\Program Files".
 static
-std::string
+std::wstring
 get_program_folder()
 {
     return get_known_folder(FOLDERID_ProgramFiles);
@@ -3065,22 +3065,22 @@ get_program_folder()
 
 // Note folder can and usually does contain spaces.
 static
-std::string
+std::wstring
 get_unzip_program()
 {
-    std::string path;
+    std::wstring path;
 
     // 7-Zip appears to note its location in the registry.
     // If that doesn't work, fall through and take a guess, but it will likely be wrong.
     HKEY hKey = nullptr;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\7-Zip", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\7-Zip", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        char value_buffer[MAX_PATH + 1]; // fyi 260 at time of writing.
+        wchar_t value_buffer[MAX_PATH + 1]; // fyi 260 at time of writing.
         // in/out parameter. Documentation say that size is a count of bytes not chars.
         DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
         DWORD tzi_type = REG_SZ;
         // Testing shows Path key value is "C:\Program Files\7-Zip\" i.e. always with trailing \.
-        bool got_value = (RegQueryValueExA(hKey, "Path", nullptr, &tzi_type,
+        bool got_value = (RegQueryValueExW(hKey, L"Path", nullptr, &tzi_type,
             reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS);
         RegCloseKey(hKey); // Close now incase of throw later.
         if (got_value)
@@ -3090,29 +3090,29 @@ get_unzip_program()
             path = value_buffer;
             if (!path.empty())
             {
-                path += "7z.exe";
+                path += L"7z.exe";
                 return path;
             }
         }
     }
     path += get_program_folder();
     path += folder_delimiter;
-    path += "7-Zip\\7z.exe";
+    path += L"7-Zip\\7z.exe";
     return path;
 }
 
 #    if !USE_SHELL_API
 static
 int
-run_program(const std::string& command)
+run_program(const std::wstring& command)
 {
-    STARTUPINFO si{};
+    STARTUPINFOW si{};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi{};
 
     // Allegedly CreateProcess overwrites the command line. Ugh.
-    std::string mutable_command(command);
-    if (CreateProcess(nullptr, &mutable_command[0],
+    std::wstring mutable_command(command);
+    if (CreateProcessW(nullptr, &mutable_command[0],
         nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
     {
         WaitForSingleObject(pi.hProcess, INFINITE);
@@ -3155,22 +3155,22 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     // Aim to create a string like:
     // "C:\Program Files\7-Zip\7z.exe" x "C:\Users\SomeUser\Downloads\tzdata2016d.tar.gz"
     //     -o"C:\Users\SomeUser\Downloads\tzdata"
-    std::string cmd;
+    std::wstring cmd;
     cmd = '\"';
     cmd += unzip_prog;
-    cmd += "\" x \"";
-    cmd += gz_file;
-    cmd += "\" -o\"";
-    cmd += dest_folder;
-    cmd += '\"';
+    cmd += L"\" x \"";
+    cmd += ::to_wstring(gz_file);
+    cmd += L"\" -o\"";
+    cmd += ::to_wstring(dest_folder);
+    cmd += L'\"';
 
 #    if USE_SHELL_API
     // When using shelling out with std::system() extra quotes are required around the
     // whole command. It's weird but necessary it seems, see:
     // http://stackoverflow.com/q/27975969/576911
 
-    cmd = "\"" + cmd + "\"";
-    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+    cmd = L"\"" + cmd + L"\"";
+    if (_wsystem(cmd.c_str()) == EXIT_SUCCESS)
         unzip_result = true;
 #    else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
@@ -3182,16 +3182,16 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
     // Use the unzip program extract the data from the tar file that was
     // just extracted from the archive.
     auto tar_file = get_download_tar_file(version);
-    cmd = '\"';
+    cmd = L'\"';
     cmd += unzip_prog;
-    cmd += "\" x \"";
-    cmd += tar_file;
-    cmd += "\" -o\"";
-    cmd += get_install();
-    cmd += '\"';
+    cmd += L"\" x \"";
+    cmd += ::to_wstring(tar_file);
+    cmd += L"\" -o\"";
+    cmd += ::to_wstring(get_install());
+    cmd += L'\"';
 #    if USE_SHELL_API
-    cmd = "\"" + cmd + "\"";
-    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
+    cmd = L"\"" + cmd + L"\"";
+    if (_wsystem(cmd.c_str()) == EXIT_SUCCESS)
         unzip_result = true;
 #    else  // !USE_SHELL_API
     if (run_program(cmd) == EXIT_SUCCESS)
@@ -3354,7 +3354,12 @@ std::string
 get_version(const std::string& path)
 {
     std::string version;
-    std::ifstream infile(path + "version");
+#ifdef _WIN32
+     std::ifstream infile(::to_wstring(path + "version"));
+#else // !WIN32
+     std::ifstream infile(path + "version");
+#endif // !WIN32
+
     if (infile.is_open())
     {
         infile >> version;
@@ -3445,7 +3450,11 @@ init_tzdb()
 
     for (const auto& filename : files)
     {
+#ifdef _WIN32
+        std::ifstream infile(::to_wstring(path + filename));
+#else
         std::ifstream infile(path + filename);
+#endif
         while (infile)
         {
             std::getline(infile, line);
