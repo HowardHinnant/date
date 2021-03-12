@@ -2889,10 +2889,11 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os.imbue(std::locale::classic());
-    os << ymd.year() << '-';
+    os << static_cast<int>(ymd.year()) << '-';
     os.width(2);
     os << static_cast<unsigned>(ymd.month()) << '-';
-    os << ymd.day();
+    os.width(2);
+    os << static_cast<unsigned>(ymd.day());
     if (!ymd.ok())
         os << " is not a valid date";
     return os;
