@@ -49,7 +49,7 @@ To use `"tz.h"`, there is a single source file (`src/tz.cpp`) that needs to be c
 
 One can run tests by cd'ing into the `test` subdirectory and running `testit`.  There are known failures on all platforms except for macOS.  And even on macOS if C++11 is used.  If any of these failures present problems for you, there exist workarounds.
 
-Additionally there is unsupported support for [vcpkg](https://github.com/Microsoft/vcpkg) and [CMake](https://cmake.org/).  I don't personally use or maintain these systems as for me they cause more problems than they solve (for this small project).  If you would like to contribute to these build systems please feel free to file a PR.
+Additionally there is _unsupported_ support for [vcpkg](https://github.com/Microsoft/vcpkg) and [CMake](https://cmake.org/).  I don't personally use or maintain these systems as for me they cause more problems than they solve (for this small project).  If you would like to contribute to these build systems please feel free to file a PR.
 
 You can download and install Date using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 
