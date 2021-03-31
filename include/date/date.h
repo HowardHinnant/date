@@ -1501,16 +1501,29 @@ operator-(const day& x, const days& y) NOEXCEPT
     return x + -y;
 }
 
+namespace detail
+{
+
 template<class CharT, class Traits>
-inline
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const day& d)
 {
     detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
     os.flags(std::ios::dec | std::ios::right);
     os.width(2);
     os << static_cast<unsigned>(d);
+    return os;
+}
+
+}  // namespace detail
+
+template<class CharT, class Traits>
+inline
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const day& d)
+{
+    detail::low_level_fmt(os, d);
     if (!d.ok())
         os << " is not a valid day";
     return os;
@@ -1628,10 +1641,12 @@ operator-(const month& x, const months& y) NOEXCEPT
     return x + -y;
 }
 
+namespace detail
+{
+
 template<class CharT, class Traits>
-inline
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const month& m)
 {
     if (m.ok())
     {
@@ -1639,7 +1654,20 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
         os << format(os.getloc(), fmt, m);
     }
     else
-        os << static_cast<unsigned>(m) << " is not a valid month";
+        os << static_cast<unsigned>(m);
+    return os;
+}
+
+}  // namespace detail
+
+template<class CharT, class Traits>
+inline
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const month& m)
+{
+    detail::low_level_fmt(os, m);
+    if (!m.ok())
+        os << " is not a valid month";
     return os;
 }
 
@@ -1753,10 +1781,12 @@ operator-(const year& x, const years& y) NOEXCEPT
     return year{static_cast<int>(x) - y.count()};
 }
 
+namespace detail
+{
+
 template<class CharT, class Traits>
-inline
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const year& y)
 {
     detail::save_ostream<CharT, Traits> _(os);
     os.fill('0');
@@ -1764,6 +1794,17 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
     os.width(4 + (y < year{0}));
     os.imbue(std::locale::classic());
     os << static_cast<int>(y);
+    return os;
+}
+
+}  // namespace detail
+
+template<class CharT, class Traits>
+inline
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
+{
+    detail::low_level_fmt(os, y);
     if (!y.ok())
         os << " is not a valid year";
     return os;
@@ -1889,10 +1930,12 @@ operator-(const weekday& x, const days& y) NOEXCEPT
     return x + -y;
 }
 
+namespace detail
+{
+
 template<class CharT, class Traits>
-inline
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
 {
     if (wd.ok())
     {
@@ -1900,7 +1943,20 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
         os << format(fmt, wd);
     }
     else
-        os << static_cast<unsigned>(wd.wd_) << " is not a valid weekday";
+        os << wd.c_encoding();
+    return os;
+}
+
+}  // namespace detail
+
+template<class CharT, class Traits>
+inline
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const weekday& wd)
+{
+    detail::low_level_fmt(os, wd);
+    if (!wd.ok())
+        os << " is not a valid weekday";
     return os;
 }
 
@@ -2009,15 +2065,26 @@ weekday_indexed::weekday_indexed(const date::weekday& wd, unsigned index) NOEXCE
 #  pragma GCC diagnostic pop
 #endif  // __GNUC__
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi)
+{
+    return low_level_fmt(os, wdi.weekday()) << '[' << wdi.index() << ']';
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_indexed& wdi)
 {
-    os << wdi.weekday() << '[' << wdi.index();
-    if (!(1 <= wdi.index() && wdi.index() <= 5))
-        os << " is not a valid index";
-    os << ']';
+    detail::low_level_fmt(os, wdi);
+    if (!wdi.ok())
+        os << " is not a valid weekday_indexed";
     return os;
 }
 
@@ -2067,12 +2134,27 @@ operator!=(const weekday_last& x, const weekday_last& y) NOEXCEPT
     return !(x == y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const weekday_last& wdl)
+{
+    return low_level_fmt(os, wdl.weekday()) << "[last]";
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const weekday_last& wdl)
 {
-    return os << wdl.weekday() << "[last]";
+    detail::low_level_fmt(os, wdl);
+    if (!wdl.ok())
+        os << " is not a valid weekday_last";
+    return os;
 }
 
 CONSTCD11
@@ -2247,12 +2329,28 @@ operator-(const year_month& ym, const years& dy) NOEXCEPT
     return ym + -dy;
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const year_month& ym)
+{
+    low_level_fmt(os, ym.year()) << '/';
+    return low_level_fmt(os, ym.month());
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month& ym)
 {
-    return os << ym.year() << '/' << ym.month();
+    detail::low_level_fmt(os, ym);
+    if (!ym.ok())
+        os << " is not a valid year_month";
+    return os;
 }
 
 // month_day
@@ -2332,12 +2430,28 @@ operator>=(const month_day& x, const month_day& y) NOEXCEPT
     return !(x < y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const month_day& md)
+{
+    low_level_fmt(os, md.month()) << '/';
+    return low_level_fmt(os, md.day());
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month_day& md)
 {
-    return os << md.month() << '/' << md.day();
+    detail::low_level_fmt(os, md);
+    if (!md.ok())
+        os << " is not a valid month_day";
+    return os;
 }
 
 // month_day_last
@@ -2394,12 +2508,27 @@ operator>=(const month_day_last& x, const month_day_last& y) NOEXCEPT
     return !(x < y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl)
+{
+    return low_level_fmt(os, mdl.month()) << "/last";
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month_day_last& mdl)
 {
-    return os << mdl.month() << "/last";
+    detail::low_level_fmt(os, mdl);
+    if (!mdl.ok())
+        os << " is not a valid month_day_last";
+    return os;
 }
 
 // month_weekday
@@ -2446,12 +2575,28 @@ operator!=(const month_weekday& x, const month_weekday& y) NOEXCEPT
     return !(x == y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd)
+{
+    low_level_fmt(os, mwd.month()) << '/';
+    return low_level_fmt(os, mwd.weekday_indexed());
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday& mwd)
 {
-    return os << mwd.month() << '/' << mwd.weekday_indexed();
+    detail::low_level_fmt(os, mwd);
+    if (!mwd.ok())
+        os << " is not a valid month_weekday";
+    return os;
 }
 
 // month_weekday_last
@@ -2498,12 +2643,28 @@ operator!=(const month_weekday_last& x, const month_weekday_last& y) NOEXCEPT
     return !(x == y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl)
+{
+    low_level_fmt(os, mwdl.month()) << '/';
+    return low_level_fmt(os, mwdl.weekday_last());
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const month_weekday_last& mwdl)
 {
-    return os << mwdl.month() << '/' << mwdl.weekday_last();
+    detail::low_level_fmt(os, mwdl);
+    if (!mwdl.ok())
+        os << " is not a valid month_weekday_last";
+    return os;
 }
 
 // year_month_day_last
@@ -2653,12 +2814,28 @@ operator>=(const year_month_day_last& x, const year_month_day_last& y) NOEXCEPT
     return !(x < y);
 }
 
+namespace detail
+{
+
+template<class CharT, class Traits>
+std::basic_ostream<CharT, Traits>&
+low_level_fmt(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymdl)
+{
+    low_level_fmt(os, ymdl.year()) << '/';
+    return low_level_fmt(os, ymdl.month_day_last());
+}
+
+}  // namespace detail
+
 template<class CharT, class Traits>
 inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day_last& ymdl)
 {
-    return os << ymdl.year() << '/' << ymdl.month_day_last();
+    detail::low_level_fmt(os, ymdl);
+    if (!ymdl.ok())
+        os << " is not a valid year_month_day_last";
+    return os;
 }
 
 template<class>
@@ -2895,7 +3072,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_day& ymd)
     os.width(2);
     os << static_cast<unsigned>(ymd.day());
     if (!ymd.ok())
-        os << " is not a valid date";
+        os << " is not a valid year_month_day";
     return os;
 }
 
@@ -3131,8 +3308,12 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday& ymwdi)
 {
-    return os << ymwdi.year() << '/' << ymwdi.month()
-              << '/' << ymwdi.weekday_indexed();
+    detail::low_level_fmt(os, ymwdi.year()) << '/';
+    detail::low_level_fmt(os, ymwdi.month()) << '/';
+    detail::low_level_fmt(os, ymwdi.weekday_indexed());
+    if (!ymwdi.ok())
+        os << " is not a valid year_month_weekday";
+    return os;
 }
 
 template<class>
@@ -3308,7 +3489,12 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last& ymwdl)
 {
-    return os << ymwdl.year() << '/' << ymwdl.month() << '/' << ymwdl.weekday_last();
+    detail::low_level_fmt(os, ymwdl.year()) << '/';
+    detail::low_level_fmt(os, ymwdl.month()) << '/';
+    detail::low_level_fmt(os, ymwdl.weekday_last());
+    if (!ymwdl.ok())
+        os << " is not a valid year_month_weekday_last";
+    return os;
 }
 
 template<class>
