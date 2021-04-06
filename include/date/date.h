@@ -1020,6 +1020,7 @@ protected:
     std::basic_ios<CharT, Traits>& is_;
     CharT fill_;
     std::ios::fmtflags flags_;
+    std::streamsize precision_;
     std::streamsize width_;
     std::basic_ostream<CharT, Traits>* tie_;
     std::locale loc_;
@@ -1029,6 +1030,7 @@ public:
     {
         is_.fill(fill_);
         is_.flags(flags_);
+        is_.precision(precision_);
         is_.width(width_);
         is_.imbue(loc_);
         is_.tie(tie_);
@@ -1041,6 +1043,7 @@ public:
         : is_(is)
         , fill_(is.fill())
         , flags_(is.flags())
+        , precision_(is.precision())
         , width_(is.width(0))
         , tie_(is.tie(nullptr))
         , loc_(is.getloc())
@@ -3997,6 +4000,7 @@ public:
         std::chrono::duration<rep> d = s_ + sub_s_;
         if (d < std::chrono::seconds{10})
             os << '0';
+        os.precision(width+6);
         os << std::fixed << d.count();
         return os;
     }
@@ -4187,9 +4191,7 @@ make24(std::chrono::hours h, bool is_pm) NOEXCEPT
 template <class Duration>
 using time_of_day = hh_mm_ss<Duration>;
 
-template <class Rep, class Period,
-          class = typename std::enable_if
-              <!std::chrono::treat_as_floating_point<Rep>::value>::type>
+template <class Rep, class Period>
 CONSTCD11
 inline
 hh_mm_ss<std::chrono::duration<Rep, Period>>
@@ -4202,8 +4204,7 @@ template <class CharT, class Traits, class Duration>
 inline
 typename std::enable_if
 <
-    !std::chrono::treat_as_floating_point<typename Duration::rep>::value &&
-        std::ratio_less<typename Duration::period, days::period>::value
+    std::ratio_less<typename Duration::period, days::period>::value
     , std::basic_ostream<CharT, Traits>&
 >::type
 operator<<(std::basic_ostream<CharT, Traits>& os, const sys_time<Duration>& tp)
