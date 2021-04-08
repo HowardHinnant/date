@@ -460,6 +460,7 @@ time_zone::to_sys(date::local_time<Duration> tp) const
     using date::local_info;
     using date::sys_time;
     using date::ambiguous_local_time;
+    using date::nonexistent_local_time;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
         throw nonexistent_local_time(tp, i);
