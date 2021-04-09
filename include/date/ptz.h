@@ -269,7 +269,75 @@ public:
     std::string name() const;
 
     friend bool operator==(const time_zone& x, const time_zone& y);
+
+private:
+    date::sys_seconds get_start(date::year y) const;
+    date::sys_seconds get_prev_start(date::year y) const;
+    date::sys_seconds get_next_start(date::year y) const;
+    date::sys_seconds get_end(date::year y) const;
+    date::sys_seconds get_prev_end(date::year y) const;
+    date::sys_seconds get_next_end(date::year y) const;
+    date::sys_info contant_offset() const;
 };
+
+inline
+date::sys_seconds
+time_zone::get_start(date::year y) const
+{
+    return date::sys_seconds{(start_rule_(y) - offset_).time_since_epoch()};
+}
+
+inline
+date::sys_seconds
+time_zone::get_prev_start(date::year y) const
+{
+    return date::sys_seconds{(start_rule_(--y) - offset_).time_since_epoch()};
+}
+
+inline
+date::sys_seconds
+time_zone::get_next_start(date::year y) const
+{
+    return date::sys_seconds{(start_rule_(++y) - offset_).time_since_epoch()};
+}
+
+inline
+date::sys_seconds
+time_zone::get_end(date::year y) const
+{
+    return date::sys_seconds{(end_rule_(y) - (offset_ + save_)).time_since_epoch()};
+}
+
+inline
+date::sys_seconds
+time_zone::get_prev_end(date::year y) const
+{
+    return date::sys_seconds{(end_rule_(--y) - (offset_ + save_)).time_since_epoch()};
+}
+
+inline
+date::sys_seconds
+time_zone::get_next_end(date::year y) const
+{
+    return date::sys_seconds{(end_rule_(++y) - (offset_ + save_)).time_since_epoch()};
+}
+
+date::sys_info
+time_zone::contant_offset() const
+{
+    using date::year;
+    using date::sys_info;
+    using date::sys_days;
+    using date::January;
+    using date::December;
+    using date::last;
+    sys_info r;
+    r.begin = sys_days{year::min()/January/1};
+    r.end   = sys_days{year::max()/December/last};
+    r.abbrev = std_abbrev_;
+    r.offset = offset_;
+    return r;
+}
 
 inline
 time_zone::time_zone(const detail::string_t& s)
@@ -313,12 +381,10 @@ time_zone::get_info(date::sys_time<Duration> st) const
 {
     using date::sys_info;
     using date::year_month_day;
-    using date::sys_seconds;
     using date::sys_days;
     using date::floor;
     using date::ceil;
     using date::days;
-    using date::years;
     using date::year;
     using date::January;
     using date::December;
@@ -329,36 +395,59 @@ time_zone::get_info(date::sys_time<Duration> st) const
     if (start_rule_.ok())
     {
         auto y = year_month_day{floor<days>(st)}.year();
-        auto start = sys_seconds{(start_rule_(y) - offset_).time_since_epoch()};
-        auto end   = sys_seconds{(end_rule_(y) - (offset_ + save_)).time_since_epoch()};
-        if (start <= st && st < end)
+        auto start = get_start(y);
+        auto end   = get_end(y);
+        if (start <= end)  // (northern hemisphere)
         {
-            r.begin = start;
-            r.end = end;
-            r.offset += save_;
-            r.save = ceil<minutes>(save_);
-            r.abbrev = dst_abbrev_;
+            if (start <= st && st < end)
+            {
+                r.begin = start;
+                r.end = end;
+                r.offset += save_;
+                r.save = ceil<minutes>(save_);
+                r.abbrev = dst_abbrev_;
+            }
+            else if (st < start)
+            {
+                r.begin = get_prev_end(y);
+                r.end = start;
+                r.abbrev = std_abbrev_;
+            }
+            else  // st >= end
+            {
+                r.begin = end;
+                r.end = get_next_start(y);
+                r.abbrev = std_abbrev_;
+            }
         }
-        else if (st < start)
+        else  // end < start (southern hemisphere)
         {
-            r.begin = sys_seconds{(end_rule_(y-years{1}) -
-                                   (offset_ + save_)).time_since_epoch()};
-            r.end = start;
-            r.abbrev = std_abbrev_;
-        }
-        else  // st >= end
-        {
-            r.begin = end;
-            r.end = sys_seconds{(start_rule_(y+years{1}) - offset_).time_since_epoch()};
-            r.abbrev = std_abbrev_;
+            if (end <= st && st < start)
+            {
+                r.begin = end;
+                r.end = start;
+                r.abbrev = std_abbrev_;
+            }
+            else if (st < end)
+            {
+                r.begin = get_prev_start(y);
+                r.end = end;
+                r.offset += save_;
+                r.save = ceil<minutes>(save_);
+                r.abbrev = dst_abbrev_;
+            }
+            else  // st >= start
+            {
+                r.begin = start;
+                r.end = get_next_end(y);
+                r.offset += save_;
+                r.save = ceil<minutes>(save_);
+                r.abbrev = dst_abbrev_;
+            }
         }
     }
-    else  //  constant offset
-    {
-        r.begin = sys_days{year::min()/January/1};
-        r.end   = sys_days{year::max()/December/last};
-        r.abbrev = std_abbrev_;
-    }
+    else
+        r = contant_offset();
     return r;
 }
 
@@ -371,7 +460,6 @@ time_zone::get_info(date::local_time<Duration> tp) const
     using date::days;
     using date::sys_days;
     using date::sys_seconds;
-    using date::years;
     using date::year;
     using date::ceil;
     using date::January;
@@ -384,19 +472,25 @@ time_zone::get_info(date::local_time<Duration> tp) const
     if (start_rule_.ok())
     {
         auto y = year_month_day{floor<days>(tp)}.year();
-        auto start = sys_seconds{(start_rule_(y) - offset_).time_since_epoch()};
-        auto end   = sys_seconds{(end_rule_(y) - (offset_ + save_)).time_since_epoch()};
+        auto start = get_start(y);
+        auto end   = get_end(y);
         auto utcs = sys_seconds{floor<seconds>(tp - offset_).time_since_epoch()};
         auto utcd = sys_seconds{floor<seconds>(tp - (offset_ + save_)).time_since_epoch()};
+        auto northern = start <= end;
         if ((utcs < start) != (utcd < start))
         {
-            r.first.begin = sys_seconds{(end_rule_(y-years{1}) -
-                                         (offset_ + save_)).time_since_epoch()};
+            if (northern)
+                r.first.begin = get_prev_end(y);
+            else
+                r.first.begin = end;
             r.first.end = start;
             r.first.offset = offset_;
             r.first.abbrev = std_abbrev_;
             r.second.begin = start;
-            r.second.end = end;
+            if (northern)
+                r.second.end = end;
+            else
+                r.second.end = get_next_end(y);
             r.second.abbrev = dst_abbrev_;
             r.second.offset = offset_ + save_;
             r.second.save = ceil<minutes>(save_);
@@ -405,51 +499,29 @@ time_zone::get_info(date::local_time<Duration> tp) const
         }
         else if ((utcs < end) != (utcd < end))
         {
-            r.first.begin = start;
+            if (northern)
+                r.first.begin = start;
+            else
+                r.first.begin = get_prev_start(y);
             r.first.end = end;
             r.first.offset = offset_ + save_;
             r.first.save = ceil<minutes>(save_);
             r.first.abbrev = dst_abbrev_;
             r.second.begin = end;
-            r.second.end = sys_seconds{(start_rule_(y+years{1}) -
-                                        offset_).time_since_epoch()};
+            if (northern)
+                r.second.end = get_next_start(y);
+            else
+                r.second.end = start;
             r.second.abbrev = std_abbrev_;
             r.second.offset = offset_;
             r.result = save_ > seconds{0} ? local_info::ambiguous
                                           : local_info::nonexistent;
         }
-        else if (utcs < start)
-        {
-            r.first.begin = sys_seconds{(end_rule_(y-years{1}) -
-                                   (offset_ + save_)).time_since_epoch()};
-            r.first.end = start;
-            r.first.offset = offset_;
-            r.first.abbrev = std_abbrev_;
-        }
-        else if (utcs < end)
-        {
-            r.first.begin = start;
-            r.first.end = end;
-            r.first.offset = offset_ + save_;
-            r.first.save = ceil<minutes>(save_);
-            r.first.abbrev = dst_abbrev_;
-        }
         else
-        {
-            r.first.begin = end;
-            r.first.end = sys_seconds{(start_rule_(y+years{1}) -
-                                       offset_).time_since_epoch()};
-            r.first.abbrev = std_abbrev_;
-            r.first.offset = offset_;
-        }
+            r.first = get_info(utcs);
     }
-    else  //  constant offset
-    {
-        r.first.begin = sys_days{year::min()/January/1};
-        r.first.end   = sys_days{year::max()/December/last};
-        r.first.abbrev = std_abbrev_;
-        r.first.offset = offset_;
-    }
+    else
+        r.first = contant_offset();
     return r;
 }
 
