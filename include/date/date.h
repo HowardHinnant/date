@@ -1004,6 +1004,8 @@ struct is_clock<T, std::void_t<decltype(T::now()), typename T::rep, typename T::
     : std::true_type
 {};
 
+template<class T> inline constexpr bool is_clock_v = is_clock<T>::value;
+
 #endif  // HAS_VOID_T
 
 //----------------+
