@@ -7845,6 +7845,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             goto broken;
                         }
                     }
+                    else  // I is ambiguous, AM or PM?
+                        goto broken;
                 }
             }
             if (H != not_a_hour)
