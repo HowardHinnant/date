@@ -66,7 +66,7 @@ You can optionally build using [CMake](https://cmake.org/). Here is a guide of h
 ```bash
 mkdir build
 cd build
-cmake ../
+cmake -DENABLE_DATE_TESTING=ON -DBUILD_TZ_LIB=ON ../
 cmake --build . --target testit # Consider '-- -j4' for multithreading
 ```
 ## Projects using this library
