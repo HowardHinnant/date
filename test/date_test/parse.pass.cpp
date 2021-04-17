@@ -625,7 +625,7 @@ test_p()
     }
     {
         std::istringstream in{"1986-12-01 01:01:01 pm"};
-        sys_time<milliseconds> tp;
+        sys_time<seconds> tp;
         in >> parse("%Y-%m-%d %I:%M:%S %p", tp);
         assert(!in.fail());
         assert(!in.bad());
@@ -633,7 +633,7 @@ test_p()
     }
     {
         std::istringstream in{"1986-12-01 01:01:01"};
-        sys_time<milliseconds> tp;
+        sys_time<seconds> tp;
         in >> parse("%Y-%m-%d %I:%M:%S", tp);
         // The test will fail because %I needs the %p option to shows if it is AM or PM
         assert(in.fail());
