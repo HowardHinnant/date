@@ -4129,11 +4129,11 @@ private:
           const fields<Duration2>& fds, const std::string* abbrev,
           const std::chrono::seconds* offset_sec);
 
-    template <class CharT, class Traits, class Duration2, class Alloc>
+    template <class Duration2, class CharT, class Traits, class Alloc>
     friend
     std::basic_istream<CharT, Traits>&
     date::from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-          fields<Duration2>& fds,
+          fields<std::chrono::duration<long double>>& fds,
           std::basic_string<CharT, Traits, Alloc>* abbrev, std::chrono::minutes* offset);
 };
 
@@ -6545,10 +6545,11 @@ checked_set(T& value, T from, T not_a_value, std::basic_ios<CharT, Traits>& is)
 
 }  // namespace detail;
 
-template <class CharT, class Traits, class Duration, class Alloc = std::allocator<CharT>>
+template <class Duration, class CharT, class Traits, class Alloc = std::allocator<CharT>>
 std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            fields<Duration>& fds, std::basic_string<CharT, Traits, Alloc>* abbrev,
+            fields<std::chrono::duration<long double>>& fds, 
+            std::basic_string<CharT, Traits, Alloc>* abbrev,
             std::chrono::minutes* offset)
 {
     using std::numeric_limits;
@@ -6574,6 +6575,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         auto modified = CharT{};
         auto width = -1;
 
+        using DurationLD = duration<long double>;
+
         CONSTDATA int not_a_year = numeric_limits<short>::min();
         CONSTDATA int not_a_2digit_year = 100;
         CONSTDATA int not_a_century = not_a_year / 100;
@@ -6582,7 +6585,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         CONSTDATA int not_a_hour = numeric_limits<int>::min();
         CONSTDATA int not_a_hour_12_value = 0;
         CONSTDATA int not_a_minute = not_a_hour;
-        CONSTDATA Duration not_a_second = Duration::min();
+        CONSTDATA DurationLD not_a_second = DurationLD::min();
         CONSTDATA int not_a_doy = -1;
         CONSTDATA int not_a_weekday = 8;
         CONSTDATA int not_a_week_num = 100;
@@ -6602,7 +6605,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
         int I = not_a_hour_12_value;    // I, r                      *
         int p = not_a_ampm;             // p, r                      *
         int M = not_a_minute;           // c, M, r, R, T, X          *
-        Duration s = not_a_second;      // c, r, S, T, X             *
+        DurationLD s = not_a_second;    // c, r, S, T, X             *
         int U = not_a_week_num;         // U                         *
         int V = not_a_week_num;         // V                         *
         int W = not_a_week_num;         // W                         *
@@ -6745,7 +6748,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             checked_set(d, tm.tm_mday, not_a_day, is);
                             checked_set(H, tm.tm_hour, not_a_hour, is);
                             checked_set(M, tm.tm_min, not_a_minute, is);
-                            checked_set(s, duration_cast<Duration>(seconds{tm.tm_sec}),
+                            checked_set(s, duration_cast<DurationLD>(seconds{tm.tm_sec}),
                                         not_a_second, is);
                         }
                         is.setstate(err);
@@ -6772,8 +6775,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
                         checked_set(M, tM, not_a_minute, is);
-                        checked_set(s, round_i<Duration>(duration<long double>{S}),
-                                    not_a_second, is);
+                        checked_set(s, DurationLD{S}, not_a_second, is);
                         ws(is);
                         int tY = not_a_year;
                         read(is, rs{tY, 1, 4u});
@@ -6837,7 +6839,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         {
                             checked_set(H, tm.tm_hour, not_a_hour, is);
                             checked_set(M, tm.tm_min, not_a_minute, is);
-                            checked_set(s, duration_cast<Duration>(seconds{tm.tm_sec}),
+                            checked_set(s, duration_cast<DurationLD>(seconds{tm.tm_sec}),
                                         not_a_second, is);
                         }
                         is.setstate(err);
@@ -6852,8 +6854,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
                         checked_set(M, tM, not_a_minute, is);
-                        checked_set(s, round_i<Duration>(duration<long double>{S}),
-                                    not_a_second, is);
+                        checked_set(s, DurationLD{S}, not_a_second, is);
 #endif
                     }
                     else
@@ -7194,7 +7195,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         {
                             checked_set(H, tm.tm_hour, not_a_hour, is);
                             checked_set(M, tm.tm_min, not_a_hour, is);
-                            checked_set(s, duration_cast<Duration>(seconds{tm.tm_sec}),
+                            checked_set(s, duration_cast<DurationLD>(seconds{tm.tm_sec}),
                                         not_a_second, is);
                         }
                         is.setstate(err);
@@ -7209,8 +7210,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(I, tI, not_a_hour_12_value, is);
                         checked_set(M, tM, not_a_minute, is);
-                        checked_set(s, round_i<Duration>(duration<long double>{S}),
-                                    not_a_second, is);
+                        checked_set(s, DurationLD{S}, not_a_second, is);
                         ws(is);
                         auto nm = detail::ampm_names();
                         auto i = detail::scan_keyword(is, nm.first, nm.second) - nm.first;
@@ -7260,8 +7260,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
                         long double S;
                         read(is, rld{S, 1, width == -1 ? w : static_cast<unsigned>(width)});
-                        checked_set(s, round_i<Duration>(duration<long double>{S}),
-                                    not_a_second, is);
+                        checked_set(s, DurationLD{S}, not_a_second, is);
                     }
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
@@ -7269,7 +7268,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         ios::iostate err = ios::goodbit;
                         f.get(is, nullptr, is, err, &tm, command, fmt+1);
                         if ((err & ios::failbit) == 0)
-                            checked_set(s, duration_cast<Duration>(seconds{tm.tm_sec}),
+                            checked_set(s, duration_cast<DurationLD>(seconds{tm.tm_sec}),
                                         not_a_second, is);
                         is.setstate(err);
                     }
@@ -7297,8 +7296,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
                         checked_set(M, tM, not_a_minute, is);
-                        checked_set(s, round_i<Duration>(duration<long double>{S}),
-                                    not_a_second, is);
+                        checked_set(s, DurationLD{S}, not_a_second, is);
                     }
                     else
                         read(is, CharT{'%'}, width, modified, *fmt);
@@ -7852,7 +7850,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (H != not_a_hour)
             {
                 fds.has_tod = true;
-                fds.tod = hh_mm_ss<Duration>{hours{H}};
+                fds.tod = hh_mm_ss<DurationLD>{hours{H}};
             }
             if (M != not_a_minute)
             {
@@ -7862,7 +7860,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (s != not_a_second)
             {
                 fds.has_tod = true;
-                fds.tod.s_ = detail::decimal_format_seconds<Duration>{s};
+                fds.tod.s_ = detail::decimal_format_seconds<DurationLD>{s};
             }
             if (j != not_a_doy)
             {
@@ -7890,8 +7888,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, year& y,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.year().ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7906,8 +7905,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, month& m,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.month().ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7922,8 +7922,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, day& d,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.day().ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7938,8 +7939,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, weekday& wd
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.wd.ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7954,8 +7956,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, year_month&
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.month().ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7970,8 +7973,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt, month_day& 
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.month().ok() || !fds.ymd.day().ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -7986,8 +7990,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = std::chrono::seconds;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.ok())
         is.setstate(std::ios::failbit);
     if (!is.fail())
@@ -8002,16 +8007,17 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+    using DurationLD = std::chrono::duration<long double>;
     using detail::round_i;
     std::chrono::minutes offset_local{};
     auto offptr = offset ? offset : &offset_local;
-    fields<CT> fds{};
+    fields<DurationLD> fds{};
     fds.has_tod = true;
-    from_stream(is, fmt, fds, abbrev, offptr);
+    from_stream<CT>(is, fmt, fds, abbrev, offptr);
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(std::ios::failbit);
     if (!is.fail())
-        tp = round_i<Duration>(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
+        tp = round_i<Duration>(sys_days(fds.ymd) - *offptr + round_i<CT>(fds.tod.to_duration()));
     return is;
 }
 
@@ -8022,14 +8028,15 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             std::chrono::minutes* offset = nullptr)
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+    using DurationLD = std::chrono::duration<long double>;
     using detail::round_i;
-    fields<CT> fds{};
+    fields<DurationLD> fds{};
     fds.has_tod = true;
-    from_stream(is, fmt, fds, abbrev, offset);
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(std::ios::failbit);
     if (!is.fail())
-        tp = round_i<Duration>(local_seconds{local_days(fds.ymd)} + fds.tod.to_duration());
+        tp = round_i<Duration>(local_seconds{local_days(fds.ymd)} + round_i<CT>(fds.tod.to_duration()));
     return is;
 }
 
@@ -8042,8 +8049,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    fields<CT> fds{};
-    from_stream(is, fmt, fds, abbrev, offset);
+    using DurationLD = std::chrono::duration<long double>;
+    fields<DurationLD> fds{};
+    from_stream<CT>(is, fmt, fds, abbrev, offset);
     if (!fds.has_tod)
         is.setstate(std::ios::failbit);
     if (!is.fail())
