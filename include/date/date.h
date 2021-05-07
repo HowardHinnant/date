@@ -3894,10 +3894,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const fields<Duration>& fds, const std::string* abbrev = nullptr,
           const std::chrono::seconds* offset_sec = nullptr);
 
-template <class CharT, class Traits, class Duration, class Alloc>
+template <class Duration, class CharT, class Traits, class Alloc>
 std::basic_istream<CharT, Traits>&
 from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
-            fields<Duration>& fds, std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+            fields<std::chrono::duration<long double>>& fds, 
+            std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
             std::chrono::minutes* offset = nullptr);
 
 // hh_mm_ss
