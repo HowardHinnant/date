@@ -545,6 +545,22 @@ test_S()
         assert(tp == sys_days{2016_y/12/11} + seconds{15} + milliseconds{1});
     }
     {
+        std::istringstream in{"2016-12-11 59.499"};
+        sys_seconds tp;
+        in >> parse("%F %6S", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == sys_days{2016_y/12/11} + seconds{59});
+    }
+    {
+        std::istringstream in{"2016-12-11 59.500"};
+        sys_seconds tp;
+        in >> parse("%F %6S", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == sys_days{2016_y/12/11} + seconds{60});
+    }
+    {
         std::istringstream in{"2016-12-11 60"};
         sys_seconds tp;
         in >> parse("%F %S", tp);
