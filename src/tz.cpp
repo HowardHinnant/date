@@ -2164,7 +2164,7 @@ time_zone::get_info_impl(local_seconds tp) const
 {
     using namespace std::chrono;
     init();
-    local_info i;
+    local_info i{};
     i.result = local_info::unique;
     auto tr = upper_bound(transitions_.begin(), transitions_.end(), tp,
                           [](const local_seconds& x, const transition& t)
