@@ -8071,6 +8071,15 @@ public:
         {}
 
 #if HAS_STRING_VIEW
+    parse_manip(const CharT* format, Parsable& tp,
+                std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
+                std::chrono::minutes* offset = nullptr)
+        : format_(format)
+        , tp_(tp)
+        , abbrev_(abbrev)
+        , offset_(offset)
+        {}
+
     parse_manip(std::basic_string_view<CharT> format, Parsable& tp,
                 std::basic_string<CharT, Traits, Alloc>* abbrev = nullptr,
                 std::chrono::minutes* offset = nullptr)
