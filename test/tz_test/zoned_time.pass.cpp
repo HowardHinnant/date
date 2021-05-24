@@ -25,12 +25,12 @@
 // {
 // public:
 //     using duration = typename std::common_type<Duration, std::chrono::seconds>::type;
-// 
+//
 //              zoned_time();
 //              zoned_time(const sys_time<Duration>& st);
 //     explicit zoned_time(const time_zone* z);
 //     explicit zoned_time(std::string_view name);
-// 
+//
 //     template <class Duration2,
 //               class = typename std::enable_if
 //                       <
@@ -38,36 +38,36 @@
 //                                               sys_time<Duration>>::value
 //                       >::type>
 //         zoned_time(const zoned_time<Duration2>& zt) NOEXCEPT;
-// 
+//
 //     zoned_time(const time_zone* z,    const local_time<Duration>& tp);
 //     zoned_time(std::string_view name, const local_time<Duration>& tp);
 //     zoned_time(const time_zone* z,    const local_time<Duration>& tp, choose c);
 //     zoned_time(std::string_view name, const local_time<Duration>& tp, choose c);
-// 
+//
 //     zoned_time(const time_zone* z,    const zoned_time<Duration>& zt);
 //     zoned_time(std::string_view name, const zoned_time<Duration>& zt);
 //     zoned_time(const time_zone* z,    const zoned_time<Duration>& zt, choose);
 //     zoned_time(std::string_view name, const zoned_time<Duration>& zt, choose);
-// 
+//
 //     zoned_time(const time_zone* z,    const sys_time<Duration>& st);
 //     zoned_time(std::string_view name, const sys_time<Duration>& st);
-// 
+//
 //     zoned_time& operator=(const sys_time<Duration>& st);
 //     zoned_time& operator=(const local_time<Duration>& ut);
-// 
+//
 //     explicit operator sys_time<duration>() const;
 //     explicit operator local_time<duration>() const;
-// 
+//
 //     const time_zone*     get_time_zone() const;
 //     local_time<duration> get_local_time() const;
 //     sys_time<duration>   get_sys_time() const;
 //     sys_info             get_info() const;
-// 
+//
 //     template <class Duration1, class Duration2>
 //     friend
 //     bool
 //     operator==(const zoned_time<Duration1>& x, const zoned_time<Duration2>& y);
-// 
+//
 //     template <class CharT, class Traits, class Duration1>
 //     friend
 //     std::basic_ostream<CharT, Traits>&

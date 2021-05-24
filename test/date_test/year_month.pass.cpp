@@ -123,7 +123,7 @@ void test_arithemtic_not_ok()
     assert(ym - months{0} == ym2);
     assert(ym - ym2 == months{0});
     assert(ym2 - ym == months{0});
-   
+
     auto ymc = ym;
     ymc += months{0};
     assert(ymc.ok());
