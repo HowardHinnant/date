@@ -1707,11 +1707,11 @@ inline
 bool
 month_day::ok() const NOEXCEPT
 {
-    CONSTDATA solar_hijri::day d[] = { 
-        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
-        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
-        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30), 
-        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30) 
+    CONSTDATA solar_hijri::day d[] = {
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30)
     };
     return m_.ok() && solar_hijri::day(1) <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
@@ -2002,11 +2002,11 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-    CONSTDATA solar_hijri::day d[] = { 
-        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
-        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31), 
-        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30), 
-        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(29) 
+    CONSTDATA solar_hijri::day d[] = {
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(29)
     };
     return month() != esf || !y_.is_leap() ?
         d[static_cast<unsigned>(month()) - 1] : solar_hijri::day(30);

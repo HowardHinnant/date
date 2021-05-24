@@ -1655,10 +1655,10 @@ inline
 bool
 month_day::ok() const NOEXCEPT
 {
-    CONSTDATA julian::day d[] = { 
-        julian::day(31), julian::day(29), julian::day(31), julian::day(30), 
-        julian::day(31), julian::day(30), julian::day(31), julian::day(31), 
-        julian::day(30), julian::day(31), julian::day(30), julian::day(31) 
+    CONSTDATA julian::day d[] = {
+        julian::day(31), julian::day(29), julian::day(31), julian::day(30),
+        julian::day(31), julian::day(30), julian::day(31), julian::day(31),
+        julian::day(30), julian::day(31), julian::day(30), julian::day(31)
     };
     return m_.ok() && julian::day(1) <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
@@ -1949,10 +1949,10 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-    CONSTDATA julian::day d[] = { 
-        julian::day(31), julian::day(28), julian::day(31), julian::day(30), 
-        julian::day(31), julian::day(30), julian::day(31), julian::day(31), 
-        julian::day(30), julian::day(31), julian::day(30), julian::day(31) 
+    CONSTDATA julian::day d[] = {
+        julian::day(31), julian::day(28), julian::day(31), julian::day(30),
+        julian::day(31), julian::day(30), julian::day(31), julian::day(31),
+        julian::day(30), julian::day(31), julian::day(30), julian::day(31)
     };
     return month() != feb || !y_.is_leap() ? d[static_cast<unsigned>(month())-1] : julian::day(29);
 }

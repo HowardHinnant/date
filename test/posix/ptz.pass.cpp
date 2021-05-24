@@ -56,7 +56,7 @@ main()
     auto tp = local_days{2021_y/1/1} + 0s;
     assert(tzp.get_info(tp).result == local_info::unique);
     assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
-    
+
     tp = local_days{2021_y/10/Sunday[1]} + 2h + 30min;
     assert(tzp.get_info(tp).result == local_info::nonexistent);
     assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));

@@ -154,7 +154,7 @@ main()
     {
         zoned_time zt{};
         static_assert(std::is_same<decltype(zt), zoned_time<seconds>>::value, "");
-    } 
+    }
 
     // zoned_time
     {
