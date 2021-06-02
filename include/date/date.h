@@ -4787,7 +4787,11 @@ struct fields
     hh_mm_ss<Duration>    tod{};
     bool                  has_tod = false;
 
+#if !defined(__clang__) && defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ <= 409)
+    fields() : ymd{nanyear/0/0}, wd{8u}, tod{}, has_tod{false} {}
+#else
     fields() = default;
+#endif
 
     fields(year_month_day ymd_) : ymd(ymd_) {}
     fields(weekday wd_) : wd(wd_) {}
