@@ -8046,12 +8046,13 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using Duration = std::chrono::duration<Rep, Period>;
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
+    using detail::round_i;
     fields<CT> fds{};
     date::from_stream(is, fmt, fds, abbrev, offset);
     if (!fds.has_tod)
         is.setstate(std::ios::failbit);
     if (!is.fail())
-        d = std::chrono::duration_cast<Duration>(fds.tod.to_duration());
+        d = round_i<Duration>(fds.tod.to_duration());
     return is;
 }
 
