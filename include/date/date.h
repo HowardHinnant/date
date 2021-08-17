@@ -6405,7 +6405,7 @@ read_long_double(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned
         is.setstate(std::ios::failbit);
         return 0;
     }
-    return i + f/std::pow(10.L, fcount);
+    return static_cast<long double>(i) + static_cast<long double>(f)/std::pow(10.L, fcount);
 }
 
 struct rs
