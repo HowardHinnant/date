@@ -6213,8 +6213,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const std::chrono::seconds* offset_sec = nullptr)
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    auto ld = floor<days>(tp);
-    fields<CT> fds{year_month_day{ld}, hh_mm_ss<CT>{tp-local_seconds{ld}}};
+    auto ld = std::chrono::time_point_cast<days>(tp);
+    fields<CT> fds;
+    if (ld <= tp)
+        fds = fields<CT>{year_month_day{ld}, hh_mm_ss<CT>{tp-local_seconds{ld}}};
+    else
+        fds = fields<CT>{year_month_day{ld - days{1}},
+                         hh_mm_ss<CT>{days{1} - (local_seconds{ld} - tp)}};
     return to_stream(os, fmt, fds, abbrev, offset_sec);
 }
 
@@ -6227,8 +6232,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     using CT = typename std::common_type<Duration, seconds>::type;
     const std::string abbrev("UTC");
     CONSTDATA seconds offset{0};
-    auto sd = floor<days>(tp);
-    fields<CT> fds{year_month_day{sd}, hh_mm_ss<CT>{tp-sys_seconds{sd}}};
+    auto sd = std::chrono::time_point_cast<days>(tp);
+    fields<CT> fds;
+    if (sd <= tp)
+        fds = fields<CT>{year_month_day{sd}, hh_mm_ss<CT>{tp-sys_seconds{sd}}};
+    else
+        fds = fields<CT>{year_month_day{sd - days{1}},
+                         hh_mm_ss<CT>{days{1} - (sys_seconds{sd} - tp)}};
     return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
