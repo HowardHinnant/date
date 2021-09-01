@@ -7,7 +7,7 @@
      include( FetchContent )
      FetchContent_Declare( date_src
        GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-       GIT_TAG        v3.0.0  # adjust tag/branch/commit as needed
+       GIT_TAG        v3.0.1  # adjust tag/branch/commit as needed
      )
      FetchContent_MakeAvailable(date_src)
      ...
@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 3.7 )
 
-project( date VERSION 3.0.0 )
+project( date VERSION 3.0.1 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
 
 include( GNUInstallDirs )
