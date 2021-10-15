@@ -3919,7 +3919,7 @@ tzdb::current_zone() const
             auto p = result.find("ZONE=\"");
             if (p != std::string::npos)
             {
-                result.erase(p, p+6);
+                result.erase(0, p+6);
                 result.erase(result.rfind('"'));
                 return locate_zone(result);
             }
