@@ -36,6 +36,11 @@
 // Posix::time_zone tz{"EST5EDT,M3.2.0,M11.1.0"};
 // zoned_time<system_clock::duration, Posix::time_zone> zt{tz, system_clock::now()};
 //
+// In C++17 CTAD simplifies this to:
+//
+// Posix::time_zone tz{"EST5EDT,M3.2.0,M11.1.0"};
+// zoned_time zt{tz, system_clock::now()};
+//
 // If the rule set is missing (everything starting with ','), then the rule is that the
 // alternate offset is never enabled.
 //
