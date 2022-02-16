@@ -845,7 +845,7 @@ private:
     load_data(std::istream& inf, std::int32_t tzh_leapcnt, std::int32_t tzh_timecnt,
                                  std::int32_t tzh_typecnt, std::int32_t tzh_charcnt);
 #else  // !USE_OS_TZDB
-    DATE_API sys_info   get_info_impl(sys_seconds tp, int timezone) const;
+    DATE_API sys_info   get_info_impl(sys_seconds tp, int tz_int) const;
     DATE_API void adjust_infos(const std::vector<detail::Rule>& rules);
     DATE_API void parse_info(std::istream& in);
 #endif  // !USE_OS_TZDB
