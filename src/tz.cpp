@@ -415,9 +415,9 @@ access_install()
 }
 
 void
-set_install(const std::string& s)
+set_install(const std::string& install)
 {
-    access_install() = s;
+    access_install() = install;
 }
 
 static
