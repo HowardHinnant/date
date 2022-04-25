@@ -327,6 +327,7 @@ time_zone::get_next_end(date::year y) const
     return date::sys_seconds{(end_rule_(++y) - (offset_ + save_)).time_since_epoch()};
 }
 
+inline
 date::sys_info
 time_zone::contant_offset() const
 {
