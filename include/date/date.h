@@ -1316,7 +1316,7 @@ CONSTCD11
 std::chrono::duration<Rep, Period>
 abs(std::chrono::duration<Rep, Period> d)
 {
-    return d >= d.zero() ? d : -d;
+    return d >= d.zero() ? d : static_cast<decltype(d)>(-d);
 }
 
 // round down
