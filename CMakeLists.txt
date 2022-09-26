@@ -68,10 +68,10 @@ add_library( date INTERFACE )
 add_library( date::date ALIAS date )
 target_include_directories( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include> )
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 # adding header sources just helps IDEs
 target_sources( date INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/date.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/date.h
     # the rest of these are not currently part of the public interface of the library:
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/solar_hijri.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/islamic.h>
@@ -111,14 +111,14 @@ if( BUILD_TZ_LIB )
     add_library( date-tz )
     target_sources( date-tz
       PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/tz.h
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/tz.h
       PRIVATE
         include/date/tz_private.h
         src/tz.cpp )
     if ( IOS )
       target_sources( date-tz
         PUBLIC
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/ios.h
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/ios.h
         PRIVATE
           src/ios.mm )
     endif()
@@ -126,7 +126,7 @@ if( BUILD_TZ_LIB )
     target_link_libraries( date-tz PUBLIC date )
     target_include_directories( date-tz PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include> )
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
     if ( USE_SYSTEM_TZ_DB OR MANUAL_TZ_DB )
       target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0 )
