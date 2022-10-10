@@ -488,9 +488,10 @@ discover_tz_dir()
     if (!(lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0))
         throw runtime_error("discover_tz_dir failed\n");
     string result;
-    char rp[PATH_MAX+1] = {};
-    if (readlink(timezone, rp, sizeof(rp)-1) > 0)
-        result = string(rp);
+    unique_ptr<char[]> rp(new char[sb.st_size]);
+    const auto rp_length = readlink(timezone, rp.get(), sb.st_size);
+    if (rp_length > 0)
+        result = string(rp.get(), rp_length); // readlink doesn't null-terminate
     else
         throw system_error(errno, system_category(), "readlink() failed");
     auto i = result.find("zoneinfo");
@@ -4026,10 +4027,10 @@ bool
 sniff_realpath(const char* timezone)
 {
     using namespace std;
-    char rp[PATH_MAX+1] = {};
-    if (realpath(timezone, rp) == nullptr)
+    unique_ptr<char, decltype(free) *> rp(realpath(timezone, nullptr), free);
+    if (rp.get() == nullptr)
         throw system_error(errno, system_category(), "realpath() failed");
-    auto result = extract_tz_name(rp);
+    auto result = extract_tz_name(rp.get());
     return result != "posixrules";
 }
 
@@ -4056,18 +4057,24 @@ tzdb::current_zone() const
         {
             using namespace std;
             static const bool use_realpath = sniff_realpath(timezone);
-            char rp[PATH_MAX+1] = {};
             if (use_realpath)
             {
-                if (realpath(timezone, rp) == nullptr)
+                unique_ptr<char, decltype(free) *> rp(realpath(timezone, nullptr), free);
+                if (rp.get() == nullptr)
                     throw system_error(errno, system_category(), "realpath() failed");
+                return locate_zone(extract_tz_name(rp.get()));
             }
             else
             {
-                if (readlink(timezone, rp, sizeof(rp)-1) <= 0)
+                // +1 because st_size doesn't include the '\0' terminator
+                const auto rp_size = sb.st_size + 1;
+                unique_ptr<char[]> rp(new char[rp_size]);
+                const auto rp_length = readlink(timezone, rp.get(), rp_size);
+                if (rp_length <= 0)
                     throw system_error(errno, system_category(), "readlink() failed");
+                rp.get()[rp_length] = '\0'; // readlink doesn't null-terminate
+                return locate_zone(extract_tz_name(rp.get()));
             }
-            return locate_zone(extract_tz_name(rp));
         }
     }
     // On embedded systems e.g. buildroot with uclibc the timezone is linked
@@ -4086,9 +4093,10 @@ tzdb::current_zone() const
         if (lstat(timezone, &sb) == 0 && S_ISLNK(sb.st_mode) && sb.st_size > 0) {
             using namespace std;
             string result;
-            char rp[PATH_MAX+1] = {};
-            if (readlink(timezone, rp, sizeof(rp)-1) > 0)
-                result = string(rp);
+            unique_ptr<char[]> rp(new char[sb.st_size]);
+            const auto rp_length = readlink(timezone, rp.get(), sb.st_size);
+            if (rp_length > 0)
+                result = string(rp.get(), rp_length); // readlink doesn't null-terminate
             else
                 throw system_error(errno, system_category(), "readlink() failed");
 
