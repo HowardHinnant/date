@@ -54,7 +54,7 @@
 #    else
 #      define HAS_REMOTE_API 1
 #    endif
-#  else  // HAS_REMOTE_API makes no since when using the OS timezone database
+#  else  // HAS_REMOTE_API makes no sense when using the OS timezone database
 #    define HAS_REMOTE_API 0
 #  endif
 #endif
