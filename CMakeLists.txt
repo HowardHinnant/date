@@ -95,6 +95,8 @@ else()
 endif()
 if ( DISABLE_STRING_VIEW )
   target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
+else()
+  target_compile_definitions( date INTERFACE HAS_STRING_VIEW=1 )
 endif()
 
 #[===================================================================[
