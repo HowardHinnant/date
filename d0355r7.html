@@ -3,19 +3,11 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name="color-scheme" content="light dark">
 	<title>Extending &lt;chrono&gt; to Calendars and Time Zones</title>
-    <style type="text/css">
-	p {text-align:justify}
-	li {text-align:justify}
-	blockquote.note
-	{
-		background-color:#E0E0E0;
-		padding-left: 15px;
-		padding-right: 15px;
-		padding-top: 1px;
-		padding-bottom: 1px;
-	}
-	p.note
+	<style type="text/css">
+	li, p {text-align:justify}
+	blockquote.note, p.note
 	{
 		background-color:#E0E0E0;
 		padding-left: 15px;
@@ -25,11 +17,17 @@
 	}
 	ins {color:#00A000}
 	del {color:#A00000}
-    address {text-align:right;}
-    h1 {text-align:center;}
-    span.comment {color:#C80000;}
+	address {text-align:right;}
+	h1 {text-align:center;}
 	code {white-space:pre;}
+	@media (prefers-color-scheme: dark)
+	{
+		blockquote.note, p.note {background-color:#505050}
+		ins {color:#88FF88}
+		del {color:#FF5555}
+	}
 	</style>
+
 </head>
 <body>
 
