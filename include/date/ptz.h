@@ -41,8 +41,19 @@
 // Posix::time_zone tz{"EST5EDT,M3.2.0,M11.1.0"};
 // zoned_time zt{tz, system_clock::now()};
 //
-// If the rule set is missing (everything starting with ','), then the rule is that the
-// alternate offset is never enabled.
+// Extension to the Posix rules to allow a constant daylight saving offset:
+//
+// If the rule set is missing (everything starting with ','), then
+// there must be exactly one abbreviation (std or daylight) with
+// length 3 or greater, and that will be used as the constant offset. If
+// there are two, the std abbreviation is silently set to "", and the
+// result is constant daylight saving. If there are zero abbreviations
+// with no rule set, an exception is thrown.
+//
+// Example:
+// "EST5" yields a constant offset of -5h with 0h save and "EST abbreviation.
+// "5EDT" yields a constant offset of -4h with 1h save and "EDT" abbreviation.
+// "EST5EDT" and "5EDT4" are both equal to "5EDT".
 //
 // Note, Posix-style time zones are not recommended for all of the reasons described here:
 // https://stackoverflow.com/tags/timezone/info
@@ -337,11 +348,22 @@ time_zone::contant_offset() const
     using date::January;
     using date::December;
     using date::last;
+    using std::chrono::minutes;
     sys_info r;
     r.begin = sys_days{year::min()/January/1};
     r.end   = sys_days{year::max()/December/last};
-    r.abbrev = std_abbrev_;
-    r.offset = offset_;
+    if (std_abbrev_.size() > 0)
+    {
+        r.abbrev = std_abbrev_;
+        r.offset = offset_;
+        r.save = {};
+    }
+    else
+    {
+        r.abbrev = dst_abbrev_;
+        r.offset = offset_ + save_;
+        r.save = date::ceil<minutes>(save_);
+    }
     return r;
 }
 
@@ -352,11 +374,14 @@ time_zone::time_zone(const detail::string_t& s)
     using detail::read_signed_time;
     using detail::throw_invalid;
     auto i = read_name(s, 0, std_abbrev_);
+    auto std_name_i = i;
+    auto abbrev_name_i = i;
     i = read_signed_time(s, i, offset_);
     offset_ = -offset_;
     if (i != s.size())
     {
         i = read_name(s, i, dst_abbrev_);
+        abbrev_name_i = i;
         if (i != s.size())
         {
             if (s[i] != ',')
@@ -377,6 +402,32 @@ time_zone::time_zone(const detail::string_t& s)
                 if (i != s.size())
                     throw_invalid(s, i, "Found unexpected trailing characters");
             }
+        }
+    }
+    if (start_rule_.ok())
+    {
+        if (std_abbrev_.size() < 3)
+            throw_invalid(s, std_name_i, "Zone with rules must have a std"
+                                         " abbreviation of length 3 or greater");
+        if (dst_abbrev_.size() < 3)
+            throw_invalid(s, abbrev_name_i, "Zone with rules must have a daylight"
+                                            " abbreviation of length 3 or greater");
+    }
+    else
+    {
+        if (dst_abbrev_.size() >= 3)
+        {
+            std_abbrev_.clear();
+        }
+        else if (std_abbrev_.size() < 3)
+        {
+            throw_invalid(s, std_name_i, "Zone must have at least one abbreviation"
+                                         " of length 3 or greater");
+        }
+        else
+        {
+            dst_abbrev_.clear();
+            save_ = {};
         }
     }
 }
@@ -765,8 +816,6 @@ read_name(const string_t& s, unsigned i, std::string& name)
             ++i;
         }
     }
-    if (name.size() < 3)
-        throw_invalid(s, i, "Found name to be shorter than 3 characters");
     return i;
 }
 
