@@ -62,6 +62,7 @@
 // have to have Posix time zones, you're welcome to use this one.
 
 #include "date/tz.h"
+#include <algorithm>
 #include <cctype>
 #include <ostream>
 #include <string>
@@ -651,7 +652,18 @@ time_zone::name() const
 {
     using namespace date;
     using namespace std::chrono;
-    auto nm = std_abbrev_;
+    auto print_abbrev = [](std::string const& nm)
+        {
+            if (std::any_of(nm.begin(), nm.end(),
+                         [](char c)
+                         {
+                             return !std::isalpha(c);
+                         }))
+            {
+                return '<' + nm + '>';
+            }
+            return nm;
+        };
     auto print_offset = [](seconds off)
         {
             std::string nm;
@@ -675,10 +687,11 @@ time_zone::name() const
             }
             return nm;
         };
+    auto nm = print_abbrev(std_abbrev_);
     nm += print_offset(offset_);
     if (!dst_abbrev_.empty())
     {
-        nm += dst_abbrev_;
+        nm += print_abbrev(dst_abbrev_);
         if (save_ != hours{1})
             nm += print_offset(offset_+save_);
         if (start_rule_.ok())
