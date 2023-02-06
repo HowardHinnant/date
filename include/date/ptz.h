@@ -452,6 +452,10 @@ time_zone::get_info(date::sys_time<Duration> st) const
     if (start_rule_.ok())
     {
         auto y = year_month_day{floor<days>(st)}.year();
+        if (st >= get_next_start(y))
+            ++y;
+        else if (st < get_prev_end(y))
+            --y;
         auto start = get_start(y);
         auto end   = get_end(y);
         if (start <= end)  // (northern hemisphere)
@@ -505,6 +509,7 @@ time_zone::get_info(date::sys_time<Duration> st) const
     }
     else
         r = contant_offset();
+    assert(r.begin <= st && st < r.end);
     return r;
 }
 
