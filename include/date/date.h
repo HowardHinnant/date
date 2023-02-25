@@ -174,7 +174,7 @@ using ratio_divide = decltype(std::ratio_divide<R1, R2>{});
 // durations
 
 using days = std::chrono::duration
-    <int, detail::ratio_multiply<std::ratio<24>, std::chrono::hours::period>>;
+    <int64_t, detail::ratio_multiply<std::ratio<24>, std::chrono::hours::period>>;
 
 using weeks = std::chrono::duration
     <int, detail::ratio_multiply<std::ratio<7>, days::period>>;
@@ -394,7 +394,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const month& m);
 
 class year
 {
-    short y_;
+    int y_;
 
 public:
     year() = default;
@@ -464,7 +464,7 @@ public:
     CONSTCD11 weekday_last    operator[](last_spec)      const NOEXCEPT;
 
 private:
-    static CONSTCD14 unsigned char weekday_from_days(int z) NOEXCEPT;
+    static CONSTCD14 unsigned char weekday_from_days(int64_t z) NOEXCEPT;
 
     friend CONSTCD11 bool operator==(const weekday& x, const weekday& y) NOEXCEPT;
     friend CONSTCD14 days operator-(const weekday& x, const weekday& y) NOEXCEPT;
@@ -1478,7 +1478,7 @@ inline
 days
 operator-(const day& x, const day& y) NOEXCEPT
 {
-    return days{static_cast<days::rep>(static_cast<unsigned>(x)
+    return days{static_cast<int>(static_cast<unsigned>(x)
                                      - static_cast<unsigned>(y))};
 }
 
@@ -1820,9 +1820,9 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year& y)
 CONSTCD14
 inline
 unsigned char
-weekday::weekday_from_days(int z) NOEXCEPT
+weekday::weekday_from_days(int64_t z) NOEXCEPT
 {
-    auto u = static_cast<unsigned>(z);
+    auto u = static_cast<uint64_t>(z);
     return static_cast<unsigned char>(z >= -4 ? (u+4) % 7 : u % 7);
 }
 
@@ -3099,7 +3099,7 @@ year_month_day::from_days(days dp) NOEXCEPT
     auto const mp = (5*doy + 2)/153;                                   // [0, 11]
     auto const d = doy - (153*mp+2)/5 + 1;                             // [1, 31]
     auto const m = mp < 10 ? mp+3 : mp-9;                              // [1, 12]
-    return year_month_day{date::year{y + (m <= 2)}, date::month(m), date::day(d)};
+    return year_month_day{date::year{static_cast<int>(y + (m <= 2))}, date::month(m), date::day(d)};
 }
 
 template<class>
