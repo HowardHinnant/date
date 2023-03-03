@@ -2820,6 +2820,7 @@ find_read_and_leap_seconds()
         }
         return leap_seconds;
     }
+#if !MISSING_LEAP_SECONDS
     in.clear();
     in.open(get_tz_dir() + std::string(1, folder_delimiter) + "right/UTC",
                      std::ios_base::binary);
@@ -2834,6 +2835,7 @@ find_read_and_leap_seconds()
     {
         return load_just_leaps(in);
     }
+#endif
     return {};
 }
 
