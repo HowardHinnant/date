@@ -148,6 +148,8 @@ public:
     year& operator+=(const years& y) NOEXCEPT;
     year& operator-=(const years& y) NOEXCEPT;
 
+    CONSTCD14 bool is_leap() const NOEXCEPT;
+
     CONSTCD11 explicit operator int() const NOEXCEPT;
     CONSTCD11 bool ok() const NOEXCEPT;
 
@@ -599,6 +601,17 @@ inline year year::operator--(int) NOEXCEPT {auto tmp(*this); --(*this); return t
 inline year& year::operator+=(const years& y) NOEXCEPT {*this = *this + y; return *this;}
 inline year& year::operator-=(const years& y) NOEXCEPT {*this = *this - y; return *this;}
 
+CONSTCD14
+inline
+bool
+year::is_leap() const NOEXCEPT
+{
+    const auto y = date::year{static_cast<int>(y_)};
+    const auto s0 = sys_days((y-years{1})/12/date::thu[date::last]);
+    const auto s1 = sys_days(y/12/date::thu[date::last]);
+    return s1-s0 != days{7*52};
+}
+
 CONSTCD11 inline year::operator int() const NOEXCEPT {return y_;}
 CONSTCD11 inline bool year::ok() const NOEXCEPT {return min() <= *this && *this <= max();}
 
@@ -1020,10 +1033,7 @@ inline
 weeknum
 year_lastweek::weeknum() const NOEXCEPT
 {
-    const auto y = date::year{static_cast<int>(y_)};
-    const auto s0 = sys_days((y-years{1})/12/date::thu[date::last]);
-    const auto s1 = sys_days(y/12/date::thu[date::last]);
-    return iso_week::weeknum(static_cast<unsigned>(date::trunc<weeks>(s1-s0).count()));
+    return iso_week::weeknum(y_.is_leap() ? 53u : 52u);
 }
 
 CONSTCD11 inline bool year_lastweek::ok() const NOEXCEPT {return y_.ok();}

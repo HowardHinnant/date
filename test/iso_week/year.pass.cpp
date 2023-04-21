@@ -93,6 +93,9 @@ main()
     static_assert(year{2015} <= 2015_y, "");
     static_assert(year{2016} >= 2015_y, "");
 
+    static_assert(year{2015}.is_leap(), "");
+    static_assert(!year{2016}.is_leap(), "");
+
     auto y = year{2014};
     assert(++y == year{2015});
     assert(y == year{2015});
