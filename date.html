@@ -26,7 +26,7 @@
 <br/>
 <br/>
 <a href="mailto:howard.hinnant@gmail.com">Howard E. Hinnant</a><br/>
-2019-12-31<br/>
+2023-05-29<br/>
 </address>
 <hr/>
 <h1 align=center><code>date</code></h1>
@@ -3236,7 +3236,10 @@ public:
     constexpr weekday&amp; operator+=(const days&amp; d) noexcept;
     constexpr weekday&amp; operator-=(const days&amp; d) noexcept;
 
+    constexpr unsigned c_encoding() const noexcept;
+    constexpr unsigned iso_encoding() const noexcept;
     constexpr bool ok() const noexcept;
+
     constexpr weekday_indexed operator[](unsigned index) const noexcept;
     constexpr weekday_last operator[](last_spec) const noexcept;
 };
@@ -3438,6 +3441,26 @@ constexpr weekday&amp; weekday::operator-=(const days&amp; d) noexcept;
 </p>
 <p>
 <i>Returns:</i> <code>*this</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr unsigned c_encoding() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_</code>.
+</p>
+</blockquote>
+
+<pre>
+constexpr unsigned iso_encoding() const noexcept;
+</pre>
+
+<blockquote>
+<p>
+<i>Returns:</i> <code>wd_ == 0u ? 7u : wd_</code>.
 </p>
 </blockquote>
 
