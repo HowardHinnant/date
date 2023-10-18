@@ -139,6 +139,9 @@ struct index_entry_t {
 // the current time zone. On Win32 windows.h provides a means to do it.
 // gcc/mingw supports unistd.h on Win32 but MSVC does not.
 
+#ifdef __ANDROID__
+#  define INSTALL .
+#endif
 #ifdef _WIN32
 #  ifdef WINAPI_FAMILY
 #    include <winapifamily.h>
