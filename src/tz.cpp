@@ -204,20 +204,6 @@ static CONSTDATA char folder_delimiter = '/';
 #if !USE_OS_TZDB
 
 #  ifdef _WIN32
-#    ifndef WINRT
-
-namespace
-{
-    struct task_mem_deleter
-    {
-        void operator()(wchar_t buf[])
-        {
-            if (buf != nullptr)
-                CoTaskMemFree(buf);
-        }
-    };
-    using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
-}
 
 static
 std::wstring
@@ -246,6 +232,21 @@ convert_utf8_to_utf16(const std::string& s)
     }
 
     return out;
+}
+
+#    ifndef WINRT
+
+namespace
+{
+    struct task_mem_deleter
+    {
+        void operator()(wchar_t buf[])
+        {
+            if (buf != nullptr)
+                CoTaskMemFree(buf);
+        }
+    };
+    using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
 }
 
 // We might need to know certain locations even if not using the remote API,
