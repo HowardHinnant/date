@@ -6590,7 +6590,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 
         CONSTDATA int not_a_year = numeric_limits<short>::min();
         CONSTDATA int not_a_2digit_year = 100;
-        CONSTDATA int not_a_century = not_a_year / 100;
+        CONSTDATA int not_a_century = numeric_limits<int>::min();
         CONSTDATA int not_a_month = 0;
         CONSTDATA int not_a_day = 0;
         CONSTDATA int not_a_hour = numeric_limits<int>::min();
