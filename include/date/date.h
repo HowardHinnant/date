@@ -6351,7 +6351,10 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
         if (('0' <= c && c <= '9') || c == '-' || c == '+')
         {
             if (c == '-' || c == '+')
+            {
                 (void)is.get();
+                --M;
+            }
             auto x = static_cast<int>(read_unsigned(is, std::max(m, 1u), M));
             if (!is.fail())
             {
