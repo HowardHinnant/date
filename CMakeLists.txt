@@ -37,7 +37,7 @@ option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
 
 if( ENABLE_DATE_TESTING AND NOT BUILD_TZ_LIB )
-    message(WARNING "Testing requested, bug BUILD_TZ_LIB not ON - forcing the latter")
+    message(WARNING "Testing requested, but BUILD_TZ_LIB not ON - forcing the latter")
     set (BUILD_TZ_LIB ON CACHE BOOL "required for testing" FORCE)
 endif( )
 
