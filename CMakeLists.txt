@@ -38,7 +38,7 @@ option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
-option( ENABLE_DATE_INSTALL "Enable unit tests" ON )
+option( ENABLE_DATE_INSTALL "Enable install" ON )
 
 if( ENABLE_DATE_TESTING AND NOT BUILD_TZ_LIB )
     message(WARNING "Testing requested, but BUILD_TZ_LIB not ON - forcing the latter")
