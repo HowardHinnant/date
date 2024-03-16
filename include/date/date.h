@@ -6527,7 +6527,14 @@ read(std::basic_istream<CharT, Traits>& is, int a0, Args&& ...args)
             *e++ = static_cast<CharT>(CharT(u % 10) + CharT{'0'});
             u /= 10;
         } while (u > 0);
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
         std::reverse(buf, e);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
         for (auto p = buf; p != e && is.rdstate() == std::ios::goodbit; ++p)
             read(is, *p);
     }
