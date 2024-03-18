@@ -27,18 +27,18 @@ get_directory_property( has_parent PARENT_DIRECTORY )
 # Override by setting on CMake command line.
 set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
 
-option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
-option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
-option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
-option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
-option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
-option( DISABLE_STRING_VIEW "Disable string view" OFF )
-option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
-option( BUILD_TZ_LIB "build/install of TZ library" OFF )
+option( DATE_USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
+option( DATE_MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
+option( DATE_USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
+option( DATE_BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
+option( DATE_ENABLE_DATE_TESTING "Enable unit tests" OFF )
+option( DATE_DISABLE_STRING_VIEW "Disable string view" OFF )
+option( DATE_COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
+option( DATE_BUILD_TZ_LIB "build/install of TZ library" OFF )
 
-if( ENABLE_DATE_TESTING AND NOT BUILD_TZ_LIB )
-    message(WARNING "Testing requested, bug BUILD_TZ_LIB not ON - forcing the latter")
-    set (BUILD_TZ_LIB ON CACHE BOOL "required for testing" FORCE)
+if( DATE_ENABLE_DATE_TESTING AND NOT DATE_BUILD_TZ_LIB )
+    message(WARNING "Testing requested, bug DATE_BUILD_TZ_LIB not ON - forcing the latter")
+    set (DATE_BUILD_TZ_LIB ON CACHE BOOL "required for testing" FORCE)
 endif( )
 
 function( print_option OPT )
@@ -49,12 +49,12 @@ function( print_option OPT )
     endif( )
 endfunction( )
 
-print_option( USE_SYSTEM_TZ_DB )
-print_option( MANUAL_TZ_DB )
-print_option( USE_TZ_DB_IN_DOT )
-print_option( BUILD_SHARED_LIBS  )
-print_option( ENABLE_DATE_TESTING )
-print_option( DISABLE_STRING_VIEW )
+print_option( DATE_USE_SYSTEM_TZ_DB )
+print_option( DATE_MANUAL_TZ_DB )
+print_option( DATE_USE_TZ_DB_IN_DOT )
+print_option( DATE_BUILD_SHARED_LIBS  )
+print_option( DATE_ENABLE_DATE_TESTING )
+print_option( DATE_DISABLE_STRING_VIEW )
 
 #[===================================================================[
    date (header only) library
@@ -80,27 +80,27 @@ endif ()
 
 # These used to be set with generator expressions,
 #
-#   ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
+#   ONLY_C_LOCALE=$<IF:$<BOOL:${DATE_COMPILE_WITH_C_LOCALE}>,1,0>
 #
 # which expand in the output target file to, e.g.
 #
 #   ONLY_C_LOCALE=$<IF:$<BOOL:FALSE>,1,0>
 #
 # This string is then (somtimes?) not correctly interpreted.
-if ( COMPILE_WITH_C_LOCALE )
+if ( DATE_COMPILE_WITH_C_LOCALE )
   # To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
   target_compile_definitions( date INTERFACE ONLY_C_LOCALE=1 )
 else()
   target_compile_definitions( date INTERFACE ONLY_C_LOCALE=0 )
 endif()
-if ( DISABLE_STRING_VIEW )
+if ( DATE_DISABLE_STRING_VIEW )
   target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 -DHAS_DEDUCTION_GUIDES=0 )
 endif()
 
 #[===================================================================[
    tz (compiled) library
 #]===================================================================]
-if( BUILD_TZ_LIB )
+if( DATE_BUILD_TZ_LIB )
     add_library( date-tz )
     target_sources( date-tz
       PUBLIC
@@ -121,19 +121,19 @@ if( BUILD_TZ_LIB )
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include> )
 
-    if ( USE_SYSTEM_TZ_DB OR MANUAL_TZ_DB )
+    if ( DATE_USE_SYSTEM_TZ_DB OR DATE_MANUAL_TZ_DB )
       target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0 )
     else()
       target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=1 HAS_REMOTE_API=1 )
     endif()
 
-    if ( USE_SYSTEM_TZ_DB AND NOT WIN32 AND NOT MANUAL_TZ_DB )
+    if ( DATE_USE_SYSTEM_TZ_DB AND NOT WIN32 AND NOT DATE_MANUAL_TZ_DB )
       target_compile_definitions( date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=1 )
     else()
       target_compile_definitions( date-tz PUBLIC USE_OS_TZDB=0 )
     endif()
 
-    if ( WIN32 AND BUILD_SHARED_LIBS )
+    if ( WIN32 AND DATE_BUILD_SHARED_LIBS )
       target_compile_definitions( date-tz PUBLIC DATE_BUILD_DLL=1 )
     endif()
 
@@ -151,7 +151,7 @@ if( BUILD_TZ_LIB )
         find_package( Threads )
         target_link_libraries( date-tz PUBLIC Threads::Threads )
     endif( )
-    if( NOT USE_SYSTEM_TZ_DB AND NOT MANUAL_TZ_DB )
+    if( NOT DATE_USE_SYSTEM_TZ_DB AND NOT DATE_MANUAL_TZ_DB )
         find_package( CURL REQUIRED )
         target_include_directories( date-tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
         target_link_libraries( date-tz PRIVATE ${CURL_LIBRARIES} )
@@ -178,7 +178,7 @@ if (CMAKE_VERSION VERSION_LESS 3.15)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
 endif ()
 
-if( BUILD_TZ_LIB )
+if( DATE_BUILD_TZ_LIB )
     install( TARGETS date-tz
         EXPORT dateConfig
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date
@@ -204,7 +204,7 @@ install (
 #[===================================================================[
    testing
 #]===================================================================]
-if( ENABLE_DATE_TESTING )
+if( DATE_ENABLE_DATE_TESTING )
     enable_testing( )
 
     add_custom_target( testit COMMAND ${CMAKE_CTEST_COMMAND} )
