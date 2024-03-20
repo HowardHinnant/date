@@ -1299,6 +1299,14 @@ DATE_API tzdb_list& get_tzdb_list();
 DATE_API const tzdb& reload_tzdb();
 DATE_API void        set_install(const std::string& install);
 
+#else // USE_OS_TZDB
+
+static
+std::string& get_user_tz_dir();
+
+void
+set_tz_dir(const std::string& tz_dir);
+
 #endif  // !USE_OS_TZDB
 
 #if HAS_REMOTE_API
