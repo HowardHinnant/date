@@ -24,6 +24,11 @@ include( GNUInstallDirs )
 
 get_directory_property( has_parent PARENT_DIRECTORY )
 
+if (POLICY CMP0077)
+    # Allow CMake 3.13+ to override options when using FetchContent / add_subdirectory.
+    cmake_policy(SET CMP0077 NEW)
+endif ()
+
 # Override by setting on CMake command line.
 set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
 
