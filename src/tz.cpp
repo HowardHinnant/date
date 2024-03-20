@@ -92,6 +92,10 @@
 #  define TARGET_OS_SIMULATOR 0
 #endif
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include <sys/system_properties.h>
+#endif
+
 #if USE_OS_TZDB
 #  include <dirent.h>
 #endif
@@ -4033,6 +4037,18 @@ tzdb::current_zone() const
         if (!result.empty())
             return locate_zone(result);
 #endif
+    // Fall through to try other means.
+    }
+    {
+    // On Android, it is not possible to use file based approach either,
+    // we have to ask the value of `persist.sys.timezone` system property
+#if defined(ANDROID) || defined(__ANDROID__)
+    char sys_timezone[PROP_VALUE_MAX];
+    if (__system_property_get("persist.sys.timezone", sys_timezone) > 0)
+    {
+        return locate_zone(sys_timezone);
+    }
+#endif // defined(ANDROID) || defined(__ANDROID__)
     // Fall through to try other means.
     }
     {
