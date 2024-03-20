@@ -67,15 +67,23 @@ target_include_directories( date INTERFACE
 # adding header sources just helps IDEs
 target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/date.h
-    # the rest of these are not currently part of the public interface of the library:
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/solar_hijri.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/islamic.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/solar_hijri.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/islamic.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/iso_week.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/julian.h
 )
+
+set(TARGET_HEADERS
+    include/date/date.h
+    include/date/solar_hijri.h
+    include/date/islamic.h
+    include/date/iso_week.h
+    include/date/julian.h
+)
+
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     # public headers will get installed:
-    set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
+    set_target_properties( date PROPERTIES PUBLIC_HEADER "${TARGET_HEADERS}" )
 endif ()
 
 # These used to be set with generator expressions,
@@ -174,7 +182,7 @@ install( TARGETS date
 export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
 if (CMAKE_VERSION VERSION_LESS 3.15)
     install(
-        FILES include/date/date.h
+        FILES "${TARGET_HEADERS}"
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
 endif ()
 
