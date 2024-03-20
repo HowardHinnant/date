@@ -3933,6 +3933,25 @@ sniff_realpath(const char* timezone)
 const time_zone*
 tzdb::current_zone() const
 {
+    // On OpenWRT we need to check /etc/config/system
+    // It will have a line with the following structure
+    //   ...
+    //   option zoneName 'Europe/Berlin'
+    //   ...
+    {
+        std::ifstream timezone_file("/etc/config/system");
+        if (timezone_file.is_open())
+        {
+            for(std::string result; std::getline(timezone_file, result);) {
+                std::string findStr = "option zoneName '";
+                size_t startPos = result.find(findStr);
+                if (startPos != std::string::npos) {
+                    size_t endPos = result.find("'", startPos + findStr.size());
+                    return locate_zone(result.substr(startPos + findStr.size(), endPos - startPos - findStr.size()));
+                }
+            }
+        }
+    }
     // On some OS's a file called /etc/localtime may
     // exist and it may be either a real file
     // containing time zone details or a symlink to such a file.
