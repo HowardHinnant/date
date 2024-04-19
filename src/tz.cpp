@@ -3711,6 +3711,48 @@ get_tzdb()
     return get_tzdb_list().front();
 }
 
+namespace {
+
+class recursion_limiter
+{
+    unsigned depth_ = 0;
+    unsigned limit_;
+
+    class restore_recursion_depth
+    {
+        recursion_limiter* rc_;
+
+    public:
+        ~restore_recursion_depth() {--(rc_->depth_);}
+        restore_recursion_depth(restore_recursion_depth&&) = default;
+
+        explicit restore_recursion_depth(recursion_limiter* rc) noexcept
+            : rc_{rc}
+        {}
+    };
+
+public:
+    recursion_limiter(recursion_limiter const&) = delete;
+    recursion_limiter& operator=(recursion_limiter const&) = delete;
+
+    explicit recursion_limiter(unsigned limit) noexcept
+        : limit_{limit}
+    {
+    }
+
+    restore_recursion_depth
+    count()
+    {
+        ++depth_;
+        if (depth_ > limit_)
+            throw std::runtime_error("recursion limit of " +
+                                      std::to_string(limit_) + " exceeded");
+        return restore_recursion_depth{this};
+    }
+};
+
+}  // unnamed namespace
+
 const time_zone*
 #if HAS_STRING_VIEW
 tzdb::locate_zone(std::string_view tz_name) const
@@ -3718,6 +3760,10 @@ tzdb::locate_zone(std::string_view tz_name) const
 tzdb::locate_zone(const std::string& tz_name) const
 #endif
 {
+    // If a link-to-link chain exceeds this limit, give up
+    thread_local recursion_limiter rc{10};
+    auto restore_count = rc.count();
+
     auto zi = std::lower_bound(zones.begin(), zones.end(), tz_name,
 #if HAS_STRING_VIEW
         [](const time_zone& z, const std::string_view& nm)
@@ -3741,13 +3787,7 @@ tzdb::locate_zone(const std::string& tz_name) const
         });
         if (li != links.end() && li->name() == tz_name)
         {
-            zi = std::lower_bound(zones.begin(), zones.end(), li->target(),
-                [](const time_zone& z, const std::string& nm)
-                {
-                    return z.name() < nm;
-                });
-            if (zi != zones.end() && zi->name() == li->target())
-                return &*zi;
+            return locate_zone(li->target());
         }
 #endif  // !USE_OS_TZDB
         throw std::runtime_error(std::string(tz_name) + " not found in timezone database");
