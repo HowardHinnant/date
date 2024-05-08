@@ -667,7 +667,7 @@ time_zone::name() const
     auto print_offset = [](seconds off)
         {
             std::string nm;
-            hh_mm_ss<seconds> offset{-off};
+            date::hh_mm_ss<seconds> offset{-off};
             if (offset.is_negative())
                 nm += '-';
             nm += std::to_string(offset.hours().count());

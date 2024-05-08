@@ -32,90 +32,90 @@ main()
     using namespace date;
     using namespace std::chrono;
     std::ostringstream os;
-    os << format("%y", sys_days{jun/1/20001});
+    os << date::format("%y", sys_days{jun/1/20001});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/20000});
+    os << date::format("%y", sys_days{jun/1/20000});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/19999});
+    os << date::format("%y", sys_days{jun/1/19999});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/2001});
+    os << date::format("%y", sys_days{jun/1/2001});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/2000});
+    os << date::format("%y", sys_days{jun/1/2000});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/1999});
+    os << date::format("%y", sys_days{jun/1/1999});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/101});
+    os << date::format("%y", sys_days{jun/1/101});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/100});
+    os << date::format("%y", sys_days{jun/1/100});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/99});
+    os << date::format("%y", sys_days{jun/1/99});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/1});
+    os << date::format("%y", sys_days{jun/1/1});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/0});
+    os << date::format("%y", sys_days{jun/1/0});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-1});
+    os << date::format("%y", sys_days{jun/1/-1});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-99});
+    os << date::format("%y", sys_days{jun/1/-99});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-100});
+    os << date::format("%y", sys_days{jun/1/-100});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-101});
+    os << date::format("%y", sys_days{jun/1/-101});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-1999});
+    os << date::format("%y", sys_days{jun/1/-1999});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-2000});
+    os << date::format("%y", sys_days{jun/1/-2000});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-2001});
+    os << date::format("%y", sys_days{jun/1/-2001});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-19999});
+    os << date::format("%y", sys_days{jun/1/-19999});
     assert(os.str() == "99");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-20000});
+    os << date::format("%y", sys_days{jun/1/-20000});
     assert(os.str() == "00");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/-20001});
+    os << date::format("%y", sys_days{jun/1/-20001});
     assert(os.str() == "01");
 
     os.str("");
-    os << format("%y", sys_days{jun/1/year::min()});
+    os << date::format("%y", sys_days{jun/1/date::year::min()});
     assert(os.str() == "67");
 }

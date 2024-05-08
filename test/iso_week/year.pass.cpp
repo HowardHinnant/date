@@ -83,6 +83,7 @@ int
 main()
 {
     using namespace iso_week;
+    using iso_week::year;
 
     static_assert(year{2015} == 2015_y, "");
     static_assert(int{year{2015}} == 2015, "");

@@ -2729,8 +2729,7 @@ operator<<(std::ostream& os, const time_zone& z)
 std::ostream&
 operator<<(std::ostream& os, const leap_second& x)
 {
-    using namespace date;
-    return os << x.date_ << "  +";
+    return date::operator<<(os, x.date_) << "  +";
 }
 
 #if USE_OS_TZDB
