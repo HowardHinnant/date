@@ -108,6 +108,7 @@ main()
     using namespace std;
     using namespace std::chrono;
     using namespace date;
+    using date::sys_time, date::local_days, date::local_seconds;
     static_assert( is_nothrow_destructible<zoned_seconds>{}, "");
     static_assert( is_default_constructible<zoned_seconds>{}, "");
     static_assert( is_nothrow_copy_constructible<zoned_seconds>{}, "");

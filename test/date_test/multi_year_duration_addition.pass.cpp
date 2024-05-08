@@ -84,9 +84,10 @@ main()
     constexpr ConvertibleToYears custom_year;
     constexpr ConvertibleToYearsAndMonths prefer_year;
 
+    using date::last;
 
     {
-       constexpr year_month ym = 2001_y/feb;
+       constexpr date::year_month ym = 2001_y/feb;
        CPP14_ASSERT(ym + one_month == 2001_y/mar);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar);
@@ -166,7 +167,7 @@ main()
     }
 
     {
-       constexpr year_month_day ym = 2001_y/feb/10;
+       constexpr date::year_month_day ym = 2001_y/feb/10;
        CPP14_ASSERT(ym + one_month == 2001_y/mar/10);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/10);
@@ -246,7 +247,7 @@ main()
     }
 
     {
-       constexpr year_month_day_last ym = 2001_y/feb/last;
+       constexpr date::year_month_day_last ym = 2001_y/feb/last;
        CPP14_ASSERT(ym + one_month == 2001_y/mar/last);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/last);
@@ -326,7 +327,7 @@ main()
     }
 
     {
-       constexpr year_month_weekday ym = 2001_y/feb/fri[4];
+       constexpr date::year_month_weekday ym = 2001_y/feb/fri[4];
        CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[4]);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[4]);
@@ -406,7 +407,7 @@ main()
     }
 
     {
-       constexpr year_month_weekday_last ym = 2001_y/feb/fri[last];
+       constexpr date::year_month_weekday_last ym = 2001_y/feb/fri[last];
        CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[last]);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[last]);

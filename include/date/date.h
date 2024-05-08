@@ -4228,7 +4228,7 @@ inline
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut)
 {
-    return (os << sys_time<Duration>{ut.time_since_epoch()});
+    return (date::operator<<(os, sys_time<Duration>{ut.time_since_epoch()}));
 }
 
 namespace detail
