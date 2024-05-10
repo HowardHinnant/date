@@ -15,7 +15,7 @@
 
 #]===================================================================]
 
-cmake_minimum_required( VERSION 3.7 )
+cmake_minimum_required( VERSION 3.8 )
 
 project( date VERSION 3.0.1 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
@@ -23,9 +23,6 @@ set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
 include( GNUInstallDirs )
 
 get_directory_property( has_parent PARENT_DIRECTORY )
-
-# Override by setting on CMake command line.
-set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested." )
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in their code" OFF )
@@ -73,6 +70,7 @@ target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
 )
+target_compile_features( date INTERFACE cxx_std_11 )
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     # public headers will get installed:
     set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
