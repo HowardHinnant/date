@@ -3718,38 +3718,57 @@ class recursion_limiter
     unsigned depth_ = 0;
     unsigned limit_;
 
-    class restore_recursion_depth
-    {
-        recursion_limiter* rc_;
-
-    public:
-        ~restore_recursion_depth() {--(rc_->depth_);}
-        restore_recursion_depth(restore_recursion_depth&&) = default;
-
-        explicit restore_recursion_depth(recursion_limiter* rc) noexcept
-            : rc_{rc}
-        {}
-    };
+    class restore_recursion_depth;
 
 public:
     recursion_limiter(recursion_limiter const&) = delete;
     recursion_limiter& operator=(recursion_limiter const&) = delete;
 
-    explicit recursion_limiter(unsigned limit) noexcept
-        : limit_{limit}
-    {
-    }
+    explicit constexpr recursion_limiter(unsigned limit) noexcept;
 
-    restore_recursion_depth
-    count()
-    {
-        ++depth_;
-        if (depth_ > limit_)
-            throw std::runtime_error("recursion limit of " +
-                                      std::to_string(limit_) + " exceeded");
-        return restore_recursion_depth{this};
-    }
+    restore_recursion_depth count();
 };
+
+class recursion_limiter::restore_recursion_depth
+{
+    recursion_limiter* rc_;
+
+public:
+    ~restore_recursion_depth();
+    restore_recursion_depth(restore_recursion_depth&&) = default;
+
+    explicit restore_recursion_depth(recursion_limiter* rc) noexcept;
+};
+
+inline
+recursion_limiter::restore_recursion_depth::~restore_recursion_depth()
+{
+    --(rc_->depth_);
+}
+
+inline
+recursion_limiter::restore_recursion_depth::restore_recursion_depth(recursion_limiter* rc)
+                                                                                  noexcept
+    : rc_{rc}
+{}
+
+inline
+constexpr
+recursion_limiter::recursion_limiter(unsigned limit) noexcept
+    : limit_{limit}
+{
+}
+
+inline
+recursion_limiter::restore_recursion_depth
+recursion_limiter::count()
+{
+    ++depth_;
+    if (depth_ > limit_)
+        throw std::runtime_error("recursion limit of " +
+                                  std::to_string(limit_) + " exceeded");
+    return restore_recursion_depth{this};
+}
 
 }  // unnamed namespace
 
