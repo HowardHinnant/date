@@ -49,7 +49,7 @@
 
 #ifndef HAS_REMOTE_API
 #  if USE_OS_TZDB == 0
-#    ifdef _WIN32
+#    if defined _WIN32 || defined __ANDROID__
 #      define HAS_REMOTE_API 0
 #    else
 #      define HAS_REMOTE_API 1
