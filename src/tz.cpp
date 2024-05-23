@@ -81,6 +81,9 @@
 #  endif  // __MINGW32__
 
 #  include <windows.h>
+#  if !defined(S_ISDIR) && defined(S_IFMT) && defined(_S_IFDIR)
+#    define S_ISDIR(m) (((m) & S_IFMT) == _S_IFDIR)
+#  endif
 #endif  // _WIN32
 
 #include "date/tz_private.h"
@@ -415,6 +418,14 @@ access_install()
     #undef STRINGIZE
 #endif  // !INSTALL
 
+    {
+        static char* tz_local_env = getenv("TZDATA");
+        if (tz_local_env != nullptr) {
+            static std::string tz_local_env_s = tz_local_env;
+            return tz_local_env_s;
+        }
+    }
+
     return install;
 }
 
@@ -468,6 +479,14 @@ discover_tz_dir()
 #  ifndef __APPLE__
     CONSTDATA auto tz_dir_default = "/usr/share/zoneinfo";
     CONSTDATA auto tz_dir_buildroot = "/usr/share/zoneinfo/uclibc";
+
+    {
+        static char* tz_local_env = getenv("TZDATA");
+        if (tz_local_env != nullptr) {
+            static std::string tz_local_env_s = tz_local_env;
+            return tz_local_env_s;
+        }
+    }
 
     // Check special path which is valid for buildroot with uclibc builds
     if(stat(tz_dir_buildroot, &sb) == 0 && S_ISDIR(sb.st_mode))
