@@ -132,7 +132,7 @@ if( BUILD_TZ_LIB )
       target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=1 HAS_REMOTE_API=1 )
     endif()
 
-    if ( USE_SYSTEM_TZ_DB AND NOT WIN32 AND NOT MANUAL_TZ_DB )
+    if ( USE_SYSTEM_TZ_DB AND NOT MANUAL_TZ_DB )
       target_compile_definitions( date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=1 )
     else()
       target_compile_definitions( date-tz PUBLIC USE_OS_TZDB=0 )
