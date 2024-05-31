@@ -2873,6 +2873,7 @@ init_tzdb()
                 strcmp(d->d_name, "version")      == 0      ||
                 strcmp(d->d_name, "zone.tab")     == 0      ||
                 strcmp(d->d_name, "zone1970.tab") == 0      ||
+                strcmp(d->d_name, "zonenow.tab")  == 0      ||
                 strcmp(d->d_name, "tzdata.zi")    == 0      ||
                 strcmp(d->d_name, "leapseconds")  == 0      ||
                 strcmp(d->d_name, "leap-seconds.list") == 0   )
