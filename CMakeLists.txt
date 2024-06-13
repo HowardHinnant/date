@@ -72,15 +72,20 @@ target_include_directories( date INTERFACE
 # adding header sources just helps IDEs
 target_sources( date INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/date.h
-    # the rest of these are not currently part of the public interface of the library:
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/solar_hijri.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/islamic.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/iso_week.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/date/julian.h>
 )
+
+add_library(extra INTERFACE)
+add_library(date::extra ALIAS extra)
+target_sources(extra INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/solar_hijri.h
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/islamic.h
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/julian.h
+)
+
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     # public headers will get installed:
-    set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h )
+    set_target_properties( date PROPERTIES PUBLIC_HEADER include/date/date.h)
+    set_target_properties( extra PROPERTIES PUBLIC_HEADER "include/date/islamic.h;include/date/solar_hijri.h;include/date/julian.h")
 endif ()
 
 # These used to be set with generator expressions,
@@ -103,6 +108,24 @@ if ( DISABLE_STRING_VIEW )
 endif()
 
 #[===================================================================[
+   iso_week (header only) library
+#]===================================================================]
+add_library( iso_week INTERFACE )
+add_library( date::iso_week ALIAS iso_week )
+target_include_directories( iso_week INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include> )
+target_sources( iso_week INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:include>/date/iso_week.h
+        )
+# public headers will get installed:
+set_target_properties( iso_week PROPERTIES PUBLIC_HEADER include/date/iso_week.h )
+target_compile_definitions( iso_week INTERFACE
+        #To workaround libstdc++ issue https://github.com/HowardHinnant/date/issues/388
+        ONLY_C_LOCALE=$<IF:$<BOOL:${COMPILE_WITH_C_LOCALE}>,1,0>
+        $<$<BOOL:${DISABLE_STRING_VIEW}>:HAS_STRING_VIEW=0> )
+
+#[===================================================================[
    tz (compiled) library
 #]===================================================================]
 if( BUILD_TZ_LIB )
@@ -113,6 +136,7 @@ if( BUILD_TZ_LIB )
       PRIVATE
         include/date/tz_private.h
         src/tz.cpp )
+
     if ( IOS )
       target_sources( date-tz
         PUBLIC
@@ -152,10 +176,10 @@ if( BUILD_TZ_LIB )
         PUBLIC_HEADER "${TZ_HEADERS}"
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${ABI_VERSION}" )
-    if( NOT MSVC )
-        find_package( Threads )
-        target_link_libraries( date-tz PUBLIC Threads::Threads )
-    endif( )
+
+    find_package( Threads )
+    target_link_libraries( date-tz PUBLIC Threads::Threads )
+
     if( NOT USE_SYSTEM_TZ_DB AND NOT MANUAL_TZ_DB )
         find_package( CURL REQUIRED )
         target_include_directories( date-tz SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} )
@@ -174,13 +198,30 @@ write_basic_package_version_file( "${version_config}"
     COMPATIBILITY SameMajorVersion )
 
 install( TARGETS date
-    EXPORT dateConfig
+    EXPORT dateTargets
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
 export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
+
+install( TARGETS extra
+        EXPORT dateTargets
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date)
+export(TARGETS extra NAMESPACE date:: APPEND FILE dateTargets.cmake)
+
+install( TARGETS iso_week
+        EXPORT dateTargets
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+export( TARGETS iso_week NAMESPACE date:: APPEND FILE dateTargets.cmake )
+
+
 if (CMAKE_VERSION VERSION_LESS 3.15)
     install(
         FILES include/date/date.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+
+    install(
+            FILES include/date/islamic.h include/date/solar_hijri.h include/date/julian.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+
 endif ()
 
 if( BUILD_TZ_LIB )
@@ -190,6 +231,7 @@ if( BUILD_TZ_LIB )
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
+
     export( TARGETS date-tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
 endif( )
 
@@ -198,13 +240,17 @@ if( WIN32 AND NOT CYGWIN)
 else( )
     set( CONFIG_LOC "${CMAKE_INSTALL_LIBDIR}/cmake/date" )
 endif( )
-install( EXPORT dateConfig
+
+install( EXPORT dateTargets
   FILE dateTargets.cmake
   NAMESPACE date::
   DESTINATION ${CONFIG_LOC} )
-install (
-  FILES cmake/dateConfig.cmake "${version_config}"
-  DESTINATION ${CONFIG_LOC})
+
+configure_file(cmake/dateConfig.cmake.in dateConfig.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dateConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/dateConfigVersion.cmake"
+        DESTINATION ${CONFIG_LOC}
+        )
 
 #[===================================================================[
    testing
