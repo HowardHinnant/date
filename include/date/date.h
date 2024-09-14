@@ -81,7 +81,7 @@
 #ifdef _MSC_VER
 #   pragma warning(push)
 // warning C4127: conditional expression is constant
-#   pragma warning(disable : 4127)
+#   pragma warning(disable : 4127 4996)
 #endif
 
 namespace date

@@ -202,35 +202,6 @@ namespace
     using co_task_mem_ptr = std::unique_ptr<wchar_t[], task_mem_deleter>;
 }
 
-static
-std::wstring
-convert_utf8_to_utf16(const std::string& s)
-{
-    std::wstring out;
-    const int size = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, NULL, 0);
-
-    if (size == 0)
-    {
-        std::string msg = "Failed to determine required size when converting \"";
-        msg += s;
-        msg += "\" to UTF-16.";
-        throw std::runtime_error(msg);
-    }
-
-    out.resize(size);
-    const int check = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &out[0], size);
-
-    if (size != check)
-    {
-        std::string msg = "Failed to convert \"";
-        msg += s;
-        msg += "\" to UTF-16.";
-        throw std::runtime_error(msg);
-    }
-
-    return out;
-}
-
 // We might need to know certain locations even if not using the remote API,
 // so keep these routines out of that block for now.
 static
@@ -268,6 +239,36 @@ get_download_folder()
 #      endif  // !INSTALL
 
 #    endif // WINRT
+
+static
+std::wstring
+convert_utf8_to_utf16(const std::string& s)
+{
+    std::wstring out;
+    const int size = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, NULL, 0);
+
+    if (size == 0)
+    {
+        std::string msg = "Failed to determine required size when converting \"";
+        msg += s;
+        msg += "\" to UTF-16.";
+        throw std::runtime_error(msg);
+    }
+
+    out.resize(size);
+    const int check = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &out[0], size);
+
+    if (size != check)
+    {
+        std::string msg = "Failed to convert \"";
+        msg += s;
+        msg += "\" to UTF-16.";
+        throw std::runtime_error(msg);
+    }
+
+    return out;
+}
+
 #  else // !_WIN32
 
 #    if !defined(INSTALL)
