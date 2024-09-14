@@ -603,6 +603,7 @@ static
 std::string
 get_alpha_word(std::istream& in)
 {
+    ws(in);
     std::string s;
     while (!in.eof() && std::isalpha(in.peek()))
         s.push_back(static_cast<char>(in.get()));
@@ -2817,7 +2818,8 @@ find_read_and_leap_seconds()
                 iss.exceptions(std::ios::failbit | std::ios::badbit);
                 std::string word;
                 iss >> word;
-                if (word == "Leap")
+                tolower(word);
+                if (is_prefix_of(word, "leap"))
                 {
                     int y, m, d;
                     iss >> y;
