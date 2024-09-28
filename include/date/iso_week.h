@@ -424,7 +424,7 @@ inline
 unsigned char
 weekday::to_iso_encoding(unsigned char z) NOEXCEPT
 {
-    return z != 0 ? z : (unsigned char)7;
+    return z != 0 ? z : static_cast<unsigned char>(7);
 }
 
 CONSTCD11
@@ -453,7 +453,7 @@ weekday::weekday(unsigned wd) NOEXCEPT
 CONSTCD11
 inline
 weekday::weekday(date::weekday wd) NOEXCEPT
-    : wd_(wd.iso_encoding())
+    : wd_(static_cast<decltype(wd_)>(wd.iso_encoding()))
     {}
 
 CONSTCD11
