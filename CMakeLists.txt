@@ -182,7 +182,7 @@ install( TARGETS date
 export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
 if (CMAKE_VERSION VERSION_LESS 3.15)
     install(
-        FILES "${TARGET_HEADERS}"
+FILES ${TARGET_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
 endif ()
 
