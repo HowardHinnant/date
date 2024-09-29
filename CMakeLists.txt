@@ -112,6 +112,7 @@ endif()
 #]===================================================================]
 if( BUILD_TZ_LIB )
     add_library( date-tz )
+    target_compile_definitions( date-tz PRIVATE BUILD_TZ_LIB=1 )
     target_sources( date-tz
       PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/tz.h
