@@ -191,9 +191,9 @@ struct index_entry_t {
 
 #ifdef _WIN32
 static CONSTDATA char folder_delimiter = '\\';
-#else   // !_WIN32
+#elif !defined(ANDROID) && !defined(__ANDROID__)
 static CONSTDATA char folder_delimiter = '/';
-#endif  // !_WIN32
+#endif  // !defined(WIN32) && !defined(ANDROID) && !defined(__ANDROID__)
 
 #if defined(__GNUC__) && __GNUC__ < 5
    // GCC 4.9 Bug 61489 Wrong warning with -Wmissing-field-initializers
@@ -612,6 +612,7 @@ get_tzdb_list()
     return tz_db;
 }
 
+#if !defined(ANDROID) && !defined(__ANDROID__)
 inline
 static
 char
@@ -640,6 +641,7 @@ get_alpha_word(std::istream& in)
         s.push_back(static_cast<char>(in.get()));
     return s;
 }
+#endif // !defined(ANDROID) && !defined(__ANDROID__)
 
 inline
 static
@@ -650,6 +652,7 @@ is_prefix_of(std::string const& key, std::string const& value)
     return key.compare(0, size, value, 0, size) == 0;
 }
 
+#if !defined(ANDROID) && !defined(__ANDROID__)
 static
 unsigned
 parse_month(std::istream& in)
@@ -669,6 +672,7 @@ parse_month(std::istream& in)
         throw std::runtime_error("oops: bad month name: " + s);
     return static_cast<unsigned>(++m);
 }
+#endif // !defined(ANDROID) && !defined(__ANDROID__)
 
 #if !USE_OS_TZDB
 
@@ -2891,21 +2895,11 @@ operator<<(std::ostream& os, const leap_second& x)
 
 #if USE_OS_TZDB
 
+#if !defined(ANDROID) && !defined(__ANDROID__)
 static
 std::string
 get_version()
 {
-    using namespace std;
-#if defined(ANDROID) || defined(__ANDROID__)
-    auto path = get_tz_dir() + string("/tzdata");
-    ifstream in{path};
-    bionic_tzdata_header_t hdr{};
-    if (in)
-    {
-        in.read(reinterpret_cast<char*>(&hdr), sizeof(bionic_tzdata_header_t));
-        return string(hdr.tzdata_version).replace(0, 6, "");
-    }
-#else
     auto path = get_tz_dir() + string("/+VERSION");
     ifstream in{path};
     string version;
@@ -2921,11 +2915,9 @@ get_version()
         in >> version;
         return version;
     }
-#endif // defined(ANDROID) || defined(__ANDROID__)
     return "unknown";
 }
 
-#if !defined(ANDROID) && !defined(__ANDROID__)
 static
 std::vector<leap_second>
 find_read_and_leap_seconds()
