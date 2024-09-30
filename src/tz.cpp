@@ -389,7 +389,7 @@ private:
     {
 #  ifdef _WIN32
         std::wstring wfilename = convert_utf8_to_utf16(filename);
-        FILE* file = ::_wfopen(wfilename.c_str(), L"rb");
+        FILE* file = ::_wfopen(wfilename.c_str(), L"r");
 #  else // !_WIN32
         FILE* file = ::fopen(filename.c_str(), "rb");
 #  endif // _WIN32
