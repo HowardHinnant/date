@@ -17,6 +17,11 @@
 
 cmake_minimum_required( VERSION 3.7 )
 
+set(DATE_MAIN_PROJECT OFF)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(DATE_MAIN_PROJECT ON)
+endif()
+
 project( date VERSION 3.0.1 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
 
@@ -50,7 +55,7 @@ if( ENABLE_DATE_INSTALL )
 endif( )
 
 function( print_option OPT )
-    if ( NOT DEFINED PRINT_OPTION_CURR_${OPT} OR ( NOT PRINT_OPTION_CURR_${OPT} STREQUAL ${OPT} ) )
+    if ( DATE_MAIN_PROJECT AND ( NOT DEFINED PRINT_OPTION_CURR_${OPT} OR ( NOT PRINT_OPTION_CURR_${OPT} STREQUAL ${OPT} ) ) )
         set( PRINT_OPTION_CURR_${OPT} ${${OPT}} CACHE BOOL "" )
         mark_as_advanced(PRINT_OPTION_CURR_${OPT})
         message( "# date: ${OPT} ${${OPT}}" )
