@@ -1206,11 +1206,11 @@ struct tzdb
 #endif  // defined(_MSC_VER) && (_MSC_VER < 1900)
 
 #if HAS_STRING_VIEW
-    const time_zone* locate_zone(std::string_view tz_name) const;
+    DATE_API const time_zone* locate_zone(std::string_view tz_name) const;
 #else
-    const time_zone* locate_zone(const std::string& tz_name) const;
+    DATE_API const time_zone* locate_zone(const std::string& tz_name) const;
 #endif
-    const time_zone* current_zone() const;
+    DATE_API const time_zone* current_zone() const;
 };
 
 using TZ_DB = tzdb;
@@ -1225,9 +1225,9 @@ class tzdb_list
     std::atomic<tzdb*> head_{nullptr};
 
 public:
-    ~tzdb_list();
+    DATE_API ~tzdb_list();
     tzdb_list() = default;
-    tzdb_list(tzdb_list&& x) NOEXCEPT;
+    DATE_API tzdb_list(tzdb_list&& x) NOEXCEPT;
 
     const tzdb& front() const NOEXCEPT {return *head_;}
           tzdb& front()       NOEXCEPT {return *head_;}
@@ -1240,7 +1240,7 @@ public:
     const_iterator cbegin() const NOEXCEPT;
     const_iterator cend() const NOEXCEPT;
 
-    const_iterator erase_after(const_iterator p) NOEXCEPT;
+    DATE_API const_iterator erase_after(const_iterator p) NOEXCEPT;
 
     struct undocumented_helper;
 private:
