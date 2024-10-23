@@ -87,6 +87,9 @@
 
 #ifdef __APPLE__
 #  include "date/ios.h"
+#  if USE_OS_TZDB
+#    define MISSING_LEAP_SECONDS 1
+#  endif // USE_OS_TZDB
 #else
 #  define TARGET_OS_IPHONE 0
 #  define TARGET_OS_SIMULATOR 0
