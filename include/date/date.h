@@ -8117,6 +8117,8 @@ public:
 #endif  // HAS_STRING_VIEW
 };
 
+#ifdef _MSC_VER
+
 template <class Parsable, class CharT, class Traits, class Alloc>
 std::basic_istream<CharT, Traits>&
 operator>>(std::basic_istream<CharT, Traits>& is,
@@ -8219,6 +8221,113 @@ parse(const CharT* format, Parsable& tp,
 {
     return {format, tp, &abbrev, &offset};
 }
+
+#else  // !defined _MSC_VER
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+std::basic_istream<CharT, Traits>&
+operator>>(std::basic_istream<CharT, Traits>& is,
+           const parse_manip<Parsable, CharT, Traits, Alloc>& x)
+{
+    return from_stream(is, x.format_.c_str(), x.tp_, x.abbrev_, x.offset_);
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const std::basic_string<CharT, Traits, Alloc>& format, Parsable& tp)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(),
+                            format.c_str(), tp),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp})
+{
+    return {format, tp};
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const std::basic_string<CharT, Traits, Alloc>& format, Parsable& tp,
+      std::basic_string<CharT, Traits, Alloc>& abbrev)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(),
+                            format.c_str(), tp, &abbrev),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, &abbrev})
+{
+    return {format, tp, &abbrev};
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const std::basic_string<CharT, Traits, Alloc>& format, Parsable& tp,
+      std::chrono::minutes& offset)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(),
+                            format.c_str(), tp,
+                            std::declval<std::basic_string<CharT, Traits, Alloc>*>(),
+                            &offset),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, nullptr, &offset})
+{
+    return {format, tp, nullptr, &offset};
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const std::basic_string<CharT, Traits, Alloc>& format, Parsable& tp,
+      std::basic_string<CharT, Traits, Alloc>& abbrev, std::chrono::minutes& offset)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(),
+                            format.c_str(), tp, &abbrev, &offset),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, &abbrev, &offset})
+{
+    return {format, tp, &abbrev, &offset};
+}
+
+// const CharT* formats
+
+template <class Parsable, class CharT>
+inline
+auto
+parse(const CharT* format, Parsable& tp)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT>&>(), format, tp),
+                parse_manip<Parsable, CharT>{format, tp})
+{
+    return {format, tp};
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const CharT* format, Parsable& tp, std::basic_string<CharT, Traits, Alloc>& abbrev)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(), format,
+                            tp, &abbrev),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, &abbrev})
+{
+    return {format, tp, &abbrev};
+}
+
+template <class Parsable, class CharT>
+inline
+auto
+parse(const CharT* format, Parsable& tp, std::chrono::minutes& offset)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT>&>(), format,
+                            tp, std::declval<std::basic_string<CharT>*>(), &offset),
+                parse_manip<Parsable, CharT>{format, tp, nullptr, &offset})
+{
+    return {format, tp, nullptr, &offset};
+}
+
+template <class Parsable, class CharT, class Traits, class Alloc>
+inline
+auto
+parse(const CharT* format, Parsable& tp,
+      std::basic_string<CharT, Traits, Alloc>& abbrev, std::chrono::minutes& offset)
+    -> decltype(from_stream(std::declval<std::basic_istream<CharT, Traits>&>(), format,
+                            tp, &abbrev, &offset),
+                parse_manip<Parsable, CharT, Traits, Alloc>{format, tp, &abbrev, &offset})
+{
+    return {format, tp, &abbrev, &offset};
+}
+
+#endif  // !defined _MSC_VER
 
 // duration streaming
 
