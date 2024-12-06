@@ -349,10 +349,11 @@ time_zone::contant_offset() const
     using date::January;
     using date::December;
     using date::last;
+    using date::days;
     using std::chrono::minutes;
     sys_info r;
     r.begin = sys_days{year::min()/January/1};
-    r.end   = sys_days{year::max()/December/last};
+    r.end   = sys_days{year::max()/December/last} + days{1} - std::chrono::seconds{1};
     if (std_abbrev_.size() > 0)
     {
         r.abbrev = std_abbrev_;
@@ -510,7 +511,8 @@ time_zone::get_info(date::sys_time<Duration> st) const
     }
     else
         r = contant_offset();
-    assert(r.begin <= st && st < r.end);
+    using seconds = std::chrono::seconds;
+    assert(r.begin <= floor<seconds>(st) && floor<seconds>(st) <= r.end);
     return r;
 }
 
