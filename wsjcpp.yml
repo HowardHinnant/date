@@ -1,0 +1,25 @@
+wsjcpp_version: "v0.1.1"
+cmake_minimum_required: "3.0"
+cmake_cxx_standard: "11"
+name: "HowardHinnant/date"
+version: "v2.4.1"
+description: "DateTime Utils"
+issues: "https://github.com/HowardHinnant/date/issues"
+keywords:
+  - "c++"
+  - "date-utils"
+
+repositories:
+  - type: main
+    url: "https://github.com/HowardHinnant/date"
+  - type: fork
+    url: "https://github.com/wsjcpp/HowardHinnant_date"
+
+authors:
+  - name: "Howard Hinnant"
+    email: "?"
+
+distribution:
+  - source-file: "include/date/date.h"
+    target-file: "date.h"
+    type: "source-code"
