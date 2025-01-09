@@ -215,7 +215,7 @@ test_g() {
   static_assert(sizeof(ymdd)/sizeof(ymdd[0]) == sizeof(ymdh)/sizeof(ymdh[0]), "");
   static_assert(sizeof(ymdd)/sizeof(ymdd[0]) == sizeof(leaps)/sizeof(leaps[0]), "");
 
-  for (auto i = 0; i < sizeof(ymdd)/sizeof(ymdd[0]); ++i)
+  for (auto i = 0u; i < sizeof(ymdd)/sizeof(ymdd[0]); ++i)
   {
     assert(solar_hijri::year_month_day{ymdd[i]} == ymdh[i]);
     assert(ymdd[i] == date::year_month_day{ymdh[i]});
