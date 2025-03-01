@@ -82,8 +82,8 @@
 
 #  include <windows.h>
 #endif  // _WIN32
-
-#include "date/tz_private.h"
+#include <unordered_map>
+#include "../../date/include/date/tz_private.h"
 
 #ifdef __APPLE__
 #  include "date/ios.h"
@@ -711,25 +711,30 @@ sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings)
 static
 bool
 native_to_standard_timezone_name(const std::string& native_tz_name,
-                                 std::string& standard_tz_name)
+    std::string& standard_tz_name)
 {
-    // TOOD! Need be a case insensitive compare?
-    if (native_tz_name == "UTC")
+    // Static map for quick lookup (created once)
+    static const std::unordered_map<std::string, std::string> tz_map = []() 
     {
-        standard_tz_name = "Etc/UTC";
+        std::unordered_map<std::string, std::string> map;
+        map["UTC"] = "Etc/UTC";  // Special case
+
+        // Add all mappings from the database
+        for (const auto& tzm : date::get_tzdb().mappings) 
+        {
+            map[tzm.other] = tzm.type;
+        }
+        return map;
+        }();
+
+    // Do the lookup
+    auto it = tz_map.find(native_tz_name);
+    if (it != tz_map.end()) {
+        standard_tz_name = it->second;
         return true;
     }
+
     standard_tz_name.clear();
-    // TODO! we can improve on linear search.
-    const auto& mappings = date::get_tzdb().mappings;
-    for (const auto& tzm : mappings)
-    {
-        if (tzm.other == native_tz_name)
-        {
-            standard_tz_name = tzm.type;
-            return true;
-        }
-    }
     return false;
 }
 
@@ -1077,26 +1082,34 @@ detail::MonthDayTime::to_sys_days(date::year y) const
 {
     using namespace std::chrono;
     using namespace date;
+
+    // Handle most common case first
+    if (type_ == month_day)
+        return sys_days(y / u.month_day_);
+
+    // Handle other cases
     switch (type_)
     {
-    case month_day:
-        return sys_days(y/u.month_day_);
     case month_last_dow:
-        return sys_days(y/u.month_weekday_last_);
+        return sys_days(y / u.month_weekday_last_);
+
     case lteq:
-        {
-            auto const x = y/u.month_day_weekday_.month_day_;
-            auto const wd1 = weekday(static_cast<sys_days>(x));
-            auto const wd0 = u.month_day_weekday_.weekday_;
-            return sys_days(x) - (wd1-wd0);
-        }
-    case gteq:
-        break;
+    {
+        auto const days = sys_days(y / u.month_day_weekday_.month_day_);
+        auto const wd1 = weekday(days);
+        auto const wd0 = u.month_day_weekday_.weekday_;
+        return days - (wd1 - wd0);
     }
-    auto const x = y/u.month_day_weekday_.month_day_;
-    auto const wd1 = u.month_day_weekday_.weekday_;
-    auto const wd0 = weekday(static_cast<sys_days>(x));
-    return sys_days(x) + (wd1-wd0);
+
+    case gteq:
+    default: // Combine with gteq case
+    {
+        auto const days = sys_days(y / u.month_day_weekday_.month_day_);
+        auto const wd1 = u.month_day_weekday_.weekday_;
+        auto const wd0 = weekday(days);
+        return days + (wd1 - wd0);
+    }
+    }
 }
 
 sys_seconds
@@ -1810,49 +1823,66 @@ find_rule(const std::pair<const Rule*, date::year>& first_rule,
 {
     using namespace std::chrono;
     using namespace date;
-    auto r = first_rule.first;
-    auto ry = first_rule.second;
+    
+    // Initialize result
     sys_info x{sys_days(year::min()/min_day), sys_days(year::max()/max_day),
                seconds{0}, initial_save, initial_abbrev};
-    while (r != nullptr)
-    {
-        auto tr = r->mdt().to_sys(ry, offset, x.save);
-        auto tx = mdt.to_sys(y, offset, x.save);
-        // Find last rule where tx >= tr
-        if (tx <= tr || (r == last_rule.first && ry == last_rule.second))
-        {
-            if (tx < tr && r == first_rule.first && ry == first_rule.second)
-            {
-                x.end = r->mdt().to_sys(ry, offset, x.save);
-                break;
-            }
-            if (tx < tr)
-            {
-                std::tie(r, ry) = find_previous_rule(r, ry);  // can't return nullptr for r
-                assert(r != nullptr);
-            }
-            // r != nullptr && tx >= tr (if tr were to be recomputed)
-            auto prev_save = initial_save;
-            if (!(r == first_rule.first && ry == first_rule.second))
-                prev_save = find_previous_rule(r, ry).first->save();
-            x.begin = r->mdt().to_sys(ry, offset, prev_save);
-            x.save = r->save();
-            x.abbrev = r->abbrev();
-            if (!(r == last_rule.first && ry == last_rule.second))
-            {
-                std::tie(r, ry) = find_next_rule(r, ry);  // can't return nullptr for r
-                assert(r != nullptr);
-                x.end = r->mdt().to_sys(ry, offset, x.save);
-            }
-            else
-                x.end = sys_days(year::max()/max_day);
-            break;
-        }
-        x.save = r->save();
-        std::tie(r, ry) = find_next_rule(r, ry);  // Can't return nullptr for r
-        assert(r != nullptr);
+    
+    // Start with first rule
+    auto r = first_rule.first;
+    auto ry = first_rule.second;
+    if (r == nullptr)
+        return x;
+        
+    // Calculate target time once
+    auto tx = mdt.to_sys(y, offset, x.save);
+    
+    // Special case: Before first rule
+    auto tr = r->mdt().to_sys(ry, offset, x.save);
+    if (tx < tr) {
+        x.end = tr;
+        return x;
     }
-    return x;
+    
+    // Find applicable rule by advancing until we find the right one
+    while (r != nullptr) {
+        // Save current rule info before potentially advancing
+        const auto current_r = r;
+        const auto current_ry = ry;
+        const auto current_tr = tr;
+        
+        // Get next rule to check if we should advance
+        if (r != last_rule.first || ry != last_rule.second) {
+            std::tie(r, ry) = find_next_rule(current_r, current_ry);
+            if (r != nullptr)
+                tr = r->mdt().to_sys(ry, offset, x.save);
+        } else {
+            r = nullptr; // Mark as last rule
+        }
+        
+        // If we've reached the end or gone past target time, use current rule
+        if (r == nullptr || tx < tr) {
+            // Set begin time (accounting for previous rule's save value)
+            std::chrono::minutes prev_save = initial_save;
+            if (!(current_r == first_rule.first && current_ry == first_rule.second)) {
+                auto [prev_r, prev_ry] = find_previous_rule(current_r, current_ry);
+                prev_save = prev_r->save();
+            }
+            
+            // Populate result
+            x.begin = current_r->mdt().to_sys(current_ry, offset, prev_save);
+            x.save = current_r->save();
+            x.abbrev = current_r->abbrev();
+            x.end = (r == nullptr) ? sys_days(year::max()/max_day) : tr;
+            
+            return x; // Early return
+        }
+        
+        // Update save time for next iteration
+        x.save = current_r->save();
+    }
+    
+    return x; // Fallback return
 }
 
 // zonelet
@@ -4363,8 +4393,7 @@ tzdb::current_zone() const
 const time_zone*
 current_zone()
 {
-    return get_tzdb().current_zone();
-}
+    return get_tzdb().current_zone();}
 
 }  // namespace date
 
