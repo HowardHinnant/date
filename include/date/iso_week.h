@@ -747,7 +747,7 @@ inline namespace literals
 CONSTCD11
 inline
 iso_week::year
-operator "" _y(unsigned long long y) NOEXCEPT
+operator ""_y(unsigned long long y) NOEXCEPT
 {
     return iso_week::year(static_cast<int>(y));
 }
@@ -755,7 +755,7 @@ operator "" _y(unsigned long long y) NOEXCEPT
 CONSTCD11
 inline
 iso_week::weeknum
-operator "" _w(unsigned long long wn) NOEXCEPT
+operator ""_w(unsigned long long wn) NOEXCEPT
 {
     return iso_week::weeknum(static_cast<unsigned>(wn));
 }

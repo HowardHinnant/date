@@ -758,8 +758,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last&
 inline namespace literals
 {
 
-CONSTCD11 julian::day  operator "" _d(unsigned long long d) NOEXCEPT;
-CONSTCD11 julian::year operator "" _y(unsigned long long y) NOEXCEPT;
+CONSTCD11 julian::day  operator ""_d(unsigned long long d) NOEXCEPT;
+CONSTCD11 julian::year operator ""_y(unsigned long long y) NOEXCEPT;
 
 // CONSTDATA julian::month jan{1};
 // CONSTDATA julian::month feb{2};
@@ -1333,7 +1333,7 @@ inline namespace literals
 CONSTCD11
 inline
 julian::day
-operator "" _d(unsigned long long d) NOEXCEPT
+operator ""_d(unsigned long long d) NOEXCEPT
 {
     return julian::day{static_cast<unsigned>(d)};
 }
@@ -1341,7 +1341,7 @@ operator "" _d(unsigned long long d) NOEXCEPT
 CONSTCD11
 inline
 julian::year
-operator "" _y(unsigned long long y) NOEXCEPT
+operator ""_y(unsigned long long y) NOEXCEPT
 {
     return julian::year(static_cast<int>(y));
 }
