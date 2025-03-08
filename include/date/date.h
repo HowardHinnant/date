@@ -6789,8 +6789,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         ws(is);
                         using dfs = detail::decimal_format_seconds<Duration>;
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
-                        int tH;
-                        int tM;
+                        int tH = not_a_hour;
+                        int tM = not_a_minute;
                         long double S{};
                         read(is, ru{tH, 1, 2}, CharT{':'}, ru{tM, 1, 2},
                                                CharT{':'}, rld{S, 1, w});
@@ -7519,7 +7519,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             case 'z':
                 if (command)
                 {
-                    int tH, tM;
+                    int tH = not_a_hour, tM = not_a_minute;
                     minutes toff = not_a_offset;
                     bool neg = false;
                     auto ic = is.peek();
