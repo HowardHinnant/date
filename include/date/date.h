@@ -6784,7 +6784,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         checked_set(m, static_cast<int>(i % 12 + 1), not_a_month, is);
                         ws(is);
                         int td = not_a_day;
-                        read(is, rs{td, 1, 2});
+                        read(is, ru{td, 1, 2});
                         checked_set(d, td, not_a_day, is);
                         ws(is);
                         using dfs = detail::decimal_format_seconds<Duration>;
@@ -6800,7 +6800,9 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                     not_a_second, is);
                         ws(is);
                         int tY = not_a_year;
-                        read(is, rs{tY, 1, 4u});
+                        // No need for `rs` here, negative years can't parse
+                        // with "%c" since `width` is hardcoded to 4
+                        read(is, ru{tY, 1, 4u});
                         checked_set(Y, tY, not_a_year, is);
 #endif
                     }
@@ -6834,7 +6836,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         int tm = not_a_month;
                         int td = not_a_day;
                         read(is, ru{tm, 1, 2}, CharT{'/'}, ru{td, 1, 2}, CharT{'/'},
-                                 rs{ty, 1, 2});
+                                 ru{ty, 1, 2});
                         checked_set(y, ty, not_a_2digit_year, is);
                         checked_set(m, tm, not_a_month, is);
                         checked_set(d, td, not_a_day, is);
@@ -6930,7 +6932,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         int ty = not_a_2digit_year;
                         read(is, ru{tn, 1, 2}, CharT{'\0'}, CharT{'/'}, CharT{'\0'},
                                  ru{td, 1, 2}, CharT{'\0'}, CharT{'/'}, CharT{'\0'},
-                                 rs{ty, 1, 2});
+                                 ru{ty, 1, 2});
                         checked_set(y, ty, not_a_2digit_year, is);
                         checked_set(m, tn, not_a_month, is);
                         checked_set(d, td, not_a_day, is);
@@ -6978,7 +6980,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 #endif
                     {
                         int td = not_a_day;
-                        read(is, rs{td, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
+                        read(is, ru{td, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         checked_set(d, td, not_a_day, is);
                     }
 #if !ONLY_C_LOCALE
@@ -7042,7 +7044,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         int tI = not_a_hour_12_value;
                         // reads in an hour into I, but most be in [1, 12]
-                        read(is, rs{tI, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
+                        read(is, ru{tI, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         if (!(1 <= tI && tI <= 12))
                             is.setstate(ios::failbit);
                         checked_set(I, tI, not_a_hour_12_value, is);
@@ -7116,7 +7118,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 #endif
                     {
                         int tn = not_a_month;
-                        read(is, rs{tn, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
+                        read(is, ru{tn, 1, width == -1 ? 2u : static_cast<unsigned>(width)});
                         checked_set(m, tn, not_a_month, is);
                     }
 #if !ONLY_C_LOCALE
@@ -7536,7 +7538,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     }
                     if (modified == CharT{})
                     {
-                        read(is, rs{tH, 2, 2});
+                        read(is, ru{tH, 2, 2});
                         if (!is.fail())
                             toff = hours{std::abs(tH)};
                         if (is.good())
@@ -7556,7 +7558,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     }
                     else
                     {
-                        read(is, rs{tH, 1, 2});
+                        read(is, ru{tH, 1, 2});
                         if (!is.fail())
                             toff = hours{std::abs(tH)};
                         if (is.good())
