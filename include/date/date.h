@@ -7577,7 +7577,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             }
                         }
                     }
-                    if (neg)
+                    if (neg && !is.fail())
                         toff = -toff;
                     checked_set(temp_offset, toff, not_a_offset, is);
                     command = nullptr;
