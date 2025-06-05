@@ -61,11 +61,29 @@
 // They are provided here as a non-trivial custom time zone example, and if you really
 // have to have Posix time zones, you're welcome to use this one.
 
-#include "date/tz.h"
 #include <algorithm>
+#include <cassert>
 #include <cctype>
+#include <chrono>
 #include <ostream>
 #include <string>
+
+#ifndef HAS_CHRONO_20
+#  if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 200100
+#    define HAS_CHRONO_20 0
+#  else
+#    define HAS_CHRONO_20 1
+#  endif
+#endif
+
+#if HAS_CHRONO_20
+   namespace chr = std::chrono;
+#  define HAS_STRING_VIEW 1
+#  include <format>
+#else
+#  include "date/tz.h"
+   namespace chr = date;
+#endif
 
 namespace Posix
 {
@@ -97,8 +115,8 @@ class rule
 {
     enum {off, J, M, N};
 
-    date::month m_;
-    date::weekday wd_;
+    chr::month m_;
+    chr::weekday wd_;
     unsigned short n_    : 14;
     unsigned short mode_ : 2;
     std::chrono::duration<std::int32_t> time_ = std::chrono::hours{2};
@@ -107,7 +125,7 @@ public:
     rule() : mode_(off) {}
 
     bool ok() const {return mode_ != off;}
-    date::local_seconds operator()(date::year y) const;
+    chr::local_seconds operator()(chr::year y) const;
     std::string to_string() const;
 
     friend std::ostream& operator<<(std::ostream& os, const rule& r);
@@ -141,15 +159,15 @@ operator!=(const rule& x, const rule& y)
 }
 
 inline
-date::local_seconds
-rule::operator()(date::year y) const
+chr::local_seconds
+rule::operator()(chr::year y) const
 {
-    using date::local_days;
-    using date::January;
-    using date::days;
-    using date::last;
+    using chr::local_days;
+    using chr::January;
+    using chr::days;
+    using chr::last;
     using sec = std::chrono::seconds;
-    date::local_seconds t;
+    chr::local_seconds t;
     switch (mode_)
     {
     case J:
@@ -177,7 +195,7 @@ rule::to_string() const
             std::string nm;
             if (off != hours{2})
             {
-                date::hh_mm_ss<seconds> offset{off};
+                chr::hh_mm_ss<seconds> offset{off};
                 nm = '/';
                 nm += std::to_string(offset.hours().count());
                 if (offset.minutes() != minutes{0} || offset.seconds() != seconds{0})
@@ -230,17 +248,29 @@ operator<<(std::ostream& os, const rule& r)
     switch (r.mode_)
     {
     case rule::J:
+#if HAS_CHRONO_20
+        os << "J " << r.n_ << std::format("{:%T}", r.time_);
+#else
         os << 'J' << r.n_ << date::format(" %T", r.time_);
+#endif
         break;
     case rule::M:
         if (r.n_ == 5)
-            os << r.m_/r.wd_[date::last];
+            os << r.m_/r.wd_[chr::last];
         else
             os << r.m_/r.wd_[r.n_];
-        os <<  date::format(" %T", r.time_);
+#if HAS_CHRONO_20
+        os << ' ' << std::format("{:%T}", r.time_);
+#else
+        os << date::format(" %T", r.time_);
+#endif
         break;
     case rule::N:
+#if HAS_CHRONO_20
+        os << r.n_ << ' ' << std::format("{:%T}", r.time_);
+#else
         os << r.n_ << date::format(" %T", r.time_);
+#endif
         break;
     default:
         break;
@@ -263,21 +293,21 @@ public:
     explicit time_zone(const detail::string_t& name);
 
     template <class Duration>
-        date::sys_info   get_info(date::sys_time<Duration> st) const;
+        chr::sys_info   get_info(chr::sys_time<Duration> st) const;
     template <class Duration>
-        date::local_info get_info(date::local_time<Duration> tp) const;
+        chr::local_info get_info(chr::local_time<Duration> tp) const;
 
     template <class Duration>
-        date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        to_sys(date::local_time<Duration> tp) const;
+        chr::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+        to_sys(chr::local_time<Duration> tp) const;
 
     template <class Duration>
-        date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        to_sys(date::local_time<Duration> tp, date::choose z) const;
+        chr::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+        to_sys(chr::local_time<Duration> tp, chr::choose z) const;
 
     template <class Duration>
-        date::local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-        to_local(date::sys_time<Duration> tp) const;
+        chr::local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+        to_local(chr::sys_time<Duration> tp) const;
 
     friend std::ostream& operator<<(std::ostream& os, const time_zone& z);
 
@@ -288,68 +318,68 @@ public:
     friend bool operator==(const time_zone& x, const time_zone& y);
 
 private:
-    date::sys_seconds get_start(date::year y) const;
-    date::sys_seconds get_prev_start(date::year y) const;
-    date::sys_seconds get_next_start(date::year y) const;
-    date::sys_seconds get_end(date::year y) const;
-    date::sys_seconds get_prev_end(date::year y) const;
-    date::sys_seconds get_next_end(date::year y) const;
-    date::sys_info contant_offset() const;
+    chr::sys_seconds get_start(chr::year y) const;
+    chr::sys_seconds get_prev_start(chr::year y) const;
+    chr::sys_seconds get_next_start(chr::year y) const;
+    chr::sys_seconds get_end(chr::year y) const;
+    chr::sys_seconds get_prev_end(chr::year y) const;
+    chr::sys_seconds get_next_end(chr::year y) const;
+    chr::sys_info contant_offset() const;
 };
 
 inline
-date::sys_seconds
-time_zone::get_start(date::year y) const
+chr::sys_seconds
+time_zone::get_start(chr::year y) const
 {
-    return date::sys_seconds{(start_rule_(y) - offset_).time_since_epoch()};
+    return chr::sys_seconds{(start_rule_(y) - offset_).time_since_epoch()};
 }
 
 inline
-date::sys_seconds
-time_zone::get_prev_start(date::year y) const
+chr::sys_seconds
+time_zone::get_prev_start(chr::year y) const
 {
-    return date::sys_seconds{(start_rule_(--y) - offset_).time_since_epoch()};
+    return chr::sys_seconds{(start_rule_(--y) - offset_).time_since_epoch()};
 }
 
 inline
-date::sys_seconds
-time_zone::get_next_start(date::year y) const
+chr::sys_seconds
+time_zone::get_next_start(chr::year y) const
 {
-    return date::sys_seconds{(start_rule_(++y) - offset_).time_since_epoch()};
+    return chr::sys_seconds{(start_rule_(++y) - offset_).time_since_epoch()};
 }
 
 inline
-date::sys_seconds
-time_zone::get_end(date::year y) const
+chr::sys_seconds
+time_zone::get_end(chr::year y) const
 {
-    return date::sys_seconds{(end_rule_(y) - (offset_ + save_)).time_since_epoch()};
+    return chr::sys_seconds{(end_rule_(y) - (offset_ + save_)).time_since_epoch()};
 }
 
 inline
-date::sys_seconds
-time_zone::get_prev_end(date::year y) const
+chr::sys_seconds
+time_zone::get_prev_end(chr::year y) const
 {
-    return date::sys_seconds{(end_rule_(--y) - (offset_ + save_)).time_since_epoch()};
+    return chr::sys_seconds{(end_rule_(--y) - (offset_ + save_)).time_since_epoch()};
 }
 
 inline
-date::sys_seconds
-time_zone::get_next_end(date::year y) const
+chr::sys_seconds
+time_zone::get_next_end(chr::year y) const
 {
-    return date::sys_seconds{(end_rule_(++y) - (offset_ + save_)).time_since_epoch()};
+    return chr::sys_seconds{(end_rule_(++y) - (offset_ + save_)).time_since_epoch()};
 }
 
 inline
-date::sys_info
+chr::sys_info
 time_zone::contant_offset() const
 {
-    using date::year;
-    using date::sys_info;
-    using date::sys_days;
-    using date::January;
-    using date::December;
-    using date::last;
-    using date::days;
+    using chr::year;
+    using chr::sys_info;
+    using chr::sys_days;
+    using chr::January;
+    using chr::December;
+    using chr::last;
+    using chr::days;
     using std::chrono::minutes;
     sys_info r;
     r.begin = sys_days{year::min()/January/1};
@@ -364,7 +394,7 @@ time_zone::contant_offset() const
     {
         r.abbrev = dst_abbrev_;
         r.offset = offset_ + save_;
-        r.save = date::ceil<minutes>(save_);
+        r.save = chr::ceil<minutes>(save_);
     }
     return r;
 }
@@ -435,19 +465,19 @@ time_zone::time_zone(const detail::string_t& s)
 }
 
 template <class Duration>
-date::sys_info
-time_zone::get_info(date::sys_time<Duration> st) const
+chr::sys_info
+time_zone::get_info(chr::sys_time<Duration> st) const
 {
-    using date::sys_info;
-    using date::year_month_day;
-    using date::sys_days;
-    using date::floor;
-    using date::ceil;
-    using date::days;
-    using date::year;
-    using date::January;
-    using date::December;
-    using date::last;
+    using chr::sys_info;
+    using chr::year_month_day;
+    using chr::sys_days;
+    using chr::floor;
+    using chr::ceil;
+    using chr::days;
+    using chr::year;
+    using chr::January;
+    using chr::December;
+    using chr::last;
     using std::chrono::minutes;
     sys_info r{};
     r.offset = offset_;
@@ -517,23 +547,23 @@ time_zone::get_info(date::sys_time<Duration> st) const
 }
 
 template <class Duration>
-date::local_info
-time_zone::get_info(date::local_time<Duration> tp) const
+chr::local_info
+time_zone::get_info(chr::local_time<Duration> tp) const
 {
-    using date::local_info;
-    using date::year_month_day;
-    using date::days;
-    using date::sys_days;
-    using date::sys_seconds;
-    using date::year;
-    using date::ceil;
-    using date::January;
-    using date::December;
-    using date::last;
+    using chr::local_info;
+    using chr::year_month_day;
+    using chr::days;
+    using chr::sys_days;
+    using chr::sys_seconds;
+    using chr::year;
+    using chr::ceil;
+    using chr::January;
+    using chr::December;
+    using chr::last;
     using std::chrono::seconds;
     using std::chrono::minutes;
     local_info r{};
-    using date::floor;
+    using chr::floor;
     if (start_rule_.ok())
     {
         auto y = year_month_day{floor<days>(tp)}.year();
@@ -591,13 +621,13 @@ time_zone::get_info(date::local_time<Duration> tp) const
 }
 
 template <class Duration>
-date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-time_zone::to_sys(date::local_time<Duration> tp) const
+chr::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+time_zone::to_sys(chr::local_time<Duration> tp) const
 {
-    using date::local_info;
-    using date::sys_time;
-    using date::ambiguous_local_time;
-    using date::nonexistent_local_time;
+    using chr::local_info;
+    using chr::sys_time;
+    using chr::ambiguous_local_time;
+    using chr::nonexistent_local_time;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
         throw nonexistent_local_time(tp, i);
@@ -607,12 +637,12 @@ time_zone::to_sys(date::local_time<Duration> tp) const
 }
 
 template <class Duration>
-date::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-time_zone::to_sys(date::local_time<Duration> tp, date::choose z) const
+chr::sys_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+time_zone::to_sys(chr::local_time<Duration> tp, chr::choose z) const
 {
-    using date::local_info;
-    using date::sys_time;
-    using date::choose;
+    using chr::local_info;
+    using chr::sys_time;
+    using chr::choose;
     auto i = get_info(tp);
     if (i.result == local_info::nonexistent)
     {
@@ -627,10 +657,10 @@ time_zone::to_sys(date::local_time<Duration> tp, date::choose z) const
 }
 
 template <class Duration>
-date::local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
-time_zone::to_local(date::sys_time<Duration> tp) const
+chr::local_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+time_zone::to_local(chr::sys_time<Duration> tp) const
 {
-    using date::local_time;
+    using chr::local_time;
     using std::chrono::seconds;
     using LT = local_time<typename std::common_type<Duration, seconds>::type>;
     auto i = get_info(tp);
@@ -641,10 +671,15 @@ inline
 std::ostream&
 operator<<(std::ostream& os, const time_zone& z)
 {
-    using date::operator<<;
+    using chr::operator<<;
     os << '{';
+#if HAS_CHRONO_20
+    os << z.std_abbrev_ << ", " << z.dst_abbrev_ << ",  " << std::format("{:%T, }", z.offset_)
+       << std::format("{:%T, [}", z.save_) << z.start_rule_ << ", " << z.end_rule_ << ")}";
+#else
     os << z.std_abbrev_ << ", " << z.dst_abbrev_ << date::format(", %T, ", z.offset_)
        << date::format("%T, [", z.save_) << z.start_rule_ << ", " << z.end_rule_ << ")}";
+#endif
     return os;
 }
 
@@ -652,7 +687,7 @@ inline
 std::string
 time_zone::name() const
 {
-    using namespace date;
+    using namespace chr;
     using namespace std::chrono;
     auto print_abbrev = [](std::string const& nm)
         {
@@ -669,7 +704,7 @@ time_zone::name() const
     auto print_offset = [](seconds off)
         {
             std::string nm;
-            date::hh_mm_ss<seconds> offset{-off};
+            chr::hh_mm_ss<seconds> offset{-off};
             if (offset.is_negative())
                 nm += '-';
             nm += std::to_string(offset.hours().count());
@@ -746,8 +781,8 @@ inline
 unsigned
 read_date(const string_t& s, unsigned i, rule& r)
 {
-    using date::month;
-    using date::weekday;
+    using chr::month;
+    using chr::weekday;
     if (i == s.size())
         throw_invalid(s, i, "Expected rule but found end of string");
     if (s[i] == 'J')
@@ -911,7 +946,11 @@ read_unsigned(const string_t& s, unsigned i, unsigned limit, unsigned& u,
 
 }  // namespace Posix
 
+#if HAS_CHRONO_20
+namespace std::chrono
+#else
 namespace date
+#endif
 {
 
 template <>
@@ -947,6 +986,6 @@ struct zoned_traits<Posix::time_zone>
 
 };
 
-}  // namespace date
+}  // namespace chr
 
 #endif  // PTZ_H
