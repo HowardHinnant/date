@@ -3838,6 +3838,10 @@ init_tzdb()
                 std::istringstream in(line);
                 std::string word;
                 in >> word;
+                if (word.empty())
+                {
+                  continue;
+                }
                 tolower(word);
                 if (is_prefix_of(word, "rule"))
                 {
