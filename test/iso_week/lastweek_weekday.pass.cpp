@@ -56,7 +56,6 @@ static_assert( std::is_trivially_move_assignable<iso_week::lastweek_weekday>{}, 
 
 static_assert(std::is_trivially_copyable<iso_week::lastweek_weekday>{}, "");
 static_assert(std::is_standard_layout<iso_week::lastweek_weekday>{}, "");
-static_assert(std::is_literal_type<iso_week::lastweek_weekday>{}, "");
 
 static_assert( std::is_nothrow_constructible<iso_week::lastweek_weekday,
                                                  iso_week::weekday>{}, "");

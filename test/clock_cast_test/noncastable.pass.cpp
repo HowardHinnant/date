@@ -191,6 +191,7 @@ main()
     using namespace date;
     using namespace std::chrono;
     using sys_clock = std::chrono::system_clock;
+    using local_t = date::local_t;
 
     //steady_clock (must be different that sys_clock)
     static_assert(is_clock_castable<steady_clock, steady_clock>::value, "steady_clock -> steady_clock");

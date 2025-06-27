@@ -50,6 +50,7 @@ main()
     using namespace date;
     using namespace std;
     using namespace std::chrono;
+    using date::local_days, date::Sunday, date::last;
 
     auto tzi = locate_zone("Australia/Sydney");
     Posix::time_zone tzp{"AEST-10AEDT,M10.1.0,M4.1.0/3"};
