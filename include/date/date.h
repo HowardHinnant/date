@@ -84,7 +84,7 @@
 #   pragma warning(disable : 4127)
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ < 5) || defined(_MSC_VER)
+#if (defined(__GNUC__) && __GNUC__ < 5)
 #  define OPERATOR_LITERAL(suffix) operator"" suffix
 #else
 #  define OPERATOR_LITERAL(suffix) operator""suffix
