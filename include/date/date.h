@@ -85,9 +85,9 @@
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ < 5)
-#  define OPERATOR_LITERAL(suffix) operator"" _suffix
+#  define OPERATOR_LITERAL(suffix) operator"" _##suffix
 #else
-#  define OPERATOR_LITERAL(suffix) operator""_suffix
+#  define OPERATOR_LITERAL(suffix) operator""_##suffix
 #endif
 
 namespace date
@@ -1978,7 +1978,7 @@ inline namespace literals
 CONSTCD11
 inline
 date::day
-OPERATOR_LITERAL(_d)(unsigned long long d) NOEXCEPT
+OPERATOR_LITERAL(d)(unsigned long long d) NOEXCEPT
 {
     return date::day{static_cast<unsigned>(d)};
 }
@@ -1986,7 +1986,7 @@ OPERATOR_LITERAL(_d)(unsigned long long d) NOEXCEPT
 CONSTCD11
 inline
 date::year
-OPERATOR_LITERAL(_y)(unsigned long long y) NOEXCEPT
+OPERATOR_LITERAL(y)(unsigned long long y) NOEXCEPT
 {
     return date::year(static_cast<int>(y));
 }
