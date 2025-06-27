@@ -34,6 +34,7 @@ void testDeductionFrom(Source&& s)
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time, date::local_days, date::local_time;
 
     // No time point
     {
@@ -148,6 +149,7 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time, date::local_days, date::local_time;
 
 #if HAS_DEDUCTION_GUIDES
     //  no arguments

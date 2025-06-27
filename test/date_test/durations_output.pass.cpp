@@ -36,7 +36,7 @@ void test_SI()
    // atto
    {
      duration<int, std::atto> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13as");
      os.str("");
    }
@@ -44,7 +44,7 @@ void test_SI()
    // femto
    {
      duration<int, std::femto> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13fs");
      os.str("");
    }
@@ -52,7 +52,7 @@ void test_SI()
    // pico
    {
      duration<int, std::pico> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13ps");
      os.str("");
    }
@@ -60,7 +60,7 @@ void test_SI()
    // nano
    {
      duration<int, std::nano> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13ns");
      os.str("");
    }
@@ -68,7 +68,7 @@ void test_SI()
    // mikro
    {
      duration<int, std::micro> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13\xC2\xB5s");
      os.str("");
    }
@@ -76,7 +76,7 @@ void test_SI()
    // milli
    {
      duration<int, std::milli> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13ms");
      os.str("");
    }
@@ -84,7 +84,7 @@ void test_SI()
    // centi
    {
      duration<int, std::centi> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13cs");
      os.str("");
    }
@@ -92,7 +92,7 @@ void test_SI()
    // deci
    {
      duration<int, std::deci> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13ds");
      os.str("");
    }
@@ -100,7 +100,7 @@ void test_SI()
    // seconds
    {
      duration<int> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13s");
      os.str("");
    }
@@ -108,7 +108,7 @@ void test_SI()
    // deca
    {
      duration<int, std::deca> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13das");
      os.str("");
    }
@@ -116,7 +116,7 @@ void test_SI()
    // hecto
    {
      duration<int, std::hecto> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13hs");
      os.str("");
    }
@@ -124,7 +124,7 @@ void test_SI()
    // kilo
    {
      duration<int, std::kilo> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13ks");
      os.str("");
    }
@@ -132,7 +132,7 @@ void test_SI()
    // mega
    {
      duration<int, std::mega> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13Ms");
      os.str("");
    }
@@ -140,7 +140,7 @@ void test_SI()
    // giga
    {
      duration<int, std::giga> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13Gs");
      os.str("");
    }
@@ -148,7 +148,7 @@ void test_SI()
    // tera
    {
      duration<int, std::tera> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13Ts");
      os.str("");
    }
@@ -156,7 +156,7 @@ void test_SI()
    // peta
    {
      duration<int, std::peta> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13Ps");
      os.str("");
    }
@@ -164,7 +164,7 @@ void test_SI()
    // femto
    {
      duration<int, std::exa> d(13);
-     os << d;
+     date::operator<<(os, d);
      assert(os.str() == "13Es");
      os.str("");
    }
@@ -180,7 +180,7 @@ void test_calendar()
    // minutes
    {
       minutes d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13min");
       os.str("");
    }
@@ -188,7 +188,7 @@ void test_calendar()
    // hours
    {
       hours d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13h");
       os.str("");
    }
@@ -196,7 +196,7 @@ void test_calendar()
    // days
    {
       days d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13d");
       os.str("");
    }
@@ -212,7 +212,7 @@ void test_integral_scale()
    // ratio 123 / 1
    {
       duration<int, std::ratio<123, 1>> d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[123]s");
       os.str("");
    }
@@ -220,7 +220,7 @@ void test_integral_scale()
    // ratio 100 / 4 = ratio 25 / 1
    {
       duration<int, std::ratio<25, 1>> d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[25]s");
       os.str("");
    }
@@ -228,7 +228,7 @@ void test_integral_scale()
    // weeks = ratio 7 * 24 * 60 * 60 / 1 = ratio 604800 / 1
    {
       weeks d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[604800]s");
       os.str("");
    }
@@ -236,7 +236,7 @@ void test_integral_scale()
    // years = 146097/400 days = ratio 146097/400 * 24 * 60 * 60 = ratio 31556952 / 1
    {
       years d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[31556952]s");
       os.str("");
    }
@@ -244,7 +244,7 @@ void test_integral_scale()
    // months = 1/12 years = ratio 1/12 * 31556952  = ratio 2629746 / 1
    {
       months d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[2629746]s");
       os.str("");
    }
@@ -260,7 +260,7 @@ void test_ratio_scale()
    // ratio 1 / 2
    {
       duration<int, std::ratio<1, 2>> d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[1/2]s");
       os.str("");
    }
@@ -268,7 +268,7 @@ void test_ratio_scale()
    // ratio 100 / 3
    {
       duration<int, std::ratio<100, 3>> d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[100/3]s");
       os.str("");
    }
@@ -276,7 +276,7 @@ void test_ratio_scale()
    // ratio 100 / 6 = ratio 50 / 3
    {
       duration<int, std::ratio<100, 6>> d(13);
-      os << d;
+      date::operator<<(os, d);
       assert(os.str() == "13[50/3]s");
       os.str("");
    }
