@@ -84,6 +84,12 @@
 #   pragma warning(disable : 4127)
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ < 5)
+#  define OPERATOR_LITERAL(suffix) operator"" _##suffix
+#else
+#  define OPERATOR_LITERAL(suffix) operator""_##suffix
+#endif
+
 namespace date
 {
 
@@ -963,8 +969,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last&
 inline namespace literals
 {
 
-CONSTCD11 date::day  operator ""_d(unsigned long long d) NOEXCEPT;
-CONSTCD11 date::year operator ""_y(unsigned long long y) NOEXCEPT;
+CONSTCD11 date::day  OPERATOR_LITERAL(d)(unsigned long long d) NOEXCEPT;
+CONSTCD11 date::year OPERATOR_LITERAL(y)(unsigned long long y) NOEXCEPT;
 
 }  // inline namespace literals
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -1972,7 +1978,7 @@ inline namespace literals
 CONSTCD11
 inline
 date::day
-operator ""_d(unsigned long long d) NOEXCEPT
+OPERATOR_LITERAL(d)(unsigned long long d) NOEXCEPT
 {
     return date::day{static_cast<unsigned>(d)};
 }
@@ -1980,7 +1986,7 @@ operator ""_d(unsigned long long d) NOEXCEPT
 CONSTCD11
 inline
 date::year
-operator ""_y(unsigned long long y) NOEXCEPT
+OPERATOR_LITERAL(y)(unsigned long long y) NOEXCEPT
 {
     return date::year(static_cast<int>(y));
 }
