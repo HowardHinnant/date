@@ -1725,7 +1725,11 @@ make_zoned(TimeZonePtr z)
 
 inline
 zoned_seconds
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name)
+#else
 make_zoned(const std::string& name)
+#endif
 {
     return zoned_seconds(name);
 }
@@ -1769,7 +1773,11 @@ make_zoned(TimeZonePtr zone, const local_time<Duration>& tp, choose c)
 template <class Duration>
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name, const local_time<Duration>& tp)
+#else
 make_zoned(const std::string& name, const local_time<Duration>& tp)
+#endif
 {
     return zoned_time<typename std::common_type<Duration,
                       std::chrono::seconds>::type>(name, tp);
@@ -1778,7 +1786,11 @@ make_zoned(const std::string& name, const local_time<Duration>& tp)
 template <class Duration>
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name, const local_time<Duration>& tp, choose c)
+#else
 make_zoned(const std::string& name, const local_time<Duration>& tp, choose c)
+#endif
 {
     return zoned_time<typename std::common_type<Duration,
                       std::chrono::seconds>::type>(name, tp, c);
@@ -1795,7 +1807,11 @@ make_zoned(TimeZonePtr zone, const zoned_time<Duration, TimeZonePtr>& zt)
 template <class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name, const zoned_time<Duration, TimeZonePtr>& zt)
+#else
 make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt)
+#endif
 {
     return zoned_time<Duration, TimeZonePtr>(name, zt);
 }
@@ -1811,7 +1827,11 @@ make_zoned(TimeZonePtr zone, const zoned_time<Duration, TimeZonePtr>& zt, choose
 template <class Duration, class TimeZonePtr>
 inline
 zoned_time<Duration, TimeZonePtr>
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name, const zoned_time<Duration, TimeZonePtr>& zt, choose c)
+#else
 make_zoned(const std::string& name, const zoned_time<Duration, TimeZonePtr>& zt, choose c)
+#endif
 {
     return zoned_time<Duration, TimeZonePtr>(name, zt, c);
 }
@@ -1837,7 +1857,11 @@ make_zoned(TimeZonePtr zone, const sys_time<Duration>& st)
 template <class Duration>
 inline
 zoned_time<typename std::common_type<Duration, std::chrono::seconds>::type>
+#if HAS_STRING_VIEW
+make_zoned(std::string_view name, const sys_time<Duration>& st)
+#else
 make_zoned(const std::string& name, const sys_time<Duration>& st)
+#endif
 {
     return zoned_time<typename std::common_type<Duration,
                       std::chrono::seconds>::type>(name, st);
