@@ -8036,15 +8036,25 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
     using detail::round_i;
-    std::chrono::minutes offset_local{};
-    auto offptr = offset ? offset : &offset_local;
+    std::chrono::minutes offset_local = std::chrono::minutes::min();
     fields<CT> fds{};
     fds.has_tod = true;
-    date::from_stream(is, fmt, fds, abbrev, offptr);
+    date::from_stream(is, fmt, fds, abbrev, &offset_local);
     if (!fds.ymd.ok() || !fds.tod.in_conventional_range())
         is.setstate(std::ios::failbit);
     if (!is.fail())
-        tp = round_i<Duration>(sys_days(fds.ymd) - *offptr + fds.tod.to_duration());
+    {
+        if (offset_local != std::chrono::minutes::min())
+        {
+            tp = round_i<Duration>(sys_days(fds.ymd) - offset_local + fds.tod.to_duration());
+            if (offset != nullptr)
+                *offset = offset_local;
+        }
+        else
+        {
+            tp = round_i<Duration>(sys_days(fds.ymd) + fds.tod.to_duration());
+        }
+    }
     return is;
 }
 
