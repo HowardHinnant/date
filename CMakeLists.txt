@@ -11,7 +11,8 @@
      )
      FetchContent_MakeAvailable(date_src)
      ...
-     target_link_libraries (my_target PRIVATE date::date)
+     target_link_libraries (my_target PRIVATE date::date date::date-tz)
+     
 
 #]===================================================================]
 
