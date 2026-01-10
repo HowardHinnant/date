@@ -2919,7 +2919,8 @@ get_version()
         in >> version;
         return version;
     }
-    return "unknown";
+    version = "unknown";
+    return version;
 }
 
 static
