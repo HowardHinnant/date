@@ -5089,8 +5089,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (os.fail())
                         return os;
 #if !ONLY_C_LOCALE
-                    const CharT f[] = {'%', *fmt};
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else  // ONLY_C_LOCALE
                     os << weekday_names().first[tm.tm_wday+7*(*fmt == 'a')];
 #endif  // ONLY_C_LOCALE
@@ -5114,8 +5113,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     tm.tm_mon = static_cast<int>(extract_month(os, fds)) - 1;
 #if !ONLY_C_LOCALE
-                    const CharT f[] = {'%', *fmt};
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else  // ONLY_C_LOCALE
                     os << month_names().first[tm.tm_mon+12*(*fmt != 'B')];
 #endif  // ONLY_C_LOCALE
@@ -5159,12 +5157,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (os.fail())
                         return os;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
-                    CharT f[3] = {'%'};
-                    auto fe = std::begin(f) + 1;
-                    if (modified == CharT{'E'})
-                        *fe++ = modified;
-                    *fe++ = *fmt;
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), fe);
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else  // ONLY_C_LOCALE
                     if (*fmt == 'c')
                     {
@@ -5234,8 +5227,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     else if (modified == CharT{'E'})
                     {
                         tm.tm_year = y - 1900;
-                        CharT f[3] = {'%', 'E', 'C'};
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5273,8 +5265,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     else if (modified == CharT{'O'})
                     {
                         tm.tm_mday = d;
-                        CharT f[3] = {'%', 'O', *fmt};
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5404,9 +5395,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_hour = static_cast<int>(hms.hours().count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5476,9 +5466,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_mon = static_cast<int>(m-1);
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5513,9 +5502,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_min = static_cast<int>(fds.tod.minutes().count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5548,9 +5536,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
 #if !ONLY_C_LOCALE
-                    const CharT f[] = {'%', *fmt};
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else
                     if (date::is_am(fds.tod.hours()))
                         os << ampm_names().first[0];
@@ -5600,11 +5587,10 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
 #if !ONLY_C_LOCALE
-                    const CharT f[] = {'%', *fmt};
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
                     tm.tm_min = static_cast<int>(fds.tod.minutes().count());
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else
                     hh_mm_ss<seconds> tod(duration_cast<seconds>(fds.tod.to_duration()));
                     save_ostream<CharT, Traits> _(os);
@@ -5678,9 +5664,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_sec = static_cast<int>(fds.tod.s_.seconds().count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5741,9 +5726,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_wday = static_cast<int>(wd);
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5782,13 +5766,12 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
  #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_year = static_cast<int>(ymd.year()) - 1900;
                         tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
                         if (os.fail())
                             return os;
                         tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5829,14 +5812,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         auto const& ymd = fds.ymd;
                         tm.tm_year = static_cast<int>(ymd.year()) - 1900;
                         tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
                         if (os.fail())
                             return os;
                         tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5863,9 +5845,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                 else if (modified == CharT{'O'})
                 {
-                    const CharT f[] = {'%', modified, *fmt};
                     tm.tm_wday = static_cast<int>(wd);
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
                 }
 #endif
                 else
@@ -5907,13 +5888,12 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'O'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_year = static_cast<int>(ymd.year()) - 1900;
                         tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
                         if (os.fail())
                             return os;
                         tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
@@ -5937,12 +5917,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
                     tm.tm_min = static_cast<int>(fds.tod.minutes().count());
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
-                    CharT f[3] = {'%'};
-                    auto fe = std::begin(f) + 1;
-                    if (modified == CharT{'E'})
-                        *fe++ = modified;
-                    *fe++ = *fmt;
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), fe);
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
 #else
                     os << fds.tod;
 #endif
@@ -5971,9 +5946,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 }
                 else
                 {
-                    const CharT f[] = {'%', modified, *fmt};
                     tm.tm_year = y - 1900;
-                    facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                    facet.put(os, os, os.fill(), &tm, *fmt, modified);
                 }
 #endif
                 modified = CharT{};
@@ -6003,9 +5977,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #if !ONLY_C_LOCALE
                     else if (modified == CharT{'E'})
                     {
-                        const CharT f[] = {'%', modified, *fmt};
                         tm.tm_year = static_cast<int>(y) - 1900;
-                        facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
+                        facet.put(os, os, os.fill(), &tm, *fmt, modified);
                     }
 #endif
                 }
