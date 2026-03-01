@@ -2,7 +2,7 @@ wsjcpp_version: "v0.1.1"
 cmake_minimum_required: "3.0"
 cmake_cxx_standard: "11"
 name: "HowardHinnant/date"
-version: "v2.4.1"
+version: "v3.0.4"
 description: "DateTime Utils"
 issues: "https://github.com/HowardHinnant/date/issues"
 keywords:
