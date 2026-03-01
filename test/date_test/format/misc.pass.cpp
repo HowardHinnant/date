@@ -29,12 +29,11 @@ void
 test(const std::string& in_fmt, const std::string& input,
      const std::string& out_fmt, const std::string& output)
 {
-    using namespace date;
     std::istringstream in{input};
     T t;
     in >> parse(in_fmt, t);
     assert(!in.fail());
-    auto s = format(out_fmt, t);
+    auto s = date::format(out_fmt, t);
     assert(s == output);
 }
 

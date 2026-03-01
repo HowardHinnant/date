@@ -33,15 +33,15 @@
 // private:
 //     std::chrono::seconds s_;
 //     precision            sub_s_;
-// 
+//
 // public:
 //     constexpr explicit decimal_format_seconds(const Duration& d) noexcept;
-// 
+//
 //     constexpr std::chrono::seconds& seconds() noexcept;
 //     constexpr std::chrono::seconds seconds() const noexcept;
 //     constexpr precision subseconds() const noexcept;
 //     constexpr precision to_duration() const noexcept;
-// 
+//
 //     template <class CharT, class Traits>
 //     friend
 //     std::basic_ostream<CharT, Traits>&

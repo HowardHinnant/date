@@ -90,6 +90,7 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::year;
 
     static_assert(year{2015} == 2015_y, "");
     static_assert(year{2015} != 2016_y, "");

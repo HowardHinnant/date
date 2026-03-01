@@ -46,8 +46,14 @@ fi
 
 if [ -z "$CXX_LANG" ]
 then
-    CXX_LANG=c++14
+    CXX_LANG=c++17
 fi
+
+if expr "$CXX" : ".*g++" >/dev/null
+then
+	OPTIONS="$OPTIONS -pthread"
+fi
+
 OPTIONS="-std=${CXX_LANG} $OPTIONS -I$ROOT -Wall $ROOT/src/tz.cpp -lcurl"
 
 echo $ROOT

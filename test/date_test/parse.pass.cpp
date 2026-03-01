@@ -204,6 +204,13 @@ test_c()
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{14} + minutes{2} + seconds{43});
     }
+    {
+        // can't parse negative years with "%c" directly
+        std::istringstream in{"Sun Dec 11 14:02:43 -2016"};
+        sys_seconds tp;
+        in >> parse("%c", tp);
+        assert(in.fail());
+    }
 }
 
 void
@@ -363,6 +370,30 @@ test_d()
         assert(tp == 2016_y/12/9);
     }
     {
+        std::istringstream in{"2016 +9 12"};
+        sys_days tp;
+        in >> parse("%Y %d %m", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016 +9 12"};
+        sys_days tp;
+        in >> parse("%Y %e %m", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016 -9 12"};
+        sys_days tp;
+        in >> parse("%Y %d %m", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016 -9 12"};
+        sys_days tp;
+        in >> parse("%Y %e %m", tp);
+        assert(in.fail());
+    }
+    {
         std::istringstream in{"2016 31 11"};
         sys_days tp;
         in >> parse("%Y %e %m", tp);
@@ -390,6 +421,7 @@ test_F()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::year_month_day;
     {
         std::istringstream in{"2016-12-13"};
         sys_days tp;
@@ -400,7 +432,7 @@ test_F()
     }
     {
         std::istringstream in{"2016-12-13"};
-        year_month_day tp;
+        year_month_day tp{};
         in >> parse("%F", tp);
         assert(!in.fail());
         assert(!in.bad());
@@ -413,6 +445,7 @@ test_H()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 15"};
         sys_time<hours> tp;
@@ -434,6 +467,7 @@ test_Ip()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 1 pm"};
         sys_time<hours> tp;
@@ -452,6 +486,12 @@ test_Ip()
     }
     {
         std::istringstream in{"2016-12-11 13 am"};
+        sys_time<hours> tp;
+        in >> parse("%F %I %p", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-11 +1 pm"};
         sys_time<hours> tp;
         in >> parse("%F %I %p", tp);
         assert(in.fail());
@@ -500,6 +540,12 @@ test_m()
         in >> parse("%Y %d %m", tp);
         assert(in.fail());
     }
+    {
+        std::istringstream in{"2016-12-+3"};
+        sys_days tp;
+        in >> parse("%Y-%d-%m", tp);
+        assert(in.fail());
+    }
 }
 
 void
@@ -507,6 +553,7 @@ test_M()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 15"};
         sys_time<minutes> tp;
@@ -528,6 +575,7 @@ test_S()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 15"};
         sys_seconds tp;
@@ -557,6 +605,7 @@ test_T()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 15:43:22"};
         sys_seconds tp;
@@ -615,6 +664,7 @@ test_p()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time;
     {
         std::istringstream in{"2016-12-11 11pm"};
         sys_time<hours> tp;
@@ -622,6 +672,21 @@ test_p()
         assert(!in.fail());
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/11} + hours{23});
+    }
+    {
+        std::istringstream in{"1986-12-01 01:01:01 pm"};
+        sys_time<seconds> tp;
+        in >> parse("%Y-%m-%d %I:%M:%S %p", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == sys_days{1986_y/12/01} + hours{13} + minutes{01} + seconds{01});
+    }
+    {
+        std::istringstream in{"1986-12-01 01:01:01"};
+        sys_time<seconds> tp;
+        in >> parse("%Y-%m-%d %I:%M:%S", tp);
+        // The test will fail because %I needs the %p option to shows if it is AM or PM
+        assert(in.fail());
     }
 }
 
@@ -729,6 +794,7 @@ test_z()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::local_seconds, date::local_days;
     {
         std::istringstream in{"2016-12-26 15:53:22 -0500"};
         sys_seconds tp;
@@ -753,6 +819,30 @@ test_z()
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26} + hours{20} + minutes{53} + seconds{22});
     }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 -+500"};
+        sys_seconds tp;
+        in >> parse("%F %T %z", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 -+500"};
+        sys_seconds tp;
+        in >> parse("%F %T %Ez", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 --500"};
+        sys_seconds tp;
+        in >> parse("%F %T %z", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 --500"};
+        sys_seconds tp;
+        in >> parse("%F %T %Ez", tp);
+        assert(in.fail());
+    }
 }
 
 void
@@ -760,6 +850,7 @@ test_Z()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::local_seconds, date::local_days;
     {
         std::string a;
         std::istringstream in{"2016-12-26 15:53:22 word"};

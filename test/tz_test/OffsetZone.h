@@ -42,7 +42,7 @@ public:
         {
             using namespace date;
             using namespace std::chrono;
-            using LT = local_time<std::common_type_t<Duration, minutes>>;
+            using LT = date::local_time<std::common_type_t<Duration, minutes>>;
             return LT{(tp + offset_).time_since_epoch()};
         }
 
@@ -52,7 +52,7 @@ public:
         {
             using namespace date;
             using namespace std::chrono;
-            using ST = sys_time<std::common_type_t<Duration, minutes>>;
+            using ST = date::sys_time<std::common_type_t<Duration, minutes>>;
             return ST{(tp - offset_).time_since_epoch()};
         }
 

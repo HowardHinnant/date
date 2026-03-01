@@ -83,10 +83,11 @@ main()
     constexpr ConvertibleToMonths custom_month;
     constexpr ConvertibleToYears custom_year;
     constexpr ConvertibleToYearsAndMonths prefer_year;
-    
+
+    using date::last;
 
     {
-       constexpr year_month ym = 2001_y/feb;
+       constexpr date::year_month ym = 2001_y/feb;
        CPP14_ASSERT(ym + one_month == 2001_y/mar);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar);
@@ -97,7 +98,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += one_month);
        CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan);
        NOEXCEPT_ASSERT(copy(ym) -= one_month);
-      
+
        CPP11_ASSERT(ym + one_year == 2002_y/feb);
        NOEXCEPT_ASSERT(ym + one_year);
        CPP11_ASSERT(one_year + ym == 2002_y/feb);
@@ -141,7 +142,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += custom_month);
        CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan);
        NOEXCEPT_ASSERT(copy(ym) -= custom_month);
-      
+
        CPP11_ASSERT(ym + custom_year == 2002_y/feb);
        NOEXCEPT_ASSERT(ym + custom_year);
        CPP11_ASSERT(custom_year + ym == 2002_y/feb);
@@ -166,7 +167,7 @@ main()
     }
 
     {
-       constexpr year_month_day ym = 2001_y/feb/10;
+       constexpr date::year_month_day ym = 2001_y/feb/10;
        CPP14_ASSERT(ym + one_month == 2001_y/mar/10);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/10);
@@ -177,7 +178,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += one_month);
        CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/10);
        NOEXCEPT_ASSERT(copy(ym) -= one_month);
-      
+
        CPP11_ASSERT(ym + one_year == 2002_y/feb/10);
        NOEXCEPT_ASSERT(ym + one_year);
        CPP11_ASSERT(one_year + ym == 2002_y/feb/10);
@@ -221,7 +222,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += custom_month);
        CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/10);
        NOEXCEPT_ASSERT(copy(ym) -= custom_month);
-      
+
        CPP11_ASSERT(ym + custom_year == 2002_y/feb/10);
        NOEXCEPT_ASSERT(ym + custom_year);
        CPP11_ASSERT(custom_year + ym == 2002_y/feb/10);
@@ -246,7 +247,7 @@ main()
     }
 
     {
-       constexpr year_month_day_last ym = 2001_y/feb/last;
+       constexpr date::year_month_day_last ym = 2001_y/feb/last;
        CPP14_ASSERT(ym + one_month == 2001_y/mar/last);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/last);
@@ -257,7 +258,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += one_month);
        CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/last);
        NOEXCEPT_ASSERT(copy(ym) -= one_month);
-      
+
        CPP11_ASSERT(ym + one_year == 2002_y/feb/last);
        NOEXCEPT_ASSERT(ym + one_year);
        CPP11_ASSERT(one_year + ym == 2002_y/feb/last);
@@ -301,7 +302,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += custom_month);
        CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/last);
        NOEXCEPT_ASSERT(copy(ym) -= custom_month);
-      
+
        CPP11_ASSERT(ym + custom_year == 2002_y/feb/last);
        NOEXCEPT_ASSERT(ym + custom_year);
        CPP11_ASSERT(custom_year + ym == 2002_y/feb/last);
@@ -326,7 +327,7 @@ main()
     }
 
     {
-       constexpr year_month_weekday ym = 2001_y/feb/fri[4];
+       constexpr date::year_month_weekday ym = 2001_y/feb/fri[4];
        CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[4]);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[4]);
@@ -337,7 +338,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += one_month);
        CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/fri[4]);
        NOEXCEPT_ASSERT(copy(ym) -= one_month);
-      
+
        CPP11_ASSERT(ym + one_year == 2002_y/feb/fri[4]);
        NOEXCEPT_ASSERT(ym + one_year);
        CPP11_ASSERT(one_year + ym == 2002_y/feb/fri[4]);
@@ -381,7 +382,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += custom_month);
        CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/fri[4]);
        NOEXCEPT_ASSERT(copy(ym) -= custom_month);
-      
+
        CPP11_ASSERT(ym + custom_year == 2002_y/feb/fri[4]);
        NOEXCEPT_ASSERT(ym + custom_year);
        CPP11_ASSERT(custom_year + ym == 2002_y/feb/fri[4]);
@@ -406,7 +407,7 @@ main()
     }
 
     {
-       constexpr year_month_weekday_last ym = 2001_y/feb/fri[last];
+       constexpr date::year_month_weekday_last ym = 2001_y/feb/fri[last];
        CPP14_ASSERT(ym + one_month == 2001_y/mar/fri[last]);
        NOEXCEPT_ASSERT(ym + one_month);
        CPP14_ASSERT(one_month + ym == 2001_y/mar/fri[last]);
@@ -417,7 +418,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += one_month);
        CPP14_ASSERT((copy(ym) -= one_month) == 2001_y/jan/fri[last]);
        NOEXCEPT_ASSERT(copy(ym) -= one_month);
-      
+
        CPP11_ASSERT(ym + one_year == 2002_y/feb/fri[last]);
        NOEXCEPT_ASSERT(ym + one_year);
        CPP11_ASSERT(one_year + ym == 2002_y/feb/fri[last]);
@@ -461,7 +462,7 @@ main()
        NOEXCEPT_ASSERT(copy(ym) += custom_month);
        CPP14_ASSERT((copy(ym) -= custom_month) == 2001_y/jan/fri[last]);
        NOEXCEPT_ASSERT(copy(ym) -= custom_month);
-      
+
        CPP11_ASSERT(ym + custom_year == 2002_y/feb/fri[last]);
        NOEXCEPT_ASSERT(ym + custom_year);
        CPP11_ASSERT(custom_year + ym == 2002_y/feb/fri[last]);

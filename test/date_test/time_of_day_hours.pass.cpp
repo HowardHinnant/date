@@ -79,16 +79,16 @@ main()
     static_assert(t1.to_duration() == hours{13}, "");
 #endif
 
-    auto t2 = t1;
+    const auto t2 = t1;
     assert(t2.hours() == t1.hours());
     assert(t2.to_duration() == t1.to_duration());
     ostringstream os;
     os << t2;
     assert(os.str() == "13:00:00");
-    auto h = make12(t2.hours());
+    auto h = date::make12(t2.hours());
     os.str("");
     assert(h == hours{1});
     assert(t2.to_duration() == t1.to_duration());
-    assert(!is_am(t2.hours()));
-    assert(is_pm(t2.hours()));
+    assert(!date::is_am(t2.hours()));
+    assert(date::is_pm(t2.hours()));
 }

@@ -46,19 +46,19 @@ int
 main()
 {
     using namespace date::detail;
-    static_assert(width<0>::value == 0, "");
-    static_assert(width<1>::value == 0, "");
-    static_assert(width<2>::value == 1, "");
-    static_assert(width<3>::value == 19, "");
-    static_assert(width<4>::value == 2, "");
-    static_assert(width<5>::value == 1, "");
-    static_assert(width<6>::value == 19, "");
-    static_assert(width<7>::value == 19, "");
-    static_assert(width<8>::value == 3, "");
-    static_assert(width<9>::value == 19, "");
-    static_assert(width<10>::value == 1, "");
-    static_assert(width<100>::value == 2, "");
-    static_assert(width<1000>::value == 3, "");
-    static_assert(width<10000>::value == 4, "");
-    static_assert(width<625>::value == 4, "");
+    static_assert(width<0, 1>::value == 0, "");
+    static_assert(width<1, 1>::value == 0, "");
+    static_assert(width<1, 2>::value == 1, "");
+    static_assert(width<1, 3>::value == 19, "");
+    static_assert(width<1, 4>::value == 2, "");
+    static_assert(width<1, 5>::value == 1, "");
+    static_assert(width<1, 6>::value == 19, "");
+    static_assert(width<1, 7>::value == 19, "");
+    static_assert(width<1, 8>::value == 3, "");
+    static_assert(width<1, 9>::value == 19, "");
+    static_assert(width<1, 10>::value == 1, "");
+    static_assert(width<1, 100>::value == 2, "");
+    static_assert(width<1, 1000>::value == 3, "");
+    static_assert(width<1, 10000>::value == 4, "");
+    static_assert(width<756, 625>::value == 4, "");
 }

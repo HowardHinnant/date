@@ -34,6 +34,7 @@ void testDeductionFrom(Source&& s)
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time, date::local_days, date::local_time;
 
     // No time point
     {
@@ -148,13 +149,14 @@ main()
 {
     using namespace date;
     using namespace std::chrono;
+    using date::sys_time, date::local_days, date::local_time;
 
 #if HAS_DEDUCTION_GUIDES
     //  no arguments
     {
         zoned_time zt{};
         static_assert(std::is_same<decltype(zt), zoned_time<seconds>>::value, "");
-    } 
+    }
 
     // zoned_time
     {

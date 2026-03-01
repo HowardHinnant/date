@@ -792,8 +792,8 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const year_month_weekday_last&
 inline namespace literals
 {
 
-CONSTCD11 solar_hijri::day  operator "" _d(unsigned long long d) NOEXCEPT;
-CONSTCD11 solar_hijri::year operator "" _y(unsigned long long y) NOEXCEPT;
+CONSTCD11 solar_hijri::day  operator ""_d(unsigned long long d) NOEXCEPT;
+CONSTCD11 solar_hijri::year operator ""_y(unsigned long long y) NOEXCEPT;
 
 }  // inline namespace literals
 #endif // !defined(_MSC_VER) || (_MSC_VER >= 1900)
@@ -1364,7 +1364,7 @@ inline namespace literals
 CONSTCD11
 inline
 solar_hijri::day
-operator "" _d(unsigned long long d) NOEXCEPT
+operator ""_d(unsigned long long d) NOEXCEPT
 {
     return solar_hijri::day{static_cast<unsigned>(d)};
 }
@@ -1372,7 +1372,7 @@ operator "" _d(unsigned long long d) NOEXCEPT
 CONSTCD11
 inline
 solar_hijri::year
-operator "" _y(unsigned long long y) NOEXCEPT
+operator ""_y(unsigned long long y) NOEXCEPT
 {
     return solar_hijri::year(static_cast<int>(y));
 }
@@ -1707,9 +1707,13 @@ inline
 bool
 month_day::ok() const NOEXCEPT
 {
-    CONSTDATA solar_hijri::day d[] =
-        {31_d, 31_d, 31_d, 31_d, 31_d, 31_d, 30_d, 30_d, 30_d, 30_d, 30_d, 30_d};
-    return m_.ok() && 1_d <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
+    CONSTDATA solar_hijri::day d[] = {
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30)
+    };
+    return m_.ok() && solar_hijri::day(1) <= d_ && d_ <= d[static_cast<unsigned>(m_)-1];
 }
 
 CONSTCD11
@@ -1998,10 +2002,14 @@ inline
 day
 year_month_day_last::day() const NOEXCEPT
 {
-    CONSTDATA solar_hijri::day d[] =
-        {31_d, 31_d, 31_d, 31_d, 31_d, 31_d, 30_d, 30_d, 30_d, 30_d, 30_d, 29_d};
+    CONSTDATA solar_hijri::day d[] = {
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(31), solar_hijri::day(31), solar_hijri::day(31),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30),
+        solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(29)
+    };
     return month() != esf || !y_.is_leap() ?
-        d[static_cast<unsigned>(month())-1] : 30_d;
+        d[static_cast<unsigned>(month()) - 1] : solar_hijri::day(30);
 }
 
 CONSTCD14
@@ -2260,7 +2268,7 @@ year_month_day::ok() const NOEXCEPT
 {
     if (!(y_.ok() && m_.ok()))
         return false;
-    return 1_d <= d_ && d_ <= (y_/m_/last).day();
+    return solar_hijri::day(1) <= d_ && d_ <= (y_/m_/last).day();
 }
 
 CONSTCD11

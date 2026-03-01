@@ -9,7 +9,7 @@ test_info(const date::time_zone* zone, const date::sys_info& info)
     auto begin = info.begin;
     auto end = info.end - microseconds{1};
     auto mid = begin + (end - begin) /2;
-    using sys_microseconds = sys_time<microseconds>;
+    using sys_microseconds = date::sys_time<microseconds>;
     using zoned_microseconds = zoned_time<microseconds>;
     zoned_microseconds local{zone};
 
@@ -106,7 +106,7 @@ tzmain()
     {
         std::cout << name << '\n';
         auto z = locate_zone(name);
-        auto begin = sys_days(jan/1/year::min()) + seconds{0};
+        auto begin = sys_days(jan/1/date::year::min()) + seconds{0};
         auto end   = sys_days(jan/1/2035) + seconds{0};
         auto info = z->get_info(begin);
         std::cout << "Initially:           ";
@@ -130,7 +130,7 @@ tzmain()
                     info.save == prev_save)
                 continue;
             auto dp = floor<days>(begin);
-            auto ymd = year_month_day(dp);
+            auto ymd = date::year_month_day(dp);
             auto time = make_time(begin - dp);
             std::cout << ymd << ' ' << time << "Z ";
             if (info.offset >= seconds{0})
