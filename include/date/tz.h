@@ -2013,18 +2013,23 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
-          const utc_time<Duration>& t, const std::chrono::seconds &offset)
+          const utc_time<Duration>& t, const std::string* abbrev,
+          const std::chrono::seconds* offset_sec)
 {
     using std::chrono::seconds;
     using CT = typename std::common_type<Duration, seconds>::type;
     auto ls = is_leap_second(t);
-    auto tp = sys_time<CT>{t.time_since_epoch() - ls.second + offset};
+    auto new_duration = t.time_since_epoch() - ls.second;
+    if (offset_sec) {
+        new_duration += *offset_sec;
+    }
+    auto tp = sys_time<CT>{new_duration};
     auto const sd = floor<days>(tp);
     year_month_day ymd = sd;
     auto time = make_time(tp - sys_seconds{sd});
     time.seconds(detail::undocumented{}) += seconds{ls.first};
     fields<CT> fds{ymd, time};
-    return to_stream(os, fmt, fds, nullptr, &offset);
+    return to_stream(os, fmt, fds, abbrev, offset_sec);
 }
 
 template <class CharT, class Traits, class Duration>
