@@ -15,7 +15,7 @@
 
 #]===================================================================]
 
-cmake_minimum_required( VERSION 3.7 )
+cmake_minimum_required( VERSION 3.23 )
 
 project( date VERSION 3.0.4 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
@@ -69,16 +69,13 @@ print_option( DISABLE_STRING_VIEW )
 #]===================================================================]
 add_library( date INTERFACE )
 add_library( date::date ALIAS date )
-target_include_directories( date INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
-# adding header sources just helps IDEs
-target_sources( date INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/date.h
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/solar_hijri.h
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/islamic.h
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/iso_week.h
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/julian.h
+target_sources(date
+    PUBLIC FILE_SET HEADERS BASE_DIRS "include" FILES
+    "include/date/date.h"
+    "include/date/solar_hijri.h"
+    "include/date/islamic.h"
+    "include/date/iso_week.h"
+    "include/date/julian.h"
 )
 
 set( APPLE_MOBILE_PLATFORM FALSE )
@@ -90,19 +87,6 @@ if ( IOS
    )
     set( APPLE_MOBILE_PLATFORM TRUE )
 endif()
-
-set(TARGET_HEADERS
-    include/date/date.h
-    include/date/solar_hijri.h
-    include/date/islamic.h
-    include/date/iso_week.h
-    include/date/julian.h
-)
-
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
-    # public headers will get installed:
-    set_target_properties( date PROPERTIES PUBLIC_HEADER "${TARGET_HEADERS}" )
-endif ()
 
 # These used to be set with generator expressions,
 #
@@ -132,23 +116,20 @@ if( BUILD_TZ_LIB )
     add_library( date-tz )
     target_compile_definitions( date-tz PRIVATE BUILD_TZ_LIB=1 )
     target_sources( date-tz
-      PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/tz.h
+      PUBLIC FILE_SET HEADERS BASE_DIRS "include" FILES
+        include/date/tz.h
       PRIVATE
         include/date/tz_private.h
         src/tz.cpp )
     if ( APPLE_MOBILE_PLATFORM )
       target_sources( date-tz
-        PUBLIC
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/date/ios.h
+        PUBLIC FILE_SET HEADERS BASE_DIRS "include" FILES
+          include/date/ios.h
         PRIVATE
           src/ios.mm )
     endif()
     add_library( date::date-tz ALIAS date-tz )
     target_link_libraries( date-tz PUBLIC date )
-    target_include_directories( date-tz PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
     if ( USE_SYSTEM_TZ_DB OR MANUAL_TZ_DB )
       target_compile_definitions( date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0 )
@@ -166,14 +147,8 @@ if( BUILD_TZ_LIB )
       target_compile_definitions( date-tz PUBLIC DATE_BUILD_DLL=1 )
     endif()
 
-    set(TZ_HEADERS include/date/tz.h)
-
-    if( APPLE_MOBILE_PLATFORM )
-        list(APPEND TZ_HEADERS include/date/ios.h)
-    endif( )
     set_target_properties( date-tz PROPERTIES
         POSITION_INDEPENDENT_CODE ON
-        PUBLIC_HEADER "${TZ_HEADERS}"
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${ABI_VERSION}" )
     if( NOT MSVC )
@@ -199,21 +174,13 @@ if( ENABLE_DATE_INSTALL )
 
   install( TARGETS date
       EXPORT dateConfig
-      PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
+      FILE_SET HEADERS)
   export( TARGETS date NAMESPACE date:: FILE dateTargets.cmake )
-  if (CMAKE_VERSION VERSION_LESS 3.15)
-      install(
-          FILES ${TARGET_HEADERS}
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date )
-  endif ()
 
   if( BUILD_TZ_LIB )
       install( TARGETS date-tz
           EXPORT dateConfig
-          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/date
-          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )  # This is for Windows
+          FILE_SET HEADERS)
       export( TARGETS date-tz NAMESPACE date:: APPEND FILE dateTargets.cmake )
   endif( )
 
