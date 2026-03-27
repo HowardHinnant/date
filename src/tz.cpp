@@ -3422,50 +3422,13 @@ move_file(const std::string& from, const std::string& to)
 #    endif // !USE_SHELL_API
 }
 
-// Usually something like "c:\Program Files".
-static
-std::string
-get_program_folder()
-{
-    return get_known_folder(FOLDERID_ProgramFiles);
-}
-
-// Note folder can and usually does contain spaces.
+// Note folder can contain spaces.
 static
 std::string
 get_unzip_program()
 {
-    std::string path;
-
-    // 7-Zip appears to note its location in the registry.
-    // If that doesn't work, fall through and take a guess, but it will likely be wrong.
-    HKEY hKey = nullptr;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\7-Zip", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-    {
-        char value_buffer[MAX_PATH + 1]; // fyi 260 at time of writing.
-        // in/out parameter. Documentation say that size is a count of bytes not chars.
-        DWORD size = sizeof(value_buffer) - sizeof(value_buffer[0]);
-        DWORD tzi_type = REG_SZ;
-        // Testing shows Path key value is "C:\Program Files\7-Zip\" i.e. always with trailing \.
-        bool got_value = (RegQueryValueExA(hKey, "Path", nullptr, &tzi_type,
-            reinterpret_cast<LPBYTE>(value_buffer), &size) == ERROR_SUCCESS);
-        RegCloseKey(hKey); // Close now incase of throw later.
-        if (got_value)
-        {
-            // Function does not guarantee to null terminate.
-            value_buffer[size / sizeof(value_buffer[0])] = '\0';
-            path = value_buffer;
-            if (!path.empty())
-            {
-                path += "7z.exe";
-                return path;
-            }
-        }
-    }
-    path += get_program_folder();
-    path += folder_delimiter;
-    path += "7-Zip\\7z.exe";
-    return path;
+    // tar should be available in windows since 2017 - https://techcommunity.microsoft.com/blog/containers/tar-and-curl-come-to-windows/382409
+    return get_known_folder(FOLDERID_System) + "\\tar.exe";
 }
 
 #    if !USE_SHELL_API
@@ -3499,35 +3462,19 @@ run_program(const std::string& command)
 #    endif // !USE_SHELL_API
 
 static
-std::string
-get_download_tar_file(const std::string& version)
-{
-    auto file = get_install();
-    file += folder_delimiter;
-    file += "tzdata";
-    file += version;
-    file += ".tar";
-    return file;
-}
-
-static
 bool
 extract_gz_file(const std::string& version, const std::string& gz_file,
                 const std::string& dest_folder)
 {
     auto unzip_prog = get_unzip_program();
     bool unzip_result = false;
-    // Use the unzip program to extract the tar file from the archive.
-
-    // Aim to create a string like:
-    // "C:\Program Files\7-Zip\7z.exe" x "C:\Users\SomeUser\Downloads\tzdata2016d.tar.gz"
-    //     -o"C:\Users\SomeUser\Downloads\tzdata"
+    
     std::string cmd;
     cmd = '\"';
     cmd += unzip_prog;
-    cmd += "\" x \"";
+    cmd += "\" xf \"";
     cmd += gz_file;
-    cmd += "\" -o\"";
+    cmd += "\" -C \"";
     cmd += dest_folder;
     cmd += '\"';
 
@@ -3545,28 +3492,6 @@ extract_gz_file(const std::string& version, const std::string& gz_file,
 #    endif // !USE_SHELL_API
     if (unzip_result)
         delete_file(gz_file);
-
-    // Use the unzip program extract the data from the tar file that was
-    // just extracted from the archive.
-    auto tar_file = get_download_tar_file(version);
-    cmd = '\"';
-    cmd += unzip_prog;
-    cmd += "\" x \"";
-    cmd += tar_file;
-    cmd += "\" -o\"";
-    cmd += get_install();
-    cmd += '\"';
-#    if USE_SHELL_API
-    cmd = "\"" + cmd + "\"";
-    if (std::system(cmd.c_str()) == EXIT_SUCCESS)
-        unzip_result = true;
-#    else  // !USE_SHELL_API
-    if (run_program(cmd) == EXIT_SUCCESS)
-        unzip_result = true;
-#    endif // !USE_SHELL_API
-
-    if (unzip_result)
-        delete_file(tar_file);
 
     return unzip_result;
 }
