@@ -8047,7 +8047,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
     {
         if (offset_local != std::chrono::minutes::min())
         {
-            tp = round_i<Duration>(sys_days(fds.ymd) - offset_local + fds.tod.to_duration());
+            tp = round_i<Duration>(sys_days(fds.ymd) + fds.tod.to_duration() - offset_local);
             if (offset != nullptr)
                 *offset = offset_local;
         }
