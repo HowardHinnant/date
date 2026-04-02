@@ -184,6 +184,12 @@ if( BUILD_TZ_LIB )
         find_package( CURL REQUIRED )
         target_link_libraries( date-tz PRIVATE CURL::libcurl )
     endif( )
+
+    if ( DISABLE_STRING_VIEW )
+        target_compile_definitions( date-tz INTERFACE HAS_STRING_VIEW=0 )
+    else()
+        target_compile_definitions( date-tz INTERFACE HAS_STRING_VIEW=1 )
+    endif()
 endif( )
 
 #[===================================================================[
