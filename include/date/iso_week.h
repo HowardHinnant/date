@@ -1514,13 +1514,13 @@ year_weeknum_weekday::from_days(days d) NOEXCEPT
 {
     const auto dp = sys_days{d};
     const auto wd = iso_week::weekday{dp};
-    auto y = date::year_month_day{dp + days{3}}.year();
-    auto start = sys_days((y - date::years{1})/date::dec/date::thu[date::last]) + (mon-thu);
-    if (dp < start)
+    auto closest_thursday = [wd, dp](sys_days tp)
     {
-        --y;
-        start = sys_days((y - date::years{1})/date::dec/date::thu[date::last]) + (mon-thu);
-    }
+        auto i = static_cast<int>(unsigned{wd});
+        return dp + days{4-i};
+    };
+    auto y = date::year_month_day{closest_thursday(dp)}.year();
+    auto start = sys_days(y/date::jan/date::thu[1]) - (thu-mon);
     const auto wn = iso_week::weeknum(
                        static_cast<unsigned>(date::trunc<weeks>(dp - start).count() + 1));
     return {iso_week::year(static_cast<int>(y)), wn, wd};
