@@ -3262,7 +3262,7 @@ remote_version()
     std::string str;
     if (download_to_string("https://www.iana.org/time-zones", str))
     {
-        CONSTDATA char db[] = "/time-zones/releases/tzdata";
+        CONSTDATA char db[] = "/time-zones/releases/";
         CONSTDATA auto db_size = sizeof(db) - 1;
         auto p = str.find(db, 0, db_size);
         const int ver_str_len = 5;
