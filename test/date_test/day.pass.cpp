@@ -140,4 +140,20 @@ main()
     os.str("");
     os << d;
     assert(os.str() == "12");
+
+    {
+        ::date::sys_time<std::chrono::milliseconds> timePoint{ std::chrono::milliseconds(0) };
+	    std::chrono::time_point<std::chrono::system_clock, ::date::days> dayPoint = ::date::floor<::date::days>(timePoint);
+	    ::date::fields<std::chrono::milliseconds> dateFields{ ::date::year_month_day{ dayPoint }, ::date::time_of_day<std::chrono::milliseconds>{ timePoint - dayPoint } };
+	    int year = (int16_t)static_cast<int>(dateFields.ymd.year());
+        assert(year == 1970);
+    }
+
+    {
+        ::date::sys_time<std::chrono::milliseconds> timePoint{ std::chrono::milliseconds(std::numeric_limits<int64_t>::min()) };
+	    std::chrono::time_point<std::chrono::system_clock, ::date::days> dayPoint = ::date::floor<::date::days>(timePoint);
+	    ::date::fields<std::chrono::milliseconds> dateFields{ ::date::year_month_day{ dayPoint }, ::date::time_of_day<std::chrono::milliseconds>{ timePoint - dayPoint } };
+	    int year = static_cast<int>(dateFields.ymd.year());
+        assert(year == -292275055);
+    }
 }
