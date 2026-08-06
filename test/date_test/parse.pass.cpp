@@ -790,6 +790,93 @@ test_GV()
 }
 
 void
+test_Y()
+{
+    using namespace date;
+    using namespace std::chrono;
+    {
+        std::istringstream in{"2026"};
+        year y;
+        in >> parse("%Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == 2026_y);
+    }
+    {
+        std::istringstream in{"32767"};
+        year y;
+        in >> parse("%Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == 3276_y);
+    }
+    {
+        std::istringstream in{"32767"};
+        year y;
+        in >> parse("%5Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == 32767_y);
+    }
+    {
+        std::istringstream in{"32768"};
+        year y{};
+        in >> parse("%5Y", y);
+        assert(in.fail());
+        assert(!in.bad());
+        assert(y == 0_y);
+    }
+    {
+        std::istringstream in{"32767"};
+        year y{};
+        in >> parse("%6Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == 32767_y);
+    }
+    {
+        std::istringstream in{"32767"};
+        year y{};
+        in >> parse("%10Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == 32767_y);
+    }
+    {
+        std::istringstream in{"32767"};
+        year y{};
+        in >> parse("%100Y", y);
+        assert( in.fail());
+        assert(!in.bad());
+        assert(y == 0_y);
+    }
+    {
+        std::istringstream in{"-32767"};
+        year y{};
+        in >> parse("%5Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == -3276_y);
+    }
+    {
+        std::istringstream in{"-32767"};
+        year y{};
+        in >> parse("%6Y", y);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(y == -32767_y);
+    }
+    {
+        std::istringstream in{"-32768"};
+        year y{};
+        in >> parse("%6Y", y);
+        assert( in.fail());
+        assert(!in.bad());
+        assert(y == 0_y);
+    }
+}
+
+void
 test_z()
 {
     using namespace date;
@@ -987,6 +1074,7 @@ main()
     test_GV();
     test_x();
     test_X();
+    test_Y();
     test_z();
     test_Z();
     test_trailing_Z();

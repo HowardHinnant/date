@@ -7636,8 +7636,14 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     if (width == -1 && modified == CharT{} && '0' <= *fmt && *fmt <= '9')
                     {
                         width = static_cast<char>(*fmt) - '0';
-                        while ('0' <= fmt[1] && fmt[1] <= '9')
+                        if ('0' <= fmt[1] && fmt[1] <= '9')
+                        {
                             width = 10*width + static_cast<char>(*++fmt) - '0';
+                            if ('0' <= fmt[1] && fmt[1] <= '9')
+                            {
+                                is.setstate(ios::failbit);
+                            }
+                        }
                     }
                     else
                     {
