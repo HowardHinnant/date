@@ -7637,7 +7637,12 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         width = static_cast<char>(*fmt) - '0';
                         while ('0' <= fmt[1] && fmt[1] <= '9')
-                            width = 10*width + static_cast<char>(*++fmt) - '0';
+                        {
+                            const int digit = static_cast<char>(*++fmt) - '0';
+                            if (width > (numeric_limits<int>::max() - digit) / 10)
+                                break;
+                            width = 10*width + digit;
+                        }
                     }
                     else
                     {
