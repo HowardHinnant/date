@@ -8005,13 +8005,14 @@ All <code>from_stream</code> overloads behave as an unformatted input function. 
 overload takes a format string containing ordinary characters and flags which have special
 meaning. Each flag begins with a <code>%</code>.  Some flags can be modified by
 <code>E</code> or <code>O</code>.  During parsing each flag interprets characters as parts
-of date and time type according to the table below. Some flags can be modified by a width
-parameter which governs how many characters are parsed from the stream in interpreting the
-flag. All characters in the format string which are not represented in the table below,
-except for white space, are parsed unchanged from the stream. A white space character
-matches zero or more white space characters in the input stream. The C++ specification
-says that the parsing of month and weekday names is both locale sensitive <i>and</i> case
-insensitive. If you find this not to be the case, file a bug with your std::lib vendor.
+of date and time type according to the table below. Some flags can be modified by a
+positive width parameter which governs how many characters are parsed from the stream in
+interpreting the flag.  If the width is more than 2 digits, failbit will be set. All
+characters in the format string which are not represented in the table below, except for
+white space, are parsed unchanged from the stream. A white space character matches zero or
+more white space characters in the input stream. The C++ specification says that the
+parsing of month and weekday names is both locale sensitive <i>and</i> case insensitive.
+If you find this not to be the case, file a bug with your std::lib vendor.
 </p>
 
 <blockquote>
