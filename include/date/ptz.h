@@ -69,7 +69,7 @@
 #include <string>
 
 #ifndef HAS_CHRONO_20
-#  if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 200100
+#  if __cplusplus <= 201703 || defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 200100
 #    define HAS_CHRONO_20 0
 #  else
 #    define HAS_CHRONO_20 1
