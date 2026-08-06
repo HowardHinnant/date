@@ -12,5 +12,3 @@ else
 	echo -ne "#!/bin/bash\nexit 0;" > ${TEST_BIN_NAME}
 fi
 chmod u+x ${TEST_BIN_NAME}
-exit 0;
-
