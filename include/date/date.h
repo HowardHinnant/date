@@ -5932,6 +5932,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    else
+                    {
 #if !ONLY_C_LOCALE
                     tm = std::tm{};
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
@@ -5946,6 +5948,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
 #else
                     os << fds.tod;
 #endif
+                    }
                 }
                 command = nullptr;
                 modified = CharT{};
