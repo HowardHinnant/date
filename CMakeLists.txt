@@ -35,6 +35,7 @@ option( MANUAL_TZ_DB "User will set TZ DB manually by invoking set_install in th
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
+option( ENABLE_FUZZ_TESTING "Build fuzz harnesses" OFF )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
 option( DISABLE_TM_ZONE "Disable support for tm::tm_zone extension" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
@@ -308,3 +309,10 @@ if( ENABLE_DATE_TESTING )
         endif( )
     endforeach( )
 endif( )
+
+#[===================================================================[
+   fuzzing
+#]===================================================================]
+if(ENABLE_FUZZ_TESTING)
+    add_subdirectory(test/fuzzing)
+endif()
