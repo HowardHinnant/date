@@ -4944,6 +4944,13 @@ ampm_names()
     return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
 }
 
+}  // namespace detail
+
+#endif  // ONLY_C_LOCALE
+
+namespace detail
+{
+
 template <class CharT, class Traits, class FwdIter>
 FwdIter
 scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
@@ -5049,8 +5056,6 @@ scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
 }
 
 }  // namespace detail
-
-#endif  // ONLY_C_LOCALE
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
@@ -7254,18 +7259,21 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         int tp = not_a_ampm;
 #if !ONLY_C_LOCALE
-                        tm = std::tm{};
-                        tm.tm_isdst = -1;
-                        tm.tm_hour = 1;
-                        ios::iostate err = ios::goodbit;
-                        f.get(is, nullptr, is, err, &tm, command, fmt+1);
-                        is.setstate(err);
-                        if (tm.tm_hour == 1)
-                            tp = 0;
-                        else if (tm.tm_hour == 13)
-                            tp = 1;
+                        const auto& time_put_f = std::use_facet<std::time_put<CharT>>(is.getloc());
+                        std::tm tm_am{}; tm_am.tm_hour = 1;
+                        std::tm tm_pm{}; tm_pm.tm_hour = 13;
+                        std::basic_ostringstream<CharT, Traits> am_os, pm_os;
+                        am_os.imbue(is.getloc());
+                        pm_os.imbue(is.getloc());
+                        const CharT p_fmt[] = {'%', 'p'};
+                        time_put_f.put(am_os, am_os, ' ', &tm_am, p_fmt, p_fmt + 2);
+                        time_put_f.put(pm_os, pm_os, ' ', &tm_pm, p_fmt, p_fmt + 2);
+                        std::basic_string<CharT, Traits, Alloc> am_pm[2] = {am_os.str(), pm_os.str()};
+                        auto i = detail::scan_keyword(is, am_pm, am_pm + 2) - am_pm;
+                        if (i < 2)
+                            tp = static_cast<decltype(tp)>(i);
                         else
-                            is.setstate(err);
+                            is.setstate(ios::failbit);
 #else
                         auto nm = detail::ampm_names();
                         auto i = detail::scan_keyword(is, nm.first, nm.second) - nm.first;

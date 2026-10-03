@@ -688,6 +688,20 @@ test_p()
         // The test will fail because %I needs the %p option to shows if it is AM or PM
         assert(in.fail());
     }
+    {
+        std::istringstream in{"Sep 16, 2025 10:29:51 PM -0300"};
+        sys_time<seconds> tp;
+        in >> parse("%b %d, %Y %I:%M:%S %p %z", tp);
+        assert(!in.fail());
+        assert(tp == sys_days{2025_y/September/17} + hours{1} + minutes{29} + seconds{51});
+    }
+    {
+        std::istringstream in{"Sep 16, 2025 10:29:51 AM -0300"};
+        sys_time<seconds> tp;
+        in >> parse("%b %d, %Y %I:%M:%S %p %z", tp);
+        assert(!in.fail());
+        assert(tp == sys_days{2025_y/September/16} + hours{13} + minutes{29} + seconds{51});
+    }
 }
 
 void
