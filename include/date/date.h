@@ -9,6 +9,7 @@
 // Copyright (c) 2017 Paul Thompson
 // Copyright (c) 2018, 2019 Tomasz Kamiński
 // Copyright (c) 2019 Jiangang Zhuang
+// Copyright (c) 2026 fhgffy
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -7951,7 +7952,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             if (H != 0 && H != 12)
                                 goto broken;
                         }
-                        else if (!(I == H || I == H+12))
+                        else if (!(I == H || I+12 == H))
                         {
                             goto broken;
                         }

@@ -1,6 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2016 Howard Hinnant
+// Copyright (c) 2026 fhgffy
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -459,6 +460,45 @@ test_H()
         sys_time<hours> tp;
         in >> parse("%F %H", tp);
         assert(in.fail());
+    }
+}
+
+void
+test_HI()
+{
+    using namespace date;
+    using namespace std::chrono;
+    // The 24-hour field disambiguates the 12-hour field without %p.
+    for (int h = 0; h < 24; ++h)
+    {
+        for (int i = 1; i <= 12; ++i)
+        {
+            const bool consistent = i == (h % 12 == 0 ? 12 : h % 12);
+            for (bool reversed : {false, true})
+            {
+                std::ostringstream text;
+                text << (reversed ? i : h) << ' ' << (reversed ? h : i);
+                std::istringstream in{text.str()};
+                hours value{99};
+                in >> parse(reversed ? "%I %H" : "%H %I", value);
+                assert(in.fail() == !consistent);
+                assert(value == (consistent ? hours{h} : hours{99}));
+            }
+        }
+    }
+    {
+        std::istringstream in{"2026-10-03 13 01"};
+        sys_seconds value{};
+        in >> parse("%F %H %I", value);
+        assert(!in.fail());
+        assert(value == sys_days{2026_y/October/3} + hours{13});
+    }
+    {
+        std::wistringstream in{L"23 11"};
+        hours value{99};
+        from_stream(in, L"%H %I", value);
+        assert(!in.fail());
+        assert(value == hours{23});
     }
 }
 
@@ -1074,6 +1114,7 @@ main()
     test_D();
     test_F();
     test_H();
+    test_HI();
     test_Ip();
     test_j();
     test_m();
