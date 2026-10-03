@@ -4867,6 +4867,90 @@ extract_month(std::basic_ostream<CharT, Traits>& os, const fields<Duration>& fds
     return static_cast<unsigned>(fds.ymd.month());
 }
 
+}  // namespace detail
+
+#if ONLY_C_LOCALE
+
+namespace detail
+{
+
+inline
+std::pair<const std::string*, const std::string*>
+weekday_names()
+{
+    static const std::string nm[] =
+    {
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+    };
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+}
+
+inline
+std::pair<const std::string*, const std::string*>
+month_names()
+{
+    static const std::string nm[] =
+    {
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+    };
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+}
+
+inline
+std::pair<const std::string*, const std::string*>
+ampm_names()
+{
+    static const std::string nm[] =
+    {
+        "AM",
+        "PM"
+    };
+    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
+}
+
+}  // namespace detail
+
+#endif  // ONLY_C_LOCALE
+
+namespace detail
+{
+
 template <class CharT, class Traits, class FwdIter>
 FwdIter
 scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
@@ -4972,85 +5056,6 @@ scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
 }
 
 }  // namespace detail
-
-#if ONLY_C_LOCALE
-
-namespace detail
-{
-
-inline
-std::pair<const std::string*, const std::string*>
-weekday_names()
-{
-    static const std::string nm[] =
-    {
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sun",
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat"
-    };
-    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
-}
-
-inline
-std::pair<const std::string*, const std::string*>
-month_names()
-{
-    static const std::string nm[] =
-    {
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec"
-    };
-    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
-}
-
-inline
-std::pair<const std::string*, const std::string*>
-ampm_names()
-{
-    static const std::string nm[] =
-    {
-        "AM",
-        "PM"
-    };
-    return std::make_pair(nm, nm+sizeof(nm)/sizeof(nm[0]));
-}
-
-}  // namespace detail
-
-#endif  // ONLY_C_LOCALE
 
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
