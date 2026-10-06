@@ -5215,7 +5215,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.width(2);
                         os << static_cast<unsigned>(ymd.day()) << CharT{'/'};
                         os.width(2);
-                        os << static_cast<int>(ymd.year()) % 100;
+                        os << std::abs(static_cast<int>(ymd.year())) % 100;
                     }
 #endif  // ONLY_C_LOCALE
                 }
@@ -5324,7 +5324,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     os.width(2);
                     os << static_cast<unsigned>(ymd.day()) << CharT{'/'};
                     os.width(2);
-                    os << static_cast<int>(ymd.year()) % 100;
+                    os << std::abs(static_cast<int>(ymd.year())) % 100;
                 }
                 else
                 {
