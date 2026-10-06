@@ -118,4 +118,22 @@ main()
     os.str("");
     os << date::format("%y", sys_days{jun/1/date::year::min()});
     assert(os.str() == "67");
+
+    os.str("");
+    os << date::format("%D", sys_days{jun/1/-1});
+    assert(os.str() == "06/01/01");
+
+    os.str("");
+    os << date::format("%D", sys_days{jun/1/-2001});
+    assert(os.str() == "06/01/01");
+
+    os.str("");
+    os << date::format("%D", sys_days{jun/1/-1999});
+    assert(os.str() == "06/01/99");
+
+#if ONLY_C_LOCALE
+    os.str("");
+    os << date::format("%x", sys_days{jun/1/-1});
+    assert(os.str() == "06/01/01");
+#endif
 }
