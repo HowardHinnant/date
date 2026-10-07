@@ -667,9 +667,9 @@ parse_month(std::istream& in)
     auto s = get_alpha_word(in);
     tolower(s);
     auto m = std::find_if(std::begin(month_names), std::end(month_names),
-                 [&s](std::string const& m)
+                 [&s](std::string const& month)
                  {
-                     return is_prefix_of(s, m);
+                     return is_prefix_of(s, month);
                  })
                   - month_names;
     if (m >= std::end(month_names) - std::begin(month_names))
@@ -893,9 +893,9 @@ parse_dow(std::istream& in)
     auto s = get_alpha_word(in);
     tolower(s);
     auto dow = std::find_if(std::begin(dow_names), std::end(dow_names),
-                 [&s](std::string const& dow)
+                 [&s](std::string const& day)
                  {
-                     return is_prefix_of(s, dow);
+                     return is_prefix_of(s, day);
                  })
                   - dow_names;
     if (dow >= std::end(dow_names) - std::begin(dow_names))
