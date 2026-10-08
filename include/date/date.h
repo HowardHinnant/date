@@ -5604,7 +5604,14 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (*fmt == 'q')
                         os << get_units<CharT>(typename decltype(d)::period::type{});
                     else
-                        os << d.count();
+                    {
+                        if (insert_negative)
+                        {
+                            os << '-';
+                            insert_negative = false;
+                        }
+                        os << (d < decltype(d)::zero() ? -d : d).count();
+                    }
                 }
                 else
                 {
@@ -5623,6 +5630,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
 #if !ONLY_C_LOCALE
                     const CharT f[] = {'%', *fmt};
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
@@ -5662,6 +5674,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
                     if (fds.tod.hours() < hours{10})
                         os << CharT{'0'};
                     os << fds.tod.hours().count() << CharT{':'};
@@ -5736,7 +5753,17 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 {
                     if (!fds.has_tod)
                         os.setstate(std::ios::failbit);
-                    os << fds.tod;
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
+                    if (fds.tod.hours() < hours{10})
+                        os << CharT{'0'};
+                    os << fds.tod.hours().count() << CharT{':'};
+                    if (fds.tod.minutes() < minutes{10})
+                        os << CharT{'0'};
+                    os << fds.tod.minutes().count() << CharT{':'} << fds.tod.s_;
                 }
                 else
                 {
@@ -5958,6 +5985,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                         os.setstate(std::ios::failbit);
                     else
                     {
+                    if (insert_negative)
+                    {
+                        os << '-';
+                        insert_negative = false;
+                    }
 #if !ONLY_C_LOCALE
                     tm = std::tm{};
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
@@ -5975,7 +6007,12 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     *fe++ = *fmt;
                     facet.put(os, os, os.fill(), &tm, std::begin(f), fe);
 #else
-                    os << fds.tod;
+                    if (fds.tod.hours() < hours{10})
+                        os << CharT{'0'};
+                    os << fds.tod.hours().count() << CharT{':'};
+                    if (fds.tod.minutes() < minutes{10})
+                        os << CharT{'0'};
+                    os << fds.tod.minutes().count() << CharT{':'} << fds.tod.s_;
 #endif
                     }
                 }
