@@ -190,16 +190,16 @@ if( BUILD_TZ_LIB )
 endif( )
 
 if ( BUILD_TZ_LIB )
-  # Cflags: -I${includedir} @TZ_COMPILE_DEFINITIONS@
-  set( TZ_COMPILE_DEFINITIONS "$<IF:$<TARGET_EXISTS:date-tz>,-D$<JOIN:$<TARGET_PROPERTY:date-tz,INTERFACE_COMPILE_DEFINITIONS>, -D>,>" )
-
   if (TARGET date-tz)
+    # tz_compile_definitions=@TZ_COMPILE_DEFINITIONS@
+    set( TZ_COMPILE_DEFINITIONS "-D$<JOIN:$<TARGET_PROPERTY:date-tz,INTERFACE_COMPILE_DEFINITIONS>, -D>" )
+
     # Requires: @TZ_PC_REQUIRES@
-    get_target_property(TZ_INTERFACE_LINK_LIBRARIES date-tz INTERFACE_LINK_LIBRARIES)
-    if ("${TZ_INTERFACE_LINK_LIBRARIES}" MATCHES "libcurl")
+    get_target_property(TZ_LINK_LIBRARIES date-tz INTERFACE_LINK_LIBRARIES)
+    if ("${TZ_LINK_LIBRARIES}" MATCHES "libcurl")
         set(TZ_PC_REQUIRES "libcurl")
     endif()
-    unset(TZ_INTERFACE_LINK_LIBRARIES)
+    unset(TZ_LINK_LIBRARIES)
   endif()
 
   configure_file(date.pc.in date.pc.cf @ONLY)

@@ -1,11 +1,13 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-exec_prefix=@CMAKE_INSTALL_FULL_BINDIR@
+exec_prefix=${prefix}
 libdir=@CMAKE_INSTALL_FULL_LIBDIR@
 includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+tz_compile_definitions=@TZ_COMPILE_DEFINITIONS@
 
 Name: date
 Description: A date and time library based on the C++11/14/17 <chrono> header
 Version: @CMAKE_PROJECT_VERSION@
 Requires: @TZ_PC_REQUIRES@
 Libs: -L${libdir} -ldate-tz -pthread
-Cflags: -I${includedir}/date -pthread @TZ_COMPILE_DEFINITIONS@
+Cflags: -I${includedir} -I${includedir}/date -pthread
