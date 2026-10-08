@@ -15,7 +15,7 @@
 
 #]===================================================================]
 
-cmake_minimum_required( VERSION 3.10 )
+cmake_minimum_required( VERSION 3.12 )
 
 project( date VERSION 3.0.5 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
@@ -191,7 +191,17 @@ endif( )
 
 if ( BUILD_TZ_LIB )
   # Cflags: -I${includedir} @TZ_COMPILE_DEFINITIONS@
-  set( TZ_COMPILE_DEFINITIONS "$<IF:$<TARGET_EXISTS:tz>,-D$<JOIN:$<TARGET_PROPERTY:tz,INTERFACE_COMPILE_DEFINITIONS>, -D>,>" )
+  set( TZ_COMPILE_DEFINITIONS "$<IF:$<TARGET_EXISTS:date-tz>,-D$<JOIN:$<TARGET_PROPERTY:date-tz,INTERFACE_COMPILE_DEFINITIONS>, -D>,>" )
+
+  if (TARGET date-tz)
+    # Requires: @TZ_PC_REQUIRES@
+    get_target_property(TZ_INTERFACE_LINK_LIBRARIES date-tz INTERFACE_LINK_LIBRARIES)
+    if ("${TZ_INTERFACE_LINK_LIBRARIES}" MATCHES "libcurl")
+        set(TZ_PC_REQUIRES "libcurl")
+    endif()
+    unset(TZ_INTERFACE_LINK_LIBRARIES)
+  endif()
+
   configure_file(date.pc.in date.pc.cf @ONLY)
   file( GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/date.pc"
     INPUT "${CMAKE_CURRENT_BINARY_DIR}/date.pc.cf" )
