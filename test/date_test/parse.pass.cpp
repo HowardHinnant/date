@@ -1076,6 +1076,12 @@ test_n()
         in >> parse("%n%D", d1);
         assert(in.fail());
     }
+    {
+        wistringstream in{wstring(1, static_cast<wchar_t>(0x10FFFF)) + L"05/04/17"};
+        year_month_day d1;
+        in >> parse(L"%n%D", d1);
+        assert(in.fail());
+    }
 }
 
 void
@@ -1099,6 +1105,12 @@ test_t()
         istringstream in{"  05/04/17"};
         year_month_day d1;
         in >> parse("%t%D", d1);
+        assert(in.fail());
+    }
+    {
+        wistringstream in{wstring(1, static_cast<wchar_t>(0x10FFFF)) + L"05/04/17"};
+        year_month_day d1;
+        in >> parse(L"%t%D", d1);
         assert(in.fail());
     }
 }

@@ -7237,7 +7237,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             is.setstate(err);
                             break;
                         }
-                        if (isspace(ic))
+                        if (isspace(Traits::to_char_type(ic), is.getloc()))
                         {
                             (void)is.get();
                         }

@@ -622,7 +622,7 @@ static
 char
 tolower(char c)
 {
-    return static_cast<char>(std::tolower(c));
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 }
 
 inline
