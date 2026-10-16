@@ -2198,9 +2198,15 @@ time_zone::load_data(std::istream& inf,
     if (leap_seconds.empty() && tzh_leapcnt > 0)
         leap_seconds = load_leaps<TimeType>(inf, tzh_leapcnt);
 #endif
+    if (infos.empty())
+        throw std::runtime_error("Invalid zoneinfo file " + name_ +
+                                 ": no local time types");
     ttinfos_.reserve(infos.size());
     for (auto& info : infos)
     {
+        if (info.tt_abbrind >= abbrev.size())
+            throw std::runtime_error("Invalid zoneinfo file " + name_ +
+                                     ": abbreviation index out of range");
         ttinfos_.push_back({seconds{info.tt_gmtoff},
                             abbrev.c_str() + info.tt_abbrind,
                             info.tt_isdst != 0});
@@ -2218,7 +2224,12 @@ time_zone::load_data(std::istream& inf,
         ++i;
     }
     for (auto j = 0u; i < transitions_.size(); ++i, ++j)
+    {
+        if (indices[j] >= ttinfos_.size())
+            throw std::runtime_error("Invalid zoneinfo file " + name_ +
+                                     ": local time type index out of range");
         transitions_[i].info = ttinfos_.data() + indices[j];
+    }
 }
 
 void
