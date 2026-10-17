@@ -5347,8 +5347,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     save_ostream<CharT, Traits> _(os);
                     os.imbue(std::locale::classic());
                     os.fill('0');
-                    os.flags(std::ios::dec | std::ios::right);
-                    os.width(4);
+                    os.flags(std::ios::dec | std::ios::internal);
+                    os.width(4 + (ymd.year() < year{0}));
                     os << static_cast<int>(ymd.year()) << CharT{'-'};
                     os.width(2);
                     os << static_cast<unsigned>(ymd.month()) << CharT{'-'};

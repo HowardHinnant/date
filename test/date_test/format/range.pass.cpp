@@ -77,4 +77,17 @@ main()
     os << date::format("%F", dec/last/year::max());
     assert(os.str() == "32767-12-31");
     os.str("");
+
+    os << date::format("%F", jan/1/year{-1});
+    assert(os.str() == "-0001-01-01");
+    os.str("");
+    os << date::format("%F", jan/1/year{-999});
+    assert(os.str() == "-0999-01-01");
+    os.str("");
+    os << date::format("%F", jan/1/year{-1000});
+    assert(os.str() == "-1000-01-01");
+    os.str("");
+    os << date::format("%F", jan/1/year{1});
+    assert(os.str() == "0001-01-01");
+    os.str("");
 }
