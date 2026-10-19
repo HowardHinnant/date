@@ -694,7 +694,7 @@ time_zone::name() const
             if (std::any_of(nm.begin(), nm.end(),
                          [](char c)
                          {
-                             return !std::isalpha(c);
+                             return !std::isalpha(static_cast<unsigned char>(c));
                          }))
             {
                 return '<' + nm + '>';
@@ -821,7 +821,7 @@ read_date(const string_t& s, unsigned i, rule& r)
         r.wd_ = weekday{wd};
         r.n_ = n;
     }
-    else if (std::isdigit(s[i]))
+    else if (std::isdigit(static_cast<unsigned char>(s[i])))
     {
         unsigned n;
         i = read_unsigned(s, i, 3, n);
@@ -865,7 +865,7 @@ read_name(const string_t& s, unsigned i, std::string& name)
     }
     else
     {
-        while (i != s.size() && std::isalpha(s[i]))
+        while (i != s.size() && std::isalpha(static_cast<unsigned char>(s[i])))
         {
             name.push_back(s[i]);
             ++i;
@@ -933,11 +933,12 @@ unsigned
 read_unsigned(const string_t& s, unsigned i, unsigned limit, unsigned& u,
               const string_t& message)
 {
-    if (i == s.size() || !std::isdigit(s[i]))
+    if (i == s.size() || !std::isdigit(static_cast<unsigned char>(s[i])))
         throw_invalid(s, i, message);
     u = static_cast<unsigned>(s[i] - '0');
     unsigned count = 1;
-    for (++i; count < limit && i != s.size() && std::isdigit(s[i]); ++i, ++count)
+    for (++i; count < limit && i != s.size() && std::isdigit(static_cast<unsigned char>(s[i]));
+         ++i, ++count)
         u = u * 10 + static_cast<unsigned>(s[i] - '0');
     return i;
 }
