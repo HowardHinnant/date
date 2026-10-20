@@ -82,9 +82,9 @@ afunc() {
 			then
 				rm ./$TEST_EXE
 				echo "$FILE should not compile"
-				fail=$(($fail+1))
+				fail=$((fail+1))
 			else
-				pass=$(($pass+1))
+				pass=$((pass+1))
 			fi
 		done
 	fi
@@ -98,17 +98,17 @@ afunc() {
 				if ./$TEST_EXE
 				then
 					rm ./$TEST_EXE
-					pass=$(($pass+1))
+					pass=$((pass+1))
 				else
 					echo "$PWD/$FILE failed at run time"
 					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
-					fail=$(($fail+1))
+					fail=$((fail+1))
 					rm ./$TEST_EXE
 				fi
 			else
 				echo "$PWD/$FILE failed to compile"
 				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
-				fail=$(($fail+1))
+				fail=$((fail+1))
 			fi
 		done
 	fi
@@ -116,7 +116,7 @@ afunc() {
 	if [ $fail -gt 0 ]
 	then
 		echo "failed $fail tests in $PWD"
-		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL+1))
+		IMPLEMENTED_FAIL=$((IMPLEMENTED_FAIL+1))
 	fi
 	if [ $pass -gt 0 ]
 	then
@@ -129,11 +129,11 @@ afunc() {
 	if [ $fail -eq 0 -a $pass -eq 0 ]
 	then
 		echo "not implemented:  $PWD"
-		UNIMPLEMENTED=$(($UNIMPLEMENTED+1))
+		UNIMPLEMENTED=$((UNIMPLEMENTED+1))
 	fi
 
-	FAIL=$(($FAIL+$fail))
-	PASS=$(($PASS+$pass))
+	FAIL=$((FAIL + fail))
+	PASS=$((PASS + pass))
 
 	for FILE in *
 	do
@@ -161,12 +161,12 @@ echo "sections without tests   : $UNIMPLEMENTED"
 echo "sections with failures   : $IMPLEMENTED_FAIL"
 echo "sections without failures: $IMPLEMENTED_PASS"
 echo "                       +   ----"
-echo "total number of sections : $(($UNIMPLEMENTED+$IMPLEMENTED_FAIL+$IMPLEMENTED_PASS))"
+echo "total number of sections : $((UNIMPLEMENTED + IMPLEMENTED_FAIL + IMPLEMENTED_PASS))"
 echo "----------------------------------------------------"
 echo "number of tests failed   : $FAIL"
 echo "number of tests passed   : $PASS"
 echo "                       +   ----"
-echo "total number of tests    : $(($FAIL+$PASS))"
+echo "total number of tests    : $((FAIL + PASS))"
 echo "****************************************************"
 
 exit $FAIL
