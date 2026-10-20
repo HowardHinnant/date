@@ -25,9 +25,8 @@
 : ${CXX:=clang++}
 : ${CXX_LANG:=c++17}
 
-currentpath="$PWD"
-origpath=$currentpath
-currentdir=`basename $currentpath`
+origpath=$PWD
+currentdir=`basename "$PWD"`
 while [ $currentdir != "test" ]; do
 	if [ $currentdir = "/" ]
 	then
@@ -35,8 +34,7 @@ while [ $currentdir != "test" ]; do
 		exit 1
 	fi
 	cd ..
-	currentpath="$PWD"
-	currentdir=`basename $currentpath`
+	currentdir=`basename "$PWD"`
 done
 
 cd ..
