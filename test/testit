@@ -25,7 +25,7 @@
 : ${CXX:=clang++}
 : ${CXX_LANG:=c++17}
 
-currentpath=`pwd`
+currentpath="$PWD"
 origpath=$currentpath
 currentdir=`basename $currentpath`
 while [ $currentdir != "test" ]; do
@@ -35,12 +35,12 @@ while [ $currentdir != "test" ]; do
 		exit 1
 	fi
 	cd ..
-	currentpath=`pwd`
+	currentpath="$PWD"
 	currentdir=`basename $currentpath`
 done
 
 cd ..
-ROOT=`pwd`
+ROOT="$PWD"
 cd $origpath
 
 if expr "$CXX" : ".*g++" >/dev/null
@@ -105,13 +105,13 @@ afunc() {
 					rm ./$TEST_EXE
 					pass=$(($pass+1))
 				else
-					echo "`pwd`/$FILE failed at run time"
+					echo "$PWD/$FILE failed at run time"
 					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
 					fail=$(($fail+1))
 					rm ./$TEST_EXE
 				fi
 			else
-				echo "`pwd`/$FILE failed to compile"
+				echo "$PWD/$FILE failed to compile"
 				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
 				fail=$(($fail+1))
 			fi
@@ -120,12 +120,12 @@ afunc() {
 
 	if [ $fail -gt 0 ]
 	then
-		echo "failed $fail tests in `pwd`"
+		echo "failed $fail tests in $PWD"
 		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL+1))
 	fi
 	if [ $pass -gt 0 ]
 	then
-		echo "passed $pass tests in `pwd`"
+		echo "passed $pass tests in $PWD"
 		if [ $fail -eq 0 ]
 		then
 			IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
@@ -133,7 +133,7 @@ afunc() {
 	fi
 	if [ $fail -eq 0 -a $pass -eq 0 ]
 	then
-		echo "not implemented:  `pwd`"
+		echo "not implemented:  $PWD"
 		UNIMPLEMENTED=$(($UNIMPLEMENTED+1))
 	fi
 
@@ -158,7 +158,7 @@ afunc() {
 afunc no
 
 echo "****************************************************"
-echo "Results for `pwd`:"
+echo "Results for $PWD:"
 echo "using `$CXX --version`"
 echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
 echo "----------------------------------------------------"
