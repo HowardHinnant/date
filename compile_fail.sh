@@ -4,7 +4,7 @@ export TEST_BIN_NAME=$1
 shift 1
 export BUILD_COMMAND=$@
 #echo "Build command: ${BUILD_COMMAND}"
-eval ${BUILD_COMMAND} >/dev/null 2>/dev/null
+eval ${BUILD_COMMAND} >/dev/null 2>&1
 
 if [ $? -eq 0 ]; then
 	echo -ne "#!/bin/bash\nexit 1;" > ${TEST_BIN_NAME}
