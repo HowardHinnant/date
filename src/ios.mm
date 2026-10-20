@@ -313,6 +313,18 @@ namespace date
         writeFile(const std::string &tzdataPath, const std::string &fileName, const std::string &data,
                   size_t realContentSize)
         {
+            // Reject tar entry names that would escape tzdataPath (CWE-22). tzdata
+            // archive entries are plain relative names; an absolute path or a
+            // ".." component must not be allowed to write outside the destination.
+            if (fileName.empty() || fileName.front() == '/' || fileName == ".." ||
+                fileName.compare(0, 3, "../") == 0 ||
+                fileName.find("/../") != std::string::npos ||
+                (fileName.size() >= 3 &&
+                 fileName.compare(fileName.size() - 3, 3, "/..") == 0))
+            {
+                return false;
+            }
+
             std::ofstream os(tzdataPath + "/" + fileName, std::ofstream::out | std::ofstream::binary);
 
             if (!os) {
