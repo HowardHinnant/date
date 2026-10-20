@@ -93,7 +93,7 @@ afunc() {
 	then
 		for FILE in $(ls ${TEST_PREFIX}*pass.cpp); do
 			[ "$VERBOSE" ] && echo "Running test:  $FILE"
-			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = no ] || echo $THREAD_FLAGS) -o ./$TEST_EXE
+			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS) -o ./$TEST_EXE
 			then
 				if ./$TEST_EXE
 				then
@@ -101,13 +101,13 @@ afunc() {
 					pass=$((pass+1))
 				else
 					echo "$PWD/$FILE failed at run time"
-					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = no ] || echo $THREAD_FLAGS)
+					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
 					fail=$((fail+1))
 					rm ./$TEST_EXE
 				fi
 			else
 				echo "$PWD/$FILE failed to compile"
-				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = no ] || echo $THREAD_FLAGS)
+				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
 				fail=$((fail+1))
 			fi
 		done
