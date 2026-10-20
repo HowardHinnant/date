@@ -92,10 +92,7 @@ afunc() {
 	if (ls ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
 	then
 		for FILE in $(ls ${TEST_PREFIX}*pass.cpp); do
-            if [ "$VERBOSE" ]
-            then
-             	echo "Running test: " $FILE
-            fi
+			[ "$VERBOSE" ] && echo "Running test:  $FILE"
 			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS) -o ./$TEST_EXE
 			then
 				if ./$TEST_EXE
