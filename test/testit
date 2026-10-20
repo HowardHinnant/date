@@ -21,6 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# Set CXX variables
+: ${CXX:=clang++}
+: ${CXX_LANG:=c++17}
+
 currentpath=`pwd`
 origpath=$currentpath
 currentdir=`basename $currentpath`
@@ -38,16 +42,6 @@ done
 cd ..
 ROOT=`pwd`
 cd $origpath
-
-if [ -z "$CXX" ]
-then
-	CXX=clang++
-fi
-
-if [ -z "$CXX_LANG" ]
-then
-    CXX_LANG=c++17
-fi
 
 if expr "$CXX" : ".*g++" >/dev/null
 then
