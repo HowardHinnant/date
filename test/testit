@@ -50,7 +50,7 @@ echo $ROOT
 HEADER_INCLUDE="-I$ROOT/include -I$ROOT/include/date"
 
 case $TRIPLE in
-  *-*-mingw* | *-*-cygwin* | *-*-win*)
+  *-*-mingw* | *-*-win*)
 	TEST_EXE=test.exe
     ;;
   *)
