@@ -97,14 +97,13 @@ afunc() {
 			then
 				if ./$TEST_EXE
 				then
-					rm ./$TEST_EXE
 					pass=$((pass+1))
 				else
 					echo "$PWD/$FILE failed at run time"
 					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
 					fail=$((fail+1))
-					rm ./$TEST_EXE
 				fi
+				rm $TEST_EXE
 			else
 				echo "$PWD/$FILE failed to compile"
 				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
