@@ -112,9 +112,7 @@ afunc() {
 	fi
 	if [ $pass -gt 0 ]; then
 		echo "passed $pass tests in $PWD"
-		if [ $fail -eq 0 ]; then
-			IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
-		fi
+		[ $fail -eq 0 ] && IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
 	fi
 	if [ $fail -eq 0 -a $pass -eq 0 ]; then
 		echo "not implemented:  $PWD"
