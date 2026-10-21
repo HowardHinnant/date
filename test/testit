@@ -26,14 +26,14 @@
 : ${CXX_LANG:=c++17}
 
 origpath=$PWD
-currentdir=`basename "$PWD"`
+currentdir=$(basename "$PWD")
 while [ $currentdir != "test" ]; do
 	if [ $currentdir = "/" ]; then
 		echo "current directory must be in or under \"test\"."
 		exit 1
 	fi
 	cd ..
-	currentdir=`basename "$PWD"`
+	currentdir=$(basename "$PWD")
 done
 
 cd ..
@@ -139,7 +139,7 @@ afunc no
 
 echo "****************************************************"
 echo "Results for $PWD:"
-echo "using `$CXX --version`"
+echo "using $($CXX --version)"
 echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
 echo "----------------------------------------------------"
 echo "sections without tests   : $UNIMPLEMENTED"
