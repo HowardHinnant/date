@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 # The MIT License (MIT)
 #
 # Copyright (c) 2015, 2016 Howard Hinnant
