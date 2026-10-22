@@ -1,14 +1,14 @@
-#!/bin/bash
-export TEST_BIN_NAME=$1
+#!/bin/sh
+export TEST_BIN_NAME="$1"
 #echo "Building ${TEST_BIN_NAME}"
 shift 1
 export BUILD_COMMAND=$@
 #echo "Build command: ${BUILD_COMMAND}"
-eval ${BUILD_COMMAND} >/dev/null 2>/dev/null
+eval ${BUILD_COMMAND} >/dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-	echo -ne "#!/bin/bash\nexit 1;" > ${TEST_BIN_NAME}
+	printf "#!/bin/sh\nexit 1" > "${TEST_BIN_NAME}"
 else
-	echo -ne "#!/bin/bash\nexit 0;" > ${TEST_BIN_NAME}
+	printf "#!/bin/sh\nexit 0" > "${TEST_BIN_NAME}"
 fi
-chmod u+x ${TEST_BIN_NAME}
+chmod u+x "${TEST_BIN_NAME}"
