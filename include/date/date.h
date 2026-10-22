@@ -4952,6 +4952,14 @@ ampm_names()
 namespace detail
 {
 
+template <class CharT>
+inline
+bool
+fits_in_uchar(CharT c)
+{
+    return static_cast<CharT>(static_cast<unsigned char>(c)) == c;
+}
+
 template <class CharT, class Traits, class FwdIter>
 FwdIter
 scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
@@ -4995,6 +5003,7 @@ scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
             is.setstate(std::ios::eofbit);
             break;
         }
+        auto ch = Traits::to_char_type(ic);
         auto c = static_cast<char>(toupper(static_cast<unsigned char>(ic)));
         bool consume = false;
         // For each keyword which might match, see if the indx character is c
@@ -5008,7 +5017,10 @@ scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
         {
             if (*st == might_match)
             {
-                if (c == static_cast<char>(toupper(static_cast<unsigned char>((*ky)[indx]))))
+                auto k = (*ky)[indx];
+                if (fits_in_uchar(ch) && fits_in_uchar(k) ?
+                        c == static_cast<char>(toupper(static_cast<unsigned char>(k))) :
+                        ch == k)
                 {
                     consume = true;
                     if (ky->size() == indx+1)
@@ -6401,7 +6413,7 @@ read_unsigned(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M 
         auto ic = is.peek();
         if (Traits::eq_int_type(ic, Traits::eof()))
             break;
-        auto c = static_cast<char>(Traits::to_char_type(ic));
+        auto c = Traits::to_char_type(ic);
         if (!('0' <= c && c <= '9'))
             break;
         (void)is.get();
@@ -6422,7 +6434,7 @@ read_signed(std::basic_istream<CharT, Traits>& is, unsigned m = 1, unsigned M = 
     auto ic = is.peek();
     if (!Traits::eq_int_type(ic, Traits::eof()))
     {
-        auto c = static_cast<char>(Traits::to_char_type(ic));
+        auto c = Traits::to_char_type(ic);
         if (('0' <= c && c <= '9') || c == '-' || c == '+')
         {
             if (c == '-' || c == '+')
@@ -6605,7 +6617,7 @@ read_seconds(std::basic_istream<CharT, Traits>& is, unsigned const m, unsigned c
         }
         else
         {
-            auto const c = static_cast<char>(Traits::to_char_type(ic));
+            auto const c = Traits::to_char_type(ic);
             if (!('0' <= c && c <= '9'))
                 break;
             if (!parsing_fraction)
@@ -7643,7 +7655,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     auto ic = is.peek();
                     if (!Traits::eq_int_type(ic, Traits::eof()))
                     {
-                        auto c = static_cast<char>(Traits::to_char_type(ic));
+                        auto c = Traits::to_char_type(ic);
                         if (c == '-')
                         {
                             neg = true;
@@ -7662,7 +7674,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             ic = is.peek();
                             if (!Traits::eq_int_type(ic, Traits::eof()))
                             {
-                                auto c = static_cast<char>(Traits::to_char_type(ic));
+                                auto c = Traits::to_char_type(ic);
                                 if ('0' <= c && c <= '9')
                                 {
                                     read(is, ru{tM, 2, 2});
@@ -7682,7 +7694,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                             ic = is.peek();
                             if (!Traits::eq_int_type(ic, Traits::eof()))
                             {
-                                auto c = static_cast<char>(Traits::to_char_type(ic));
+                                auto c = Traits::to_char_type(ic);
                                 if (c == ':')
                                 {
                                     (void)is.get();

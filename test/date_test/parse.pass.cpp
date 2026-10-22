@@ -1115,6 +1115,47 @@ test_t()
     }
 }
 
+void
+test_wide_non_ascii()
+{
+    using namespace std;
+    using namespace date;
+    using namespace std::chrono;
+    {
+        // U+0132 U+0130 U+0132 U+0136 are not digits
+        wistringstream in{L"\u0132\u0130\u0132\u0136-01-02"};
+        year_month_day d1;
+        in >> parse(L"%F", d1);
+        assert(in.fail());
+    }
+    {
+        wistringstream in{L"2017-05-04 10:00:\u0130\u0135"};
+        sys_seconds tp;
+        in >> parse(L"%F %T", tp);
+        assert(in.fail());
+    }
+    {
+        wistringstream in{L"2017-05-04 10:00:00 \u012B\u0130\u0135\u0133\u0130"};
+        sys_seconds tp;
+        in >> parse(L"%F %T %z", tp);
+        assert(in.fail());
+    }
+    {
+        // U+0150 U+014D: low bytes are 'P' and 'M'
+        wistringstream in{L"2017-05-04 01:00 \u0150\u014D"};
+        local_seconds tp;
+        in >> parse(L"%F %I:%M %p", tp);
+        assert(in.fail());
+    }
+    {
+        wistringstream in{L"2017-05-04 01:00 PM"};
+        local_seconds tp;
+        in >> parse(L"%F %I:%M %p", tp);
+        assert(!in.fail());
+        assert(tp == local_days{2017_y/may/4} + 13h);
+    }
+}
+
 int
 main()
 {
@@ -1149,4 +1190,5 @@ main()
     test_space();
     test_n();
     test_t();
+    test_wide_non_ascii();
 }
