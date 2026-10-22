@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 # The MIT License (MIT)
 #
 # Copyright (c) 2015, 2016 Howard Hinnant
@@ -21,36 +21,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-currentpath=`pwd`
-origpath=$currentpath
-currentdir=`basename $currentpath`
+# Set CXX variables
+: ${CXX:=clang++}
+: ${CXX_LANG:=c++17}
+
+origpath=$PWD
+currentdir=$(basename "$PWD")
 while [ $currentdir != "test" ]; do
-	if [ $currentdir = "/" ]
-	then
+	if [ $currentdir = "/" ]; then
 		echo "current directory must be in or under \"test\"."
 		exit 1
 	fi
 	cd ..
-	currentpath=`pwd`
-	currentdir=`basename $currentpath`
+	currentdir=$(basename "$PWD")
 done
 
 cd ..
-ROOT=`pwd`
+ROOT="$PWD"
 cd $origpath
 
-if [ -z "$CXX" ]
-then
-	CXX=clang++
-fi
-
-if [ -z "$CXX_LANG" ]
-then
-    CXX_LANG=c++17
-fi
-
-if expr "$CXX" : ".*g++" >/dev/null
-then
+if expr "$CXX" : ".*g++" >/dev/null; then
 	OPTIONS="$OPTIONS -pthread"
 fi
 
@@ -60,7 +50,7 @@ echo $ROOT
 HEADER_INCLUDE="-I$ROOT/include -I$ROOT/include/date"
 
 case $TRIPLE in
-  *-*-mingw* | *-*-cygwin* | *-*-win*)
+  *-*-mingw* | *-*-win*)
 	TEST_EXE=test.exe
     ;;
   *)
@@ -83,73 +73,57 @@ IMPLEMENTED_PASS=0
 afunc() {
 	fail=0
 	pass=0
-	if (ls ${TEST_PREFIX}*fail.cpp > /dev/null 2>&1)
-	then
+	if (ls ${TEST_PREFIX}*fail.cpp > /dev/null 2>&1); then
 		for FILE in $(ls ${TEST_PREFIX}*fail.cpp); do
 			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE > /dev/null 2>&1
 			then
 				rm ./$TEST_EXE
 				echo "$FILE should not compile"
-				fail=$(($fail+1))
+				fail=$((fail+1))
 			else
-				pass=$(($pass+1))
+				pass=$((pass+1))
 			fi
 		done
 	fi
 
-	if (ls ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1)
-	then
+	if (ls ${TEST_PREFIX}*pass.cpp > /dev/null 2>&1); then
 		for FILE in $(ls ${TEST_PREFIX}*pass.cpp); do
-            if [ "$VERBOSE" ]
-            then
-             	echo "Running test: " $FILE
-            fi
-			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS) -o ./$TEST_EXE
-			then
-				if ./$TEST_EXE
-				then
-					rm ./$TEST_EXE
-					pass=$(($pass+1))
+			[ "$VERBOSE" ] && echo "Running test:  $FILE"
+			if $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS) -o ./$TEST_EXE; then
+				if ./$TEST_EXE; then
+					pass=$((pass+1))
 				else
-					echo "`pwd`/$FILE failed at run time"
-					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
-					fail=$(($fail+1))
-					rm ./$TEST_EXE
+					echo "$PWD/$FILE failed at run time"
+					echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
+					fail=$((fail+1))
 				fi
+				rm $TEST_EXE
 			else
-				echo "`pwd`/$FILE failed to compile"
-				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
-				fail=$(($fail+1))
+				echo "$PWD/$FILE failed to compile"
+				echo "Compile line was:" $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $([ $1 = yes ] && echo $THREAD_FLAGS)
+				fail=$((fail+1))
 			fi
 		done
 	fi
 
-	if [ $fail -gt 0 ]
-	then
-		echo "failed $fail tests in `pwd`"
-		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL+1))
+	if [ $fail -gt 0 ]; then
+		echo "failed $fail tests in $PWD"
+		IMPLEMENTED_FAIL=$((IMPLEMENTED_FAIL+1))
 	fi
-	if [ $pass -gt 0 ]
-	then
-		echo "passed $pass tests in `pwd`"
-		if [ $fail -eq 0 ]
-		then
-			IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
-		fi
+	if [ $pass -gt 0 ]; then
+		echo "passed $pass tests in $PWD"
+		[ $fail -eq 0 ] && IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
 	fi
-	if [ $fail -eq 0 -a $pass -eq 0 ]
-	then
-		echo "not implemented:  `pwd`"
-		UNIMPLEMENTED=$(($UNIMPLEMENTED+1))
+	if [ $fail -eq 0 -a $pass -eq 0 ]; then
+		echo "not implemented:  $PWD"
+		UNIMPLEMENTED=$((UNIMPLEMENTED+1))
 	fi
 
-	FAIL=$(($FAIL+$fail))
-	PASS=$(($PASS+$pass))
+	FAIL=$((FAIL + fail))
+	PASS=$((PASS + pass))
 
-	for FILE in *
-	do
-		if [ -d "$FILE" ];
-		then
+	for FILE in *; do
+		if [ -d "$FILE" ]; then
 			cd $FILE
 			if [ $FILE = thread -o $1 = yes ]; then
 				afunc yes
@@ -164,20 +138,20 @@ afunc() {
 afunc no
 
 echo "****************************************************"
-echo "Results for `pwd`:"
-echo "using `$CXX --version`"
+echo "Results for $PWD:"
+echo "using $($CXX --version)"
 echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
 echo "----------------------------------------------------"
 echo "sections without tests   : $UNIMPLEMENTED"
 echo "sections with failures   : $IMPLEMENTED_FAIL"
 echo "sections without failures: $IMPLEMENTED_PASS"
 echo "                       +   ----"
-echo "total number of sections : $(($UNIMPLEMENTED+$IMPLEMENTED_FAIL+$IMPLEMENTED_PASS))"
+echo "total number of sections : $((UNIMPLEMENTED + IMPLEMENTED_FAIL + IMPLEMENTED_PASS))"
 echo "----------------------------------------------------"
 echo "number of tests failed   : $FAIL"
 echo "number of tests passed   : $PASS"
 echo "                       +   ----"
-echo "total number of tests    : $(($FAIL+$PASS))"
+echo "total number of tests    : $((FAIL + PASS))"
 echo "****************************************************"
 
 exit $FAIL
