@@ -3264,6 +3264,24 @@ download_to_file(const std::string& url, const std::string& local_filename,
     return res == CURLE_OK;
 }
 
+// A tzdata version is a four digit year followed by one or more lowercase
+// letters, e.g. "2016a".  The version is used to build file names that are
+// passed to the shell, so anything else is rejected.
+static
+bool
+is_valid_version(const std::string& version)
+{
+    if (version.size() < 5)
+        return false;
+    for (std::size_t i = 0; i < 4; ++i)
+        if (!('0' <= version[i] && version[i] <= '9'))
+            return false;
+    for (std::size_t i = 4; i < version.size(); ++i)
+        if (!('a' <= version[i] && version[i] <= 'z'))
+            return false;
+    return true;
+}
+
 std::string
 remote_version()
 {
@@ -3277,6 +3295,8 @@ remote_version()
         const int ver_str_len = 5;
         if (p != std::string::npos && p + (db_size + ver_str_len) <= str.size())
             version = str.substr(p + db_size, ver_str_len);
+        if (!is_valid_version(version))
+            version.clear();
     }
     return version;
 }
@@ -3664,6 +3684,8 @@ bool
 remote_download(const std::string& version, char* error_buffer)
 {
     assert(!version.empty());
+    if (!is_valid_version(version))
+        return false;
 
 #  ifdef _WIN32
     // Download folder should be always available for Windows
@@ -3699,6 +3721,8 @@ remote_install(const std::string& version)
 {
     auto success = false;
     assert(!version.empty());
+    if (!is_valid_version(version))
+        return false;
 
     std::string install = get_install();
     auto gz_file = get_download_gz_file(version);
