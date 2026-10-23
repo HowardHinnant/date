@@ -304,9 +304,9 @@ namespace date
         std::string
         getTarObject(std::ifstream &readStream, int64_t size)
         {
-            char buffer[size];
-            readStream.read(buffer, size);
-            return std::string(buffer);
+            std::string buffer(static_cast<size_t>(size), '\0');
+            readStream.read(&buffer[0], size);
+            return buffer;
         }
 
         bool
@@ -325,19 +325,19 @@ namespace date
                 return false;
             }
 
+            if (data.size() < realContentSize)
+            {
+                return false;
+            }
+
             std::ofstream os(tzdataPath + "/" + fileName, std::ofstream::out | std::ofstream::binary);
 
             if (!os) {
                 return false;
             }
 
-            // trim empty space
-            char trimmedData[realContentSize + 1];
-            memset(&trimmedData, '\0', realContentSize);
-            memcpy(&trimmedData, data.c_str(), realContentSize);
-
-            // write
-            os.write(trimmedData, realContentSize);
+            // write without the block padding
+            os.write(data.data(), realContentSize);
             os.close();
 
             return true;
