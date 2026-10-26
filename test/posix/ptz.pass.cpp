@@ -107,4 +107,41 @@ main()
     tp = local_days{2021_y/7/1};
     assert(tzp.get_info(tp).result == local_info::unique);
     assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    // RFC 9636 allows rule times with hours from -167 to 167, as zic writes
+    // them in TZif footers
+
+    tzi = locate_zone("Asia/Jerusalem");
+    tzp = Posix::time_zone{"IST-2IDT,M3.4.4/26,M10.5.0"};
+    assert(tzp.name() == "IST-2IDT,M3.4.4/26,M10.5.0");
+    tp = local_days{2021_y/1/1};
+    assert(tzp.get_info(tp).result == local_info::unique);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tp = local_days{2021_y/3/26} + 2h + 30min;
+    assert(tzp.get_info(tp).result == local_info::nonexistent);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tp = local_days{2021_y/10/Sunday[last]} + 1h + 30min;
+    assert(tzp.get_info(tp).result == local_info::ambiguous);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tzi = locate_zone("America/Nuuk");
+    tzp = Posix::time_zone{"<-02>2<-01>,M3.5.0/-1,M10.5.0/0"};
+    assert(tzp.name() == "<-02>2<-01>,M3.5.0/-1,M10.5.0/0");
+    tp = local_days{2025_y/1/1};
+    assert(tzp.get_info(tp).result == local_info::unique);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tp = local_days{2025_y/3/29} + 23h + 30min;
+    assert(tzp.get_info(tp).result == local_info::nonexistent);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tp = local_days{2025_y/10/25} + 23h + 30min;
+    assert(tzp.get_info(tp).result == local_info::ambiguous);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
+
+    tp = local_days{2025_y/7/1};
+    assert(tzp.get_info(tp).result == local_info::unique);
+    assert(is_equal(tzi->get_info(tp), tzp.get_info(tp)));
 }

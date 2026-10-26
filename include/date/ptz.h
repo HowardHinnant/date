@@ -106,8 +106,10 @@ class rule;
 void throw_invalid(const string_t& s, unsigned i, const string_t& message);
 unsigned read_date(const string_t& s, unsigned i, rule& r);
 unsigned read_name(const string_t& s, unsigned i, std::string& name);
-unsigned read_signed_time(const string_t& s, unsigned i, std::chrono::seconds& t);
-unsigned read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t);
+unsigned read_signed_time(const string_t& s, unsigned i, std::chrono::seconds& t,
+                          unsigned max_hours = 24);
+unsigned read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t,
+                            unsigned max_hours = 24);
 unsigned read_unsigned(const string_t& s, unsigned i,  unsigned limit, unsigned& u,
                        const string_t& message = string_t{});
 
@@ -197,6 +199,8 @@ rule::to_string() const
             {
                 chr::hh_mm_ss<seconds> offset{off};
                 nm = '/';
+                if (offset.is_negative())
+                    nm += '-';
                 nm += std::to_string(offset.hours().count());
                 if (offset.minutes() != minutes{0} || offset.seconds() != seconds{0})
                 {
@@ -836,7 +840,9 @@ read_date(const string_t& s, unsigned i, rule& r)
     {
         ++i;
         std::chrono::seconds t;
-        i = read_unsigned_time(s, i, t);
+        // RFC 9636 (TZif) section 3.3.1 extends POSIX here: the hours may be
+        // signed and range from -167 through 167, e.g. M3.4.4/26 and M3.5.0/-1
+        i = read_signed_time(s, i, t, 167);
         r.time_ = t;
     }
     return i;
@@ -877,7 +883,7 @@ read_name(const string_t& s, unsigned i, std::string& name)
 inline
 unsigned
 read_signed_time(const string_t& s, unsigned i,
-                                  std::chrono::seconds& t)
+                                  std::chrono::seconds& t, unsigned max_hours)
 {
     if (i == s.size())
         throw_invalid(s, i, "Expected to read signed time, but found end of string");
@@ -889,7 +895,7 @@ read_signed_time(const string_t& s, unsigned i,
     }
     else if (s[i] == '+')
         ++i;
-    i = read_unsigned_time(s, i, t);
+    i = read_unsigned_time(s, i, t, max_hours);
     if (negative)
         t = -t;
     return i;
@@ -897,7 +903,8 @@ read_signed_time(const string_t& s, unsigned i,
 
 inline
 unsigned
-read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t)
+read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t,
+                   unsigned max_hours)
 {
     using std::chrono::seconds;
     using std::chrono::minutes;
@@ -905,9 +912,18 @@ read_unsigned_time(const string_t& s, unsigned i, std::chrono::seconds& t)
     if (i == s.size())
         throw_invalid(s, i, "Expected to read unsigned time, but found end of string");
     unsigned x;
-    i = read_unsigned(s, i, 2, x, "Expected to find hours [0, 24]");
-    if (x > 24)
-        throw_invalid(s, i-1, "Expected hours to be in the range [0, 24]");
+    if (max_hours <= 24)
+    {
+        i = read_unsigned(s, i, 2, x, "Expected to find hours [0, 24]");
+        if (x > 24)
+            throw_invalid(s, i-1, "Expected hours to be in the range [0, 24]");
+    }
+    else
+    {
+        i = read_unsigned(s, i, 3, x, "Expected to find hours [0, 167]");
+        if (x > max_hours)
+            throw_invalid(s, i-1, "Expected hours to be in the range [0, 167]");
+    }
     t = hours{x};
     if (i != s.size() && s[i] == ':')
     {
