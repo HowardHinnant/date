@@ -3264,22 +3264,19 @@ download_to_file(const std::string& url, const std::string& local_filename,
     return res == CURLE_OK;
 }
 
-// A tzdata version is a four digit year followed by one or more lowercase
-// letters, e.g. "2016a".  The version is used to build file names that are
+// A tzdata version is a four digit year followed by a single lowercase
+// letter, e.g. "2016a".  The version is used to build file names that are
 // passed to the shell, so anything else is rejected.
 static
 bool
 is_valid_version(const std::string& version)
 {
-    if (version.size() < 5)
+    if (version.size() != 5)
         return false;
     for (std::size_t i = 0; i < 4; ++i)
         if (!('0' <= version[i] && version[i] <= '9'))
             return false;
-    for (std::size_t i = 4; i < version.size(); ++i)
-        if (!('a' <= version[i] && version[i] <= 'z'))
-            return false;
-    return true;
+    return 'a' <= version[4] && version[4] <= 'z';
 }
 
 std::string
