@@ -2523,8 +2523,6 @@ time_zone::time_zone(const std::string& s, detail::undocumented)
     {
         std::cerr << s << '\n';
         std::cerr << *this << '\n';
-        if (!zonelets_.empty())
-            zonelets_.pop_back();
         throw;
     }
 }
