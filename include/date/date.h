@@ -7916,6 +7916,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
             if (j != not_a_doy && Y != not_a_year)
             {
                 auto ymd_trial = year_month_day{local_days(year{Y}/1/1) + days{j-1}};
+                if (year{Y} != ymd_trial.year())
+                    goto broken;
                 if (m == not_a_month)
                     m = static_cast<int>(static_cast<unsigned>(ymd_trial.month()));
                 else if (month(static_cast<unsigned>(m)) != ymd_trial.month())
