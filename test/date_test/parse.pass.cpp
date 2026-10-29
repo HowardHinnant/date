@@ -984,6 +984,37 @@ test_z()
         in >> parse("%F %T %Ez", tp);
         assert(in.fail());
     }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 -0459"};
+        sys_seconds tp;
+        in >> parse("%F %T %z", tp);
+        assert(!in.fail());
+        assert(tp == sys_days{2016_y/12/26} + hours{20} + minutes{52} + seconds{22});
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 -0460"};
+        sys_seconds tp;
+        in >> parse("%F %T %z", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 +0099"};
+        sys_seconds tp;
+        in >> parse("%F %T %z", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 -4:60"};
+        sys_seconds tp;
+        in >> parse("%F %T %Ez", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016-12-26 15:53:22 +1:99"};
+        sys_seconds tp;
+        in >> parse("%F %T %Ez", tp);
+        assert(in.fail());
+    }
 }
 
 void
