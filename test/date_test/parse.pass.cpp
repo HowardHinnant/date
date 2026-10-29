@@ -551,6 +551,32 @@ test_j()
         assert(!in.bad());
         assert(tp == sys_days{2016_y/12/26});
     }
+    {
+        std::istringstream in{"2016 366"};
+        sys_days tp;
+        in >> parse("%Y %j", tp);
+        assert(!in.fail());
+        assert(!in.bad());
+        assert(tp == sys_days{2016_y/12/31});
+    }
+    {
+        std::istringstream in{"2016 000"};
+        sys_days tp;
+        in >> parse("%Y %j", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2015 366"};
+        sys_days tp;
+        in >> parse("%Y %j", tp);
+        assert(in.fail());
+    }
+    {
+        std::istringstream in{"2016 400"};
+        sys_days tp;
+        in >> parse("%Y %j", tp);
+        assert(in.fail());
+    }
 }
 
 void
