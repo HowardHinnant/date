@@ -789,6 +789,7 @@ private:
 #if USE_OS_TZDB
     std::vector<detail::transition>      transitions_;
     std::vector<detail::expanded_ttinfo> ttinfos_;
+    std::string                          posix_tz_;
 #else  // !USE_OS_TZDB
     std::vector<detail::zonelet>         zonelets_;
 #endif  // !USE_OS_TZDB

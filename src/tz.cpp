@@ -85,6 +85,13 @@
 
 #include "date/tz_private.h"
 
+#if USE_OS_TZDB
+// ptz.h has to use date's types here, not std::chrono's
+#  undef HAS_CHRONO_20
+#  define HAS_CHRONO_20 0
+#  include "date/ptz.h"
+#endif
+
 #ifdef __APPLE__
 #  include "date/ios.h"
 #else
@@ -2182,6 +2189,25 @@ load_just_leaps(std::istream& inf)
 
 #endif  // !MISSING_LEAP_SECONDS
 
+// Version 2+ files end with "\n<TZ string>\n", which gives the rule for
+// times after the last transition (RFC 9636 section 3.3).
+static
+std::string
+load_footer(std::istream& inf)
+{
+    inf.seekg(0, std::ios::end);
+    auto size = static_cast<std::streamoff>(inf.tellg());
+    std::string tail(static_cast<std::size_t>(std::min<std::streamoff>(size, 512)), '\0');
+    inf.seekg(size - static_cast<std::streamoff>(tail.size()));
+    inf.read(&tail[0], static_cast<std::streamsize>(tail.size()));
+    if (tail.size() < 2 || tail.back() != '\n')
+        return {};
+    auto i = tail.rfind('\n', tail.size() - 2);
+    if (i == std::string::npos)
+        return {};
+    return tail.substr(i + 1, tail.size() - i - 2);
+}
+
 template <class TimeType>
 void
 time_zone::load_data(std::istream& inf,
@@ -2272,6 +2298,18 @@ time_zone::init_impl()
         load_counts(inf, tzh_ttisgmtcnt, tzh_ttisstdcnt, tzh_leapcnt,
                          tzh_timecnt,    tzh_typecnt,    tzh_charcnt);
         load_data<int64_t>(inf, tzh_leapcnt, tzh_timecnt, tzh_typecnt, tzh_charcnt);
+        posix_tz_ = load_footer(inf);
+        if (!posix_tz_.empty())
+        {
+            try
+            {
+                Posix::time_zone{posix_tz_};
+            }
+            catch (const std::exception&)
+            {
+                posix_tz_.clear();
+            }
+        }
     }
 #if !MISSING_LEAP_SECONDS
     if (tzh_leapcnt > 0)
@@ -2351,6 +2389,12 @@ time_zone::get_info_impl(sys_seconds tp) const
 {
     using namespace std;
     init();
+    if (!posix_tz_.empty() && tp >= transitions_.back().timepoint)
+    {
+        auto r = Posix::time_zone{posix_tz_}.get_info(tp);
+        r.begin = std::max(r.begin, transitions_.back().timepoint);
+        return r;
+    }
     return load_sys_info(upper_bound(transitions_.begin(), transitions_.end(), tp,
                                      [](const sys_seconds& x, const transition& t)
                                      {
@@ -2363,6 +2407,17 @@ time_zone::get_info_impl(local_seconds tp) const
 {
     using namespace std::chrono;
     init();
+    // Stay a day clear of the last transition so it is still found in the table
+    auto const& final_tr = transitions_.back();
+    auto clear_of_final = final_tr.timepoint + final_tr.info->offset + days{1};
+    if (!posix_tz_.empty() && tp >= local_seconds{clear_of_final.time_since_epoch()})
+    {
+        auto i = Posix::time_zone{posix_tz_}.get_info(tp);
+        i.first.begin = std::max(i.first.begin, final_tr.timepoint);
+        if (i.result != local_info::unique)
+            i.second.begin = std::max(i.second.begin, final_tr.timepoint);
+        return i;
+    }
     local_info i{};
     i.result = local_info::unique;
     auto tr = upper_bound(transitions_.begin(), transitions_.end(), tp,
