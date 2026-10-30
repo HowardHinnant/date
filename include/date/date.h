@@ -7679,7 +7679,12 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                 {
                                     read(is, ru{tM, 2, 2});
                                     if (!is.fail())
-                                        toff += minutes{tM};
+                                    {
+                                        if (tM > 59)
+                                            is.setstate(ios::failbit);
+                                        else
+                                            toff += minutes{tM};
+                                    }
                                 }
                             }
                         }
@@ -7700,7 +7705,12 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                                     (void)is.get();
                                     read(is, ru{tM, 2, 2});
                                     if (!is.fail())
-                                        toff += minutes{tM};
+                                    {
+                                        if (tM > 59)
+                                            is.setstate(ios::failbit);
+                                        else
+                                            toff += minutes{tM};
+                                    }
                                 }
                             }
                         }
