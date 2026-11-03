@@ -2676,8 +2676,9 @@ time_zone::adjust_infos(const std::vector<Rule>& rules)
         std::pair<const Rule*, const Rule*> eqr{};
         std::istringstream in;
         in.exceptions(std::ios::failbit | std::ios::badbit);
-        // Classify info as rule-based, has save, or neither
-        if (!z.u.rule_.empty())
+        // Classify info as rule-based, has save, or neither.  An earlier call
+        // that threw part way through may have already turned z into a save.
+        if (z.tag_ == zonelet::has_rule && !z.u.rule_.empty())
         {
             // Find out if this zonelet has a rule or a save
             eqr = std::equal_range(rules.data(), rules.data() + rules.size(), z.u.rule_);
@@ -2707,7 +2708,7 @@ time_zone::adjust_infos(const std::vector<Rule>& rules)
                 }
             }
         }
-        else
+        else if (z.tag_ == zonelet::has_rule)
         {
             // This zone::zonelet has no rule and no save
             z.tag_ = zonelet::is_empty;
