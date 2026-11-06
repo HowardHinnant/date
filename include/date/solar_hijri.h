@@ -2008,7 +2008,7 @@ year_month_day_last::day() const NOEXCEPT
         solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(30),
         solar_hijri::day(30), solar_hijri::day(30), solar_hijri::day(29)
     };
-    return month() != esf || !y_.is_leap() ?
+    return (month() != esf || !y_.is_leap()) && mdl_.ok() ?
         d[static_cast<unsigned>(month()) - 1] : solar_hijri::day(30);
 }
 

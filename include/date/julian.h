@@ -1954,7 +1954,8 @@ year_month_day_last::day() const NOEXCEPT
         julian::day(31), julian::day(30), julian::day(31), julian::day(31),
         julian::day(30), julian::day(31), julian::day(30), julian::day(31)
     };
-    return month() != feb || !y_.is_leap() ? d[static_cast<unsigned>(month())-1] : julian::day(29);
+    return (month() != feb || !y_.is_leap()) && mdl_.ok() ?
+        d[static_cast<unsigned>(month())-1] : julian::day(29);
 }
 
 CONSTCD14

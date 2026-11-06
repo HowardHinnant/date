@@ -1933,7 +1933,7 @@ year_month_day_last::day() const NOEXCEPT
 {
     CONSTDATA islamic::day d[] =
         {30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d, 30_d, 29_d};
-    return month() != islamic::month(12) || !y_.is_leap() ?
+    return (month() != islamic::month(12) || !y_.is_leap()) && mdl_.ok() ?
                d[static_cast<unsigned>(month())-1] : 30_d;
 }
 
