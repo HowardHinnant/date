@@ -2325,7 +2325,7 @@ time_zone::init_impl()
                                        });
                   t != transitions_.end(); ++t)
         {
-            while (t->timepoint >= l)
+            while (itr != leap_seconds.end() && t->timepoint >= l)
             {
                 ++leap_count;
                 if (++itr == leap_seconds.end())
@@ -2506,7 +2506,7 @@ time_zone::parse_from_android_tzdata(std::ifstream& inf, const std::size_t off)
                                        });
                   t != transitions_.end(); ++t)
         {
-            while (t->timepoint >= l)
+            while (itr != leap_seconds.end() && t->timepoint >= l)
             {
                 ++leap_count;
                 if (++itr == leap_seconds.end())
