@@ -5139,6 +5139,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                 if (modified == CharT{})
                 {
                     tm.tm_mon = static_cast<int>(extract_month(os, fds)) - 1;
+                    if (os.fail())
+                        return os;
 #if !ONLY_C_LOCALE
                     const CharT f[] = {'%', *fmt};
                     facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
@@ -5205,6 +5207,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (*fmt == 'c')
                     {
                         auto wd = static_cast<int>(extract_weekday(os, fds));
+                        if (os.fail())
+                            return os;
                         os << weekday_names().first[static_cast<unsigned>(wd)+7]
                            << ' ';
                         os << month_names().first[extract_month(os, fds)-1+12] << ' ';
