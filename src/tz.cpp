@@ -130,6 +130,7 @@ struct index_entry_t {
 #include <cwchar>
 #include <exception>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -1623,6 +1624,23 @@ detail::Rule::split_overlaps(std::vector<Rule>& rules)
     rules.shrink_to_fit();
 }
 
+// Return the rules of the tzdb that r points into.  This is not necessarily
+// get_tzdb().rules:  a time_zone from an earlier database keeps pointing into
+// that database's rules after reload_tzdb().
+static
+const std::vector<Rule>&
+rules_containing(const Rule* r)
+{
+    std::less<const Rule*> less;
+    for (auto const& db : get_tzdb_list())
+    {
+        auto const& rules = db.rules;
+        if (!less(r, rules.data()) && less(r, rules.data() + rules.size()))
+            return rules;
+    }
+    return get_tzdb().rules;
+}
+
 // Find the rule that comes chronologically before Rule r.  For multi-year rules,
 // y specifies which rules in r.  For single year rules, y is assumed to be equal
 // to the year specified by r.
@@ -1635,7 +1653,7 @@ std::pair<const Rule*, date::year>
 find_previous_rule(const Rule* r, date::year y)
 {
     using namespace date;
-    auto const& rules = get_tzdb().rules;
+    auto const& rules = rules_containing(r);
     if (y == r->starting_year())
     {
         if (r == &rules.front() || r->name() != r[-1].name())
@@ -1702,7 +1720,7 @@ std::pair<const Rule*, date::year>
 find_next_rule(const Rule* r, date::year y)
 {
     using namespace date;
-    auto const& rules = get_tzdb().rules;
+    auto const& rules = rules_containing(r);
     if (y == r->ending_year())
     {
         if (r == &rules.back() || r->name() != r[1].name())
