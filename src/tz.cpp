@@ -4335,7 +4335,9 @@ tzdb::current_zone() const
                 // +1 because st_size doesn't include the '\0' terminator
                 const auto rp_size = sb.st_size + 1;
                 unique_ptr<char[]> rp(new char[rp_size]);
-                const auto rp_length = readlink(timezone, rp.get(), rp_size);
+                // Pass sb.st_size, not rp_size, so the extra byte stays reserved
+                // for the terminator even if the link grew between lstat and here.
+                const auto rp_length = readlink(timezone, rp.get(), sb.st_size);
                 if (rp_length <= 0)
                     throw system_error(errno, system_category(), "readlink() failed");
                 rp.get()[rp_length] = '\0'; // readlink doesn't null-terminate
