@@ -380,6 +380,7 @@ protected:
     virtual
     int_type
     underflow()
+    override
     {
         if (gptr() == egptr() && file_)
         {
