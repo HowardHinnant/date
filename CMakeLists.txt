@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-project( date VERSION 3.0.5 )
+project( date VERSION 3.0.6 )
 set(ABI_VERSION 3) # used as SOVERSION, increment when ABI changes
 
 get_directory_property( has_parent PARENT_DIRECTORY )
